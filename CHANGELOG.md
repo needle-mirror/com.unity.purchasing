@@ -1,3 +1,6 @@
+## [2.0.6] - 2019-02-18
+Remove embedded prebuilt assemblies.
+
 ## [2.0.5] - 2019-02-08
 Fixed Unsupported platform error
 
