@@ -1,6 +1,6 @@
 {
   "name": "com.unity.purchasing",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "unity": "2017.1",
   "description": "Unity Purchasing",
   "keywords": [
@@ -10,7 +10,7 @@
   ],
   "category": "AssetStore/Unity",
   "dependencies": {
-    "com.unity.analytics": "0.0.9"
+    "com.unity.analytics": "*"
   },
   "publishConfig":{"registry":"https://packages.unity.com"}
 }
