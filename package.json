@@ -1,6 +1,6 @@
 {
   "name": "com.unity.purchasing",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "unity": "2017.1",
   "description": "Unity Purchasing",
   "keywords": [
@@ -10,7 +10,7 @@
   ],
   "category": "AssetStore/Unity",
   "dependencies": {
-    "com.unity.analytics": "0.0.3"
+    "com.unity.analytics": "0.0.4"
   },
   "publishConfig":{"registry":"https://api.bintray.com/npm/unity/unity"}
 }
