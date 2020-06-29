@@ -10,10 +10,7 @@ Supported platforms include:
 * Universal Windows Platform
 * Amazon Appstore
 * Samsung Galaxy Apps
-* Tizen Store
-* CloudMoolah Store
 * Facebook Gameroom
-* Xiaomi Mi Game Pay
 
 For instructions on using the features in the Purchasing package, refer to the [Unity IAP section of
 the Unity Manual](https://docs.unity3d.com/Manual/UnityIAP.html).

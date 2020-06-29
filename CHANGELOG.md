@@ -1,3 +1,10 @@
+## [2.1.0] - 2020-06-29
+Source Code provided instead of precompiled dlls.
+Live vs Stub DLLs are now using asmdef files to differentiate their targeting via the Editor
+Fixed errors regarding failing to find assemblies when toggling In-App Purchasing in the Service Window or Purchasing Service Settings
+Fixed failure to find UI assemblies when updating the Editor version.
+Added menu to support eventual migration to In-App Purchasing version 3.
+
 ## [2.0.6] - 2019-02-18
 Remove embedded prebuilt assemblies.
 

@@ -1,4 +1,4 @@
-#if UNITY_PURCHASING
+#if UNITY_PURCHASING || UNITY_UNIFIED_IAP
 using System;
 using System.IO;
 using System.Linq;
@@ -16,7 +16,7 @@ using System.Runtime.Serialization;
 
 namespace Test
 {
-	public class PurchasingRuntimeTest 
+	public class PurchasingRuntimeTest
     {
         private IList<ProductDefinition> products;
 		private int transactionID;
@@ -24,7 +24,7 @@ namespace Test
 		private List<ProductDescription> GetProductDescriptions(IEnumerable<ProductDefinition> products) {
 			return (from product in products
 					let receipt = "fakeReceipt"
-					let tranID = (transactionID++).ToString() 
+					let tranID = (transactionID++).ToString()
 					let metadata = new ProductMetadata ("Fake", "Fake", "Fake", "GBP", 1.23m)
 				select new ProductDescription (product.storeSpecificId, metadata, receipt, tranID)).ToList();
 		}
@@ -52,12 +52,12 @@ namespace Test
         	}
         	PurchasingSettings.enabled = _isPurchasingEnabled;
     	}
-        
+
         [SetUp]
         public void Init()
-        {   
+        {
 			metadata = new ProductMetadata("£1.23", "Fake title", "Fake desc", "GBP", 1.23m);
-			
+
             products = new List<ProductDefinition> ();
             products.Add (new ProductDefinition ("ammo",  "ammo.ios", ProductType.Consumable));
             products.Add (new ProductDefinition ("bomb",  "bomb.ios", ProductType.Consumable));
@@ -107,16 +107,15 @@ namespace Test
             return path;
         }
 
-        class DummyProducts 
+        class DummyProducts
         {
-
 		    public static ProductDefinition Consumable =
 			    new ProductDefinition ("coins", "com.brainDeadDesign.DepletedUraniumBullets", ProductType.Consumable, true, new List<PayoutDefinition> { new PayoutDefinition (PayoutType.Currency, "gold", 123), new PayoutDefinition (PayoutType.Resource, "health", 100) });
-		
+
 		    public static ProductDefinition NonConsumable =
 			    new ProductDefinition("Rotary Cannon", "com.brainDeadDesign.GAU-12Equalizer", ProductType.NonConsumable, true, new PayoutDefinition(PayoutType.Item, "Cannon", 1, "anti-materiel cannon"));
 
-		    public static ProductDefinition Subscription = 
+		    public static ProductDefinition Subscription =
 			    new ProductDefinition("subscription", "com.brainDeadDesign.subscription", ProductType.Subscription);
 
 		    public static HashSet<ProductDefinition> Products = new HashSet<ProductDefinition>
@@ -126,115 +125,11 @@ namespace Test
 			    Subscription
 		    };
 
-		    public static ReadOnlyCollection<ProductDefinition> ProductCollection = 
+		    public static ReadOnlyCollection<ProductDefinition> ProductCollection =
 			    new ReadOnlyCollection<ProductDefinition> (Products.ToList());
 
 		    public static ProductMetadata DummyMetadata =
 			    new ProductMetadata("£1.99", "Dummy product title", "Dummy product description", "GBP", 1.99m);
-	    }
-
-        class MockLogger : ILogger 
-        {
-
-		    public bool IsLogTypeAllowed (LogType logType)
-		    {
-			    return true;
-		    }
-
-		    public void Log (LogType logType, object message)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void Log (LogType logType, object message, UnityEngine.Object context)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void Log (LogType logType, string tag, object message)
-		    {
-			    Console.WriteLine (message);
-	    	}
-
-		    public void Log (LogType logType, string tag, object message, UnityEngine.Object context)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void Log (object message)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void Log (string tag, object message)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void Log (string tag, object message, UnityEngine.Object context)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void LogWarning (string tag, object message)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void LogWarning (string tag, object message, UnityEngine.Object context)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void LogError (string tag, object message)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void LogError (string tag, object message, UnityEngine.Object context)
-		    {
-			    Console.WriteLine (message);
-		    }
-
-		    public void LogFormat (LogType logType, string format, params object[] args)
-		    {
-			    Console.WriteLine (format);
-		    }
-
-		    public void LogException (Exception exception)
-		    {
-			    Console.WriteLine (exception);
-		    }
-
-		    public ILogHandler logHandler {
-			    get {
-				    throw new NotImplementedException ();
-			    }
-			    set {
-				    throw new NotImplementedException ();
-			    }
-		    }
-
-		    public bool logEnabled { get; set; }
-
-		    public LogType filterLogType {
-			    get {
-				    throw new NotImplementedException ();
-			    }
-			    set {
-				    throw new NotImplementedException ();
-			    }
-		    }
-
-		    public void LogFormat (LogType logType, UnityEngine.Object context, string format, params object[] args)
-		    {
-			    Console.WriteLine (format);
-		    }
-
-		    public void LogException (Exception exception, UnityEngine.Object context)
-		    {
-			    Console.WriteLine (exception);
-		    }
 	    }
     }
 }
