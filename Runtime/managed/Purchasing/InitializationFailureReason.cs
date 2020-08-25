@@ -1,5 +1,8 @@
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Reasons for which purchasing initialization could fail.
+    /// </summary>
     public enum InitializationFailureReason
     {
         /// <summary>

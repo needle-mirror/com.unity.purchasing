@@ -28,16 +28,27 @@ namespace UnityEngine.Purchasing
             m_StoreSpecificIdToProduct = m_Products.ToDictionary(x => x.definition.storeSpecificId);
         }
 
+        /// <summary>
+        /// The hash set of all products
+        /// </summary>
         public HashSet<Product> set
         {
             get { return m_ProductSet; }
         }
 
+        /// <summary>
+        /// The array of all products
+        /// </summary>
         public Product[] all
         {
             get { return m_Products; }
         }
 
+        /// <summary>
+        /// Gets a product matching an id
+        /// </summary>
+        /// <param name="id"> The id of the desired product </param>
+        /// <returns> The product matching the id, or null if not found </returns>
         public Product WithID(string id)
         {
             Product result = null;
@@ -45,6 +56,11 @@ namespace UnityEngine.Purchasing
             return result;
         }
 
+        /// <summary>
+        /// Gets a product matching a store-specific id
+        /// </summary>
+        /// <param name="id"> The store-specific id of the desired product </param>
+        /// <returns> The product matching the id, or null if not found </returns>
         public Product WithStoreSpecificID(string id)
         {
             Product result = null;

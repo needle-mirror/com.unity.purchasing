@@ -49,7 +49,14 @@ namespace UnityEditor.Purchasing
         private static string m_LatestPackageVersion;
         private static SearchRequest m_SearchRequest;
 
+        /// <summary>
+        /// String used to specify the path for an item in the menu bar to access the Migration UI.
+        /// </summary>
         public const string CleanIapForMigrationMenuPath = "Window/Unity IAP/Clean Libraries for Migration to IAP Version 3";
+
+        /// <summary>
+        /// Validation function to flag Migration UI accessibility from the menu bar.
+        /// </summary>
         [MenuItem(CleanIapForMigrationMenuPath, true)]
         public static bool CleanIapForMigrationValidation()
         {
@@ -65,6 +72,9 @@ namespace UnityEditor.Purchasing
             return true;
         }
 
+        /// <summary>
+        /// Opens the Migration UI in an editor window.
+        /// </summary>
         [MenuItem(CleanIapForMigrationMenuPath, false, 999)]
         public static void CleanIapForMigration()
         {
@@ -332,7 +342,7 @@ namespace UnityEditor.Purchasing
                         var fileName = Path.GetFileName(prevFile);
                         if (fileName.EndsWith(k_ObfuscationClassSuffix))
                         {
-                            var newFile = $"{k_ObfuscatorPath}/{fileName}";
+                            var newFile = k_ObfuscatorPath + "/" + fileName;
 
                             if (File.Exists(newFile))
                             {
@@ -372,7 +382,7 @@ namespace UnityEditor.Purchasing
                     var fileName = Path.GetFileName(prevFile);
                     if (fileName.EndsWith(k_ObfuscationClassSuffix))
                     {
-                        var newFile = $"{k_ObfuscatorPath}/{fileName}";
+                        var newFile = k_ObfuscatorPath + "/" + fileName;
 
                         if (!File.Exists(newFile))
                         {

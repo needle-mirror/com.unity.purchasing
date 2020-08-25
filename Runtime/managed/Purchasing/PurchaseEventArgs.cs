@@ -11,6 +11,9 @@ namespace UnityEngine.Purchasing
             this.purchasedProduct = purchasedProduct;
         }
 
+        /// <summary>
+        /// The product which was purchased successfully.
+        /// </summary>
         public Product purchasedProduct { get; private set; }
     }
 }

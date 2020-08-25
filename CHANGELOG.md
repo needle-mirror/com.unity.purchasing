@@ -1,3 +1,7 @@
+## [2.1.1] - 2020-08-25
+Fix compilation compatibility with platforms that don't use Unity Analytics (ex: PS4)
+Fix compilation compatibility with "Scripting Runtime Version" option set to ".Net 3.5 Equivalent (Deprecated)" in Unity 2018.4
+
 ## [2.1.0] - 2020-06-29
 Source Code provided instead of precompiled dlls.
 Live vs Stub DLLs are now using asmdef files to differentiate their targeting via the Editor

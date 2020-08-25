@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Definition of a purchase payout
+    /// </summary>
     [Serializable]
     public class PayoutDefinition
     {
@@ -19,6 +22,9 @@ namespace UnityEngine.Purchasing
         [SerializeField]
         string m_Data = string.Empty;
 
+        /// <summary>
+        /// Type of the payout
+        /// </summary>
         public PayoutType type {
             get {
                 return m_Type;
@@ -28,13 +34,25 @@ namespace UnityEngine.Purchasing
             }
         }
 
+
+        /// <summary>
+        /// Type of the payout as a string
+        /// </summary>
         public string typeString {
             get {
                 return m_Type.ToString ();
             }
         }
 
+
+        /// <summary>
+        /// Maximum string length of the payout subtype
+        /// </summary>
         public const int MaxSubtypeLength = 64;
+
+        /// <summary>
+        /// Subtype of the payout
+        /// </summary>
         public string subtype {
             get {
                 return m_Subtype;
@@ -46,6 +64,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// Quantity or value of the payout
+        /// </summary>
         public double quantity {
             get {
                 return m_Quantity;
@@ -55,7 +76,14 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// Maximum number of bytes of the payout data
+        /// </summary>
         public const int MaxDataLength = 1024;
+
+        /// <summary>
+        /// Payload data of the payout
+        /// </summary>
         public string data {
             get {
                 return m_Data;
@@ -67,14 +95,30 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public PayoutDefinition()
         {
         }
 
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="typeString"> The payout type, as a string. </param>
+        /// <param name="subtype"> The payout subtype. </param>
+        /// <param name="quantity"> The payout quantity. </param>
         public PayoutDefinition (string typeString, string subtype, double quantity) : this (typeString, subtype, quantity, string.Empty)
         {
         }
 
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="typeString"> The payout type, as a string. </param>
+        /// <param name="subtype"> The payout subtype. </param>
+        /// <param name="quantity"> The payout quantity. </param>
+        /// <param name="data"> The payout data. </param>
         public PayoutDefinition (string typeString, string subtype, double quantity, string data)
         {
             PayoutType t = PayoutType.Other;
@@ -87,18 +131,42 @@ namespace UnityEngine.Purchasing
             this.data = data;
         }
 
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="subtype"> The payout subtype. </param>
+        /// <param name="quantity"> The payout quantity. </param>
         public PayoutDefinition (string subtype, double quantity) : this (PayoutType.Other, subtype, quantity, string.Empty)
         {
         }
 
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="subtype"> The payout subtype. </param>
+        /// <param name="quantity"> The payout quantity. </param>
+        /// <param name="data"> The payout data. </param>
         public PayoutDefinition (string subtype, double quantity, string data) : this (PayoutType.Other, subtype, quantity, data)
         {
         }
 
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="type"> The payout type. </param>
+        /// <param name="subtype"> The payout subtype. </param>
+        /// <param name="quantity"> The payout quantity. </param>
         public PayoutDefinition (PayoutType type, string subtype, double quantity) : this (type, subtype, quantity, string.Empty)
         {
         }
 
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="type"> The payout type. </param>
+        /// <param name="subtype"> The payout subtype. </param>
+        /// <param name="quantity"> The payout quantity. </param>
+        /// <param name="data"> The payout data. </param>
         public PayoutDefinition (PayoutType type, string subtype, double quantity, string data)
         {
             this.type = type;

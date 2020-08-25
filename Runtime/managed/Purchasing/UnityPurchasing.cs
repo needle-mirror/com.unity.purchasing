@@ -5,11 +5,16 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// The core abstract implementation for Unity Purchasing.
+    /// </summary>
     public abstract class UnityPurchasing
     {
         /// <summary>
         /// The main initialization call for Unity Purchasing.
         /// </summary>
+        /// <param name="listener"> The <c>IStoreListener</c> to receive callbacks for future transactions </param>
+        /// <param name="builder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
         public static void Initialize(IStoreListener listener, ConfigurationBuilder builder)
         {
 #if UNITY_2017_1_OR_NEWER

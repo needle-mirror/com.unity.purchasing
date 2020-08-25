@@ -70,8 +70,10 @@ namespace UnityEngine.Purchasing
         public string receipt { get; internal set; }
 
         /// <summary>
-        /// Products may be contained in a Set.
+        /// Check if this product is equal to another.
         /// </summary>
+        /// <param name="obj"> The product to compare with this object. </param>
+        /// <returns> True if the products are equal </returns>
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -84,6 +86,10 @@ namespace UnityEngine.Purchasing
             return (definition.Equals(p.definition));
         }
 
+        /// <summary>
+        /// Get the unique Hash representing the product.
+        /// </summary>
+        /// <returns> The hash code as integer </returns>
         public override int GetHashCode()
         {
             return definition.GetHashCode();

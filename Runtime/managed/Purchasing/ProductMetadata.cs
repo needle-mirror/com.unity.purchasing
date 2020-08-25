@@ -1,7 +1,18 @@
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Metadata for the product, namely that which is relevant to the store subsystem
+    /// </summary>
     public class ProductMetadata
     {
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="priceString"> The price, as a string. </param>
+        /// <param name="title"> The title of the product. </param>
+        /// <param name="description"> The description of the product. </param>
+        /// <param name="currencyCode"> The currency code of the localized price. </param>
+        /// <param name="localizedPrice"> The localized price, by currency. </param>
         public ProductMetadata(string priceString, string title, string description, string currencyCode, decimal localizedPrice)
         {
             localizedPriceString = priceString;
@@ -11,6 +22,9 @@ namespace UnityEngine.Purchasing
             this.localizedPrice = localizedPrice;
         }
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
         public ProductMetadata()
         {
         }

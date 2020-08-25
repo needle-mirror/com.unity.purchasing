@@ -9,6 +9,10 @@ namespace UnityEngine.Purchasing.Extension
     /// </summary>
     public interface IPurchasingModule
     {
+        /// <summary>
+        /// Configures the purchasing module.
+        /// </summary>
+        /// <param name="binder"> The object binding the purchasing with store implementations </param>
         void Configure(IPurchasingBinder binder);
     }
 }

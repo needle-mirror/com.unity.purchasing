@@ -13,8 +13,19 @@ namespace UnityEngine.Purchasing
             this.message = message;
         }
 
+        /// <summary>
+        /// The product which failed to be purchased.
+        /// </summary>
         public Product purchasedProduct { get; private set; }
+
+        /// <summary>
+        /// The reason for the failure.
+        /// </summary>
         public PurchaseFailureReason reason { get; private set; }
+
+        /// <summary>
+        /// A message containing details about the failure.
+        /// </summary>
         public string message { get; private set; }
     }
 }

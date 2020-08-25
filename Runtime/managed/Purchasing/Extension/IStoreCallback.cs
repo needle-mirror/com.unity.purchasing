@@ -15,6 +15,7 @@ namespace UnityEngine.Purchasing.Extension
         /// <summary>
         /// Purhasing unavailable.
         /// </summary>
+        /// <param name="reason"> The reason the initialization failed. </param>
         void OnSetupFailed(InitializationFailureReason reason);
 
         /// <summary>
@@ -24,16 +25,21 @@ namespace UnityEngine.Purchasing.Extension
         ///
         /// Any previously unseen purchases will be completed by the PurchasingManager.
         /// </summary>
+        /// <param name="products"> The list of product descriptions retrieved. </param>
         void OnProductsRetrieved(List<ProductDescription> products);
 
         /// <summary>
         /// Inform Unity Purchasing of a purchase.
         /// </summary>
+        /// <param name="storeSpecificId"> The product id specific to the store it was purchased from. </param>
+        /// <param name="receipt"> The receipt provided by the store detailing the purchase </param>
+        /// <param name="transactionIdentifier"> The id of the transaction </param>
         void OnPurchaseSucceeded(string storeSpecificId, string receipt, string transactionIdentifier);
 
         /// <summary>
         /// Notify a failed purchase with associated details.
         /// </summary>
+        /// <param name="desc"> The object detailing the purchase failure </param>
         void OnPurchaseFailed(PurchaseFailureDescription desc);
 
         /// <summary>

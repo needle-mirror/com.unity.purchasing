@@ -1,5 +1,8 @@
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Types of a product, relevant to the store subsystem.
+    /// </summary>
     public enum ProductType
     {
         /// <summary>

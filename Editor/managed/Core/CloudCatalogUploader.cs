@@ -6,23 +6,48 @@ using System.Collections.Generic;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// Utility to upload the Product Catalog to the cloud backend
+    /// </summary>
     public static class CloudCatalogUploader
     {
+        /// <summary>
+        /// Upload the catalog data to the cloud backend with no callbacks
+        /// </summary>
+        /// <param name="catalogJson"> Raw json string containing the catalog data </param>
         public static void Upload(string catalogJson)
         {
             Upload(catalogJson, null, null);
         }
 
+        /// <summary>
+        /// Upload the catalog data to the cloud backend, with a completion callback event
+        /// </summary>
+        /// <param name="catalogJson"> Raw json string containing the catalog data </param>
+        /// <param name="onComplete"> Completion callback function </param>
         public static void Upload(string catalogJson, Action<UploadDataCompletedEventArgs> onComplete)
         {
             Upload(catalogJson, onComplete, null);
         }
 
+        /// <summary>
+        /// Upload the catalog data to the cloud backend, with a completion callback event and a progress event
+        /// </summary>
+        /// <param name="catalogJson"> Raw json string containing the catalog data </param>
+        /// <param name="onComplete"> Completion callback function </param>
+        /// <param name="onProgressChanged"> Progress callback function </param>
         public static void Upload(string catalogJson, Action<UploadDataCompletedEventArgs> onComplete, Action<UploadProgressChangedEventArgs> onProgressChanged)
         {
             Upload(catalogJson, onComplete, onProgressChanged, UnityConnect.instance.GetCoreConfigurationUrl());
         }
 
+        /// <summary>
+        /// Upload the catalog data to the cloud backend, with a completion callback event and a progress event, and specifying the base backend URL
+        /// </summary>
+        /// <param name="catalogJson"> Raw json string containing the catalog data </param>
+        /// <param name="onComplete"> Completion callback function </param>
+        /// <param name="onProgressChanged"> Progress callback function </param>
+        /// <param name="baseURL"> Base URL of the backend to upload the catalog file to </param>
         public static void Upload(string catalogJson, Action<UploadDataCompletedEventArgs> onComplete, Action<UploadProgressChangedEventArgs> onProgressChanged, string baseURL)
         {
             string exportURL = baseURL;
