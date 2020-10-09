@@ -1,7 +1,7 @@
 {
   "name": "com.unity.purchasing",
   "displayName": "In App Purchasing",
-  "version": "3.0.0-pre.3",
+  "version": "3.0.0-pre.4",
   "unity": "2019.4",
   "description": "*** PREVIEW RELEASE ***\n\n*** Not intended for use with existing projects!\n\n*** PREVIEW RELEASE ***\n\n\nUnity IAP supports the iOS, Mac, tvOS, Google Play, Facebook Gameroom, Windows, Amazon, and Samsung Galaxy app stores. Additionally, it can work in tandem with the Unity Distribution Portal in order to synchronize catalogs and transactions with even more stores.\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nUse one common API to access all stores for free. With just a few lines of code, you can fully understand and optimize your in-game economy.\n\nUnity IAP automatically couples with Unity Analytics enabling you to monitor and act on trends in your revenue and purchase data across multiple platforms.\n\nIncludes client-side receipt validation for Apple App Store and Google Play.\n\nAfter installing this package, please make sure to open the Services Window and enable In-App Purchasing to use its features.",
   "dependencies": {
@@ -15,15 +15,15 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "3.0.0-pre.3"
+    "com.unity.purchasing.tests": "3.0.0-pre.4"
   },
   "upmCi": {
-    "footprint": "aa72ff9cbb68918ba39593bbc307e623c34f070f"
+    "footprint": "ea31692b85463aabdaadcf01f1cc49d7a80da861"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "1b885452215a17c49f708fd1166b89136eea15d4"
+    "revision": "421b0189e535cf53aaabe59ff2cde8db759be3f6"
   },
   "samples": [
     {
