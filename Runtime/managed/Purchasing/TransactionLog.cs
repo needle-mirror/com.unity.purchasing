@@ -39,7 +39,7 @@ namespace UnityEngine.Purchasing
 
         public void Record(string transactionID)
         {
-            // Consumables have additional de duplication logic.
+            // Consumables have additional de-duplication logic.
             if (!(string.IsNullOrEmpty(transactionID) || string.IsNullOrEmpty(persistentDataPath)))
             {
                 var path = GetRecordPath(transactionID);

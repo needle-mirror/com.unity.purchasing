@@ -1,0 +1,32 @@
+{
+    "name": "UnityEngine.Purchasing.Stores",
+    "references": [
+        "UnityEngine.Purchasing.Apple",
+        "UnityEngine.Purchasing.AppleCore",
+        "UnityEngine.Purchasing.AppleMacos",
+        "UnityEngine.Purchasing.AppleMacosStub",
+        "UnityEngine.Purchasing.AppleStub",
+        "UnityEngine.Purchasing.Facebook",
+        "UnityEngine.Purchasing.FacebookCommon",
+        "UnityEngine.Purchasing.FacebookStub",
+        "UnityEngine.Purchasing",
+        "UnityEngine.Purchasing.Interfaces",
+        "UnityEngine.Purchasing.Models",
+        "UnityEngine.Purchasing.Extension",
+        "UnityEngine.Purchasing.Utils",
+        "Purchasing.Common"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Security.dll",
+        "UDP.dll",
+        "winrt.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

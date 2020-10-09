@@ -1,0 +1,19 @@
+{
+    "name": "UnityEngine.Purchasing.FacebookStub",
+    "references": [
+        "UnityEngine.Purchasing",
+        "Purchasing.Common",
+        "UnityEngine.Purchasing.FacebookCommon"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "!UNITY_PURCHASING_FACEBOOK"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

@@ -1,0 +1,25 @@
+{
+    "name": "UnityEngine.Purchasing.Facebook",
+    "references": [
+        "UnityEngine.Purchasing.FacebookCommon",
+        "Purchasing.Common",
+        "UnityEngine.Purchasing"
+    ],
+    "includePlatforms": [
+        "WebGL",
+        "WindowsStandalone32",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Facebook.Unity.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_PURCHASING_FACEBOOK"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

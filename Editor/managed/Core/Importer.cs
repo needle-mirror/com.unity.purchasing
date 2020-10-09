@@ -1,4 +1,4 @@
-#define NON_COMPILED_UPM
+#define UNITY_UNIFIED_IAP
 
 using UnityEditor.Purchasing;
 using UnityEditor.Build;
