@@ -25,7 +25,9 @@ namespace UnityEditor.Purchasing
         private const string k_BillingModePath = "Assets/Resources/BillingMode.json";
         private const string k_PrevBillingModePath = "Assets/Plugins/UnityPurchasing/Resources/BillingMode.json";
         private const string k_PrevObfuscatorPath = "Assets/Plugins/UnityPurchasing/generated";
-        private const string k_ObfuscatorPath = "Assets/Resources/UnityPurchasing/generated";
+        private const string k_BackupObfuscatorPath = "Assets/Plugins/UnityPurchasing~/generated";
+        private const string k_BadObfuscatorPath = "Assets/Resources/UnityPurchasing/generated";
+        private const string k_ObfuscatorPath = "Assets/Scripts/UnityPurchasing/generated";
         private const string k_ObfuscationClassSuffix = "Tangle.cs";
 
 #if !UNITY_UNIFIED_IAP
@@ -113,7 +115,7 @@ namespace UnityEditor.Purchasing
             bool needRemoveAssetStore = Directory.Exists(k_AssetStorePath);
             bool needMigrateCatalog = needRemoveAssetStore && DoesPrevCatalogPathExist() && !DoesNewCatalogPathExist();
             bool needMigrateBilling = needRemoveAssetStore && DoesPrevBillingModePathExist() && !DoesNewBillingModePathExist();
-            bool needMigrateObfuscations = needRemoveAssetStore && DoPrevObfuscationFilesExist() && IsObfuscationMigrationNeeded();
+            bool needMigrateObfuscations = needRemoveAssetStore && IsObfuscationMigrationNeeded();
 
             EditorGUILayout.BeginVertical(GUILayout.ExpandHeight(true));
             GUILayout.Label("Product Catalog Migrated: *{" + !needMigrateCatalog + "}*");
@@ -220,8 +222,19 @@ namespace UnityEditor.Purchasing
 
         private void UninstallAssetStorePackage()
         {
+            Directory.CreateDirectory(k_AssetStoreBackupPath);
+
             try
             {
+                if (File.Exists(k_BackupObfuscatorPath + ".meta"))
+                {
+                    FileUtil.ReplaceDirectory(k_BackupObfuscatorPath, k_PrevObfuscatorPath);
+                    FileUtil.DeleteFileOrDirectory(k_BackupObfuscatorPath);
+
+                    FileUtil.ReplaceFile(k_BackupObfuscatorPath + ".meta", k_PrevObfuscatorPath + ".meta");
+                    FileUtil.DeleteFileOrDirectory(k_BackupObfuscatorPath + ".meta");
+                }
+
                 if (Directory.Exists(k_AssetStoreBackupPath))
                 {
                     Directory.Delete(k_AssetStoreBackupPath);
@@ -335,24 +348,56 @@ namespace UnityEditor.Purchasing
             {
                 if (DoPrevObfuscationFilesExist())
                 {
-                    Directory.CreateDirectory (k_ObfuscatorPath);
-
-                    foreach (var prevFile in Directory.GetFiles(k_PrevObfuscatorPath))
-                    {
-                        var fileName = Path.GetFileName(prevFile);
-                        if (fileName.EndsWith(k_ObfuscationClassSuffix))
-                        {
-                            var newFile = k_ObfuscatorPath + "/" + fileName;
-
-                            if (File.Exists(newFile))
-                            {
-                                break;
-                            }
-
-                            AssetDatabase.CopyAsset(prevFile, newFile);
-                        }
-                    }
+                    CopyObfuscatorFiles(k_PrevObfuscatorPath);
+                    ArchiveObfuscatorFiles(k_PrevObfuscatorPath, k_BackupObfuscatorPath);
                 }
+
+                if (DoBadObfuscationFilesExist())
+                {
+                    CopyObfuscatorFiles(k_BadObfuscatorPath);
+                    ArchiveObfuscatorFiles(k_BadObfuscatorPath, k_BackupObfuscatorPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+        }
+
+        private static void CopyObfuscatorFiles(string oldObfuscatorPath)
+        {
+            Directory.CreateDirectory(k_ObfuscatorPath);
+
+            foreach (var oldFile in Directory.GetFiles(oldObfuscatorPath))
+            {
+                var fileName = Path.GetFileName(oldFile);
+                if (fileName.EndsWith(k_ObfuscationClassSuffix))
+                {
+                    var newFile = k_ObfuscatorPath + "/" + fileName;
+
+                    if (File.Exists(newFile))
+                    {
+                        break;
+                    }
+
+                    AssetDatabase.CopyAsset(oldFile, newFile);
+                }
+            }
+        }
+
+        private static void ArchiveObfuscatorFiles(string oldObfuscatorPath, string archivedObfuscatorPath)
+        {
+            Directory.CreateDirectory(k_BackupObfuscatorPath);
+
+            try
+            {
+                FileUtil.ReplaceDirectory(oldObfuscatorPath, archivedObfuscatorPath);
+                FileUtil.DeleteFileOrDirectory(oldObfuscatorPath);
+
+                FileUtil.ReplaceFile(oldObfuscatorPath + ".meta", archivedObfuscatorPath + ".meta");
+                FileUtil.DeleteFileOrDirectory(oldObfuscatorPath + ".meta");
+
+                AssetDatabase.Refresh();
             }
             catch (Exception ex)
             {
@@ -365,34 +410,34 @@ namespace UnityEditor.Purchasing
             return (Directory.Exists(k_PrevObfuscatorPath) && (Directory.GetFiles(k_PrevObfuscatorPath).Length > 0));
         }
 
+        private static bool DoBadObfuscationFilesExist()
+        {
+            return (Directory.Exists(k_BadObfuscatorPath) && (Directory.GetFiles(k_BadObfuscatorPath).Length > 0));
+        }
+
         private static bool IsObfuscationMigrationNeeded()
         {
-            if (!DoPrevObfuscationFilesExist())
-            {
-                return false;
-            }
-            else if (!Directory.Exists(k_ObfuscatorPath))
-            {
-                return true;
-            }
-            else
-            {
-                foreach (var prevFile in Directory.GetFiles(k_PrevObfuscatorPath))
-                {
-                    var fileName = Path.GetFileName(prevFile);
-                    if (fileName.EndsWith(k_ObfuscationClassSuffix))
-                    {
-                        var newFile = k_ObfuscatorPath + "/" + fileName;
+            return (DoPrevObfuscationFilesExist() && FindUncopiedOldObfucscatorFiles(k_PrevObfuscatorPath)) ||
+                   (DoBadObfuscationFilesExist() && FindUncopiedOldObfucscatorFiles(k_BadObfuscatorPath));
+        }
 
-                        if (!File.Exists(newFile))
-                        {
-                            return true;
-                        }
+        private static bool FindUncopiedOldObfucscatorFiles(string oldObfuscatorPath)
+        {
+            foreach (var oldFile in Directory.GetFiles(oldObfuscatorPath))
+            {
+                var fileName = Path.GetFileName(oldFile);
+                if (fileName.EndsWith(k_ObfuscationClassSuffix))
+                {
+                    var newFile = k_ObfuscatorPath + "/" + fileName;
+
+                    if (!File.Exists(newFile))
+                    {
+                        return true;
                     }
                 }
-
-                return false;
             }
+
+            return false;
         }
     }
 }

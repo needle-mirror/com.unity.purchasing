@@ -1,3 +1,9 @@
+## [2.2.0] - 2020-10-22
+Google Billing v3
+
+## [2.1.2] - 2020-09-20
+Fix migration tooling's obfuscator file destination path to target Scripts instead of Resources
+
 ## [2.1.1] - 2020-08-25
 Fix compilation compatibility with platforms that don't use Unity Analytics (ex: PS4)
 Fix compilation compatibility with "Scripting Runtime Version" option set to ".Net 3.5 Equivalent (Deprecated)" in Unity 2018.4

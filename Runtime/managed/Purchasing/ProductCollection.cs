@@ -64,7 +64,10 @@ namespace UnityEngine.Purchasing
         public Product WithStoreSpecificID(string id)
         {
             Product result = null;
-            m_StoreSpecificIdToProduct.TryGetValue(id, out result);
+            if (id != null)
+            {
+                m_StoreSpecificIdToProduct.TryGetValue(id, out result);
+            }
             return result;
         }
     }

@@ -37,6 +37,12 @@ namespace UnityEngine.Purchasing.Extension
         void OnPurchaseSucceeded(string storeSpecificId, string receipt, string transactionIdentifier);
 
         /// <summary>
+        /// Inform Unity Purchasing of all active purchases.
+        /// </summary>
+        /// <param name="purchasedProducts">all active purchased products</param>
+        void OnPurchasesRetrieved(List<Product> purchasedProducts);
+
+        /// <summary>
         /// Notify a failed purchase with associated details.
         /// </summary>
         /// <param name="desc"> The object detailing the purchase failure </param>

@@ -108,11 +108,46 @@ namespace UnityEngine.Purchasing
                 var definition = new ProductDefinition(id, ProductType.NonConsumable);
                 product = new Product(definition, new ProductMetadata());
             }
-            var unifiedReceipt = FormatUnifiedReceipt(receipt, transactionId);
-            product.receipt = unifiedReceipt;
-            product.transactionID = transactionId;
-
+            UpdateProductReceipt(product, receipt, transactionId);
             ProcessPurchaseIfNew(product);
+        }
+
+        void UpdateProductReceipt(Product product, string receipt, string transactionId)
+        {
+            var unifiedReceipt = FormatUnifiedReceipt(receipt, transactionId);
+            if (product != null)
+            {
+                product.receipt = unifiedReceipt;
+                product.transactionID = transactionId;
+            }
+        }
+
+        public void OnPurchasesRetrieved(List<Product> purchasedProducts)
+        {
+            foreach (var product in products.all)
+            {
+                var purchasedProduct = purchasedProducts.FirstOrDefault(firstPurchasedProduct => firstPurchasedProduct.definition.id == product.definition.id);
+                if (purchasedProduct != null)
+                {
+                    HandlePurchaseRetrieved(product, purchasedProduct);
+                }
+                else
+                {
+                    ClearProductReceipt(product);
+                }
+            }
+        }
+
+        void HandlePurchaseRetrieved(Product product, Product purchasedProduct)
+        {
+            UpdateProductReceipt(product, purchasedProduct.receipt, purchasedProduct.transactionID);
+            ProcessPurchaseIfNew(product);
+        }
+
+        static void ClearProductReceipt(Product product)
+        {
+            product.receipt = null;
+            product.transactionID = null;
         }
 
         public void OnSetupFailed(InitializationFailureReason reason)
@@ -128,14 +163,18 @@ namespace UnityEngine.Purchasing
 
         public void OnPurchaseFailed(PurchaseFailureDescription description)
         {
-            var product = products.WithStoreSpecificID(description.productId);
-            if (null == product)
+            if (description != null)
             {
-                m_Logger.LogError("Failed to purchase unknown product {0}", description.productId);
-                return;
+                var product = products.WithStoreSpecificID(description.productId);
+                if (null == product)
+                {
+                    m_Logger.LogError("Failed to purchase unknown product {0}", "productId:" + description.productId + " reason:" + description.reason + " message:" + description.message);
+                    return;
+                }
+
+                m_Logger.Log("onPurchaseFailedEvent({0})", "productId:" + product.definition.id + " message:" + description.message);
+                m_Listener.OnPurchaseFailed(product, description.reason);
             }
-            m_Logger.Log("onPurchaseFailedEvent({0})", product.definition.id);
-            m_Listener.OnPurchaseFailed(product, description.reason);
         }
 
         /// <summary>
