@@ -1,8 +1,6 @@
 {
     "name": "UnityEngine.Purchasing",
-    "references": [
-        "Purchasing.Common"
-    ],
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

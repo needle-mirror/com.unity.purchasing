@@ -1,3 +1,6 @@
+## [2.2.1] - 2020-11-19
+Fixed exposure of function calls at runtime used by the Asset Store Package 2.2.0 and up.
+
 ## [2.2.0] - 2020-10-22
 Google Billing v3
 
