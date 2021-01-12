@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.0.0-pre.6] - 2021-01-12
+###Fixed
+- WinRT - There was a bad path being pointed to by the .dll's meta file, preventing compilation to this target.
+
 ## [3.0.0-pre.5] - 2021-01-12
 ### Added
 - Apple - Support for [auto-renewable subscription Offer Codes](https://developer.apple.com/documentation/storekit/in-app_purchase/subscriptions_and_offers/implementing_offer_codes_in_your_app) on iOS and iPadOS 14 and later via `IAppleExtensions.PresentOfferRedemptionSheet()`. E.g. 

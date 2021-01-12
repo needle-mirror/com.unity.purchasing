@@ -18,7 +18,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class StandardPurchasingModule : AbstractPurchasingModule, IAndroidStoreSelection
     {
-		public const string k_PackageVersion = "2.2.7"; // NOTE: Change using `gradle applyPackageVersion` task.
+		public const string k_PackageVersion = "3.0.0-pre.6"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         private AppStore m_AppStorePlatform;
         private INativeStoreProvider m_NativeStoreProvider;
         private RuntimePlatform m_RuntimePlatform;
