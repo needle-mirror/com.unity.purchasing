@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.Purchasing.Interfaces;
 
@@ -22,6 +23,18 @@ namespace UnityEngine.Purchasing.Models
         static AndroidJavaClass GetPriceChangeFlowParamClass()
         {
             return new AndroidJavaClass(k_AndroidPriceChangeFlowParamClassName);
+        }
+
+        const string k_AndroidConsumeParamsClassName = "com.android.billingclient.api.ConsumeParams";
+        static AndroidJavaClass GetConsumeParamsClass()
+        {
+            return new AndroidJavaClass(k_AndroidConsumeParamsClassName);
+        }
+
+        const string k_AndroidAcknowledgePurchaseParamsClassName = "com.android.billingclient.api.AcknowledgePurchaseParams";
+        static AndroidJavaClass GetAcknowledgePurchaseParamsClass()
+        {
+            return new AndroidJavaClass(k_AndroidAcknowledgePurchaseParamsClassName);
         }
 
         const string k_AndroidBillingClientClassName = "com.android.billingclient.api.BillingClient";
@@ -123,14 +136,22 @@ namespace UnityEngine.Purchasing.Models
             return billingFlowParams;
         }
 
-        public void ConsumeAsync(AndroidJavaObject consumeParams, GoogleConsumeResponseListener listener)
+        public void ConsumeAsync(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> onConsume)
         {
-            m_BillingClient.Call("consumeAsync", consumeParams, listener);
+            AndroidJavaObject consumeParams = GetConsumeParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
+            consumeParams = consumeParams.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken);
+            consumeParams = consumeParams.Call<AndroidJavaObject>("build");
+
+            m_BillingClient.Call("consumeAsync", consumeParams, new GoogleConsumeResponseListener(product, googlePurchase, onConsume));
         }
 
-        public void AcknowledgePurchase(AndroidJavaObject acknowledgePurchaseParams, GoogleAcknowledgePurchaseListener listener)
+        public void AcknowledgePurchase(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, GoogleBillingResult> onAcknowledge)
         {
-            m_BillingClient.Call("acknowledgePurchase", acknowledgePurchaseParams, listener);
+            AndroidJavaObject acknowledgePurchaseParams = GetAcknowledgePurchaseParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
+            acknowledgePurchaseParams = acknowledgePurchaseParams.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken);
+            acknowledgePurchaseParams = acknowledgePurchaseParams.Call<AndroidJavaObject>("build");
+
+            m_BillingClient.Call("acknowledgePurchase", acknowledgePurchaseParams, new GoogleAcknowledgePurchaseListener(product, googlePurchase, onAcknowledge));
         }
 
         public void LaunchPriceChangeConfirmationFlow(AndroidJavaObject skuDetails, GooglePriceChangeConfirmationListener listener)

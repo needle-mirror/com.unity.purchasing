@@ -27,7 +27,7 @@ namespace UnityEngine.Purchasing.Utils
         {
             return new List<ProductDescription>()
             {
-                BuildProductDescription(skusDetails)
+                BuildProductDescription(new AndroidJavaObjectWrapper(skusDetails))
             };
         }
 
@@ -37,23 +37,39 @@ namespace UnityEngine.Purchasing.Utils
         /// </summary>
         /// <param name="skuDetails">`AndroidJavaObject` of SkuDetails</param>
         /// <returns>`ProductDescription` representation of a SkuDetails</returns>
-        static ProductDescription BuildProductDescription(AndroidJavaObject skuDetails)
+        internal static ProductDescription BuildProductDescription(IAndroidJavaObjectWrapper skuDetails)
         {
             string sku = skuDetails.Call<string>("getSku");
             string price = skuDetails.Call<string>("getPrice");
+            decimal priceAmount = Convert.ToDecimal(skuDetails.Call<long>("getPriceAmountMicros") > 0 ? skuDetails.Call<long>("getPriceAmountMicros") / 1000000.0 : 0);
             string title = skuDetails.Call<string>("getTitle");
             string description = skuDetails.Call<string>("getDescription");
             string priceCurrencyCode = skuDetails.Call<string>("getPriceCurrencyCode");
+            string originalJson = skuDetails.Call<string>("getOriginalJson");
+            string subscriptionPeriod = skuDetails.Call<string>("getSubscriptionPeriod");
+            string freeTrialPeriod = skuDetails.Call<string>("getFreeTrialPeriod");
+            string introductoryPrice = skuDetails.Call<string>("getIntroductoryPrice");
+            string introductoryPricePeriod = skuDetails.Call<string>("getIntroductoryPricePeriod");
+            int introductoryPriceCycles = skuDetails.Call<int>("getIntroductoryPriceCycles");
+
+            GoogleProductMetadata productMetadata = new GoogleProductMetadata(
+                price,
+                title,
+                description,
+                priceCurrencyCode,
+                priceAmount)
+            {
+                originalJson = originalJson,
+                introductoryPrice = introductoryPrice,
+                subscriptionPeriod = subscriptionPeriod,
+                freeTrialPeriod = freeTrialPeriod,
+                introductoryPricePeriod = introductoryPricePeriod,
+                introductoryPriceCycles = introductoryPriceCycles
+            };
 
             ProductDescription product = new ProductDescription(
                 sku,
-                new ProductMetadata(
-                    price,
-                    title,
-                    description,
-                    priceCurrencyCode,
-                    0
-                ),
+                productMetadata,
                 "",
                 ""
             );

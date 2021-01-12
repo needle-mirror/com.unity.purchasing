@@ -27,6 +27,8 @@ namespace UnityEngine.Purchasing
         ///
         /// The <c>IStoreController</c> is available for accessing
         /// purchasing functionality.
+        ///
+        /// Initialized products will include receipts, if currently owned.
         /// </summary>
         void OnInitialized(IStoreController controller);
     }

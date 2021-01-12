@@ -95,15 +95,5 @@ namespace UnityEngine.Purchasing
             }
             return new OSXStoreBindings ();
         }
-
-        public INativeFacebookStore GetFacebookStore()
-        {
-            return new FacebookStoreBindings();
-        }
-
-        public INativeFacebookStore GetFacebookStore (IUnityCallback callback, IPurchasingBinder binder)
-        {
-            return new FacebookStoreBindings();
-        }
     }
 }

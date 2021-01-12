@@ -1,8 +1,6 @@
-#define UNITY_UNIFIED_IAP
-
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Stores;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -27,87 +25,47 @@ namespace UnityEngine.Purchasing
 
         public void FetchPurchases()
         {
-            m_GooglePlayStoreService.FetchPurchases(OnFetchedPurchaseSuccessful);
+            m_GooglePlayStoreService.FetchPurchases(OnFetchedPurchase);
         }
 
-        void OnFetchedPurchaseSuccessful(List<GooglePurchase> purchases)
+        public void FetchPurchases(Action<List<Product>> onQueryPurchaseSucceed)
+        {
+            m_GooglePlayStoreService.FetchPurchases(
+                googlePurchases =>
+                {
+                    onQueryPurchaseSucceed(FillProductsWithPurchases(googlePurchases));
+                });
+        }
+
+        List<Product> FillProductsWithPurchases(IEnumerable<GooglePurchase> purchases)
+        {
+            var purchasedProducts = new List<Product>();
+
+            foreach (var purchase in purchases.Where(purchase => purchase != null).ToList())
+            {
+                var product = m_StoreCallback?.FindProductById(purchase.sku);
+                if (product != null)
+                {
+                    var updatedProduct = new Product(product.definition, product.metadata, purchase.receipt)
+                    {
+                        transactionID = purchase.purchaseToken
+                    };
+                    purchasedProducts.Add(updatedProduct);
+                }
+            }
+
+            return purchasedProducts;
+        }
+
+        void OnFetchedPurchase(List<GooglePurchase> purchases)
         {
             if (purchases != null)
             {
-#if UNITY_UNIFIED_IAP
-                var purchasedProducts = new List<Product>();
-
-                foreach (var purchase in purchases.Where(purchase => purchase != null).ToList())
-                {
-                    if (purchase.IsAcknowledged())
-                    {
-                        var product = m_StoreCallback?.FindProductById(purchase.sku);
-                        if (product != null)
-                        {
-                            product.receipt = purchase.receipt;
-                            product.transactionID = purchase.purchaseToken;
-                            purchasedProducts.Add(product);
-                        }
-                    }
-                    else
-                    {
-                        FinishTransaction(purchase);
-                    }
-                }
+                var purchasedProducts = FillProductsWithPurchases(purchases);
                 if (purchasedProducts.Count > 0)
                 {
-                    m_StoreCallback?.OnPurchasesRetrieved(purchasedProducts);
+                    m_StoreCallback?.OnAllPurchasesRetrieved(purchasedProducts);
                 }
-#else
-                if (m_StoreCallback.HasMethod("OnPurchasesRetrieved"))
-                {
-                    var purchasedProducts = new List<Product>();
-
-                    foreach (var purchase in purchases.Where(purchase => purchase != null).ToList())
-                    {
-                        if (purchase.IsAcknowledged())
-                        {
-                            var product = m_StoreCallback?.FindProductById(purchase.sku);
-                            if (product != null)
-                            {
-                                product.receipt = purchase.receipt;
-                                product.transactionID = purchase.purchaseToken;
-                                purchasedProducts.Add(product);
-                            }
-                        }
-                        else
-                        {
-                            FinishTransaction(purchase);
-                        }
-                    }
-
-                    if (purchasedProducts.Count > 0)
-                    {
-                        m_StoreCallback?.InvokeMethod("OnPurchasesRetrieved", new object[]{purchasedProducts});
-                    }
-                }
-                else
-                {
-                    foreach (GooglePurchase purchase in purchases)
-                    {
-                        if (purchase != null)
-                        {
-                            if (purchase.IsAcknowledged())
-                            {
-                                m_StoreCallback?.OnPurchaseSucceeded(
-                                    purchase.sku,
-                                    purchase.receipt,
-                                    purchase.purchaseToken
-                                );
-                            }
-                            else
-                            {
-                                FinishTransaction(purchase);
-                            }
-                        }
-                    }
-                }
-#endif
             }
         }
 

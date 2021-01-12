@@ -1,6 +1,3 @@
-#define UNITY_UNIFIED_IAP
-
-#if UNITY_PURCHASING || UNITY_UNIFIED_IAP
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -43,4 +40,3 @@ namespace UnityEngine.Purchasing
         }
     }
 }
-#endif

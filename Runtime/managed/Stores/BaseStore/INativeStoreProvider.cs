@@ -7,7 +7,5 @@ namespace UnityEngine.Purchasing
     {
         INativeStore GetAndroidStore (IUnityCallback callback, AppStore store, IPurchasingBinder binder, Uniject.IUtil util);
         INativeAppleStore GetStorekit(IUnityCallback callback);
-        INativeFacebookStore GetFacebookStore ();
-        INativeFacebookStore GetFacebookStore (IUnityCallback callback, IPurchasingBinder binder);
     }
 }

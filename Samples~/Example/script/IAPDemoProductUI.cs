@@ -1,8 +1,4 @@
-#define UNITY_UNIFIED_IAP
-
-﻿#if UNITY_PURCHASING || UNITY_UNIFIED_IAP
-
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Purchasing;
@@ -54,5 +50,3 @@ public class IAPDemoProductUI : MonoBehaviour
             Debug.Log("Receipt for " + m_ProductID + ": " + m_Receipt);
     }
 }
-
-#endif

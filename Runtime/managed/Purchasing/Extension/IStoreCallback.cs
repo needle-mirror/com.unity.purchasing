@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing.Extension
@@ -37,10 +38,17 @@ namespace UnityEngine.Purchasing.Extension
         void OnPurchaseSucceeded(string storeSpecificId, string receipt, string transactionIdentifier);
 
         /// <summary>
+        /// DEPRECATED - Inform Unity Purchasing of all active purchases.
+        /// </summary>
+        /// <param name="purchasedProducts">all active purchased products</param>
+        [Obsolete("OnPurchasesRetrieved is deprecated, please use OnAllPurchasesRetrieved instead.")]
+        void OnPurchasesRetrieved(List<Product> purchasedProducts);
+
+        /// <summary>
         /// Inform Unity Purchasing of all active purchases.
         /// </summary>
         /// <param name="purchasedProducts">all active purchased products</param>
-        void OnPurchasesRetrieved(List<Product> purchasedProducts);
+        void OnAllPurchasesRetrieved(List<Product> purchasedProducts);
 
         /// <summary>
         /// Notify a failed purchase with associated details.

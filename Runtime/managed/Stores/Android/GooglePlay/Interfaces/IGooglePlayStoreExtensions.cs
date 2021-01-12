@@ -73,10 +73,10 @@ namespace UnityEngine.Purchasing
         void SetObfuscatedProfileId(string profileId);
 
         /// <summary>
-        /// GetProductJSONDictionary is deprecated, nothing will be returns and no code will be executed. Will be removed soon. use the `ProductMetadata` of `product.metadata` from `IStoreController.products`
+        /// GetProductJSONDictionary is deprecated, nothing will be returns and no code will be executed. Will be removed soon. Use the `GoogleProductMetadata` of `product.metadata.GetGoogleProductMetadata()` from `IStoreController.products`
         /// </summary>
         /// <returns>null</returns>
-        [Obsolete("GetProductJSONDictionary is deprecated, nothing will be returns and no code will be executed. Will be removed soon. Use the `ProductMetadata` of `product.metadata` from `IStoreController.products`")]
+        [Obsolete("GetProductJSONDictionary is deprecated, nothing will be returns and no code will be executed. Will be removed soon. Use the `GoogleProductMetadata` of `product.metadata.GetGoogleProductMetadata()` from `IStoreController.products`")]
         Dictionary<string, string> GetProductJSONDictionary();
 
         /// <summary>

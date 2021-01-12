@@ -1,6 +1,3 @@
-#define UNITY_UNIFIED_IAP
-
-#if UNITY_PURCHASING || UNITY_UNIFIED_IAP
 using UnityEngine.Events;
 using UnityEngine.UI;
 using System.IO;
@@ -202,4 +199,3 @@ namespace UnityEngine.Purchasing
         }
     }
 }
-#endif

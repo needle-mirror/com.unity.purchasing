@@ -1,7 +1,3 @@
-#define UNITY_UNIFIED_IAP
-
-#if UNITY_PURCHASING || UNITY_UNIFIED_IAP
-
 using System.Collections.Generic;
 using System.Linq;
 
@@ -245,5 +241,3 @@ namespace UnityEngine.Purchasing
         }
     }
 }
-
-#endif

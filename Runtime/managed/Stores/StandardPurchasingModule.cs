@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Stores;
 using Uniject;
 
 using UnityEngine.Purchasing.Extension;
@@ -19,7 +18,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class StandardPurchasingModule : AbstractPurchasingModule, IAndroidStoreSelection
     {
-		public const string k_PackageVersion = "2.2.0"; // NOTE: Change using `gradle applyPackageVersion` task.
+		public const string k_PackageVersion = "2.2.7"; // NOTE: Change using `gradle applyPackageVersion` task.
         private AppStore m_AppStorePlatform;
         private INativeStoreProvider m_NativeStoreProvider;
         private RuntimePlatform m_RuntimePlatform;
@@ -267,9 +266,11 @@ namespace UnityEngine.Purchasing
 
             switch (m_RuntimePlatform) {
             case RuntimePlatform.OSXPlayer:
+                m_AppStorePlatform = AppStore.MacAppStore;
                 return new StoreInstance (MacAppStore.Name, InstantiateApple ());
             case RuntimePlatform.IPhonePlayer:
             case RuntimePlatform.tvOS:
+                m_AppStorePlatform = AppStore.AppleAppStore;
                 return new StoreInstance (AppleAppStore.Name, InstantiateApple ());
             case RuntimePlatform.Android:
                 switch (m_AppStorePlatform) {
@@ -278,24 +279,14 @@ namespace UnityEngine.Purchasing
                 default:
                     return new StoreInstance (AndroidStoreNameMap [m_AppStorePlatform], InstantiateAndroid());
                 }
+            case RuntimePlatform.WindowsPlayer:
             case RuntimePlatform.WSAPlayerARM:
             case RuntimePlatform.WSAPlayerX64:
             case RuntimePlatform.WSAPlayerX86:
+                m_AppStorePlatform = AppStore.WinRT;
                 return new StoreInstance (WindowsStore.Name, instantiateWindowsStore ());
-            case RuntimePlatform.WindowsPlayer:
-            case RuntimePlatform.WebGLPlayer:
-                // OK, new feedback from Build Pipelines (so won't work for externally included SDK)
-                // is that we can use BuildTags to detect this
-                // Nope: GetBuildTags() is only 5.6 and later so not helpful for us
-                // This relies on the build system doing the right thing based on Editor scripting
-                var fbStore = InstantiateFacebook();
-                if(fbStore != null)
-                {
-                    return new StoreInstance (FacebookStore.Name, fbStore);
-                }
-                break;
             }
-
+            m_AppStorePlatform = AppStore.fake;
             return new StoreInstance (FakeStore.Name, InstantiateFakeStore ());
         }
 
@@ -333,7 +324,8 @@ namespace UnityEngine.Purchasing
                 googleFetchPurchases,
                 googlePlayStoreFinishTransactionService,
                 googlePurchaseCallback,
-                googlePlayStoreExtensions
+                googlePlayStoreExtensions,
+                util
                 );
             util.AddPauseListener (googlePlayStore.OnPause);
             BindGoogleExtension(googlePlayStoreExtensions);
@@ -355,7 +347,8 @@ namespace UnityEngine.Purchasing
         static IGooglePlayStoreService BuildGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback)
         {
             IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService = new GoogleCachedQuerySkuDetailsService();
-            IGooglePurchaseUpdatedListener googlePurchaseUpdatedListener = new GooglePurchaseUpdatedListener(googlePurchaseCallback, googleCachedQuerySkuDetailsService);
+            IGoogleLastKnownProductService googleLastKnownProductService = new GoogleLastKnownProductService();
+            IGooglePurchaseUpdatedListener googlePurchaseUpdatedListener = new GooglePurchaseUpdatedListener(googleLastKnownProductService, googlePurchaseCallback, googleCachedQuerySkuDetailsService);
             IGoogleBillingClient googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener);
             IQuerySkuDetailsService googleQuerySkuDetailsService = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService);
             IGooglePurchaseService purchaseService = new GooglePurchaseService(googleBillingClient, googlePurchaseCallback, googleQuerySkuDetailsService);
@@ -371,7 +364,8 @@ namespace UnityEngine.Purchasing
                 finishTransactionService,
                 queryPurchasesService,
                 billingClientStateListener,
-                priceChangeService
+                priceChangeService,
+                googleLastKnownProductService
             );
             return googlePlayStoreService;
         }
@@ -439,20 +433,6 @@ namespace UnityEngine.Purchasing
             // Microsoft require polling for new purchases on each app foregrounding.
             util.AddPauseListener (windowsStore.restoreTransactions);
             return windowsStore;
-        }
-
-        private IStore InstantiateFacebook ()
-        {
-            var myBindings = m_NativeStoreProvider.GetFacebookStore ();
-            if (myBindings.Check ()) {
-                var store = new FacebookStoreImpl (util);
-                store.SetNativeStore (myBindings);
-                return store;
-            } else {
-                // This will result in an exception if a dev attempts to build on
-                // WebGL or WindowsStandalone without Facebook enabled
-                return null;
-            }
         }
 
         private IStore InstantiateFakeStore ()

@@ -1,9 +1,9 @@
 {
   "name": "com.unity.purchasing",
   "displayName": "In App Purchasing",
-  "version": "3.0.0-pre.4",
   "unity": "2019.4",
-  "description": "*** PREVIEW RELEASE ***\n\n*** Not intended for use with existing projects!\n\n*** PREVIEW RELEASE ***\n\n\nUnity IAP supports the iOS, Mac, tvOS, Google Play, Facebook Gameroom, Windows, Amazon, and Samsung Galaxy app stores. Additionally, it can work in tandem with the Unity Distribution Portal in order to synchronize catalogs and transactions with even more stores.\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nUse one common API to access all stores for free. With just a few lines of code, you can fully understand and optimize your in-game economy.\n\nUnity IAP automatically couples with Unity Analytics enabling you to monitor and act on trends in your revenue and purchase data across multiple platforms.\n\nIncludes client-side receipt validation for Apple App Store and Google Play.\n\nAfter installing this package, please make sure to open the Services Window and enable In-App Purchasing to use its features.",
+  "version": "3.0.0-pre.5",
+  "description": "*** PRE RELEASE ***\n\nNote: This In-App-Purchasing 3.0 package is a pre-release version and is not yet intended for use with existing projects.\n\nIMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, Amazon, and Samsung Galaxy app stores\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0"
   },
@@ -15,15 +15,15 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "3.0.0-pre.4"
+    "com.unity.purchasing.tests": "3.0.0-pre.5"
   },
   "upmCi": {
-    "footprint": "ea31692b85463aabdaadcf01f1cc49d7a80da861"
+    "footprint": "ec6e8563be7922d374545a1599e5a8b1f73eaad9"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "421b0189e535cf53aaabe59ff2cde8db759be3f6"
+    "revision": "a9123c98c11f486a2db5c60c738c42939c36fbe6"
   },
   "samples": [
     {

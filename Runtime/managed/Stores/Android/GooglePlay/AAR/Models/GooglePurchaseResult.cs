@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Stores;
-using UnityEngine;
 using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing.Models
@@ -25,11 +22,21 @@ namespace UnityEngine.Purchasing.Models
         void FillPurchases(AndroidJavaObject purchaseResult, IGoogleCachedQuerySkuDetailsService cachedQuerySkuDetailsService)
         {
             AndroidJavaObject purchaseList = purchaseResult.Call<AndroidJavaObject>("getPurchasesList");
-            int size = purchaseList.Call<int>("size");
-            for (int index = 0; index < size; index++)
+            if (purchaseList != null)
             {
-                AndroidJavaObject purchase = purchaseList.Call<AndroidJavaObject>("get", index);
-                m_Purchases.Add(GooglePurchaseHelper.MakeGooglePurchase(cachedQuerySkuDetailsService.GetCachedQueriedSkus().ToList(), purchase));
+                int size = purchaseList.Call<int>("size");
+                for (int index = 0; index < size; index++)
+                {
+                    AndroidJavaObject purchase = purchaseList.Call<AndroidJavaObject>("get", index);
+                    if (purchase != null)
+                    {
+                        m_Purchases.Add(GooglePurchaseHelper.MakeGooglePurchase(cachedQuerySkuDetailsService.GetCachedQueriedSkus().ToList(), purchase));
+                    }
+                    else
+                    {
+                        Debug.LogWarning("Failed to retrieve Purchase from Purchase List at index " + index + " of " + size + ". FillPurchases will skip this item");
+                    }
+                }
             }
         }
     }

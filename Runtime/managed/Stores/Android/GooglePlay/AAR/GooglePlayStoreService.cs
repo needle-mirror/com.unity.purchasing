@@ -13,6 +13,7 @@ namespace UnityEngine.Purchasing
 
         IGoogleBillingClient m_BillingClient;
         bool m_IsConnectedToGoogle;
+        bool m_HasConnectionAttempted;
         IQuerySkuDetailsService m_QuerySkuDetailsService;
         Queue<ProductDescriptionQuery> m_ProductsToQuery = new Queue<ProductDescriptionQuery>();
         Queue<Action<List<GooglePurchase>>> m_OnPurchaseSucceededQueue = new Queue<Action<List<GooglePurchase>>>();
@@ -20,6 +21,7 @@ namespace UnityEngine.Purchasing
         IGoogleFinishTransactionService m_GoogleFinishTransactionService;
         IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
         IGooglePriceChangeService m_GooglePriceChangeService;
+        IGoogleLastKnownProductService m_GoogleLastKnownProductService;
 
         internal GooglePlayStoreService(
             IGoogleBillingClient billingClient,
@@ -28,7 +30,8 @@ namespace UnityEngine.Purchasing
             IGoogleFinishTransactionService finishTransactionService,
             IGoogleQueryPurchasesService queryPurchasesService,
             IBillingClientStateListener billingClientStateListener,
-            IGooglePriceChangeService priceChangeService)
+            IGooglePriceChangeService priceChangeService,
+            IGoogleLastKnownProductService lastKnownProductService)
         {
             m_BillingClient = billingClient;
             m_QuerySkuDetailsService = querySkuDetailsService;
@@ -36,6 +39,7 @@ namespace UnityEngine.Purchasing
             m_GoogleFinishTransactionService = finishTransactionService;
             m_GoogleQueryPurchasesService = queryPurchasesService;
             m_GooglePriceChangeService = priceChangeService;
+            m_GoogleLastKnownProductService = lastKnownProductService;
 
             InitConnectionWithGooglePlay(billingClientStateListener);
         }
@@ -49,6 +53,7 @@ namespace UnityEngine.Purchasing
 
         void OnConnected()
         {
+            m_HasConnectionAttempted = true;
             m_IsConnectedToGoogle = true;
             DequeueQueryProducts();
             DequeueFetchPurchases();
@@ -59,7 +64,14 @@ namespace UnityEngine.Purchasing
             while (m_ProductsToQuery.Count > 0)
             {
                 ProductDescriptionQuery productDescriptionQuery = m_ProductsToQuery.Dequeue();
-                m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products, productDescriptionQuery.onProductsReceived);
+                if (m_IsConnectedToGoogle)
+                {
+                    m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products, productDescriptionQuery.onProductsReceived);
+                }
+                else if (m_HasConnectionAttempted)
+                {
+                    productDescriptionQuery.onRetrieveProductsFailed();
+                }
             }
         }
 
@@ -74,10 +86,12 @@ namespace UnityEngine.Purchasing
 
         void OnDisconnected()
         {
+            m_HasConnectionAttempted = true;
             m_IsConnectedToGoogle = false;
+            DequeueQueryProducts();
         }
 
-        public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived)
+        public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action onRetrieveProductFailed)
         {
             if (m_IsConnectedToGoogle)
             {
@@ -85,7 +99,11 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                m_ProductsToQuery.Enqueue(new ProductDescriptionQuery(products, onProductsReceived));
+                if (m_HasConnectionAttempted)
+                {
+                    onRetrieveProductFailed();
+                }
+                m_ProductsToQuery.Enqueue(new ProductDescriptionQuery(products, onProductsReceived, onRetrieveProductFailed));
             }
         }
 
@@ -96,6 +114,7 @@ namespace UnityEngine.Purchasing
 
         public void Purchase(ProductDefinition product, Product oldProduct, int desiredProrationMode)
         {
+            m_GoogleLastKnownProductService.SetLastKnownProductId(product.storeSpecificId);
             m_GooglePurchaseService.Purchase(product, oldProduct, desiredProrationMode);
         }
 

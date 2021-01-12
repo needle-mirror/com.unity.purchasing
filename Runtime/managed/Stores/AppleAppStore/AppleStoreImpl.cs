@@ -121,7 +121,7 @@ namespace UnityEngine.Purchasing
                                 finalProductDescriptions.Add (productDescription);
                             } else {
                                 Array.Sort(foundReceipts, (b, a) => (a.purchaseDate.CompareTo(b.purchaseDate)));
-                                var mostRecentReceipt = foundReceipts[0];                    
+                                var mostRecentReceipt = foundReceipts[0];
                                 var productType = (AppleStoreProductType) Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
                                 if (productType == AppleStoreProductType.AutoRenewingSubscription) {
                                     // if the product is auto-renewing subscription, filter the expired products
@@ -146,15 +146,6 @@ namespace UnityEngine.Purchasing
                                                 mostRecentReceipt.transactionID));
                                 }
                             }
-                        }
-                        foreach(var inAppReceipt in appleReceipt.inAppPurchaseReceipts)
-                        {
-                            Console.WriteLine("                    productID: {0}", inAppReceipt.productID);
-                            Console.WriteLine("                transactionID: {0}", inAppReceipt.transactionID);
-                            Console.WriteLine("originalTransactionIdentifier: {0}", inAppReceipt.originalTransactionIdentifier);
-                            Console.WriteLine("                 purchaseDate: {0}", inAppReceipt.purchaseDate);
-                            Console.WriteLine("         originalPurchaseDate: {0}", inAppReceipt.originalPurchaseDate);
-                            Console.WriteLine("   subscriptionExpirationDate: {0}", inAppReceipt.subscriptionExpirationDate);
                         }
                     }
                 }
@@ -208,6 +199,11 @@ namespace UnityEngine.Purchasing
 
         public Dictionary<string, string> GetProductDetails() {
             return JSONSerializer.DeserializeProductDetails(this.products_json);
+        }
+
+        public void PresentCodeRedemptionSheet()
+        {
+            m_Native.PresentCodeRedemptionSheet();
         }
 
         public void OnPurchaseDeferred(string productId)
@@ -330,10 +326,10 @@ namespace UnityEngine.Purchasing
                 var foundReceipts = Array.FindAll(appleReceipt.inAppPurchaseReceipts, (r) => r.productID == id);
                 if (foundReceipts != null && foundReceipts.Length > 0) {
                     Array.Sort(foundReceipts, (b, a) => (a.purchaseDate.CompareTo(b.purchaseDate)));
-                    var mostRecentReceipt = foundReceipts[0];                    
+                    var mostRecentReceipt = foundReceipts[0];
                     var productType = (AppleStoreProductType) Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
                     if (productType == AppleStoreProductType.AutoRenewingSubscription) {
-                        // if the product is auto-renewing subscription, check if this transaction is expired 
+                        // if the product is auto-renewing subscription, check if this transaction is expired
                         if (new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True) {
                             isValid = false;
                         }

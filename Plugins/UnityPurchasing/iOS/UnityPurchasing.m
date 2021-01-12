@@ -305,6 +305,17 @@ int delayInSeconds = 2;
 #endif
 }
 
+- (void)presentCodeRedemptionSheet {
+#if !MAC_APPSTORE
+    if (@available(iOS 14, *)) {
+        [[SKPaymentQueue defaultQueue] presentCodeRedemptionSheet]; 
+    } else
+#endif
+    {
+        UnityPurchasingLog(@"Offer Code redemption is available on iOS and iPadOS 14 and later");
+    }
+}
+
 #if !MAC_APPSTORE
 #pragma mark -
 #pragma mark UnityEarlyTransactionObserverDelegate Methods
@@ -831,4 +842,9 @@ void unityPurchasingInterceptPromotionalPurchases() {
 void unityPurchasingContinuePromotionalPurchases() {
     UnityPurchasingLog(@"Continue promotional purchases");
     [UnityPurchasing_getInstance() initiateQueuedEarlyTransactionObserverPayments];
+}
+
+void unityPurchasingPresentCodeRedemptionSheet() {
+    UnityPurchasingLog(@"Present code redemption sheet");
+    [UnityPurchasing_getInstance() presentCodeRedemptionSheet];
 }

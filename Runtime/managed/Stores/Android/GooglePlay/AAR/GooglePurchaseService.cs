@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using Stores;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -25,11 +23,11 @@ namespace UnityEngine.Purchasing
             m_QuerySkuDetailsService.QueryAsyncSku(product,
                 skus =>
                 {
-                    OnQuerySkuDetailsResponse(skus, oldProduct, desiredProrationMode);
+                    OnQuerySkuDetailsResponse(skus, product, oldProduct, desiredProrationMode);
                 });
         }
 
-        void OnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, Product oldProduct, int desiredProrationMode)
+        void OnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product oldProduct, int desiredProrationMode)
         {
             if (skus?.Count > 0)
             {
@@ -42,7 +40,7 @@ namespace UnityEngine.Purchasing
             {
                 m_GooglePurchaseCallback.OnPurchaseFailed(
                     new PurchaseFailureDescription(
-                        skus.ToString(),
+                        productToBuy.id,
                         PurchaseFailureReason.ProductUnavailable,
                         "SKU does not exist in the store."
                     )

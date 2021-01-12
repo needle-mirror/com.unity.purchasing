@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Stores;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
-using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing
 {
@@ -48,12 +45,9 @@ namespace UnityEngine.Purchasing
             return new GooglePurchaseResult(javaPurchaseResult, m_CachedQuerySkuDetailsService);
         }
 
-        void HandleGooglePurchaseResult(GooglePurchaseResult purchaseResult, Action<List<GooglePurchase>> onPurchaseSucceed)
+        void HandleGooglePurchaseResult(GooglePurchaseResult purchaseResult, Action<List<GooglePurchase>> onPurchaseResult)
         {
-            if (purchaseResult.m_ResponseCode == BillingClientResponseEnum.OK())
-            {
-                onPurchaseSucceed(purchaseResult.m_Purchases);
-            }
+            onPurchaseResult(purchaseResult.m_ResponseCode == BillingClientResponseEnum.OK() ? purchaseResult.m_Purchases : new List<GooglePurchase>());
         }
     }
 }

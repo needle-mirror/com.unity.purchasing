@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 
@@ -14,6 +15,7 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreFinishTransactionService m_FinishTransactionService;
         IGooglePurchaseCallback m_GooglePurchaseCallback;
         IGooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensions;
+        IUtil m_Util;
 
         public GooglePlayStore(
             IGooglePlayStoreRetrieveProductsService retrieveProductsService,
@@ -21,8 +23,10 @@ namespace UnityEngine.Purchasing
             IGoogleFetchPurchases fetchPurchases,
             IGooglePlayStoreFinishTransactionService transactionService,
             IGooglePurchaseCallback googlePurchaseCallback,
-            IGooglePlayStoreExtensionsInternal googlePlayStoreExtensions)
+            IGooglePlayStoreExtensionsInternal googlePlayStoreExtensions,
+            IUtil util)
         {
+            m_Util = util;
             m_RetrieveProductsService = retrieveProductsService;
             m_StorePurchaseService = storePurchaseService;
             m_FetchPurchases = fetchPurchases;
@@ -37,11 +41,12 @@ namespace UnityEngine.Purchasing
         /// <param name="callback">The `IStoreCallback` will be call when receiving events from the google store</param>
         public override void Initialize(IStoreCallback callback)
         {
-            m_RetrieveProductsService.SetStoreCallback(callback);
-            m_FetchPurchases.SetStoreCallback(callback);
-            m_FinishTransactionService.SetStoreCallback(callback);
-            m_GooglePurchaseCallback.SetStoreCallback(callback);
-            m_GooglePlayStoreExtensions.SetStoreCallback(callback);
+            var scriptingStoreCallback = new ScriptingStoreCallback(callback, m_Util);
+            m_RetrieveProductsService.SetStoreCallback(scriptingStoreCallback);
+            m_FetchPurchases.SetStoreCallback(scriptingStoreCallback);
+            m_FinishTransactionService.SetStoreCallback(scriptingStoreCallback);
+            m_GooglePurchaseCallback.SetStoreCallback(scriptingStoreCallback);
+            m_GooglePlayStoreExtensions.SetStoreCallback(scriptingStoreCallback);
         }
 
         /// <summary>

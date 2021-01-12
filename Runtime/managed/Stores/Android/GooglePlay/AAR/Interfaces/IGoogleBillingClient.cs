@@ -1,3 +1,6 @@
+using System;
+using UnityEngine.Purchasing.Models;
+
 namespace UnityEngine.Purchasing.Interfaces
 {
     interface IGoogleBillingClient
@@ -7,8 +10,8 @@ namespace UnityEngine.Purchasing.Interfaces
         AndroidJavaObject QueryPurchase(string skuType);
         void QuerySkuDetailsAsync(AndroidJavaObject skuDetailsParamsBuilder, SkuDetailsResponseListener listener);
         AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, int prorationMode);
-        void ConsumeAsync(AndroidJavaObject consumeParams, GoogleConsumeResponseListener listener);
-        void AcknowledgePurchase(AndroidJavaObject acknowledgePurchaseParams, GoogleAcknowledgePurchaseListener listener);
+        void ConsumeAsync(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> onConsume);
+        void AcknowledgePurchase(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, GoogleBillingResult> onAcknowledge);
         void SetObfuscationAccountId(string obfuscationAccountId);
         void SetObfuscationProfileId(string obfuscationProfileId);
         void LaunchPriceChangeConfirmationFlow(AndroidJavaObject skuDetails, GooglePriceChangeConfirmationListener listener);

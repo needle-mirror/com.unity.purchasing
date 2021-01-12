@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Stores;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -16,14 +15,21 @@ namespace UnityEngine.Purchasing
     {
         const string k_AndroidPurchaseListenerClassName = "com.android.billingclient.api.PurchasesUpdatedListener";
 
+        IGoogleLastKnownProductService m_LastKnownProductService;
         IGooglePurchaseCallback m_GooglePurchaseCallback;
         IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
-        internal GooglePurchaseUpdatedListener(IGooglePurchaseCallback googlePurchaseCallback, IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService): base(k_AndroidPurchaseListenerClassName)
+        internal GooglePurchaseUpdatedListener(IGoogleLastKnownProductService googleLastKnownProductService, IGooglePurchaseCallback googlePurchaseCallback, IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService): base(k_AndroidPurchaseListenerClassName)
         {
+            m_LastKnownProductService = googleLastKnownProductService;
             m_GooglePurchaseCallback = googlePurchaseCallback;
             m_GoogleCachedQuerySkuDetailsService = googleCachedQuerySkuDetailsService;
         }
 
+        /// <summary>
+        /// Implementation of com.android.billingclient.api.PurchasesUpdatedListener#onPurchasesUpdated
+        /// </summary>
+        /// <param name="billingResult"></param>
+        /// <param name="purchasesList"></param>
         void onPurchasesUpdated(AndroidJavaObject billingResult, AndroidJavaObject purchasesList)
         {
             GoogleBillingResult result = new GoogleBillingResult(billingResult);
@@ -53,8 +59,18 @@ namespace UnityEngine.Purchasing
                 {
                     m_GooglePurchaseCallback.OnPurchaseFailed(
                         new PurchaseFailureDescription(
-                            null,
+                            m_LastKnownProductService.GetLastKnownProductId(),
                             PurchaseFailureReason.DuplicateTransaction,
+                            billingResult.debugMessage
+                        )
+                    );
+                }
+                else if (billingResult.responseCode == BillingClientResponseEnum.USER_CANCELED())
+                {
+                    m_GooglePurchaseCallback.OnPurchaseFailed(
+                        new PurchaseFailureDescription(
+                            m_LastKnownProductService.GetLastKnownProductId(),
+                            PurchaseFailureReason.UserCancelled,
                             billingResult.debugMessage
                         )
                     );
@@ -63,9 +79,9 @@ namespace UnityEngine.Purchasing
                 {
                     m_GooglePurchaseCallback.OnPurchaseFailed(
                         new PurchaseFailureDescription(
-                            null,
+                            m_LastKnownProductService.GetLastKnownProductId(),
                             PurchaseFailureReason.Unknown,
-                            billingResult.debugMessage
+                            billingResult.debugMessage + " {M: GPUL.HEC}"
                         )
                     );
                 }
@@ -114,7 +130,7 @@ namespace UnityEngine.Purchasing
                     new PurchaseFailureDescription(
                         googlePurchase.sku,
                         PurchaseFailureReason.Unknown,
-                        GoogleBillingStrings.errorPurchaseStateUnspecified
+                        GoogleBillingStrings.errorPurchaseStateUnspecified + " {M: GPUL.OPO}"
                     )
                 );
             }
@@ -148,7 +164,7 @@ namespace UnityEngine.Purchasing
                 new PurchaseFailureDescription(
                     googlePurchase.sku,
                     PurchaseFailureReason.Unknown,
-                    debugMessage
+                    debugMessage + " {M: GPUL.OPF}"
                 )
             );
         }

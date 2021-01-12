@@ -6,9 +6,6 @@
         "UnityEngine.Purchasing.AppleMacos",
         "UnityEngine.Purchasing.AppleMacosStub",
         "UnityEngine.Purchasing.AppleStub",
-        "UnityEngine.Purchasing.Facebook",
-        "UnityEngine.Purchasing.FacebookCommon",
-        "UnityEngine.Purchasing.FacebookStub",
         "UnityEngine.Purchasing",
         "UnityEngine.Purchasing.Interfaces",
         "UnityEngine.Purchasing.Models",
@@ -22,7 +19,6 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "Security.dll",
-        "UDP.dll",
         "winrt.dll"
     ],
     "autoReferenced": true,

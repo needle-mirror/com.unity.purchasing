@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics.SymbolStore;
 using System.IO;
 using System.Reflection;
-using UnityEngine.Analytics;
 using UnityEngine.Scripting;
 using UnityEngine.Purchasing.Extension;
 using System.Linq;

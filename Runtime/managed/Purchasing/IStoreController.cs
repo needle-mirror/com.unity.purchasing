@@ -43,10 +43,10 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Fetch additional products from the controlled store.
         /// </summary>
-        /// <param name="products"> The set of product definitions to be fetched. </param>
-        /// <param name="successCallback"> The event triggered on a succesful fetch. </param>
+        /// <param name="additionalProducts"> The set of product definitions to be fetched. </param>
+        /// <param name="successCallback"> The event triggered on a successful fetch. </param>
         /// <param name="failCallback"> The event triggered on a failed fetch. </param>
-        void FetchAdditionalProducts(HashSet<ProductDefinition> products, Action successCallback,
+        void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback,
             Action<InitializationFailureReason> failCallback);
 
         /// <summary>

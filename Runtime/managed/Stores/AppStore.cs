@@ -10,7 +10,6 @@
 	    MacAppStore,
 	    AppleAppStore,
 	    WinRT,
-	    FacebookStore,
 	    fake
 	}
 
