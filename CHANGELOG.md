@@ -1,3 +1,7 @@
+## [2.2.2] - 2021-01-19
+Fixed logs incorrectly formatted showing “purchases({0}): -id of product-”
+Renamed method IStoreCallback.OnPurchasesRetrieved to IStoreCallback.OnAllPurchasesRetrieved, deprecated old method name. This is to fix a problem when refreshing receipts.
+
 ## [2.2.1] - 2020-11-19
 Fixed exposure of function calls at runtime used by the Asset Store Package 2.2.0 and up.
 

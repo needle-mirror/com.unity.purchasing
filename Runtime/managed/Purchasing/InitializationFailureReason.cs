@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// No products available for purchase,
-        /// typically indicating a configuration error.
+        /// typically indicating a configuration error or a connection issue.
         /// </summary>
         NoProductsAvailable,
 

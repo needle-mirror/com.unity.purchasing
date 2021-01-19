@@ -58,14 +58,14 @@ namespace UnityEngine.Purchasing
             }
 
             m_Store.Purchase(product.definition, developerPayload);
-            m_Logger.Log("purchase({0})", product.definition.id);
+            m_Logger.LogFormat(LogType.Log, "purchase({0})", product.definition.id);
         }
 
         public void InitiatePurchase(string purchasableId, string developerPayload)
         {
             Product product = products.WithID(purchasableId);
             if (null == product)
-                m_Logger.LogWarning("Unable to purchase unknown product with id: {0}", purchasableId);
+                m_Logger.LogFormat(LogType.Warning, "Unable to purchase unknown product with id: {0}", purchasableId);
             InitiatePurchase(product, developerPayload);
         }
 
@@ -124,16 +124,24 @@ namespace UnityEngine.Purchasing
 
         public void OnPurchasesRetrieved(List<Product> purchasedProducts)
         {
-            foreach (var product in products.all)
+            //DEPRECATED
+        }
+
+        public void OnAllPurchasesRetrieved(List<Product> purchasedProducts)
+        {
+            if (products != null)
             {
-                var purchasedProduct = purchasedProducts.FirstOrDefault(firstPurchasedProduct => firstPurchasedProduct.definition.id == product.definition.id);
-                if (purchasedProduct != null)
+                foreach (var product in products.all)
                 {
-                    HandlePurchaseRetrieved(product, purchasedProduct);
-                }
-                else
-                {
-                    ClearProductReceipt(product);
+                    var purchasedProduct = purchasedProducts?.FirstOrDefault(firstPurchasedProduct => firstPurchasedProduct.definition.id == product.definition.id);
+                    if (purchasedProduct != null)
+                    {
+                        HandlePurchaseRetrieved(product, purchasedProduct);
+                    }
+                    else
+                    {
+                        ClearProductReceipt(product);
+                    }
                 }
             }
         }
@@ -141,7 +149,6 @@ namespace UnityEngine.Purchasing
         void HandlePurchaseRetrieved(Product product, Product purchasedProduct)
         {
             UpdateProductReceipt(product, purchasedProduct.receipt, purchasedProduct.transactionID);
-            ProcessPurchaseIfNew(product);
         }
 
         static void ClearProductReceipt(Product product)
@@ -168,11 +175,11 @@ namespace UnityEngine.Purchasing
                 var product = products.WithStoreSpecificID(description.productId);
                 if (null == product)
                 {
-                    m_Logger.LogError("Failed to purchase unknown product {0}", "productId:" + description.productId + " reason:" + description.reason + " message:" + description.message);
+                    m_Logger.LogFormat(LogType.Error, "Failed to purchase unknown product {0}", "productId:" + description.productId + " reason:" + description.reason + " message:" + description.message);
                     return;
                 }
 
-                m_Logger.Log("onPurchaseFailedEvent({0})", "productId:" + product.definition.id + " message:" + description.message);
+                m_Logger.LogFormat(LogType.Log, "onPurchaseFailedEvent({0})", "productId:" + product.definition.id + " message:" + description.message);
                 m_Listener.OnPurchaseFailed(product, description.reason);
             }
         }
@@ -211,23 +218,27 @@ namespace UnityEngine.Purchasing
             // Fire our initialisation events if this is a first poll.
             CheckForInitialization();
 
-            // Notify the application of any purchases it
-            // has not yet processed.
-            // Note that this must be done *after* initialisation, above.
-            foreach (var product in this.products.set)
+            ProcessPurchaseOnStart();
+        }
+
+        void ProcessPurchaseOnStart()
+        {
+            foreach (var product in products.set)
             {
                 if (!string.IsNullOrEmpty(product.receipt) && !string.IsNullOrEmpty(product.transactionID))
+                {
                     ProcessPurchaseIfNew(product);
+                }
             }
         }
 
-        public void FetchAdditionalProducts(HashSet<ProductDefinition> products, Action successCallback,
+        public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback,
             Action<InitializationFailureReason> failCallback)
         {
             m_AdditionalProductsCallback = successCallback;
             m_AdditionalProductsFailCallback = failCallback;
-            this.products.AddProducts(products.Select(x => new Product(x, new ProductMetadata())));
-            m_Store.RetrieveProducts(new ReadOnlyCollection<ProductDefinition>(products.ToList()));
+            products.AddProducts(additionalProducts.Select(x => new Product(x, new ProductMetadata())));
+            m_Store.RetrieveProducts(new ReadOnlyCollection<ProductDefinition>(additionalProducts.ToList()));
         }
 
         /// <summary>
@@ -256,21 +267,17 @@ namespace UnityEngine.Purchasing
         {
             if (!initialized)
             {
-                // Determine if any products are purchasable.
-                var available = false;
-                foreach (var product in this.products.set)
+                var hasAvailableProductsToPurchase = HasAvailableProductsToPurchase();
+
+                if (hasAvailableProductsToPurchase)
                 {
-                    if (!product.availableToPurchase)
-                        m_Logger.LogFormat(LogType.Warning, "Unavailable product {0} -{1}", product.definition.id, product.definition.storeSpecificId);
-                    else
-                        available = true;
+                    m_Listener.OnInitialized(this);
+                }
+                else
+                {
+                    OnSetupFailed(InitializationFailureReason.NoProductsAvailable);
                 }
 
-                // One or more products is available.
-                if (available)
-                    m_Listener.OnInitialized(this);
-                else
-                    OnSetupFailed(InitializationFailureReason.NoProductsAvailable);
                 initialized = true;
             }
             else
@@ -278,6 +285,24 @@ namespace UnityEngine.Purchasing
                 if (null != m_AdditionalProductsCallback)
                     m_AdditionalProductsCallback();
             }
+        }
+
+        bool HasAvailableProductsToPurchase(bool shouldLogUnavailableProducts = true)
+        {
+            var available = false;
+            foreach (var product in products.set)
+            {
+                if (product.availableToPurchase)
+                {
+                    available = true;
+                }
+                else if (shouldLogUnavailableProducts)
+                {
+                    m_Logger.LogFormat(LogType.Warning, "Unavailable product {0}-{1}", product.definition.id, product.definition.storeSpecificId);
+                }
+            }
+
+            return available;
         }
 
         public void Initialize(IInternalStoreListener listener, HashSet<ProductDefinition> products)
