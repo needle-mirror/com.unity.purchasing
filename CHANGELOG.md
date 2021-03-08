@@ -1,7 +1,27 @@
 # Changelog
 
-## [3.0.0-pre.6] - 2021-01-12
-###Fixed
+## [3.0.1] - 2021-03-08
+### Removed
+- Pre-release disclaimer.
+
+## [3.0.0] - 2021-03-05
+
+## [3.0.0-pre.7] - 2021-03-03
+### Added
+GooglePlay - populate `Product.receipt` for `Action<Product>` parameter returned by `IGooglePlayStoreExtensions.SetDeferredPurchaseListener` callback
+
+### Changed 
+- WinRT - This feature is now shipped as C# code under assembly definitions instead of .dll files.
+- Security - This feature is now shipped as C# code under assembly definitions instead of .dll files.
+- Receipt Validation Obfuscator - The Tangle File Obfuscate function is now Editor-only and no longer part of the Runtime Security module.
+
+### Fixed
+- Windows Standalone - launches FakeStore when detected by StandardPurchasingModule; disentangled from WinRT
+- Security - restored Receipt Validation Obfuscator Editor functionality
+- GooglePlay - fix regression, avoiding exception when using IGooglePlayConfiguration while running on a non-Google target
+
+## [3.0.0-pre.6] - 2021-02-09
+### Fixed
 - WinRT - There was a bad path being pointed to by the .dll's meta file, preventing compilation to this target.
 
 ## [3.0.0-pre.5] - 2021-01-12
@@ -16,10 +36,10 @@ public void ShowSubscriptionOfferRedemption(IExtensionProvider extensions)
 }
 ```
 
-###Fixed
+### Fixed
  - Security and WinRT stub dlls and references to Analytics no longer break builds unsupported platforms like PS4, XboxOne, Switch and Lumin. These platforms are still unsupported but will no longer raise errors on build.  
 
-###Removed
+### Removed
 - Support for Facebook in-app purchasing is no longer provided. All classes and implementations have been removed.
 
 ## [3.0.0-pre.4] - 2020-10-09
@@ -38,7 +58,7 @@ public void ShowSubscriptionOfferRedemption(IExtensionProvider extensions)
 - Fixed exposure of function calls at runtime used by the Asset Store Package 2.2.0 and up.
 
 ## [2.2.0] - 2020-10-22
-- - Google Billing v3
+- Google Billing v3
 
 ## [2.1.2] - 2020-09-20
 Fix migration tooling's obfuscator file destination path to target Scripts instead of Resources
