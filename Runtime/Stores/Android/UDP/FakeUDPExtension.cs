@@ -2,8 +2,15 @@
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Mock implementation of the interface for UDP purchasing extensions.
+    /// </summary>
     public class FakeUDPExtension : IUDPExtensions
     {
+        /// <summary>
+        /// Some stores return user information after initialization.
+        /// </summary>
+        /// <returns>UserInfo, which may be null</returns>
         public object GetUserInfo()
         {
             Type udpUserInfo = UserInfoInterface.GetClassType();
@@ -23,16 +30,28 @@ namespace UnityEngine.Purchasing
             return userInfo;
         }
 
+        /// <summary>
+        /// Return the UDP initialization error.
+        /// </summary>
+        /// <returns> The error as a string. </returns>
         public string GetLastInitializationError()
         {
             return "Fake Initialization Error";
         }
 
+        /// <summary>
+        /// Gets the last purchase error.
+        /// </summary>
+        /// <returns> The error as a string. </returns>
         public string GetLastPurchaseError()
         {
             return "Fake Purchase Error";
         }
 
+        /// <summary>
+        /// Enable debug log for UDP.
+        /// </summary>
+        /// <param name="enable"> Whether or not the logging is to be enabled. </param>
         public void EnableDebugLog(bool enable)
         {
             return;

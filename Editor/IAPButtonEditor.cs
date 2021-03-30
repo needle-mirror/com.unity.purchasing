@@ -6,14 +6,23 @@ using System.Collections.Generic;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// IAPButtonMenu class creates options in menus to create the IAPButton.
+    /// </summary>
 	public static class IAPButtonMenu
 	{
+        /// <summary>
+        /// Add option to create a IAPButton from the GameObject menu.
+        /// </summary>
         [MenuItem("GameObject/Unity IAP/IAP Button", false, 10)]
         public static void GameObjectCreateUnityIAPButton()
         {
             CreateUnityIAPButton();
         }
 
+        /// <summary>
+        /// Add option to create a IAPButton from the Window/UnityIAP menu.
+        /// </summary>
 		[MenuItem ("Window/Unity IAP/Create IAP Button", false, 5)]
 		public static void CreateUnityIAPButton()
 		{
@@ -37,14 +46,23 @@ namespace UnityEditor.Purchasing
 		}
 	}
 
+    /// <summary>
+    /// IAPListenerMenu class creates options in menus to create the IAPListener.
+    /// </summary>
     public static class IAPListenerMenu
     {
+        /// <summary>
+        /// Add option to create a IAPListener from the GameObject menu.
+        /// </summary>
         [MenuItem("GameObject/Unity IAP/IAP Listener", false, 10)]
         public static void GameObjectCreateUnityIAPListener()
         {
             CreateUnityIAPListener();
         }
 
+        /// <summary>
+        /// Add option to create a IAPListener from the Window/UnityIAP menu.
+        /// </summary>
         [MenuItem ("Window/Unity IAP/Create IAP Listener", false, 6)]
         public static void CreateUnityIAPListener()
         {
@@ -63,6 +81,9 @@ namespace UnityEditor.Purchasing
     }
 
 
+    /// <summary>
+    /// Customer Editor class for the IAPButton. This class handle how the IAPButton should represent itself in the UnityEditor.
+    /// </summary>
 	[CustomEditor(typeof(IAPButton))]
 	[CanEditMultipleObjects]
 	public class IAPButtonEditor : Editor
@@ -74,12 +95,18 @@ namespace UnityEditor.Purchasing
 		private List<string> m_ValidIDs = new List<string>();
 		private SerializedProperty m_ProductIDProperty;
 
-		public void OnEnable()
+		/// <summary>
+		/// Event trigger when IAPButton is enabled in the scene.
+		/// </summary>
+        public void OnEnable()
 		{
 			m_ProductIDProperty = serializedObject.FindProperty("productId");
 		}
 
-		public override void OnInspectorGUI()
+		/// <summary>
+		/// Event trigger when trying to draw the IAPButton in the inspector.
+		/// </summary>
+        public override void OnInspectorGUI()
 		{
 			IAPButton button = (IAPButton)target;
 

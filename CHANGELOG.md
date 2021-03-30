@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.0.2] - 2021-03-30
+
+### Added
+Comprehensive manual and API documentation.
+
 ## [3.0.1] - 2021-03-08
 ### Removed
 - Pre-release disclaimer.

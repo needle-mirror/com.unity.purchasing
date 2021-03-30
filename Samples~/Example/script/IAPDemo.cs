@@ -45,11 +45,25 @@ public class IAPDemo : MonoBehaviour, IStoreListener
 
     private Dictionary<string, IAPDemoProductUI> m_ProductUIs = new Dictionary<string, IAPDemoProductUI>();
 
+    /// <summary>
+    /// The interface for instantiating user interface for a <typeparamref name="Product"/>.
+    /// Instantiates a IAPDemoProductUI.
+    /// </summary>
     public GameObject productUITemplate;
+
+    /// <summary>
+    /// The size of the current Product UI content area.
+    /// </summary>
     public RectTransform contentRect;
 
+    /// <summary>
+    /// The handle for the <typeparamref name="IAPButton"/> configured to restore IAP transactions.
+    /// </summary>
     public Button restoreButton;
 
+    /// <summary>
+    /// The reference for the <typeparamref name="Text"/> to show the current IAP SDK version.
+    /// </summary>
     public Text versionText;
 
 #if RECEIPT_VALIDATION
@@ -57,8 +71,13 @@ public class IAPDemo : MonoBehaviour, IStoreListener
 #endif
 
     /// <summary>
-    /// This will be called when Unity IAP has finished initialising.
+    /// Purchasing initialized successfully.
+    ///
+    /// The <c>IStoreController</c> and <c>IExtensionProvider</c> are
+    /// available for accessing purchasing functionality.
     /// </summary>
+    /// <param name="controller"> The <c>IStoreController</c> created during initialization. </param>
+    /// <param name="extensions"> The <c>IExtensionProvider</c> created during initialization. </param>
     public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
     {
         m_Controller = controller;
@@ -196,9 +215,12 @@ public class IAPDemo : MonoBehaviour, IStoreListener
     }
 #endif
 
+
     /// <summary>
-    /// This will be called when a purchase completes.
+    /// A purchase succeeded.
     /// </summary>
+    /// <param name="e"> The <c>PurchaseEventArgs</c> for the purchase event. </param>
+    /// <returns> The result of the successful purchase </returns>
     public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
     {
         Debug.Log("Purchase OK: " + e.purchasedProduct.definition.id);
@@ -299,9 +321,13 @@ public class IAPDemo : MonoBehaviour, IStoreListener
     }
 #endif
 
+
+
     /// <summary>
-    /// This will be called if an attempted purchase fails.
+    /// A purchase failed with specified reason.
     /// </summary>
+    /// <param name="item">The product that was attempted to be purchased. </param>
+    /// <param name="r">The failure reason.</param>
     public void OnPurchaseFailed(Product item, PurchaseFailureReason r)
     {
         Debug.Log("Purchase failed: " + item.definition.id);
@@ -318,6 +344,10 @@ public class IAPDemo : MonoBehaviour, IStoreListener
         m_PurchaseInProgress = false;
     }
 
+    /// <summary>
+    /// Purchasing failed to initialise for a non recoverable reason.
+    /// </summary>
+    /// <param name="error"> The failure reason. </param>
     public void OnInitializeFailed(InitializationFailureReason error)
     {
         Debug.Log("Billing failed to initialize!");
@@ -337,6 +367,9 @@ public class IAPDemo : MonoBehaviour, IStoreListener
         }
     }
 
+    /// <summary>
+    /// Awake is called when the script instance is being loaded.
+    /// </summary>
     public void Awake()
     {
         var module = StandardPurchasingModule.Instance();
@@ -531,7 +564,10 @@ public class IAPDemo : MonoBehaviour, IStoreListener
                            "IAP version: " + StandardPurchasingModule.k_PackageVersion;
     }
 
-
+    /// <summary>
+    /// Triggered when the user presses the <c>Buy</c> button on a product user interface component.
+    /// </summary>
+    /// <param name="productID">The product identifier to buy</param>
     public void PurchaseButtonClick(string productID)
     {
         if (m_PurchaseInProgress == true)
@@ -566,6 +602,9 @@ public class IAPDemo : MonoBehaviour, IStoreListener
 
     }
 
+    /// <summary>
+    /// Triggered when the user presses the restore button.
+    /// </summary>
     public void RestoreButtonClick()
     {
         if (m_IsSamsungAppsStoreSelected)

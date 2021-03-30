@@ -9,6 +9,10 @@ namespace UnityEngine.Purchasing
 	/// </summary>
 	public interface ISamsungAppsExtensions : IStoreExtension
 	{
+        /// <summary>
+        /// Restores previously purchased transactions.
+        /// </summary>
+        /// <param name="callback"> The callback received after restoring transactions. </param>
 		void RestoreTransactions(Action<bool> callback);
 	}
 }

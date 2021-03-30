@@ -208,6 +208,13 @@ namespace UnityEngine.Purchasing.Security {
 		}
 	}
 
+    /// <summary>
+    /// An IAP Security exception indicating some invalid time format.
+    /// </summary>
     public class InvalidTimeFormat : IAPSecurityException {}
+
+    /// <summary>
+    /// An IAP Security exception indicating some invalid data for X509 certification checks.
+    /// </summary>
 	public class InvalidX509Data : IAPSecurityException {}
 }

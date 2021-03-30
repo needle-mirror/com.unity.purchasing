@@ -25,7 +25,14 @@ namespace UnityEditor.Purchasing
             UDP.Name
         };
 
+        /// <summary>
+        /// The path in the Menu bar where the <c>ProductCatalogEditor</c> item is located.
+        /// </summary>
         public const string ProductCatalogEditorMenuPath = "Window/Unity IAP/IAP Catalog";
+
+        /// <summary>
+        /// Opens the <c>ProductCatalogEditor</c> Window or moves it to the front of the draw order.
+        /// </summary>
         [MenuItem(ProductCatalogEditorMenuPath, false, 5)]
         public static void ShowWindow()
         {
@@ -100,12 +107,20 @@ namespace UnityEditor.Purchasing
             return File.Exists(ProductCatalog.kPrevCatalogPath);
         }
 
+        /// <summary>
+        /// Property which gets the <c>ProductCatalog</c> instance which is being edited.
+        /// </summary>
         public ProductCatalog Catalog {
             get {
                 return catalog;
             }
         }
 
+        /// <summary>
+        /// Sets the results of the validation of catalog items upon export or upload to the cloud catalog.
+        /// </summary>
+        /// <param name="catalogResults"> Validation results of the exported catalog </param>
+        /// <param name="itemResults"> List of validation results of the exported items </param>
         public void SetCatalogValidationResults(ExporterValidationResults catalogResults,
             List<ExporterValidationResults> itemResults)
         {
@@ -440,6 +455,13 @@ namespace UnityEditor.Purchasing
             }
         }
 
+        /// <summary>
+        /// Exports the Catalog to a file for a particular store, or erases an existing exported file.
+        /// </summary>
+        /// <param name="storeName"> The name of the store to be exported.</param>
+        /// <param name="folder"> The full path of the export file, including the file name.</param>
+        /// <param name="eraseExport"> If true, it will just erase the export file and do nothing else.</param>
+        /// <returns>Whether or not the export was succesful. Always returns false if eraseExport is true.</returns>
         public static bool Export(string storeName, string folder, bool eraseExport)
         {
             var editor = ScriptableObject.CreateInstance(typeof(ProductCatalogEditor)) as ProductCatalogEditor;
@@ -605,6 +627,11 @@ namespace UnityEditor.Purchasing
             }
         }
 
+        /// <summary>
+        /// Gets the authenticate code of a web response.
+        /// </summary>
+        /// <typeparam name="T"> Type of the web response passed. </typeparam>
+        /// <param name="response"> The web response from which to extract the auth code </param>
         public void GetAuthCode<T>(T response)
         {
             var authCodePropertyInfo = response.GetType().GetProperty("AuthCode");
@@ -633,6 +660,9 @@ namespace UnityEditor.Purchasing
         /// </summary>
         public class ProductCatalogItemEditor
         {
+            /// <summary>
+            /// Property which gets the <c>ProductCatalogItem</c> instance being edited.
+            /// </summary>
             public ProductCatalogItem Item { get; private set; }
 
             private ExporterValidationResults validation;
@@ -650,13 +680,23 @@ namespace UnityEditor.Purchasing
             private bool idDuplicate = false;
             private bool idInvalid = false;
             private bool shouldBeMarked = true;
+
+            /// <summary>
+            /// Whether or not this item is syncing a UDP item.
+            /// </summary>
             public Boolean udpItemSyncing = false;
 
+            /// <summary>
+            /// The Error message of the UDP sync, if applicable.
+            /// </summary>
             public string udpSyncErrorMsg = "";
 
             private List<LocalizedProductDescription> descriptionsToRemove = new List<LocalizedProductDescription>();
             private List<ProductCatalogPayout> payoutsToRemove = new List<ProductCatalogPayout>();
 
+            /// <summary>
+            /// Default constructor. Creates a new <c>ProductCatalogItem</c> to edit.
+            /// </summary>
             public ProductCatalogItemEditor()
             {
                 this.Item = new ProductCatalogItem();
@@ -664,12 +704,19 @@ namespace UnityEditor.Purchasing
                 editorSupportsPayouts = (null != typeof(ProductDefinition).GetProperty("payouts"));
             }
 
+            /// <summary>
+            /// Constructor taking an instance of <c>ProductCatalogItem</c> to edit.
+            /// </summary>
+            /// <param name="description"> The description of the item being created. </param>
             public ProductCatalogItemEditor(ProductCatalogItem description)
             {
                 this.Item = description;
                 editorSupportsPayouts = (null != typeof(ProductDefinition).GetProperty("payouts"));
             }
 
+            /// <summary>
+            /// Function called when the GUI updates.
+            /// </summary>
             public void OnGUI()
             {
                 GUIStyle s = new GUIStyle(EditorStyles.foldout);
@@ -1016,8 +1063,10 @@ namespace UnityEditor.Purchasing
                 EditorGUILayout.EndVertical();
             }
 
-
-
+            /// <summary>
+            /// Sets the validation results upon export of this item.
+            /// </summary>
+            /// <param name="results"> The validation results of the export. </param>
             public void SetValidationResults(ExporterValidationResults results)
             {
                 validation = results;
@@ -1032,16 +1081,28 @@ namespace UnityEditor.Purchasing
                 }
             }
 
+            /// <summary>
+            /// Sets an error flag if the item's ID is a duplicate of another item's.
+            /// </summary>
+            /// <param name="isDuplicate"> Whether or not the ID is a duplicate of another item. </param>
             public void SetIDDuplicateError(bool isDuplicate)
             {
                 idDuplicate = isDuplicate;
             }
 
+            /// <summary>
+            /// Sets an error flag if the item's ID is valid or not.
+            /// </summary>
+            /// <param name="isValid"> Whether or not the ID is valid. </param>
             public void SetIDInvalidError(bool isValid)
             {
                 idInvalid = isValid;
             }
 
+            /// <summary>
+            /// Sets a flag if the item should be marked.
+            /// </summary>
+            /// <param name="marked"> Whether or not the item should be marked. </param>
             public void SetShouldBeMarked(bool marked)
             {
                 shouldBeMarked = marked;
@@ -1094,11 +1155,18 @@ namespace UnityEditor.Purchasing
         /// </summary>
         public class ProductCatalogExportWindow : PopupWindowContent
         {
+            /// <summary>
+            /// The default width of the export window.
+            /// </summary>
             public const float kWidth = 200f;
 
             private ProductCatalogEditor editor;
             private List<IProductCatalogExporter> exporters = new List<IProductCatalogExporter>();
 
+            /// <summary>
+            /// Constructor taking an instance of <c>ProductCatalogEditor</c> to export contents from.
+            /// </summary>
+            /// <param name="editor_"> The product catalog editor from which the catalog will be exported. </param>
             public ProductCatalogExportWindow(ProductCatalogEditor editor_)
             {
                 editor = editor_;
@@ -1108,11 +1176,19 @@ namespace UnityEditor.Purchasing
                 exporters.Add(new CloudJSONProductCatalogExporter());
             }
 
+            /// <summary>
+            /// Gets the dimensions of the window.
+            /// </summary>
+            /// <returns>The size of the window as a 2D vector.</returns>
             public override Vector2 GetWindowSize()
             {
                 return new Vector2(kWidth, EditorGUIUtility.singleLineHeight * (exporters.Count + 1));
             }
 
+            /// <summary>
+            /// Function called when the GUI updates.
+            /// </summary>
+            /// <param name="rect">The current draw rectangle of the Window's GUI.</param>
             public override void OnGUI(Rect rect)
             {
                 if (editor == null)
@@ -1344,14 +1420,28 @@ namespace UnityEditor.Purchasing
         /// </summary>
         public class ExporterValidationResults
         {
+            /// <summary>
+            /// Property that checks if the export results are valid.
+            /// </summary>
             public bool Valid
             {
                 get { return (errors.Count == 0 && fieldErrors.Count == 0); }
             }
 
+            /// <summary>
+            /// The list of errors.
+            /// </summary>
             public List<string> errors = new List<string>();
+
+            /// <summary>
+            /// The list of warnings.
+            /// </summary>
             public List<string> warnings = new List<string>();
 
+
+            /// <summary>
+            /// The dictionary of field errors.
+            /// </summary>
             public Dictionary<string, string> fieldErrors = new Dictionary<string, string>();
         }
 
@@ -1360,9 +1450,24 @@ namespace UnityEditor.Purchasing
         /// </summary>
         public interface IProductCatalogExporter
         {
+            /// <summary>
+            /// The display name of the catalog.
+            /// </summary>
             string DisplayName { get; }
+
+            /// <summary>
+            /// The default file name of the catalog export.
+            /// </summary>
             string DefaultFileName { get; }
+
+            /// <summary>
+            /// The file extension of the catalog export.
+            /// </summary>
             string FileExtension { get; }
+
+            /// <summary>
+            /// The name of the store to be exported.
+            /// </summary>
             string StoreName { get; }
 
             /// <summary>
@@ -1371,10 +1476,34 @@ namespace UnityEditor.Purchasing
             /// </summary>
             string MandatoryExportFolder { get; }
 
+            /// <summary>
+            /// Exports the product catalog.
+            /// </summary>
+            /// <param name="catalog"> The <c>ProductCatalog</c> to be exported. </param>
+            /// <returns> The exported catalog as raw text. </returns>
             string Export(ProductCatalog catalog);
+
+            /// <summary>
+            /// Validates the product catalog for export.
+            /// </summary>
+            /// <param name="catalog"> The <c>ProductCatalog</c> to be exported. </param>
+            /// <returns> The results of the validation. </returns>
             ExporterValidationResults Validate(ProductCatalog catalog);
+
+            /// <summary>
+            /// Validates the product catalog item for export.
+            /// </summary>
+            /// <param name="item"> The <c>ProductCataloItemg</c> to be exported. </param>
+            /// <returns> The results of the validation. </returns>
             ExporterValidationResults Validate(ProductCatalogItem item);
-            ProductCatalog NormalizeToType(ProductCatalog catalog); // Fixes issues targeting this exporter's impl
+
+            /// <summary>
+            /// Normalizes the product catalog for export to the base type.
+            /// Fixes issues targeting this exporter's implempentation.
+            /// </summary>
+            /// <param name="catalog"> The <c>ProductCatalog</c> to be normalized. </param>
+            /// <returns> The normalized <c>ProductCatalog</c>. </returns>
+            ProductCatalog NormalizeToType(ProductCatalog catalog);
 
             /// <summary>
             /// Files to copy to the final directory, ex. screenshots on iOS
@@ -1395,8 +1524,19 @@ namespace UnityEditor.Purchasing
         /// </summary>
         protected static class CompatibleGUI
         {
+            /// <summary>
+            /// Whether or not the GUI item has been folded out.
+            /// </summary>
             public static bool parsedVersion = false;
 
+            /// <summary>
+            /// Folds out the GUI item.
+            /// </summary>
+            /// <param name="foldout"> The shown foldout state. </param>
+            /// <param name="text"> The label to show. </param>
+            /// <param name="toggleOnLabelClick"> Optional GUIStyle. </param>
+            /// <param name="style"> Specifies whether clicking the label toggles the foldout state. The default value is false. Set to true to include the label in the clickable area. </param>
+            /// <returns> The foldout state selected by the user. If true, you should render sub-objects. </returns>
             public static bool Foldout(bool foldout, string text, bool toggleOnLabelClick, GUIStyle style)
             {
                 if (!parsedVersion)
@@ -1409,6 +1549,15 @@ namespace UnityEditor.Purchasing
                 return FoldoutHelper(foldout, text, toggleOnLabelClick, style);
             }
 
+            /// <summary>
+            /// Helper that folds out the GUI item.
+            /// Exists to fix a linker binding error with Foldout.
+            /// </summary>
+            /// <param name="foldout"> The shown foldout state. </param>
+            /// <param name="text"> The label to show. </param>
+            /// <param name="toggleOnLabelClick"> Optional GUIStyle. </param>
+            /// <param name="style"> Specifies whether clicking the label toggles the foldout state. The default value is false. Set to true to include the label in the clickable area. </param>
+            /// <returns> The foldout state selected by the user. If true, you should render sub-objects. </returns>
             public static bool FoldoutHelper(bool foldout, string text, bool toggleOnLabelClick,
                 GUIStyle style)
             {

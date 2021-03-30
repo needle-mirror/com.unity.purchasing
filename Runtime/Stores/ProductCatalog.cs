@@ -16,6 +16,9 @@ namespace UnityEngine.Purchasing
     [Serializable]
     public class Price : ISerializationCallbackReceiver
     {
+        /// <summary>
+        /// The price as a decimal.
+        /// </summary>
         public decimal value;
 
         [SerializeField] private int[] data;
@@ -24,12 +27,20 @@ namespace UnityEngine.Purchasing
         [SerializeField] private double num;
 #pragma warning restore 414
 
+        /// <summary>
+        /// Callback executed before Serialization.
+        /// Converts value to raw data and to a double.
+        /// </summary>
         public void OnBeforeSerialize()
         {
             data = decimal.GetBits(value);
             num = decimal.ToDouble(value);
         }
 
+        /// <summary>
+        /// Callback executed after Deserialization.
+        /// Converts the raw data to a decimal and asigns it to value.
+        /// </summary>
         public void OnAfterDeserialize()
         {
             if (data != null && data.Length == 4)
@@ -45,9 +56,21 @@ namespace UnityEngine.Purchasing
     [Serializable]
     public class StoreID
     {
+        /// <summary>
+        /// The name of the store.
+        /// </summary>
         public string store;
+
+        /// <summary>
+        /// The unique id of the store.
+        /// </summary>
         public string id;
 
+        /// <summary>
+        /// Constructor. Simply assigns the parameters as member data.
+        /// </summary>
+        /// <param name="store_"> The name of the store. </param>
+        /// <param name="id_">  The unique id of the store. </param>
         public StoreID(string store_, string id_)
         {
             store = store_;
@@ -61,42 +84,141 @@ namespace UnityEngine.Purchasing
     public enum TranslationLocale
     {
         // Added for Google:
-        zh_TW, // Chinese
-        cs_CZ, // Czech
-        da_DK, // Danish
-        nl_NL, // Dutch
-        en_US, // English
-        fr_FR, // French
-        fi_FI, // Finnish
-        de_DE, // German
-        iw_IL, // Hebrew
-        hi_IN, // Hindi
-        it_IT, // Italian
-        ja_JP, // Japanese
-        ko_KR, // Korean
-        no_NO, // Norwegian
-        pl_PL, // Polish
-        pt_PT, // Portuguese
-        ru_RU, // Russian
-        es_ES, // Spanish
-        sv_SE, // Swedish
+        /// <summary>
+        /// Chinese (Traditional).
+        /// </summary>
+        zh_TW,
+        /// <summary>
+        /// Czech.
+        /// </summary>
+        cs_CZ,
+        /// <summary>
+        /// Danish.
+        /// </summary>
+        da_DK,
+        /// <summary>
+        /// Dutch.
+        /// </summary>
+        nl_NL,
+        /// <summary>
+        /// English (US).
+        /// </summary>
+        en_US,
+        /// <summary>
+        /// French.
+        /// </summary>
+        fr_FR,
+        /// <summary>
+        /// Finnish.
+        /// </summary>
+        fi_FI,
+        /// <summary>
+        /// German.
+        /// </summary>
+        de_DE,
+        /// <summary>
+        /// Hebrew.
+        /// </summary>
+        iw_IL,
+        /// <summary>
+        /// Hindi.
+        /// </summary>
+        hi_IN,
+        /// <summary>
+        /// Italian.
+        /// </summary>
+        it_IT,
+        /// <summary>
+        /// Japanese.
+        /// </summary>
+        ja_JP,
+        /// <summary>
+        /// Korean.
+        /// </summary>
+        ko_KR,
+        /// <summary>
+        /// Norwegian.
+        /// </summary>
+        no_NO,
+        /// <summary>
+        /// Polish.
+        /// </summary>
+        pl_PL,
+        /// <summary>
+        /// Portuguese.
+        /// </summary>
+        pt_PT,
+        /// <summary>
+        /// Russian.
+        /// </summary>
+        ru_RU,
+        /// <summary>
+        /// Spanish.
+        /// </summary>
+        es_ES,
+        /// <summary>
+        /// Swedish.
+        /// </summary>
+        sv_SE,
         // Added for Xiaomi:
-        zh_CN, // Chinese (Simplified)
+        /// <summary>
+        /// Chinese (Simplified).
+        /// </summary>
+        zh_CN,
         // Added for Apple:
-        en_AU, // English (Australia)
-        en_CA, // English (Canada)
-        en_GB, // English (U.K.)
-        fr_CA, // French (Canada)
-        el_GR, // Greek
-        id_ID, // Indonesian
-        ms_MY, // Malay
-        pt_BR, // Portuguese (Brazil)
-        es_MX, // Spanish (Mexico)
-        th_TH, // Thai
-        tr_TR, // Turkish
-        vi_VN, // Vietnamese
+        /// <summary>
+        /// English (Australia).
+        /// </summary>
+        en_AU,
+        /// <summary>
+        /// English (Canada).
+        /// </summary>
+        en_CA,
+        /// <summary>
+        /// English (UK).
+        /// </summary>
+        en_GB,
+        /// <summary>
+        /// French (Canada).
+        /// </summary>
+        fr_CA,
+        /// <summary>
+        /// Greek.
+        /// </summary>
+        el_GR,
+        /// <summary>
+        /// Indonesian.
+        /// </summary>
+        id_ID,
+        /// <summary>
+        /// Malay.
+        /// </summary>
+        ms_MY,
+        /// <summary>
+        /// Portuguese (Brazil).
+        /// </summary>
+        pt_BR,
+        /// <summary>
+        /// Spanish (Mexico).
+        /// </summary>
+        es_MX,
+        /// <summary>
+        /// Thai.
+        /// </summary>
+        th_TH,
+        /// <summary>
+        /// Turkish.
+        /// </summary>
+        tr_TR,
+        /// <summary>
+        /// Vietnamese.
+        /// </summary>
+        vi_VN,
     }
 
+    /// <summary>
+    /// Class that facilitates localization code extensions.
+    /// </summary>
     public static class LocaleExtensions
     {
         /// <summary>
@@ -229,11 +351,21 @@ namespace UnityEngine.Purchasing
             return LabelsWithSupportedPlatforms;
         }
 
+        /// <summary>
+        /// Checks that a <c>TranslationLocale</c> is supported on Apple.
+        /// </summary>
+        /// <param name="locale"> The locale to check. </param>
+        /// <returns> If the locale is supported or not. </returns>
         public static bool SupportedOnApple(this TranslationLocale locale)
         {
             return AppleLocales.Contains(locale);
         }
 
+        /// <summary>
+        /// Checks that a <c>TranslationLocale</c> is supported on Google.
+        /// </summary>
+        /// <param name="locale"> The locale to check. </param>
+        /// <returns> If the locale is supported or not. </returns>
         public static bool SupportedOnGoogle(this TranslationLocale locale)
         {
             return GoogleLocales.Contains(locale);
@@ -242,18 +374,25 @@ namespace UnityEngine.Purchasing
 
     /// <summary>
     /// A description of an IAP product. Includes both a title and a longer description, plus an optional locale for
-    /// specifying the language of this description. Characters wider than one byte are escaped as \uXXXX for
+    /// specifying the language of this description. Characters wider than one byte are escaped as \\uXXXX for
     /// serialization to work around a bug in Unity's JSONUtility deserialization prior to Unity 5.6.
     /// </summary>
     [Serializable]
     public class LocalizedProductDescription
     {
+        /// <summary>
+        /// The <c>TranslationLocale</c> for GooglePlay.
+        /// </summary>
         public TranslationLocale googleLocale = TranslationLocale.en_US;
         [SerializeField]
         private string title;
         [SerializeField]
         private string description;
 
+        /// <summary>
+        /// Copy this product description.
+        /// </summary>
+        /// <returns> A new instance identical to this object </returns>
         public LocalizedProductDescription Clone()
         {
             var desc = new LocalizedProductDescription ();
@@ -265,6 +404,9 @@ namespace UnityEngine.Purchasing
             return desc;
         }
 
+        /// <summary>
+        /// The title of the product description.
+        /// </summary>
         public string Title {
             get {
                 return DecodeNonLatinCharacters(title);
@@ -274,6 +416,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// The product description displayed as a string.
+        /// </summary>
         public string Description {
             get {
                 return DecodeNonLatinCharacters(description);
@@ -317,19 +462,38 @@ namespace UnityEngine.Purchasing
     [Serializable]
     public class ProductCatalogPayout
     {
-        // Values here should mirror the values in the Core PayoutType enum, but we don't want to use that enum
-        // directly because it will create a dependency between the plugin and a particular core/editor version.
+        /// <summary>
+        /// Types of Product Payouts. Mirrors the <c>PayoutType</c> enum.
+        /// </summary>
+        /// Values here should mirror the values in the Core PayoutType enum, but we don't want to use that enum
+        /// directly because it will create a dependency between the plugin and a particular core/editor version.
         public enum ProductCatalogPayoutType
         {
+            /// <summary>
+            /// "Other" payouts are those with a customizable payout subtype.
+            /// </summary>
             Other,
+            /// <summary>
+            /// Payout is a currency, often paired with quantity to specify the amount.
+            /// </summary>
             Currency,
+            /// <summary>
+            /// Payout is an item.
+            /// </summary>
             Item,
+            /// <summary>
+            /// Payout is a resource, often used in in-game economies or for crafting features.
+            /// Examples: Iron, Wood.
+            /// </summary>
             Resource
         }
 
         // Serialize the type as a string for readability and future-proofing
         [SerializeField]
         string t = ProductCatalogPayoutType.Other.ToString();
+        /// <summary>
+        /// The type of the payout of the product.
+        /// </summary>
         public ProductCatalogPayoutType type {
             get {
                 var retval = ProductCatalogPayoutType.Other;
@@ -341,16 +505,27 @@ namespace UnityEngine.Purchasing
                 t = value.ToString ();
             }
         }
+
+        /// <summary>
+        /// ProductCatalogPayoutType as a string.
+        /// </summary>
         public string typeString {
             get {
                 return t;
             }
         }
 
+        /// <summary>
+        /// The maximum string length of the subtype for the "Other" payout type or any type requiring specification of a subtype.
+        /// </summary>
         public const int MaxSubtypeLength = 64;
 
         [SerializeField]
         string st = string.Empty;
+
+        /// <summary>
+        /// The custom name for a subtype for the "Other" payout type.
+        /// </summary>
         public string subtype {
             get {
                 return st;
@@ -364,6 +539,10 @@ namespace UnityEngine.Purchasing
 
         [SerializeField]
         double q;
+
+        /// <summary>
+        /// The quantity of payout.
+        /// </summary>
         public double quantity {
             get {
                 return q;
@@ -373,10 +552,16 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// The maximum byte length of the payout data when serialized.
+        /// </summary>
         public const int MaxDataLength = 1024;
 
         [SerializeField]
         string d = string.Empty;
+        /// <summary>
+        /// The raw data of the payout.
+        /// </summary>
         public string data {
             get {
                 return d;
@@ -397,47 +582,91 @@ namespace UnityEngine.Purchasing
     public class ProductCatalogItem
     {
         // Local configuration fields
+
+        /// <summary>
+        /// The ID of the item.
+        /// </summary>
         public string id;
+
+        /// <summary>
+        /// The <c>ProductType</c> of the item.
+        /// </summary>
         public ProductType type;
-        //public Dictionary<string, string> storeSpecificIDs = new Dictionary<string, string> ();
+
         [SerializeField]
         private List<StoreID> storeIDs = new List<StoreID>();
 
+        /// <summary>
+        /// The default localized description of the product.
+        /// </summary>
         public LocalizedProductDescription defaultDescription = new LocalizedProductDescription();
 
         // Apple configuration fields
+        /// <summary>
+        /// Screenshot path for Apple configuration.
+        /// </summary>
         public string screenshotPath;
+
+        /// <summary>
+        /// The price tier for the Apple Store.
+        /// </summary>
         public int applePriceTier = 0;
 
         // Google configuration fields
+        /// <summary>
+        /// The price for GooglePlay.
+        /// </summary>
         public Price googlePrice = new Price();
+
+        /// <summary>
+        /// The price template for GooglePlay.
+        /// </summary>
         public string pricingTemplateID;
+
         [SerializeField]
         private List<LocalizedProductDescription> descriptions = new List<LocalizedProductDescription>();
 
         // UDP configuration fields
+        /// <summary>
+        /// The price for UDP.
+        /// </summary>
         public Price udpPrice = new Price();
 
         // Payouts
         [SerializeField]
         private List<ProductCatalogPayout> payouts = new List<ProductCatalogPayout>();
 
+        /// <summary>
+        /// Adds a new payout to the list.
+        /// </summary>
         public void AddPayout()
         {
             payouts.Add(new ProductCatalogPayout());
         }
 
+        /// <summary>
+        /// Removes a payout to the list.
+        /// </summary>
+        /// <param name="payout"> The payout to be removed. </param>
         public void RemovePayout(ProductCatalogPayout payout)
         {
             payouts.Remove(payout);
         }
 
+        /// <summary>
+        /// Gets the list of payouts for this product.
+        /// </summary>
+        /// <returns> The list of payouts </returns>
         public IList<ProductCatalogPayout> Payouts {
             get {
                 return payouts;
             }
         }
 
+        /// <summary>
+        /// Creates a copy of this object.
+        /// </summary>
+        /// <returns> A new instance of <c>ProductCatalogItem</c> identical to this. </returns>
         public ProductCatalogItem Clone()
         {
             ProductCatalogItem item = new ProductCatalogItem ();
@@ -457,6 +686,11 @@ namespace UnityEngine.Purchasing
             return item;
         }
 
+        /// <summary>
+        /// Assigns or adds the a store for this item by name and id.
+        /// </summary>
+        /// <param name="aStore"> The name of the store. </param>
+        /// <param name="aId">  The unique id of the store. </param>
         public void SetStoreID(string aStore, string aId)
         {
             storeIDs.RemoveAll((obj) => obj.store == aStore);
@@ -464,18 +698,31 @@ namespace UnityEngine.Purchasing
                 storeIDs.Add(new StoreID(aStore, aId));
         }
 
+        /// <summary>
+        /// Gets the store id by name.
+        /// </summary>
+        /// <param name="store"> The name of the store. </param>
+        /// <returns> The id of the store if found, otherwise returns null. </returns>
         public string GetStoreID(string store)
         {
             StoreID sID = storeIDs.Find((obj) => obj.store == store);
             return sID == null ? null : sID.id;
         }
 
+        /// <summary>
+        /// Gets all of the <c>StoreIds</c> associated with this item.
+        /// </summary>
+        /// <returns> A collection of all store IDs for this item. </returns>
         public ICollection<StoreID> allStoreIDs {
             get {
                 return storeIDs;
             }
         }
 
+        /// <summary>
+        /// Assigns or modifies a collection of <c>StoreID</c>s associated with this item.
+        /// </summary>
+        /// <param name="storeIds"> The set of <c>StoreID</c>s to assign or overwrite. </param>
         public void SetStoreIDs(ICollection<StoreID> storeIds) {
             foreach (var storeId in storeIds) {
                 storeIDs.RemoveAll((obj) => obj.store == storeId.store);
@@ -484,16 +731,31 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// Gets the product description, localized to a specific locale.
+        /// </summary>
+        /// <param name="locale"> The locale of the description desired. </param>
+        /// <returns> The localized description of this item. </returns>
         public LocalizedProductDescription GetDescription(TranslationLocale locale)
         {
             return descriptions.Find((obj) => obj.googleLocale == locale);
         }
 
+        /// <summary>
+        /// Gets the product description, localized to a specific locale, or adds a default one if it's not already set.
+        /// </summary>
+        /// <param name="locale"> The locale of the description desired. </param>
+        /// <returns> The localized description of this item. </returns>
         public LocalizedProductDescription GetOrCreateDescription(TranslationLocale locale)
         {
             return GetDescription(locale) ?? AddDescription(locale);
         }
 
+        /// <summary>
+        /// Adds a default product description, localized to a specific locale.
+        /// </summary>
+        /// <param name="locale"> The locale of the description desired. </param>
+        /// <returns> The localized description of this item. </returns>
         public LocalizedProductDescription AddDescription(TranslationLocale locale)
         {
             RemoveDescription(locale);
@@ -503,21 +765,37 @@ namespace UnityEngine.Purchasing
             return newDesc;
         }
 
+        /// <summary>
+        /// Removes a product description, localized to a specific locale.
+        /// </summary>
+        /// <param name="locale"> The locale of the description desired. </param>
         public void RemoveDescription(TranslationLocale locale)
         {
             descriptions.RemoveAll((obj) => obj.googleLocale == locale);
         }
 
-        public bool HasAvailableLocale {
+        /// <summary>
+        /// Property that gets whether or not a valid locale is unassigned.
+        /// </summary>
+        /// <returns> Whether or not a new locale is avalable. </returns>
+        public bool HasAvailableLocale
+        {
             get {
                 return Enum.GetValues(typeof(TranslationLocale)).Length > descriptions.Count + 1; // +1 for the default description
             }
         }
 
-        public TranslationLocale NextAvailableLocale {
+        /// <summary>
+        /// Property that gets the next avalaible locale on the list.
+        /// </summary>
+        /// <returns> The next avalable locale. </returns>
+        public TranslationLocale NextAvailableLocale
+        {
             get {
-                foreach (TranslationLocale l in Enum.GetValues(typeof(TranslationLocale))) {
-                    if (GetDescription(l) == null && defaultDescription.googleLocale != l) {
+                foreach (TranslationLocale l in Enum.GetValues(typeof(TranslationLocale)))
+                {
+                    if (GetDescription(l) == null && defaultDescription.googleLocale != l)
+                    {
                         return l;
                     }
                 }
@@ -526,7 +804,12 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public ICollection<LocalizedProductDescription> translatedDescriptions {
+        /// <summary>
+        /// Property that gets the translated descriptions.
+        /// </summary>
+        /// <returns> A collection of all translated descriptions. </returns>
+        public ICollection<LocalizedProductDescription> translatedDescriptions
+        {
             get {
                 return descriptions;
             }
@@ -543,15 +826,33 @@ namespace UnityEngine.Purchasing
     {
         private static IProductCatalogImpl instance;
 
+        /// <summary>
+        /// The apple SKU of the app.
+        /// </summary>
         public string appleSKU;
+
+        /// <summary>
+        /// The apple team ID of the app.
+        /// </summary>
         public string appleTeamID;
+
+        /// <summary>
+        /// Enables automatic initialization when using Codeless IAP.
+        /// </summary>
         public bool enableCodelessAutoInitialization = false;
         [SerializeField]
         private List<ProductCatalogItem> products = new List<ProductCatalogItem>();
 
+        /// <summary>
+        /// The collection of all products.
+        /// </summary>
         public ICollection<ProductCatalogItem> allProducts => products;
 
-        public ICollection<ProductCatalogItem> allValidProducts {
+        /// <summary>
+        /// The collection of all valid products.
+        /// </summary>
+        public ICollection<ProductCatalogItem> allValidProducts
+        {
             get {
                 return products.Where(x => (!string.IsNullOrEmpty(x.id) && x.id.Trim().Length != 0 )).ToList();
             }
@@ -574,11 +875,19 @@ namespace UnityEngine.Purchasing
             instance = productCatalogImpl;
         }
 
+        /// <summary>
+        /// Adds an item to the catalog.
+        /// </summary>
+        /// <param name="item"> The item to be added. </param>
         public void Add(ProductCatalogItem item)
         {
             products.Add(item);
         }
 
+        /// <summary>
+        /// Removes an item to the catalog.
+        /// </summary>
+        /// <param name="item"> The item to be removed. </param>
         public void Remove(ProductCatalogItem item)
         {
             products.Remove(item);
@@ -600,19 +909,42 @@ namespace UnityEngine.Purchasing
             return true;
         }
 
+        /// <summary>
+        /// The path of the catalog file.
+        /// </summary>
         public const string kCatalogPath = "Assets/Resources/IAPProductCatalog.json";
+
+        /// <summary>
+        /// The previous path of the catalog file used in older versions of Unity IAP.
+        /// </summary>
         public const string kPrevCatalogPath = "Assets/Plugins/UnityPurchasing/Resources/IAPProductCatalog.json";
 
+
+        /// <summary>
+        /// Serializes the catalog to JSON.
+        /// </summary>
+        /// <param name="catalog"> The catalog. </param>
+        /// <returns> The raw json string of the catalog data </returns>
         public static string Serialize(ProductCatalog catalog)
         {
             return JsonUtility.ToJson(catalog);
         }
 
+        /// <summary>
+        /// Deserializes the catalog from JSON.
+        /// </summary>
+        /// <param name="catalogJSON"> The raw json string of catalog data. </param>
+        /// <returns> The deserialized Prodcut Catalog. </returns>
         public static ProductCatalog Deserialize(string catalogJSON)
         {
             return JsonUtility.FromJson<ProductCatalog>(catalogJSON);
         }
 
+        /// <summary>
+        /// Deserializes the catalog from a text asset.
+        /// </summary>
+        /// <param name="asset"> The text asset. </param>
+        /// <returns> The deserialized Prodcut Catalog. </returns>
         public static ProductCatalog FromTextAsset(TextAsset asset)
         {
             return Deserialize(asset.text);
@@ -621,6 +953,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Loads the default catalog.
         /// </summary>
+        /// <returns> The <c>ProductCatalog</c> instance. </returns>
         public static ProductCatalog LoadDefaultCatalog()
         {
             Initialize();
@@ -634,6 +967,10 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public interface IProductCatalogImpl
     {
+        /// <summary>
+        /// Loads the default catalog.
+        /// </summary>
+        /// <returns> The <c>ProductCatalog</c> instance. </returns>
         ProductCatalog LoadDefaultCatalog();
     }
 
@@ -642,12 +979,19 @@ namespace UnityEngine.Purchasing
     /// </summary>
     internal class ProductCatalogImpl : IProductCatalogImpl
     {
+        /// <summary>
+        /// Loads the default catalog.
+        /// </summary>
+        /// <returns> The <c>ProductCatalog</c> instance. </returns>
         public ProductCatalog LoadDefaultCatalog()
         {
             var asset = Resources.Load("IAPProductCatalog") as TextAsset;
-            if (asset != null) {
+            if (asset != null)
+            {
                 return ProductCatalog.FromTextAsset(asset);
-            } else {
+            }
+            else
+            {
                 return new ProductCatalog();
             }
         }

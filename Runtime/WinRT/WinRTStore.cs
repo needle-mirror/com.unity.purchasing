@@ -306,7 +306,12 @@ namespace UnityEngine.Purchasing.Default {
             });
         }
 
-        public void BuildDummyProducts(List<WinProductDescription> products) {
+        /// <summary>
+        /// Builds a dummy list of Products.
+        /// </summary>
+        /// <param name="products"> The list of product descriptions. </param>
+        public void BuildDummyProducts(List<WinProductDescription> products)
+        {
             currentApp.BuildMockProducts(products);
         }
     }

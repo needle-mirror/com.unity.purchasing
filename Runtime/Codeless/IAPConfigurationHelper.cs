@@ -5,9 +5,16 @@ using UnityEngine.Purchasing;
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Helps to set up ConfigurationBuilder.
+    /// </summary>
     public static class IAPConfigurationHelper
     {
+        /// <summary>
         /// Populate a ConfigurationBuilder with products from a ProductCatalog
+        /// </summary>
+        /// <param name="builder">Will be populated with product identifiers and payouts</param>
+        /// <param name="catalog">Source of product identifiers and payouts</param>
         public static void PopulateConfigurationBuilder(ref ConfigurationBuilder builder, ProductCatalog catalog)
         {
             foreach (var product in catalog.allValidProducts)

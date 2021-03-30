@@ -5,30 +5,52 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// An invisible GUI component for initializing Unity IAP and processing lifecycle events.
+    /// </summary>
+    /// <seealso cref="CodelessIAPStoreListener"/>
     [AddComponentMenu("Unity IAP/IAP Listener")]
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
     public class IAPListener : MonoBehaviour
     {
+        /// <summary>
+        /// Type of event fired after a successful purchase of a product.
+        /// </summary>
         [System.Serializable]
         public class OnPurchaseCompletedEvent : UnityEvent<Product>
         {
         };
 
+        /// <summary>
+        /// Type of event fired after a failed purchase of a product.
+        /// </summary>
         [System.Serializable]
         public class OnPurchaseFailedEvent : UnityEvent<Product, PurchaseFailureReason>
         {
         };
 
-        [Tooltip("Consume successful purchases immediately")]
+        /// <summary>
+        /// Consume successful purchases immediately.
+        /// </summary>
+        [Tooltip("Consume successful purchases immediately.")]
         public bool consumePurchase = true;
 
-        [Tooltip("Preserve this GameObject when a new scene is loaded")]
+        /// <summary>
+        /// Preserve this GameObject when a new scene is loaded.
+        /// </summary>
+        [Tooltip("Preserve this GameObject when a new scene is loaded.")]
         public bool dontDestroyOnLoad = true;
 
-        [Tooltip("Event fired after a successful purchase of this product")]
+        /// <summary>
+        /// Event fired after a successful purchase of this product.
+        /// </summary>
+        [Tooltip("Event fired after a successful purchase of this product.")]
         public OnPurchaseCompletedEvent onPurchaseComplete;
 
-        [Tooltip("Event fired after a failed purchase of this product")]
+        /// <summary>
+        /// Event fired after a failed purchase of this product.
+        /// </summary>
+        [Tooltip("Event fired after a failed purchase of this product.")]
         public OnPurchaseFailedEvent onPurchaseFailed;
 
         void OnEnable()
@@ -43,9 +65,11 @@ namespace UnityEngine.Purchasing
             CodelessIAPStoreListener.Instance.RemoveListener(this);
         }
 
-        /**
-         *  Invoked to process a purchase of the product associated with this button
-         */
+        /// <summary>
+        /// Invoked to process a successful purchase of the product associated with this button
+        /// </summary>
+        /// <param name="e">The successful <c>PurchaseEventArgs</c> for the purchase event. </param>
+        /// <returns>The result of the successful purchase</returns>
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
         {
             Debug.Log(string.Format("IAPListener.ProcessPurchase(PurchaseEventArgs {0} - {1})", e,
@@ -56,9 +80,11 @@ namespace UnityEngine.Purchasing
             return (consumePurchase) ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
         }
 
-        /**
-         *  Invoked on a failed purchase of the product associated with this button
-         */
+        /// <summary>
+        /// Invoked on a failed purchase of the product associated with this button
+        /// </summary>
+        /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
+        /// <param name="reason">Information to help developers recover from this failure</param>
         public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
         {
             Debug.Log(string.Format("IAPListener.OnPurchaseFailed(Product {0}, PurchaseFailureReason {1})", product,

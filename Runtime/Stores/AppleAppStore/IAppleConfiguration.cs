@@ -3,12 +3,16 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-	public interface IAppleConfiguration : IStoreConfiguration
+	/// <summary>
+    /// Access Apple store specific configurations.
+	/// </summary>
+    public interface IAppleConfiguration : IStoreConfiguration
 	{
-		/// Read the App Receipt from local storage.
-		/// Returns null for iOS less than or equal to 6, may also be
-		/// null on a reinstalling and require refreshing.
-		string appReceipt { get; }
+        /// <summary>
+        /// Read the App Receipt from local storage.
+        /// Returns null for iOS less than or equal to 6, may also be null on a reinstalling and require refreshing.
+        /// </summary>
+        string appReceipt { get; }
 
 		/// <summary>
 		/// Determine if the user can make payments; [SKPaymentQueue canMakePayments].

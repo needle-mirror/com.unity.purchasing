@@ -54,8 +54,7 @@ namespace UnityEngine.Purchasing
         /// Set listener for deferred purchasing events.
         /// Deferred purchasing is enabled by default and cannot be changed.
         /// </summary>
-        /// <param name="action">Deferred purchasing successful events. Do not grant the item here. Instead, record the purchase and remind
-        // the user to complete the transaction in the Play Store. </param>
+        /// <param name="action">Deferred purchasing successful events. Do not grant the item here. Instead, record the purchase and remind the user to complete the transaction in the Play Store. </param>
         void SetDeferredPurchaseListener(Action<Product> action);
 
         /// <summary>

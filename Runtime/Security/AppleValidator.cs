@@ -8,16 +8,29 @@ using System.Threading;
 
 namespace UnityEngine.Purchasing.Security
 {
+    /// <summary>
+    /// This class will validate the Apple receipt is signed with the correct certificate.
+    /// </summary>
     public class AppleValidator
     {
         private X509Cert cert;
         private AppleReceiptParser parser = new AppleReceiptParser ();
 
+        /// <summary>
+        /// Constructs an instance with Apple Certificate.
+        /// </summary>
+        /// <param name="appleRootCertificate">The apple certificate.</param>
         public AppleValidator (byte[] appleRootCertificate)
         {
             cert = new X509Cert(appleRootCertificate);
         }
 
+        /// <summary>
+        /// Validate that the Apple receipt is signed correctly.
+        /// </summary>
+        /// <param name="receiptData">The Apple receipt to validate.</param>
+        /// <returns>The parsed AppleReceipt</returns>
+        /// <exception cref="InvalidSignatureException">The exception thrown if the receipt is incorrectly signed.</exception>
         public AppleReceipt Validate (byte [] receiptData)
         {
             PKCS7 receipt;
@@ -29,6 +42,9 @@ namespace UnityEngine.Purchasing.Security
         }
     }
 
+    /// <summary>
+    /// This class with parse the Apple receipt data received in byte[] into a AppleReceipt object
+    /// </summary>
     public class AppleReceiptParser
     {
         // Cache the AppleReceipt object, PKCS7, and raw data for the most recently parsed data.
@@ -37,6 +53,11 @@ namespace UnityEngine.Purchasing.Security
         private const string k_PKCS7Key = "k_PKCS7Key";
         private const string k_ReceiptBytesKey = "k_ReceiptBytesKey";
 
+        /// <summary>
+        /// Parse the Apple receipt data into a AppleReceipt object
+        /// </summary>
+        /// <param name="receiptData">Apple receipt data</param>
+        /// <returns>The converted AppleReceipt object from the Apple receipt data</returns>
         public AppleReceipt Parse (byte [] receiptData)
         {
             return Parse(receiptData, out _);
@@ -226,6 +247,15 @@ namespace UnityEngine.Purchasing.Security
             return DateTime.MinValue;
         }
 
+        /// <summary>
+        /// Indicates whether both arrays are the same or contains the same information.
+        ///
+        /// This method is used to validate if the receipts are different.
+        /// </summary>
+        /// <param name="a">First object to validate against second object.</param>
+        /// <param name="b">Second object to validate against first object.</param>
+        /// <typeparam name="T">Type of object to check.</typeparam>
+        /// <returns>Returns true if they are the same length and contain the same information or else returns false.</returns>
         public static bool ArrayEquals<T>(T[] a, T[] b) where T: IEquatable<T> {
             if (a.Length != b.Length) {
                 return false;

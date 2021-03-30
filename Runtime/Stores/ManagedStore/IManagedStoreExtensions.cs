@@ -16,9 +16,9 @@ namespace UnityEngine.Purchasing
         Product[] storeCatalog { get; }
 
         /// <summary>
-        /// Refresh the managed store catalog
-        ///
+        /// Refresh the managed store catalog.
         /// </summary>
+        /// <param name="callback"> The action executed upon refreshing the catalog. </param>
         void RefreshCatalog(Action callback);
     }
 }

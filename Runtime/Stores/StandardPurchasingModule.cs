@@ -18,6 +18,9 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class StandardPurchasingModule : AbstractPurchasingModule, IAndroidStoreSelection
     {
+        /// <summary>
+        /// The version of com.unity.purchasing installed and the app was built using.
+        /// </summary>
 		public const string k_PackageVersion = "3.0.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         private AppStore m_AppStorePlatform;
         private INativeStoreProvider m_NativeStoreProvider;
@@ -69,8 +72,12 @@ namespace UnityEngine.Purchasing
             Promo.InitPromo(platform, logger, k_PackageVersion, util, webUtil);
         }
 
+        /// <summary>
+        /// A property that retrieves the <c>AndroidStore</c> type, if applicabble.
+        /// </summary>
         [System.Obsolete("Use StandardPurchasingModule.appStore instead")]
-        public AndroidStore androidStore {
+        public AndroidStore androidStore
+        {
             get
             {
                 AndroidStore store = AndroidStore.NotSpecified;
@@ -86,8 +93,13 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public AppStore appStore {
-            get {
+        /// <summary>
+        /// A property that retrieves the <c>AppStore</c> type.
+        /// </summary>
+        public AppStore appStore
+        {
+            get
+            {
                 return m_AppStorePlatform;
             }
         }
@@ -95,26 +107,49 @@ namespace UnityEngine.Purchasing
         // At some point we should remove this but to do so will cause a compile error
         // for App developers who used this property directly.
         private bool usingMockMicrosoft;
+
+        /// <summary>
+        /// Whether or not to use the mock billing system for Universal Windows Platform apps.
+        /// </summary>
         [Obsolete ("Use IMicrosoftConfiguration to toggle use of the Microsoft IAP simulator.")]
-        public bool useMockBillingSystem {
-            get {
+        public bool useMockBillingSystem
+        {
+            get
+            {
                 return usingMockMicrosoft;
             }
-            set {
+            set
+            {
                 UseMockWindowsStore (value);
                 usingMockMicrosoft = value;
             }
         }
 
+        /// <summary>
+        /// The UI mode for the Fake store, if it's in use.
+        /// </summary>
         public FakeStoreUIMode useFakeStoreUIMode { get; set; }
+
+        /// <summary>
+        /// Whether or not to use the Fake store.
+        /// </summary>
         public bool useFakeStoreAlways { get; set; }
 
+        /// <summary>
+        /// Creates an instance of StandardPurchasingModule or retrieves the existing one.
+        /// </summary>
+        /// <returns> The existing instance or the one just created. </returns>
         public static StandardPurchasingModule Instance ()
         {
             // Default to Google Play on Android.
             return Instance (AppStore.NotSpecified);
         }
 
+        /// <summary>
+        /// Creates an instance of StandardPurchasingModule or retrieves the existing one, specifying a type of Android store.
+        /// </summary>
+        /// <param name="androidStore"> The type of Android Store with which to create the instance. </param>
+        /// <returns> The existing instance or the one just created. </returns>
         [System.Obsolete("Use StandardPurchasingModule.Instance(AppStore) instead")]
         public static StandardPurchasingModule Instance(AndroidStore androidStore)
         {
@@ -131,6 +166,11 @@ namespace UnityEngine.Purchasing
             return Instance(store);
         }
 
+        /// <summary>
+        /// Creates an instance of StandardPurchasingModule or retrieves the existing one, specifying a type of App store.
+        /// </summary>
+        /// <param name="androidStore"> The type of Android Store with which to create the instance. </param>
+        /// <returns> The existing instance or the one just created. </returns>
         public static StandardPurchasingModule Instance (AppStore androidStore)
         {
             if (null == ModuleInstance) {
@@ -175,6 +215,9 @@ namespace UnityEngine.Purchasing
             return ModuleInstance;
         }
 
+        /// <summary>
+        /// Configures the StandardPurchasingModule.
+        /// </summary>
         public override void Configure()
         {
             BindConfiguration<IGooglePlayConfiguration>(new FakeGooglePlayStoreConfiguration());

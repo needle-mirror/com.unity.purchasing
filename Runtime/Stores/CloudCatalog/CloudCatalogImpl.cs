@@ -22,6 +22,11 @@ namespace UnityEngine.Purchasing
 
 		private const string kCatalogURL = "https://catalog.iap.cloud.unity3d.com";
 
+        /// <summary>
+        /// Creates a new intance of a cloud catalog for a given store.
+        /// </summary>
+        /// <param name="storeName"> The name of the store for which to create the catalog, e.g. GooglePlay. </param>
+        /// <returns> The new instance created. </returns>
 		public static CloudCatalogImpl CreateInstance (string storeName)
 		{
 			var g = new GameObject ();
@@ -57,6 +62,10 @@ namespace UnityEngine.Purchasing
             m_StoreName = storeName;
         }
 
+        /// <summary>
+        /// Fetches the products contained in the cloud catalog aynchronously.
+        /// </summary>
+        /// <param name="callback"> The action to be executed once the fetch is complete. </param>
 		public void FetchProducts (Action<HashSet<ProductDefinition>> callback)
 		{
 			FetchProducts (callback, 0);

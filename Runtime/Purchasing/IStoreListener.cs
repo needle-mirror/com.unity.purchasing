@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing
         /// A purchase succeeded.
         /// </summary>
         /// <param name="purchaseEvent"> The <c>PurchaseEventArgs</c> for the purchase event. </param>
-        /// <returns> The result of the succesful purchase </returns>
+        /// <returns> The result of the successful purchase </returns>
         PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs purchaseEvent);
 
         /// <summary>
@@ -31,8 +31,8 @@ namespace UnityEngine.Purchasing
         /// The <c>IStoreController</c> and <c>IExtensionProvider</c> are
         /// available for accessing purchasing functionality.
         /// </summary>
-        /// <param name="controller"> The <c>IStoreController</c> created during initilaization. </param>
-        /// <param name="extensions"> The <c>IExtensionProvider</c> created during initilaization. </param>
+        /// <param name="controller"> The <c>IStoreController</c> created during initialization. </param>
+        /// <param name="extensions"> The <c>IExtensionProvider</c> created during initialization. </param>
         void OnInitialized(IStoreController controller, IExtensionProvider extensions);
     }
 }

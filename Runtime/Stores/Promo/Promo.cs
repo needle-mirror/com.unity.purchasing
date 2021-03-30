@@ -11,7 +11,9 @@ using Uniject;
 
 namespace UnityEngine.Purchasing
 {
-
+    /// <summary>
+    /// Class that provides a static interface to IAP Promo purchases.
+    /// </summary>
     public class Promo
     {
         private static JSONStore s_PromoPurchaser = null;
@@ -26,11 +28,20 @@ namespace UnityEngine.Purchasing
         private static bool s_IsReady = false;
         private static string s_ProductJSON;
 
+        /// <summary>
+        /// Check if the IAP Promo setup is ready.
+        /// </summary>
+        /// <returns> Whether or not promo products have been proviced to Ads. </returns>
         [Preserve]
         public static bool IsReady()
         {
             return s_IsReady;
         }
+
+        /// <summary>
+        /// Check the version of IAP Promo.
+        /// </summary>
+        /// <returns> The package version used, if known. </returns>
 
         [Preserve]
         public static string Version()
@@ -38,6 +49,10 @@ namespace UnityEngine.Purchasing
             return s_Version;
         }
 
+        /// <summary>
+        /// No longer used because this class is static.
+        /// Creates a Promo object, but there is no reason to do this.
+        /// </summary>
         public Promo()
         {
         }
@@ -147,22 +162,33 @@ namespace UnityEngine.Purchasing
                 }
         }
 
+        /// <summary>
+        /// Queries the list of available promo products.
+        /// </summary>
+        /// <returns> The list of promo products as raw JSON. </returns>
         [Preserve]
         public static string QueryPromoProducts()
         {
             return s_ProductJSON;
         }
 
-
-        // Legacy for original promo Ads SDK, will be removed RSN
-        //
-        //
+        /// <summary>
+        /// Initiates a purchasing command for a promo product.
+        /// Legacy for original promo Ads SDK.
+        /// </summary>
+        /// <param name="itemRequest"> The JSON item request command for purchase. </param>
+        /// <returns> If the command was successful or not. </returns>
         [Preserve]
         public static bool InitiatePromoPurchase(string itemRequest)
         {
             return InitiatePurchasingCommand(itemRequest);
         }
 
+        /// <summary>
+        /// Initiates a purchasing command for a promo product.
+        /// </summary>
+        /// <param name="command"> The JSON item request command for purchase. </param>
+        /// <returns> If the command was successful or not. </returns>
         [Preserve]
         public static bool InitiatePurchasingCommand(string command)
         {

@@ -8,6 +8,9 @@ using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// Synchronize store data from UDP and IAP
+    /// </summary>
     public static class UdpSynchronizationApi
     {
 
@@ -58,6 +61,12 @@ namespace UnityEditor.Purchasing
             return asyncRequest(kHttpVerbPOST, BuildConfigInterface.GetApiEndpoint(), "/v1/oauth2/token", null, req);
         }
 
+        /// <summary>
+        /// Call UDP store asynchronously to retrieve the Organization Identifier.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="projectGuid">The project id.</param>
+        /// <returns>The HTTP GET Request to get the organization identifier.</returns>
         public static object GetOrgId(string accessToken, string projectGuid)
         {
             CheckUdpBuildConfig();
@@ -66,6 +75,13 @@ namespace UnityEditor.Purchasing
             return asyncRequest(kHttpVerbGET, BuildConfigInterface.GetApiEndpoint(), api, accessToken, null);
         }
 
+        /// <summary>
+        /// Call UDP store asynchronously to create a store item.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="orgId">The organization identifier to create the store item under.</param>
+        /// <param name="iapItem">The store item to create.</param>
+        /// <returns>The HTTP POST Request to create a store item.</returns>
         public static object CreateStoreItem(string accessToken, string orgId, IapItem iapItem)
         {
             CheckUdpBuildConfig();
@@ -75,6 +91,12 @@ namespace UnityEditor.Purchasing
             return asyncRequest(kHttpVerbPOST, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
         }
 
+        /// <summary>
+        /// Call UDP store asynchronously to update a store item.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="iapItem">The updated store item.</param>
+        /// <returns>The HTTP PUT Request to update a store item.</returns>
         public static object UpdateStoreItem(string accessToken, IapItem iapItem)
         {
             CheckUdpBuildConfig();
@@ -83,6 +105,13 @@ namespace UnityEditor.Purchasing
             return asyncRequest(kHttpVerbPUT, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
         }
 
+        /// <summary>
+        /// Call UDP store asynchronously to search for a store item.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="orgId">The organization identifier where to find the store item.</param>
+        /// <param name="appItemSlug">The store item slug name.</param>
+        /// <returns>The HTTP GET Request to update a store item.</returns>
         public static object SearchStoreItem(string accessToken, string orgId, string appItemSlug)
         {
             CheckUdpBuildConfig();
@@ -243,78 +272,189 @@ namespace UnityEditor.Purchasing
 
     #region model
 
+    /// <summary>
+    /// This class is used to authenticate the API call to UDP. In OAuth2.0 authentication format.
+    /// </summary>
     [Serializable]
     public class TokenRequest
     {
+        /// <summary>
+        /// The access token. Acquired by UnityOAuth
+        /// </summary>
         public string code;
+        /// <summary>
+        /// The client identifier
+        /// </summary>
         public string client_id;
+        /// <summary>
+        /// The client secret key
+        /// </summary>
         public string client_secret;
+        /// <summary>
+        /// The type of OAuth2.0 code granting.
+        /// </summary>
         public string grant_type;
+        /// <summary>
+        /// Redirect use after a successful authorization.
+        /// </summary>
         public string redirect_uri;
+        /// <summary>
+        /// When the access token is expire. This token is used to renew it.
+        /// </summary>
         public string refresh_token;
     }
 
+    /// <summary>
+    /// PriceSets holds the PurchaseFee. Used for IapItem.
+    /// </summary>
     [Serializable]
     public class PriceSets
     {
+        /// <summary>
+        /// Get the PurchaseFee
+        /// </summary>
         public PurchaseFee PurchaseFee = new PurchaseFee();
     }
 
+    /// <summary>
+    /// A PurchaseFee contains the PriceMap which contains the prices and currencies.
+    /// </summary>
     [Serializable]
     public class PurchaseFee
     {
+        /// <summary>
+        /// The PurchaseFee type
+        /// </summary>
         public string priceType = "CUSTOM";
+        /// <summary>
+        /// Holds a list of prices with their currencies
+        /// </summary>
         public PriceMap priceMap = new PriceMap();
     }
 
+    /// <summary>
+    /// PriceMap hold a list of PriceDetail.
+    /// </summary>
     [Serializable]
     public class PriceMap
     {
+        /// <summary>
+        /// List of prices with their currencies.
+        /// </summary>
         public List<PriceDetail> DEFAULT = new List<PriceDetail>();
     }
 
+    /// <summary>
+    /// Price and the currency of a IAPItem.
+    /// </summary>
     [Serializable]
     public class PriceDetail
     {
+        /// <summary>
+        /// Price of a IAPItem.
+        /// </summary>
         public string price;
+        /// <summary>
+        /// Currency of the price.
+        /// </summary>
         public string currency = "USD";
     }
 
+    /// <summary>
+    /// The Response from and HTTP response converted into an object.
+    /// </summary>
     [Serializable]
     public class GeneralResponse
     {
+        /// <summary>
+        /// The body from the HTTP response.
+        /// </summary>
         public string message;
     }
 
+    /// <summary>
+    /// The properties of a IAPItem.
+    /// </summary>
     [Serializable]
     public class Properties
     {
+        /// <summary>
+        /// The description of a IAPItem.
+        /// </summary>
         public string description;
     }
 
+    /// <summary>
+    /// The response used when creating/updating IAP item succeeds
+    /// </summary>
     [Serializable]
     public class IapItemResponse : GeneralResponse
     {
+        /// <summary>
+        /// The IapItem identifier.
+        /// </summary>
         public string id;
     }
 
+    /// <summary>
+    /// IapItem is the representation of a purchasable product from the UDP store
+    /// </summary>
     [Serializable]
     public class IapItem
     {
+        /// <summary>
+        /// A unique identifier to identify the product.
+        /// </summary>
         public string id;
+        /// <summary>
+        /// The product url stripped of all unsafe characters.
+        /// </summary>
         public string slug;
+        /// <summary>
+        /// The product name.
+        /// </summary>
         public string name;
+        /// <summary>
+        /// The organization url stripped of all unsafe characters.
+        /// </summary>
         public string masterItemSlug;
+        /// <summary>
+        /// Is product a consumable type. If set to false it is a subscriptions.
+        /// Consumables may be purchased more than once.
+        /// Subscriptions have a finite window of validity.
+        /// </summary>
         public bool consumable = true;
+        /// <summary>
+        /// The product type.
+        /// </summary>
         public string type = "IAP";
+        /// <summary>
+        /// The product status.
+        /// </summary>
         public string status = "STAGE";
+        /// <summary>
+        /// The organization id.
+        /// </summary>
         public string ownerId;
+        /// <summary>
+        /// The organization type.
+        /// </summary>
         public string ownerType = "ORGANIZATION";
 
+        /// <summary>
+        /// The product's prices with currencies.
+        /// </summary>
         public PriceSets priceSets = new PriceSets();
 
+        /// <summary>
+        /// The properties of the product.
+        /// </summary>
         public Properties properties = new Properties();
 
+        /// <summary>
+        /// Validates that the IapItem has at least the minimum amount of information set.
+        /// </summary>
+        /// <returns>A string error of missing information to the IapItem.</returns>
         public string ValidationCheck()
         {
             if (string.IsNullOrEmpty(slug))
@@ -336,17 +476,35 @@ namespace UnityEditor.Purchasing
         }
     }
 
+    /// <summary>
+    /// TokenInfo holds all the authentication token required to authenticate the API call.
+    /// </summary>
     [Serializable]
     public class TokenInfo : GeneralResponse
     {
+        /// <summary>
+        /// The OAuth2.0 access token.
+        /// </summary>
         public string access_token;
+        /// <summary>
+        /// The OAuth2.0 refresh token.
+        /// </summary>
         public string refresh_token;
     }
 
+    /// <summary>
+    /// The response used when searching for IAP item.
+    /// </summary>
     [Serializable]
     public class IapItemSearchResponse : GeneralResponse
     {
+        /// <summary>
+        /// The total amount of IAP item found.
+        /// </summary>
         public int total;
+        /// <summary>
+        /// The list of IAP item found.
+        /// </summary>
         public List<IapItem> results;
     }
 
@@ -358,29 +516,59 @@ namespace UnityEditor.Purchasing
         public IapItem iapItem;
     }
 
+    /// <summary>
+    /// The response used when searching for Organization identifier.
+    /// </summary>
     [Serializable]
     public class OrgIdResponse : GeneralResponse
     {
+        /// <summary>
+        /// The organization identifier.
+        /// </summary>
         public string org_foreign_key;
     }
 
+    /// <summary>
+    /// The response used when searching for Organization roles.
+    /// </summary>
     [Serializable]
     public class OrgRoleResponse : GeneralResponse
     {
+        /// <summary>
+        /// The organization roles.
+        /// </summary>
         public List<string> roles;
     }
 
+    /// <summary>
+    /// The response used when getting an error.
+    /// </summary>
     [Serializable]
     public class ErrorResponse : GeneralResponse
     {
+        /// <summary>
+        /// The http error code.
+        /// </summary>
         public string code;
+        /// <summary>
+        /// The details of an error.
+        /// </summary>
         public ErrorDetail[] details;
     }
 
+    /// <summary>
+    /// The details of an error return from the api.
+    /// </summary>
     [Serializable]
     public class ErrorDetail
     {
+        /// <summary>
+        /// The error context where it occured.
+        /// </summary>
         public string field;
+        /// <summary>
+        /// The error message reason.
+        /// </summary>
         public string reason;
     }
 

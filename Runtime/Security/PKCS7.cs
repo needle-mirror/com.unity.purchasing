@@ -164,6 +164,13 @@ namespace UnityEngine.Purchasing.Security {
 		}
 	}
 
+    /// <summary>
+    /// An IAP Security exception indicating some invalid data for PKCS7 checks.
+    /// </summary>
     public class InvalidPKCS7Data : IAPSecurityException {}
+
+    /// <summary>
+    /// An IAP Security exception indicating unsupported signer information.
+    /// </summary>
     public class UnsupportedSignerInfoVersion : IAPSecurityException {}
 }

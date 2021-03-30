@@ -4,10 +4,23 @@ using System.Collections.Generic;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// This class will generate the tangled signature used for client-side receipt validation obfuscation.
+    /// </summary>
     public static class TangleObfuscator
     {
+        /// <summary>
+        /// An Exception thrown when the tangle order array provided is invalid or shorter than the number of data slices made.
+        /// </summary>
         public class InvalidOrderArray : Exception {}
 
+        /// <summary>
+        /// Generates the obfucscation tangle data.
+        /// </summary>
+        /// <param name="data"> The Apple or GooglePlay public key data to be obfuscated. </param>
+        /// <param name="order"> The array, passed by reference, of order of the data slices used to obfuscate the data with. </param>
+        /// <param name="rkey"> Outputs the encryption key to deobfuscate the tangled data at runtime </param>
+        /// <returns>The obfucated public key</returns>
         public static byte[] Obfuscate(byte[] data, int[] order, out int rkey)
         {
             var rnd = new System.Random();

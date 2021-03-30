@@ -5,49 +5,94 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// A GUI component for exposing the current price and allow purchasing of In-App Purchases. Exposes configurable
+    /// elements through the Inspector.
+    /// </summary>
+    /// <seealso cref="CodelessIAPStoreListener"/>
     [RequireComponent(typeof(Button))]
     [AddComponentMenu("Unity IAP/IAP Button")]
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
     public class IAPButton : MonoBehaviour
     {
+        /// <summary>
+        /// The type of this button, can be either a purchase or a restore button.
+        /// </summary>
         public enum ButtonType
         {
+            /// <summary>
+            /// This button will display localized product title and price. Clicking will trigger a purchase.
+            /// </summary>
             Purchase,
+            /// <summary>
+            /// This button will display a static string for restoring previously purchased non-consumable
+            /// and subscriptions. Clicking will trigger this restoration process, on supported app stores.
+            /// </summary>
             Restore
         }
 
+        /// <summary>
+        /// Type of event fired after a successful purchase of a product.
+        /// </summary>
         [System.Serializable]
         public class OnPurchaseCompletedEvent : UnityEvent<Product>
         {
         };
 
+        /// <summary>
+        /// Type of event fired after a failed purchase of a product.
+        /// </summary>
         [System.Serializable]
         public class OnPurchaseFailedEvent : UnityEvent<Product, PurchaseFailureReason>
         {
         };
 
+        /// <summary>
+        /// Which product identifier to represent. Note this is not a store-specific identifier.
+        /// </summary>
         [HideInInspector]
         public string productId;
 
-        [Tooltip("The type of this button, can be either a purchase or a restore button")]
+        /// <summary>
+        /// The type of this button, can be either a purchase or a restore button.
+        /// </summary>
+        [Tooltip("The type of this button, can be either a purchase or a restore button.")]
         public ButtonType buttonType = ButtonType.Purchase;
 
-        [Tooltip("Consume the product immediately after a successful purchase")]
+        /// <summary>
+        /// Consume the product immediately after a successful purchase.
+        /// </summary>
+        [Tooltip("Consume the product immediately after a successful purchase.")]
         public bool consumePurchase = true;
 
-        [Tooltip("Event fired after a successful purchase of this product")]
+        /// <summary>
+        /// Event fired after a successful purchase of this product.
+        /// </summary>
+        [Tooltip("Event fired after a successful purchase of this product.")]
         public OnPurchaseCompletedEvent onPurchaseComplete;
 
-        [Tooltip("Event fired after a failed purchase of this product")]
+        /// <summary>
+        /// Event fired after a failed purchase of this product.
+        /// </summary>
+        [Tooltip("Event fired after a failed purchase of this product.")]
         public OnPurchaseFailedEvent onPurchaseFailed;
 
-        [Tooltip("[Optional] Displays the localized title from the app store")]
+        /// <summary>
+        /// Displays the localized title from the app store.
+        /// </summary>
+        [Tooltip("[Optional] Displays the localized title from the app store.")]
         public Text titleText;
 
-        [Tooltip("[Optional] Displays the localized description from the app store")]
+        /// <summary>
+        /// Displays the localized description from the app store.
+        /// </summary>
+        [Tooltip("[Optional] Displays the localized description from the app store.")]
         public Text descriptionText;
 
-        [Tooltip("[Optional] Displays the localized price from the app store")]
+        /// <summary>
+        /// Displays the localized price from the app store.
+        /// </summary>
+        [Tooltip("[Optional] Displays the localized price from the app store.")]
         public Text priceText;
 
         void Start()
@@ -152,9 +197,12 @@ namespace UnityEngine.Purchasing
             Debug.Log("Transactions restored: " + success);
         }
 
-        /**
-         *  Invoked to process a purchase of the product associated with this button
-         */
+
+        /// <summary>
+        /// Invoke to process a successful purchase of the product associated with this button.
+        /// </summary>
+        /// <param name="e">The successful <c>PurchaseEventArgs</c> for the purchase event. </param>
+        /// <returns>The result of the successful purchase</returns>
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
         {
             Debug.Log(string.Format("IAPButton.ProcessPurchase(PurchaseEventArgs {0} - {1})", e,
@@ -165,9 +213,11 @@ namespace UnityEngine.Purchasing
             return (consumePurchase) ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
         }
 
-        /**
-         *  Invoked on a failed purchase of the product associated with this button
-         */
+        /// <summary>
+        /// Invoked on a failed purchase of the product associated with this button
+        /// </summary>
+        /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
+        /// <param name="reason">Information to help developers recover from this failure</param>
         public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
         {
             Debug.Log(string.Format("IAPButton.OnPurchaseFailed(Product {0}, PurchaseFailureReason {1})", product,

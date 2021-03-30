@@ -98,16 +98,59 @@
         BILLING_RESPONSE_RESULT_ITEM_NOT_OWNED,
 
         // IAB HELPER ERROR CODES
+        /// <summary>
+        /// In-App Billing helper base error. (GooglePlay only)
+        /// </summary>
         IABHELPER_ERROR_BASE,
+
+        /// <summary>
+        /// In-App Billing helper encountered a remote exception. (GooglePlay only)
+        /// </summary>
         IABHELPER_REMOTE_EXCEPTION,
+
+        /// <summary>
+        /// In-App Billing helper received a bad response. (GooglePlay only)
+        /// </summary>
         IABHELPER_BAD_RESPONSE,
+
+        /// <summary>
+        /// In-App Billing helper had a failed verification. (GooglePlay only)
+        /// </summary>
         IABHELPER_VERIFICATION_FAILED,
+
+        /// <summary>
+        /// In-App Billing helper found a failed intent. (GooglePlay only)
+        /// </summary>
         IABHELPER_SEND_INTENT_FAILED,
+
+        /// <summary>
+        /// In-App Billing helper encountered a user cancellation. (GooglePlay only)
+        /// </summary>
         IABHELPER_USER_CANCELLED,
+
+        /// <summary>
+        /// In-App Billing helper receieved an unknown purchase response. (GooglePlay only)
+        /// </summary>
         IABHELPER_UNKNOWN_PURCHASE_RESPONSE,
+
+        /// <summary>
+        /// In-App Billing helper is missing a token. (GooglePlay only)
+        /// </summary>
         IABHELPER_MISSING_TOKEN,
+
+        /// <summary>
+        /// In-App Billing helper encountered an unknown error. (GooglePlay only)
+        /// </summary>
         IABHELPER_UNKNOWN_ERROR,
+
+        /// <summary>
+        /// In-App Billing helper has no subscriptions available. (GooglePlay only)
+        /// </summary>
         IABHELPER_SUBSCRIPTIONS_NOT_AVAILABLE,
+
+        /// <summary>
+        /// In-App Billing helper attempted to consume an invalid purchase. (GooglePlay only)
+        /// </summary>
         IABHELPER_INVALID_CONSUMPTION,
 
         /// <summary>
@@ -119,7 +162,7 @@
         /// Indicates that the purchase failed. (Amazon only)
         /// </summary>
         Amazon_FAILED,
-        
+
         /// <summary>
         /// Indicates that the SKU originally provided to the PurchasingService.purchase(String) method is not valid. (Amazon only)
         /// </summary>

@@ -67,5 +67,8 @@ namespace UnityEngine.Purchasing.Security {
 		}
 	}
 
+    /// <summary>
+    /// An IAP Security exception indicating some invalid data parsing an RSA node.
+    /// </summary>
 	public class InvalidRSAData : IAPSecurityException {}
 }

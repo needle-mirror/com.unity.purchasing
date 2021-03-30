@@ -12,6 +12,9 @@ using UnityEditor.PackageManager.UI;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// This class directs the developer to install UDP if it is not already installed through Package Manager.
+    /// </summary>
     public class UdpInstaller
     {
 #if UNITY_2019_3_OR_NEWER
