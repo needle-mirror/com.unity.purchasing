@@ -9,5 +9,6 @@ namespace UnityEngine.Purchasing
     {
         void SetStoreCallback(IStoreCallback storeCallback);
         void NotifyDeferredPurchase(string productId, string receipt, string transactionId);
+        void NotifyDeferredProrationUpgradeDowngradeSubscription(string productId);
     }
 }

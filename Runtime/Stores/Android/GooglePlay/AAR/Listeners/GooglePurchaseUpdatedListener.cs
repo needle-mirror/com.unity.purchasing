@@ -4,6 +4,7 @@ using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Purchasing.Utils;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
@@ -30,12 +31,13 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="billingResult"></param>
         /// <param name="purchasesList"></param>
+        [Preserve]
         void onPurchasesUpdated(AndroidJavaObject billingResult, AndroidJavaObject purchasesList)
         {
             GoogleBillingResult result = new GoogleBillingResult(billingResult);
-            if (result.responseCode == BillingClientResponseEnum.OK() && purchasesList != null)
+            if (result.responseCode == BillingClientResponseEnum.OK())
             {
-                ApplyOnPurchases(purchasesList, OnPurchaseOk);
+                HandleResultOkCases(result, purchasesList);
             }
             else if (result.responseCode == BillingClientResponseEnum.USER_CANCELED() && purchasesList != null)
             {
@@ -44,6 +46,22 @@ namespace UnityEngine.Purchasing
             else if (result.responseCode == BillingClientResponseEnum.ITEM_ALREADY_OWNED() && purchasesList != null)
             {
                 ApplyOnPurchases(purchasesList, OnPurchaseAlreadyOwned);
+            }
+            else
+            {
+                HandleErrorCases(result, purchasesList);
+            }
+        }
+
+        void HandleResultOkCases(GoogleBillingResult result, AndroidJavaObject purchasesList)
+        {
+            if (purchasesList != null)
+            {
+                ApplyOnPurchases(purchasesList, OnPurchaseOk);
+            }
+            else if (IsLastProrationModeDeferred())
+            {
+                OnDeferredProrationUpgradeDowngradeSubscriptionOk();
             }
             else
             {
@@ -81,7 +99,7 @@ namespace UnityEngine.Purchasing
                         new PurchaseFailureDescription(
                             m_LastKnownProductService.GetLastKnownProductId(),
                             PurchaseFailureReason.Unknown,
-                            billingResult.debugMessage + " {M: GPUL.HEC}"
+                            billingResult.debugMessage + " {M: GPUL.HEC} - Response Code = " + billingResult.responseCode
                         )
                     );
                 }
@@ -114,6 +132,11 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        bool IsLastProrationModeDeferred()
+        {
+            return m_LastKnownProductService.GetLastKnownProrationMode() == GooglePlayProrationMode.k_DeferredProrationMode;
+        }
+
         void OnPurchaseOk(GooglePurchase googlePurchase)
         {
             if (googlePurchase.purchaseState == GooglePurchaseStateEnum.Purchased())
@@ -134,6 +157,10 @@ namespace UnityEngine.Purchasing
                     )
                 );
             }
+        }
+        void OnDeferredProrationUpgradeDowngradeSubscriptionOk()
+        {
+            m_GooglePurchaseCallback.NotifyDeferredProrationUpgradeDowngradeSubscription(m_LastKnownProductService.GetLastKnownProductId());
         }
 
         void OnPurchaseCanceled(GooglePurchase googlePurchase)

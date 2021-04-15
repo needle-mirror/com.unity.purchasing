@@ -10,7 +10,6 @@ namespace UnityEngine.Purchasing.Models
     /// </summary>
     class GoogleBillingClient : IGoogleBillingClient
     {
-        const int k_ProrationNullState = -1;
         const string k_AndroidBillingFlowParamClassName = "com.android.billingclient.api.BillingFlowParams";
 
         static AndroidJavaClass GetBillingFlowParamClass()
@@ -107,7 +106,7 @@ namespace UnityEngine.Purchasing.Models
                 billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setOldSku", oldSku, oldPurchaseToken);
             }
 
-            if (prorationMode != k_ProrationNullState)
+            if (prorationMode != GooglePlayProrationMode.k_NullProrationMode)
             {
                 billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setReplaceSkusProrationMode", prorationMode);
             }

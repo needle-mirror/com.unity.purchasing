@@ -94,18 +94,17 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    Debug.Log("metadata key not found in subscription description json");
+                    Debug.LogWarning("metadata key not found in subscription description json");
                 }
 
                 if (obj.TryGetValue("storeSpecificId", out var id))
                 {
                     var idStr = (string) id;
                     result.Add(idStr, MiniJson.JsonEncode(subscription));
-
                 }
                 else
                 {
-                    Debug.Log("storeSpecificId key not found in subscription description json");
+                    Debug.LogWarning("storeSpecificId key not found in subscription description json");
                 }
             }
 
@@ -148,7 +147,7 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    Debug.Log("metadata key not found in product details json");
+                    Debug.LogWarning("metadata key not found in product details json");
                 }
 
                 if (obj.TryGetValue("storeSpecificId", out var id))
@@ -158,7 +157,7 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    Debug.Log("storeSpecificId key not found in product details json");
+                    Debug.LogWarning("storeSpecificId key not found in product details json");
                 }
             }
             return result;
@@ -184,7 +183,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                Debug.Log("Reason key not found in purchase failure json: " + json);
+                Debug.LogWarning("Reason key not found in purchase failure json: " + json);
             }
 
             return new PurchaseFailureDescription( "Unknown ProductID", reason, dic.TryGetString("message"));

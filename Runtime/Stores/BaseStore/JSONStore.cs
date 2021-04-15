@@ -59,7 +59,6 @@ namespace UnityEngine.Purchasing
 #if HIGH_PERMISSION_DATA
         private bool isFirstTimeRetrievingProducts = true;
 #endif
-        private bool shouldLogPromoInitialization = true;
         private Action refreshCallback;
 
         // m_Module is our StandardPurchasingModule, added via reflection to avoid core changes etc.
@@ -134,10 +133,6 @@ namespace UnityEngine.Purchasing
                     catalogDisabled = false;
                     eventsDisabled = false;
                     isManagedStoreEnabled = true;
-                    if (m_Logger != null)
-                    {
-                        m_Logger.Log("UnityIAP", "Enabling store optimization");
-                    }
                 }
             }
         }
@@ -331,7 +326,6 @@ namespace UnityEngine.Purchasing
 
                 if ( (dic != null) && (dic.ContainsKey("iapPromo")) && (dic.TryGetValue("productId", out var prodId)) )
                 {
-                    m_Logger.Log("UnityIAP: Promo Purchase(" + prodId + ")");
                     promoPayload = dic;
 
                     // Add more fields to promoPayload
@@ -373,11 +367,7 @@ namespace UnityEngine.Purchasing
             // NB: AppleStoreImpl overrides this completely and does not call the base.
             unity.OnProductsRetrieved (JSONSerializer.DeserializeProductDescriptions (json));
 
-            // The shouldLogPromoInitialization flag determines if we should log a message from ProvideProductsToAds
-            // We would like to log this message only once when we successfully retrieved products, so we reset
-            // shouldLogPromoInitialization to false once we call ProvideProductsToAds.
-            Promo.ProvideProductsToAds(this, unity, shouldLogPromoInitialization);
-            shouldLogPromoInitialization = false;
+            Promo.ProvideProductsToAds(this, unity);
         }
 
         public virtual void OnPurchaseSucceeded (string id, string receipt, string transactionID)

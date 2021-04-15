@@ -34,7 +34,7 @@ namespace UnityEditor.Purchasing
                 GUI.Label(new Rect(linkSize.x, linkRect.y, linkRect.height, linkRect.height), linkIcon);
             else
             {
-                Debug.Log("Cannot get icon: " + kLightLinkIconPath);
+                Debug.LogWarning("Cannot get icon: " + kLightLinkIconPath);
             }
 
             if (Event.current.type == EventType.MouseUp && linkRect.Contains(Event.current.mousePosition))

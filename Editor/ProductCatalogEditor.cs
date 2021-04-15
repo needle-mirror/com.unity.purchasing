@@ -234,7 +234,7 @@ namespace UnityEditor.Purchasing
 
             EditorGUILayout.BeginVertical();
             float defaultLabelWidth = EditorGUIUtility.labelWidth;
-            EditorGUIUtility.labelWidth = 310;
+            EditorGUIUtility.labelWidth = 315;
 
             bool catalogHasProducts = !catalog.IsEmpty();
             if (catalogHasProducts)
@@ -273,7 +273,7 @@ namespace UnityEditor.Purchasing
                 ProductCatalogExportWindow.kWidth,
                 EditorGUIUtility.singleLineHeight);
             if (GUI.Button(exportButtonRect,
-                new GUIContent("App Store Export", "Export products for bulk import into app store tools")))
+                new GUIContent("App Store Export", "Export products for bulk import into app store tools.")))
             {
                 PopupWindow.Show(exportButtonRect, new ProductCatalogExportWindow(this));
             }
@@ -926,7 +926,7 @@ namespace UnityEditor.Purchasing
                                                             screenshotButtonBox.yMin,
                                                             ProductCatalogExportWindow.kWidth,
                                                             EditorGUIUtility.singleLineHeight);
-                        if (GUI.Button(screenshotButtonRect, new GUIContent("Select a screenshot", "Required for Apple XML Delivery"))) {
+                        if (GUI.Button(screenshotButtonRect, new GUIContent("Select a screenshot", "Required for Apple XML Delivery."))) {
                             string selectedPath = EditorUtility.OpenFilePanel("Select a screenshot", "", "");
                             if (selectedPath != null) {
                                 Item.screenshotPath = selectedPath;

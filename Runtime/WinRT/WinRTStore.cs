@@ -40,7 +40,6 @@ namespace UnityEngine.Purchasing.Default {
 
         public void SetLoginDelay(int delayTime)
         {
-            Log("WinRTSStore(native): SetLoginDelay({0}) called", delayTime);
             this.m_loginDelay = delayTime;
         }
 
@@ -65,15 +64,13 @@ namespace UnityEngine.Purchasing.Default {
         private async void PollForProducts(bool persistent, int delay, int retryCount = 10, bool tryLogin = false, bool loginAttempted = false, bool productsOnly = false) {
             await Task.Delay(delay);
             try {
-                Log("Begin PollForProducts() persistent = {2}, delay = {0}, productsOnly = {1}", delay, productsOnly, persistent);
-
                 var result = await DoRetrieveProducts(productsOnly);
                 callback.OnProductListReceived(result);
             }
             catch (Exception e)
             {
 
-                Log("PollForProducts() Exception (persistent = {0}, delay = {1}, retry = {2}), exception: {3}", persistent, delay, retryCount, e.Message);
+                LogError("PollForProducts() Exception (persistent = {0}, delay = {1}, retry = {2}), exception: {3}", persistent, delay, retryCount, e.Message);
 
                 // NB: persistent here is used to distinguish when this is used by restoreTransactions() so we will
                 // keep it intact and supplement for retries on initialization
@@ -82,14 +79,14 @@ namespace UnityEngine.Purchasing.Default {
                     // This seems to indicate the App is not uploaded on
                     // the dev portal, but is undocumented by Microsoft.
                     if (e.Message.Contains("801900CC")) {
-                        Log("Exception loading listing information: {0}", e.Message);
+                        LogError("Exception loading listing information: {0}", e.Message);
                         callback.OnProductListError("AppNotKnown");
                         // JDRjr: in the main store code this is not being checked correctly
                         // and will result in repeated init attempts. Leaving it for now, but broken...
                     }
                     else if (e.Message.Contains("80070525"))
                     {
-                        Log("PollForProducts() User not signed in error HResult = 0x{0:X} (delay = {1}, retry = {2})", e.HResult, delay, retryCount);
+                        LogError("PollForProducts() User not signed in error HResult = 0x{0:X} (delay = {1}, retry = {2})", e.HResult, delay, retryCount);
                         if((delay == 0)&&(productsOnly == false))
                         {
                             // First time failure give products only a try
@@ -98,7 +95,7 @@ namespace UnityEngine.Purchasing.Default {
                         else
                         {
                             // Gonna call this an error
-                            Log("Calling OnProductListError() delay = {0}, productsOnly = {1}", delay, productsOnly);
+                            LogError("Calling OnProductListError() delay = {0}, productsOnly = {1}", delay, productsOnly);
                             callback.OnProductListError("801900CC because the C# code is broken");
                         }
                     }
@@ -113,14 +110,10 @@ namespace UnityEngine.Purchasing.Default {
                 }
                 else
                 {
-                    Log("Polling for products exception: {0}", e.Message);
-
                     // This is a restore attempt that has thrown an exception
                     // We should allow for a login attempt here as well...
                     if (tryLogin == true)
                     {
-                        Log("Attempting Windows Store login from within IAP");
-
                         var uri = new Uri("ms-windows-store://signin");
                         var loginResult = await global::Windows.System.Launcher.LaunchUriAsync(uri);
 
@@ -132,7 +125,6 @@ namespace UnityEngine.Purchasing.Default {
                         {
                             if (loginAttempted)
                             {
-                                Log("Waiting {0}", retryCount);
                                 // Will wait for retryCount seconds...
                                 PollForProducts(true, 1000, --retryCount, false, true);
                             }
@@ -146,7 +138,6 @@ namespace UnityEngine.Purchasing.Default {
                         }
                         else
                         {
-                            Log("Calling OnProductListError()");
                             callback.OnProductListError("801900CC because the C# code is broken");
                         }
                     }
@@ -159,7 +150,6 @@ namespace UnityEngine.Purchasing.Default {
 
             if(productsOnly == false)
             {
-                Log("Building full product list with existing purchases");
                 // We need a comprehensive list of transaction IDs for owned items.
                 // Microsoft make this difficult by failing to provide transaction IDs
                 // on product licenses that are owned.
@@ -173,7 +163,7 @@ namespace UnityEngine.Purchasing.Default {
                 try {
                     appReceipt = await currentApp.RequestAppReceiptAsync();
                 } catch (Exception e) {
-                    Log("Unable to retrieve app receipt:{0}", e.Message);
+                    LogError("Unable to retrieve app receipt:{0}", e.Message);
                 }
 
                 var receiptTransactions = XMLUtils.ParseProducts(appReceipt);
@@ -185,7 +175,6 @@ namespace UnityEngine.Purchasing.Default {
                 foreach (var license in currentApp.LicenseInformation.ProductLicenses) {
                     if (!transactionMap.ContainsKey(license.Key)) {
                         transactionMap[license.Key] = license.Key.GetHashCode().ToString();
-                        Log("Fake transactionID: Set transactionMap[{0}] = {1}", license.Key, transactionMap[license.Key]);
                     }
                 }
 
@@ -205,7 +194,6 @@ namespace UnityEngine.Purchasing.Default {
             }
             else
             {
-                Log("Building product list without purchases");
                 var productDescriptions = from listing in result.ProductListings.Values
                                           let priceDecimal = TryParsePrice(listing.FormattedPrice)
                                           select new WinProductDescription(listing.ProductId,
@@ -225,7 +213,6 @@ namespace UnityEngine.Purchasing.Default {
             RunOnUIThread(async () => {
                 try {
                     var result = await currentApp.RequestProductPurchaseAsync(productId);
-                    Log("Purchase {0} status:{1}", productId, result.Status);
                     switch (result.Status) {
                         case ProductPurchaseStatus.Succeeded:
                             onPurchaseSucceeded(productId, result.ReceiptXml, result.TransactionId);
@@ -244,10 +231,8 @@ namespace UnityEngine.Purchasing.Default {
         }
 
         private async Task FulfillConsumable(string productId, string transactionId) {
-            Log("Consuming: " + productId);
             try {
                 var result = await currentApp.ReportConsumableFulfillmentAsync(productId, Guid.Parse(transactionId));
-                Log("Fulfilment result for {0} - {1} : {2}", productId, transactionId, result);
 
                 if (FulfillmentResult.Succeeded == result) {
                     lock (transactionIdToProductId) {
@@ -258,12 +243,12 @@ namespace UnityEngine.Purchasing.Default {
                 // If it doesn't, it will eventually be retried automatically.
             }
             catch (Exception e) {
-                Log("Exception consuming {0} : {1} (non-fatal)", productId, e.Message);
+                LogError("Exception consuming {0} : {1} (non-fatal)", productId, e.Message);
             }
         }
 
-        private void Log(string message, params object[] formatArgs) {
-            callback.log(string.Format("UnityIAPWin8:" + message, formatArgs));
+        private void LogError(string message, params object[] formatArgs) {
+            callback.logError(string.Format("UnityIAPWin8:" + message, formatArgs));
         }
 
         private void onPurchaseSucceeded(string productId, string receipt, Guid transactionId) {
@@ -287,13 +272,11 @@ namespace UnityEngine.Purchasing.Default {
                 {
                     if (transactionIdToProductId.ContainsKey(transactionId))
                     {
-                        callback.log("Fulfilling transaction " + transactionId);
-                        callback.log("  ProductID " + transactionIdToProductId[transactionId]);
                         FulfillConsumable(transactionIdToProductId[transactionId], transactionId);
                     }
                     else
                     {
-                        callback.log("Nothing to fulfil for transaction " + transactionId);
+                        callback.logError("Nothing to fulfill for transaction " + transactionId);
                     }
                 }
             });

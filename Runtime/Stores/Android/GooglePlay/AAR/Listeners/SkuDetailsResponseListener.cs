@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
@@ -17,6 +18,7 @@ namespace UnityEngine.Purchasing
             m_OnSkuDetailsResponse = onSkuDetailsResponseAction;
         }
 
+        [Preserve]
         void onSkuDetailsResponse(AndroidJavaObject billingResult, AndroidJavaObject skuDetails)
         {
             m_OnSkuDetailsResponse(billingResult, skuDetails);

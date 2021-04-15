@@ -47,11 +47,11 @@ namespace UnityEngine.Purchasing
                 {
                     Directory.CreateDirectory(path);
                 }
-                catch (Exception e)
+                catch (Exception recordPathException)
                 {
                     // A wide variety of exceptions can occur, for all of which
                     // nothing is the best course of action.
-                    logger.Log(e.Message);
+                    logger.LogException(recordPathException);
                 }
             }
         }

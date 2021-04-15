@@ -168,25 +168,6 @@ namespace UnityEngine.Purchasing.Extension
 			return s_PcControlledPlatforms.Contains(Application.platform);
 		}
 
-		public static void DebugLog(string message, params System.Object[] args)
-		{
-			try
-			{
-				Debug.Log(string.Format(
-										"com.ballatergames.debug - {0}",
-					string.Format(message, args))
-					);
-			}
-			catch (ArgumentNullException a)
-			{
-				Debug.Log(a);
-			}
-			catch (FormatException f)
-			{
-				Debug.Log(f);
-			}
-		}
-
 		private IEnumerator DelayedCoroutine(IEnumerator coroutine, int delay)
 		{
 			yield return new WaitForSeconds(delay);

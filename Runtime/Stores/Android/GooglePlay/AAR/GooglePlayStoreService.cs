@@ -9,8 +9,6 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreService : IGooglePlayStoreService
     {
-        const int k_NullProrationMode = -1;
-
         IGoogleBillingClient m_BillingClient;
         bool m_IsConnectedToGoogle;
         bool m_HasConnectionAttempted;
@@ -109,12 +107,13 @@ namespace UnityEngine.Purchasing
 
         public void Purchase(ProductDefinition product)
         {
-            Purchase(product, null, k_NullProrationMode);
+            Purchase(product, null, GooglePlayProrationMode.k_NullProrationMode);
         }
 
         public void Purchase(ProductDefinition product, Product oldProduct, int desiredProrationMode)
         {
             m_GoogleLastKnownProductService.SetLastKnownProductId(product.storeSpecificId);
+            m_GoogleLastKnownProductService.SetLastKnownProrationMode(desiredProrationMode);
             m_GooglePurchaseService.Purchase(product, oldProduct, desiredProrationMode);
         }
 

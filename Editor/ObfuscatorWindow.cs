@@ -250,7 +250,7 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception e)
             {
-                Debug.Log(e.StackTrace);
+                Debug.LogWarning(e.StackTrace);
             }
 
             // Ensure all the Tangle classes exist, even if they were not generated at this time. Apple will always
@@ -263,7 +263,7 @@ namespace UnityEditor.Purchasing
                 }
                 catch (Exception e)
                 {
-                    Debug.Log(e.StackTrace);
+                    Debug.LogWarning(e.StackTrace);
                 }
             }
 

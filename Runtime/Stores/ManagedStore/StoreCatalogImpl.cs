@@ -80,7 +80,6 @@ namespace UnityEngine.Purchasing
                     }
                     else
                     {
-                        m_Logger.Log("Fetched catalog successfully");
                         if (m_cachedStoreCatalogReference != null)
                         {
                             m_cachedStoreCatalogReference.Save(response);
@@ -163,19 +162,8 @@ namespace UnityEngine.Purchasing
             if (m_cachedStoreCatalogReference != null)
             {
                 cache = ParseProductsFromJSON(m_cachedStoreCatalogReference.Load(), m_StoreName, m_Logger);
-                if (cache == null || cache.Count == 0)
-                {
-                    m_Logger.Log("Using configuration builder objects");
-                }
-                else
-                {
-                    m_Logger.Log("Using cached IAP catalog");
-                }
             }
-            else
-            {
-                m_Logger.Log("Using registered configuration builder objects");
-            }
+
             callback(cache);
         }
     }

@@ -46,7 +46,7 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    m_Logger.Log("RetrieveProducts failed: " + json);
+                    m_Logger.LogWarning("Unity IAP", "RetrieveProducts failed: " + json);
                 }
             };
 

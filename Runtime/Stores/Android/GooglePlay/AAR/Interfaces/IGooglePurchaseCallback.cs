@@ -9,5 +9,6 @@ namespace UnityEngine.Purchasing.Interfaces
         void OnPurchaseSuccessful(string sku, string receipt, string purchaseToken);
         void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription);
         void NotifyDeferredPurchase(string sku, string receipt, string purchaseToken);
+        void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku);
     }
 }

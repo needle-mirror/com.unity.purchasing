@@ -68,7 +68,7 @@ In the Seller Office, add one or more in-app purchases for the app.
 
 ![](images/SamsungGalaxyIAP-8.png)
 
-2. Define the __Item ID__. The Item ID here is the same identifier used in the app source code, added to the Unity IAP [ConfigurationBuilder](ScriptRef:Purchasing.ConfigurationBuilder.html) instance via `AddProduct()` or `AddProducts()`. For debugging purposes, it's best practise to use [reverse-DNS](https://en.wikipedia.org/wiki/Reverse_domain_name_notation) for your Item ID. Click __Check__ to ensure the Item ID is valid and unique, then populate __Item Type__ and all other elements and click __Save__.
+2. Define the __Item ID__. The Item ID here is the same identifier used in the app source code, added to the Unity IAP [ConfigurationBuilder](xref:UnityEngine.Purchasing.ConfigurationBuilder) instance via `AddProduct()` or `AddProducts()`. For debugging purposes, it's best practise to use [reverse-DNS](https://en.wikipedia.org/wiki/Reverse_domain_name_notation) for your Item ID. Click __Check__ to ensure the Item ID is valid and unique, then populate __Item Type__ and all other elements and click __Save__.
 
 ![](images/SamsungGalaxyIAP-9.png)
 

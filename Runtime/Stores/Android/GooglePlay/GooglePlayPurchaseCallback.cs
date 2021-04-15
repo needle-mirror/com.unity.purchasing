@@ -32,5 +32,10 @@ namespace UnityEngine.Purchasing
         {
             m_GooglePlayStoreExtensions?.NotifyDeferredPurchase(sku, receipt, purchaseToken);
         }
+
+        public void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku)
+        {
+            m_GooglePlayStoreExtensions?.NotifyDeferredProrationUpgradeDowngradeSubscription(sku);
+        }
     }
 }

@@ -9,11 +9,13 @@ using UnityEngine;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Default;
 
-namespace UnityEngine.Purchasing {
+namespace UnityEngine.Purchasing
+{
 	/// <summary>
 	/// Handles Windows 8.1.
 	/// </summary>
-	internal class WinRTStore : AbstractStore, IWindowsIAPCallback, IMicrosoftExtensions {
+	internal class WinRTStore : AbstractStore, IWindowsIAPCallback, IMicrosoftExtensions
+    {
 		private IWindowsIAP win8;
 		private IStoreCallback callback;
 		private IUtil util;
@@ -21,8 +23,8 @@ namespace UnityEngine.Purchasing {
 
 		private bool m_CanReceivePurchases = false;
 
-		public WinRTStore(IWindowsIAP win8, IUtil util,
-								 ILogger logger) {
+		public WinRTStore(IWindowsIAP win8, IUtil util, ILogger logger)
+        {
 			this.win8 = win8;
 			this.util = util;
 			this.logger = logger;
@@ -34,11 +36,13 @@ namespace UnityEngine.Purchasing {
 		/// between sandbox/live after this store is
 		/// constructed.
 		/// </summary>
-		public void SetWindowsIAP(IWindowsIAP iap) {
+		public void SetWindowsIAP(IWindowsIAP iap)
+        {
 			this.win8 = iap;
 		}
 
-		public override void Initialize(IStoreCallback biller) {
+		public override void Initialize(IStoreCallback biller)
+        {
 			this.callback = biller;
 		}
 
@@ -66,12 +70,14 @@ namespace UnityEngine.Purchasing {
 			win8.RetrieveProducts(true);
 		}
 
-		public override void Purchase(ProductDefinition product, string developerPayload) {
+		public override void Purchase(ProductDefinition product, string developerPayload)
+        {
 			win8.Purchase(product.storeSpecificId);
 		}
 
 		// An Action<bool> invoked on pause/resume.
-		public void restoreTransactions(bool pausing) {
+		public void restoreTransactions(bool pausing)
+        {
 			if (!pausing) {
 				if(m_CanReceivePurchases)
 				{
@@ -80,8 +86,8 @@ namespace UnityEngine.Purchasing {
 			}
 		}
 
-		public void RestoreTransactions() {
-			logger.Log("Explicit RestoreTransactions()");
+		public void RestoreTransactions()
+        {
 			win8.RetrieveProducts(false);
 			// setting this here assumes that the Retrieve actually worked, but in the
 			// case where it didn't we still want to persist that the user has tried to restore
@@ -89,12 +95,14 @@ namespace UnityEngine.Purchasing {
 			m_CanReceivePurchases = true;
 		}
 
-		public void logError(string error) {
+		public void logError(string error)
+        {
 			// Uncomment to get diagnostics printed on screen.
 			logger.LogError("Unity Purchasing", error);
 		}
 
-		public void OnProductListReceived(WinProductDescription[] winProducts) {
+		public void OnProductListReceived(WinProductDescription[] winProducts)
+        {
 			util.RunOnMainThread(() =>
 			{
 				// Convert windows products to Unity Purchasing products.
@@ -118,8 +126,9 @@ namespace UnityEngine.Purchasing {
 				logger.Log(message);
 			});
 		}
-
-		public void OnPurchaseFailed(string productId, string error) {
+		
+		public void OnPurchaseFailed(string productId, string error)
+        {
 			util.RunOnMainThread(() => {
 				logger.LogFormat(LogType.Error, "Purchase failed: {0}, {1}", productId, error);
 				if("AlreadyPurchased" == error)
@@ -149,9 +158,9 @@ namespace UnityEngine.Purchasing {
 		}
 
 		private static int count;
-		public void OnPurchaseSucceeded(string productId, string receipt, string tranId) {
+		public void OnPurchaseSucceeded(string productId, string receipt, string tranId)
+        {
 			util.RunOnMainThread(() => {
-				logger.Log("PURCHASE SUCCEEDED!:{0}", count++);
 				m_CanReceivePurchases = true;
 				callback.OnPurchaseSucceeded(productId, receipt, tranId);
 			});
@@ -159,12 +168,15 @@ namespace UnityEngine.Purchasing {
 
 		// When using an incorrect product id:
 		// "Exception from HRESULT: 0x805A0194"
-		public void OnProductListError(string message) {
+		public void OnProductListError(string message)
+        {
 			util.RunOnMainThread(() => {
-				if (message.Contains("801900CC")) {
+				if (message.Contains("801900CC"))
+                {
 					callback.OnSetupFailed(InitializationFailureReason.AppNotKnown);
 				}
-				else {
+				else
+                {
 					logError("Unable to retrieve product listings. UnityIAP will automatically retry...");
 					logError(message);
 					init(3000);

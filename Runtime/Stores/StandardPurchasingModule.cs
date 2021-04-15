@@ -19,9 +19,15 @@ namespace UnityEngine.Purchasing
     public class StandardPurchasingModule : AbstractPurchasingModule, IAndroidStoreSelection
     {
         /// <summary>
+        /// Obsolete and inaccurate. Do not use.
+        /// </summary>
+        [Obsolete("Not accurate. Use Version instead.", false)]
+        public const string k_PackageVersion = "3.0.1";
+        internal readonly string k_Version = "3.0.2"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
-		public const string k_PackageVersion = "3.0.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        public string Version => k_Version;
         private AppStore m_AppStorePlatform;
         private INativeStoreProvider m_NativeStoreProvider;
         private RuntimePlatform m_RuntimePlatform;
@@ -69,7 +75,7 @@ namespace UnityEngine.Purchasing
             m_AppStorePlatform = android;
             m_UseCloudCatalog = useCloudCatalog;
             m_persistentDataPath = persistentDataPath;
-            Promo.InitPromo(platform, logger, k_PackageVersion, util, webUtil);
+            Promo.InitPromo(platform, logger, Version, util, webUtil);
         }
 
         /// <summary>
@@ -175,7 +181,6 @@ namespace UnityEngine.Purchasing
         {
             if (null == ModuleInstance) {
                 var logger = UnityEngine.Debug.unityLogger;
-                logger.Log("UnityIAP Version: " + k_PackageVersion);
                 var gameObject = new GameObject ("IAPUtil");
                 Object.DontDestroyOnLoad (gameObject);
                 gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;

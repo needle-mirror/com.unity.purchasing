@@ -64,12 +64,12 @@ namespace UnityEngine.Purchasing {
         /// <param name="googleStore">Triggered upon completion of the subscription update.</param>
         public static void UpdateSubscription(Product newProduct, Product oldProduct, string developerPayload, Action<Product, string> appleStore, Action<string, string> googleStore) {
             if (oldProduct.receipt == null) {
-                Debug.Log("The product has not been purchased, a subscription can only be upgrade/downgrade when has already been purchased");
+                Debug.LogError("The product has not been purchased, a subscription can only be upgrade/downgrade when has already been purchased");
                 return;
             }
             var receipt_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(oldProduct.receipt);
             if (receipt_wrapper == null || !receipt_wrapper.ContainsKey("Store") || !receipt_wrapper.ContainsKey("Payload")) {
-                Debug.Log("The product receipt does not contain enough information");
+                Debug.LogWarning("The product receipt does not contain enough information");
                 return;
             }
             var store = (string)receipt_wrapper ["Store"];
@@ -84,7 +84,7 @@ namespace UnityEngine.Purchasing {
                         try {
                             oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
                         } catch (Exception e) {
-                            Debug.unityLogger.Log("Error: the product that will be updated does not have a valid receipt", e);
+                            Debug.unityLogger.LogError("Error: the product that will be updated does not have a valid receipt", e);
                             return;
                         }
                         string newSubscriptionId = newProduct.definition.storeSpecificId;
@@ -99,7 +99,7 @@ namespace UnityEngine.Purchasing {
                     }
                 default:
                     {
-                        Debug.Log("This store does not support update subscriptions");
+                        Debug.LogWarning("This store does not support update subscriptions");
                         return;
                     }
                 }
@@ -119,7 +119,7 @@ namespace UnityEngine.Purchasing {
             try {
                 oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
             } catch (Exception e) {
-                Debug.unityLogger.Log("Error: the product that will be updated does not have a valid receipt", e);
+                Debug.unityLogger.LogError("Error: the product that will be updated does not have a valid receipt", e);
                 return;
             }
             string newSubscriptionId = newProduct.definition.storeSpecificId;

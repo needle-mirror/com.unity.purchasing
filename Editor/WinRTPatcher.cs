@@ -22,7 +22,7 @@ namespace UnityEditor.Purchasing
                 }
                 catch (Exception patchException)
                 {
-                    Debug.Log(patchException.StackTrace);
+                    Debug.LogWarning(patchException.StackTrace);
                 }
             }
 

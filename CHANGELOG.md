@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.1.0] - 2021-04-15
+### Added
+- GooglePlay - Google Play Billing Library version 3.0.3.
+  - Fixes a broken purchase flow when user resumed their app through the Android Launcher after interrupting an ongoing purchase. Now `IStoreListener.OnPurchaseFailed(PurchaseFailureDescription.reason: PurchaseFailureReason.UserCancelled)` is called on resumption. E.g. first the user initiates a purchase, then sees the Google purchasing dialog, and sends their app to the background via the device's Home key. They tap the app's icon in the Launcher, see no dialog, and, finally, the app will now receive this callback.
+
+### Changed
+- `string StandardPurchasingModule.k_PackageVersion` is obsolete and will incorrectly report `"3.0.1"`. Please use the new `string StandardPurchasingModule.Version` to read the correct current version of this package.
+- Reduced logging, and corrected the severity of several logs.
+
+### Fixed
+- tvOS - build errors due to undesirable call to `[[SKPaymentQueue defaultQueue] presentCodeRedemptionSheet]` which will now only be used for iOS 14.
+- tvOS, macOS - Builds missing Xcode project In-App Purchasing capability and StoreKit.framework.
+- Security - Tangle files causing compilation errors on platforms not supported by Security: non-GooglePlay and non-Apple.
+- GooglePlay - Subscription upgrade/downgrade using proration mode [DEFERRED](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode#DEFERRED) (via `IGooglePlayStoreExtensions.UpgradeDowngradeSubscription(string oldSku, string newSku, int desiredProrationMode)`) reported `OnPurchaseFailed` with `PurchaseFailureReason.Unknown`, when the deferred subscription upgrade/downgrade succeeded. This subscription change generates no immediate transaction and no receipt. Now a custom `Action<Product>` can be called when the change succeeds, and is set by the new `SetDeferredProrationUpgradeDowngradeSubscriptionListener` API:
+  - Adds `IGooglePlayStoreExtensions.SetDeferredProrationUpgradeDowngradeSubscriptionListener(Action<Product> action)`. Sets listener for deferred subscription change events. Deferred subscription changes only take effect at the renewal cycle and no transaction is done immediately, therefore there is no receipt nor token. The `Action<Product>` is the deferred subscription change event. No payout is granted here. Instead, notify the user that the subscription change will take effect at the next renewal cycle.
+
 ## [3.0.2] - 2021-03-30
 
 ### Added

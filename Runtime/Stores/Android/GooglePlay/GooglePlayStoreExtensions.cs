@@ -8,12 +8,11 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreExtensions: IGooglePlayStoreExtensions, IGooglePlayStoreExtensionsInternal
     {
-        const int k_ImmediateWithoutProration = 3;
-
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
         IStoreCallback m_StoreCallback;
         Action<Product> m_DeferredPurchaseAction;
+        Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
         internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
@@ -22,7 +21,7 @@ namespace UnityEngine.Purchasing
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku)
         {
-            UpgradeDowngradeSubscription(oldSku, newSku, k_ImmediateWithoutProration);
+            UpgradeDowngradeSubscription(oldSku, newSku, GooglePlayProrationMode.k_ImmediateWithoutProration);
         }
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku, int desiredProrationMode)
@@ -87,6 +86,11 @@ namespace UnityEngine.Purchasing
             m_DeferredPurchaseAction = action;
         }
 
+        public void SetDeferredProrationUpgradeDowngradeSubscriptionListener(Action<Product> action)
+        {
+            m_DeferredProrationUpgradeDowngradeSubscriptionAction = action;
+        }
+
         public void SetStoreCallback(IStoreCallback storeCallback)
         {
             m_StoreCallback = storeCallback;
@@ -100,6 +104,15 @@ namespace UnityEngine.Purchasing
                 product.transactionID = transactionId;
                 product.receipt = receipt;
                 m_DeferredPurchaseAction?.Invoke(product);
+            }
+        }
+
+        public void NotifyDeferredProrationUpgradeDowngradeSubscription(string productId)
+        {
+            Product product = m_StoreCallback.FindProductById(productId);
+            if (product != null)
+            {
+                m_DeferredProrationUpgradeDowngradeSubscriptionAction?.Invoke(product);
             }
         }
 

@@ -52,7 +52,7 @@ Use this section to add local, fixed definitions for the content you pay out to 
 
 **Note**: You can add multiple Payouts to a single Product. 
 
-For more information on the PayoutDefinition class, see the [Scripting Reference](ScriptRef:Purchasing.PayoutDefinition.html). You can always add Payout information to a Product in a script using this class. For example:
+For more information on the PayoutDefinition class, see the [Scripting Reference](xref:UnityEngine.Purchasing.PayoutDefinition). You can always add Payout information to a Product in a script using this class. For example:
 
 ```
 using UnityEngine.Purchasing;
@@ -109,7 +109,7 @@ For information on screenshot specs, see Apple’s publisher support documentati
 ![Populating **Apple Configuration** fields for Products in the **IAP Catalog** GUI.](images/AppleConfig.png)
 
 ## Defining Products in scripts
-You can also declare your Product list programmatically using the [Purchasing Configuration Builder](ScriptRef:Purchasing.ConfigurationBuilder.html). You must provide a unique cross-store __Product ID__ and __Product Type__ for each Product:
+You can also declare your Product list programmatically using the [Purchasing Configuration Builder](xref:UnityEngine.Purchasing.ConfigurationBuilder). You must provide a unique cross-store __Product ID__ and __Product Type__ for each Product:
 
 ````
 using UnityEngine;

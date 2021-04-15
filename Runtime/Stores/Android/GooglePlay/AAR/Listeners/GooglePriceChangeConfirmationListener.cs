@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
@@ -19,6 +20,7 @@ namespace UnityEngine.Purchasing
             m_OnPriceChangeConfirmationResult = onPriceChangeConfirmationResult;
         }
 
+        [Preserve]
         void onPriceChangeConfirmationResult(AndroidJavaObject javaBillingResult)
         {
             GoogleBillingResult billingResult = new GoogleBillingResult(javaBillingResult);

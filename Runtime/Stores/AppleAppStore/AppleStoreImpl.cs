@@ -24,7 +24,6 @@ namespace UnityEngine.Purchasing
 
 
         private string products_json;
-        private bool shouldLogPromoInitialization = true;
 
 
         public AppleStoreImpl(IUtil util) {
@@ -157,8 +156,7 @@ namespace UnityEngine.Purchasing
             unity.OnProductsRetrieved (finalProductDescriptions ?? productDescriptions);
 
             // Set up IAP promo product list (since we bypassed the JSON store here)
-            Promo.ProvideProductsToAds(this, unity, shouldLogPromoInitialization);
-            shouldLogPromoInitialization = false;
+            Promo.ProvideProductsToAds(this, unity);
 
             // If there is a promotional purchase callback, tell the store to intercept those purchases.
             if (m_PromotionalPurchaseCallback != null)

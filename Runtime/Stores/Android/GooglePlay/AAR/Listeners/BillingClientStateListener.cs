@@ -1,6 +1,7 @@
 using System;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
@@ -28,6 +29,7 @@ namespace UnityEngine.Purchasing
             m_Disconnect = onDisconnected;
         }
 
+        [Preserve]
         void onBillingSetupFinished(AndroidJavaObject billingResult)
         {
             GoogleBillingResult result = new GoogleBillingResult(billingResult);
@@ -41,6 +43,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        [Preserve]
         void onBillingServiceDisconnected()
         {
             m_Disconnect();

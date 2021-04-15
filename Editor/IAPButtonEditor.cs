@@ -113,7 +113,7 @@ namespace UnityEditor.Purchasing
 			serializedObject.Update();
 
 			if (button.buttonType == IAPButton.ButtonType.Purchase) {
-				EditorGUILayout.LabelField(new GUIContent("Product ID:", "Select a product from the IAP catalog"));
+				EditorGUILayout.LabelField(new GUIContent("Product ID:", "Select a product from the IAP catalog."));
 
 				var catalog = ProductCatalog.LoadDefaultCatalog();
 

@@ -5,5 +5,9 @@ namespace UnityEngine.Purchasing.Interfaces
         string GetLastKnownProductId();
 
         void SetLastKnownProductId(string lastKnownProductId);
+
+        int GetLastKnownProrationMode();
+
+        void SetLastKnownProrationMode(int lastKnownProrationMode);
     }
 }

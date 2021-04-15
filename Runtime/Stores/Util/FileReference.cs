@@ -10,11 +10,11 @@ namespace UnityEngine.Purchasing {
     /// Operations such as Save, Load, and Delete are available.
     /// One use case for this class is to create a file reference to a locally cached store catalog.
     /// </summary>
-    /// 
+    ///
     internal class FileReference {
         private string m_FilePath;
         private ILogger m_Logger;
-       
+
         /// <summary>
         /// Creates the instance of FileReference. Method allows dependency injection to ease testing
         /// by using Interfaces for the logger and util.
@@ -84,7 +84,7 @@ namespace UnityEngine.Purchasing {
             try {
                 File.Delete(m_FilePath);
             } catch (Exception e) {
-                m_Logger.Log("Failed deleting cached content", e);
+                m_Logger.LogWarning("Failed deleting cached content", e);
             }
         }
     }

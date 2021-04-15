@@ -12,7 +12,7 @@ The __Unity Purchasing__ system configures the Products you populate in the cata
 **Note**: You still need to use scripting to define how players access their newly purchased content. For more information, see the [**Purchase fulfillment**](#PurchaseFulfillment) section below. 
 
 ## Implementing Codeless IAP
-Before starting, install the latest [**Unity IAP**](https://assetstore.unity.com/packages/add-ons/services/billing/unity-iap-68207) SDK. See documentation on [**Setting up Unity IAP**](https://docs.unity3d.com/2018.1/Documentation/Manual/UnityIAPSettingUp.html) for more information.
+Before starting, install the latest Unity IAP SDK. See documentation on [**Setting up Unity IAP**](UnityIAPSettingUp.md) for more information.
 
 <a name="IAPButtons"></a>
 ### Adding IAP Buttons to your Scene
@@ -37,10 +37,10 @@ Next, use the GUI to define the following attributes for each Product in your ca
 
 ![Populating Product information in the **IAP Catalog** GUI](images/IAPCatalogGUI.png)
 
-**Note**: The __IAP Catalog__ GUI provides additional tools for configuring your Products. Before [exporting a catalog](#Exporting) for upload to its respective store, you must populate description and pricing information as well. For detailed information on these settings, see documentation on [**Defining Products**](https://docs.unity3d.com/2018.1/Documentation/Manual/UnityIAPDefiningProducts.html).
+**Note**: The __IAP Catalog__ GUI provides additional tools for configuring your Products. Before [exporting a catalog](#Exporting) for upload to its respective store, you must populate description and pricing information as well. For detailed information on these settings, see documentation on [**Defining Products**](UnityIAPDefiningProducts.md).
 
 ### Automatically initializing `UnityPurchasing`
-The IAP SDK must initialize in order for in-app purchasing to work. This occurs automatically when the first instance of a Codeless __IAP Button__ or [__IAP Listener__](#IAPListeners) loads at run time. However, you may need to initialize the SDK before an IAP Button or IAP Listener appears in your game (for example, serving an [**IAP Promo**](https://docs.unity3d.com/2018.1/Documentation/Manual/IAPPromo.html) offer after application launch). In these cases, check __Automatically initialize UnityPurchasing (recommended)__ at the bottom of the __IAP Catalog__ window. This ensures that [```UnityPurchasing```](https://docs.unity3d.com/2018.1/Documentation/ScriptReference/Purchasing.UnityPurchasing.html) initializes immediately when the application starts, and eliminates dependencies on the codeless instances’ lifecycles. 
+The IAP SDK must initialize in order for in-app purchasing to work. This occurs automatically when the first instance of a Codeless __IAP Button__ or [__IAP Listener__](#IAPListeners) loads at run time. However, you may need to initialize the SDK before an IAP Button or IAP Listener appears in your game. In these cases, check __Automatically initialize UnityPurchasing (recommended)__ at the bottom of the __IAP Catalog__ window. This ensures that [```UnityPurchasing```](xref:UnityEngine.Purchasing.UnityPurchasing) initializes immediately when the application starts, and eliminates dependencies on the codeless instances’ lifecycles. 
 
 ![Enabling auto-initialization for the SDK through the **IAP Catalog** GUI](images/AutoInitialize.png)
 
@@ -113,7 +113,7 @@ When a user selects this button at run time, the button calls the purchase resto
 
 If the restore succeeds, Unity IAP invokes the __On Purchase Complete (Product)__ function on the __IAP Button__ associated with that Product. 
 
-For more information, see the documentation on [**Restoring purchases**](https://docs.unity3d.com/2018.1/Documentation/Manual/UnityIAPRestoringTransactions.html).
+For more information, see the documentation on [**Restoring purchases**](UnityIAPRestoringTransactions.md).
 
 <a name="IAPListeners"></a>
 ### IAP Listeners
@@ -128,8 +128,8 @@ To add an __IAP Listener__:
    ![Configuring an __IAP Listener__ to handle processing exceptions](images/IAPListenerScript.png)
 
 ### Accessing Unity IAP’s extended functionality
-The Codeless IAP feature does not expose most of Unity IAP’s [extended functionality](https://docs.unity3d.com/2018.1/Documentation/Manual/UnityIAPStoreExtensions.html). However, Codeless IAP is implemented on top of the existing scripting APIs, so you can modify much of its functionality in the _IAPButton.cs_ script (_Assets/Plugins/UnityPurchasing/script/IAPButton.cs_) to suit your needs.
+The Codeless IAP feature does not expose most of Unity IAP’s [extended functionality](UnityIAPStoreExtensions.md). However, Codeless IAP is implemented on top of the existing scripting APIs, so you can modify much of its functionality in the _IAPButton.cs_ script (_Assets/Plugins/UnityPurchasing/script/IAPButton.cs_) to suit your needs.
 
-To use Unity IAP’s extended functionality, access the Unity IAP [```IStoreController```](https://docs.unity3d.com/2018.1/Documentation/ScriptReference/Purchasing.IStoreController.html) and [```IExtensionProvider```](https://docs.unity3d.com/2018.1/Documentation/ScriptReference/Purchasing.IExtensionProvider.html) instances returned by [```IStoreListener.OnInitialize```](https://docs.unity3d.com/2018.1/Documentation/ScriptReference/Purchasing.IStoreListener.OnInitialized.html).
+To use Unity IAP’s extended functionality, access the Unity IAP [```IStoreController```](xref:UnityEngine.Purchasing.IStoreController) and [```IExtensionProvider```](xref:UnityEngine.Purchasing.IExtensionProvider) instances returned by [```IStoreListener.OnInitialized```](xref:UnityEngine.Purchasing.IStoreListener).
 
 

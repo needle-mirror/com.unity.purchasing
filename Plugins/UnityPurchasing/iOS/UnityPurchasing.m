@@ -306,7 +306,7 @@ int delayInSeconds = 2;
 }
 
 - (void)presentCodeRedemptionSheet {
-#if !MAC_APPSTORE
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 && TARGET_OS_TV == 0 && !MAC_APPSTORE
     if (@available(iOS 14, *)) {
         [[SKPaymentQueue defaultQueue] presentCodeRedemptionSheet]; 
     } else

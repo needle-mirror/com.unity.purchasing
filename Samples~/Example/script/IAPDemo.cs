@@ -260,9 +260,15 @@ public class IAPDemo : MonoBehaviour, IStoreListener
                     // embedded in the signed receipt objects to the data which the game is using
                     // to make this purchase.
                 }
-            } catch (IAPSecurityException ex) {
+            }
+            catch (IAPSecurityException ex)
+            {
                 Debug.Log("Invalid receipt, not unlocking content. " + ex);
                 return PurchaseProcessingResult.Complete;
+            }
+            catch (NotImplementedException exception)
+            {
+                Debug.Log("Cross Platform Validator Not Implemented: " + exception);
             }
         }
         #endif
@@ -503,7 +509,14 @@ public class IAPDemo : MonoBehaviour, IStoreListener
         #else
         appIdentifier = Application.bundleIdentifier;
         #endif
-        validator = new CrossPlatformValidator(GooglePlayTangle.Data(), AppleTangle.Data(), appIdentifier);
+        try
+        {
+            validator = new CrossPlatformValidator(GooglePlayTangle.Data(), AppleTangle.Data(), appIdentifier);
+        }
+        catch (NotImplementedException exception)
+        {
+            Debug.Log("Cross Platform Validator Not Implemented: " + exception);
+        }
 #endif
 
         // Now we're ready to initialize Unity IAP.
@@ -561,7 +574,7 @@ public class IAPDemo : MonoBehaviour, IStoreListener
         restoreButton.onClick.AddListener(RestoreButtonClick);
 
         versionText.text = "Unity version: " + Application.unityVersion + "\n" +
-                           "IAP version: " + StandardPurchasingModule.k_PackageVersion;
+                           "IAP version: " + StandardPurchasingModule.Instance().Version;
     }
 
     /// <summary>

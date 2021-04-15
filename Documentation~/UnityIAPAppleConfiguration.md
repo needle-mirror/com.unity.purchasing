@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This guide describes the process of establishing the digital records and relationships necessary for a Unity game to interact with an In-App Purchase Store. The [Unity IAP](UnityIAP) purchasing API is targeted. 
+This guide describes the process of establishing the digital records and relationships necessary for a Unity game to interact with an In-App Purchase Store. The [Unity IAP](index.md) purchasing API is targeted. 
 
 In-App Purchase (IAP) is the process of transacting money for digital goods. A platform's Store allows purchase of Products, representing digital goods. These Products have an Identifier, typically of string datatype. Products have Types to represent their durability: _subscription_, _consumable_ (capable of being rebought), and _non-consumable_ (capable of being bought only once) are the most common. 
 
@@ -10,7 +10,7 @@ In-App Purchase (IAP) is the process of transacting money for digital goods. A p
 
 ### Getting Started
 
-1. Write a game implementing Unity IAP. See [Unity IAP Initialization](UnityIAPInitialization) and [Integrating Unity IAP with your game](https://unity3d.com/learn/tutorials/topics/analytics/integrating-unity-iap-your-game-beta).
+1. Write a game implementing Unity IAP. See [Unity IAP Initialization](UnityIAPInitialization.md).
 
 1. Keep the game's product identifiers on-hand for use in iTunes Connect later.
 
@@ -43,15 +43,15 @@ In-App Purchase (IAP) is the process of transacting money for digital goods. A p
     ![](images/IAPAppleImage4.png)
 
 
-2. Choose a [Product Type](UnityIAPDefiningProducts). 
+2. Choose a [Product Type](UnityIAPDefiningProducts.md). 
 
     ![](images/IAPAppleImage5.png)
 
 3. Specify the Product Identifier, and complete other fields as requested.
 
-    **NOTE:** The "Product ID" here is the same identifier used in the game source code, added to the [Unity IAP ConfigurationBuilder](http://docs.unity3d.com/Documentation/ScriptReference/Purchasing.ConfigurationBuilder.html) instance via __AddProduct()__ or __AddProducts()__. 
+    **NOTE:** The "Product ID" here is the same identifier used in the game source code, added to the [Unity IAP ConfigurationBuilder](xref:UnityEngine.Purchasing.ConfigurationBuilder) instance via __AddProduct()__ or __AddProducts()__. 
     
-    **NOTE:** When targeting multiple Apple device groups (for example, shipping on both iOS and Mac) Apple requires usage of different, unique product identifiers for each distinct device group. Use [Unity IAP's Purchasing.IDs](http://docs.unity3d.com/ScriptReference/Purchasing.IDs-ctor.html) class and define a one-to-many mapping Product IDs to the store-specific identifiers, and pass that mapping in when initializing IAP. 
+    **NOTE:** When targeting multiple Apple device groups (for example, shipping on both iOS and Mac) Apple requires usage of different, unique product identifiers for each distinct device group. Use [Unity IAP's Purchasing.IDs](xref:UnityEngine.Purchasing.IDs) class and define a one-to-many mapping Product IDs to the store-specific identifiers, and pass that mapping in when initializing IAP. 
 
     ![](images/IAPAppleImage6.png)
 
@@ -63,7 +63,7 @@ In-App Purchase (IAP) is the process of transacting money for digital goods. A p
 
 1. Create __Sandbox Testers__ using iTunes Connect for use on your test device's iTunes Account. To do this, navigate to __iTunes Connect &gt; Users and Roles__, and choose the plus ("+") button. You must review [Apple's Sandbox Tester documentation](https://developer.apple.com/library/ios/documentation/LanguagesUtilities/Conceptual/iTunesConnect_Guide/Chapters/SettingUpUserAccounts.html#/apple_ref/doc/uid/TP40011225-CH25-SW9) as there are several additional important usage notes, and you must use a real email address to create Testers. 
 
-    **NOTE:** See the [iOS and Mac App Store guides](UnityIAPiOSMAS) for additional details. 
+    **NOTE:** See the [iOS and Mac App Store guides](UnityIAPiOSMAS.md) for additional details. 
     
     **TIP:** (*) To simplify managing the email address, use an email service capable of sub-addressing (emailaccount+subaddress@example.com) such as Gmail, iCloud, and Outlook.com. This allows one email account to receive email for multiple sub-addresses. 
 
@@ -87,7 +87,7 @@ In-App Purchase (IAP) is the process of transacting money for digital goods. A p
 
     ![](images/IAPAppleImage11.png)
 
-2. Build and run the game on your iOS device. `UnityPurchasing.Initialize()` succeeds if everything has been correctly configured. See [Unity Purchasing Initialization](http://docs.unity3d.com/ScriptReference/Purchasing.UnityPurchasing.Initialize.html) 
+2. Build and run the game on your iOS device. `UnityPurchasing.Initialize()` succeeds if everything has been correctly configured. See [Unity Purchasing Initialization](xref:UnityEngine.Purchasing.UnityPurchasing) 
 
 3. Test the IAP by making a purchase in the game on the device. A modified purchase dialog displays, explaining that this purchase is being performed in the Sandbox Environment. Use the Sandbox User Tester password when prompted for purchase. 
 
@@ -116,6 +116,6 @@ In-App Purchase (IAP) is the process of transacting money for digital goods. A p
 5. Launch the app from the _Applications_ folder. The first time you do so, you are prompted to enter your iTunes account details, for which you can then make test purchases against the sandbox environment.
 
 
-See pages on [iOS and Mac Extended Functionality](UnityIAPiOSMAS) and [Delivering applications to the Apple Mac Store](HOWTO-PortToAppleMacStore) for additional details on Apple App Store testing and signing. 
+See pages on [iOS and Mac Extended Functionality](UnityIAPiOSMAS.md) and [Delivering applications to the Apple Mac Store](https://docs.unity3d.com/Manual/HOWTO-PortToAppleMacStore.html) for additional details on Apple App Store testing and signing. 
 
 

@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing
         {
             if (null == product)
             {
-                m_Logger.Log("Trying to purchase null Product");
+                m_Logger.LogWarning("Unity IAP", "Trying to purchase null Product");
                 return;
             }
 
@@ -58,7 +58,6 @@ namespace UnityEngine.Purchasing
             }
 
             m_Store.Purchase(product.definition, developerPayload);
-            m_Logger.LogFormat(LogType.Log, "purchase({0})", product.definition.id);
         }
 
         public void InitiatePurchase(string purchasableId, string developerPayload)
@@ -77,13 +76,13 @@ namespace UnityEngine.Purchasing
         {
             if (null == product)
             {
-                m_Logger.Log("Unable to confirm purchase with null Product");
+                m_Logger.LogError("Unity IAP", "Unable to confirm purchase with null Product");
                 return;
             }
 
             if (string.IsNullOrEmpty(product.transactionID))
             {
-                m_Logger.Log("Unable to confirm purchase; Product has missing or empty transactionID");
+                m_Logger.LogError("Unity IAP", "Unable to confirm purchase; Product has missing or empty transactionID");
                 return;
             }
 
@@ -179,7 +178,7 @@ namespace UnityEngine.Purchasing
                     return;
                 }
 
-                m_Logger.LogFormat(LogType.Log, "onPurchaseFailedEvent({0})", "productId:" + product.definition.id + " message:" + description.message);
+                m_Logger.LogFormat(LogType.Warning, "onPurchaseFailedEvent({0})", "productId:" + product.definition.id + " message:" + description.message);
                 m_Listener.OnPurchaseFailed(product, description.reason);
             }
         }
@@ -250,7 +249,7 @@ namespace UnityEngine.Purchasing
         {
             if (useTransactionLog && m_TransactionLog.HasRecordOf(product.transactionID))
             {
-                m_Logger.Log("Already recorded transaction " + product.transactionID);
+                m_Logger.LogWarning("Unity IAP", "Already recorded transaction " + product.transactionID);
                 m_Store.FinishTransaction(product.definition, product.transactionID);
                 return;
             }

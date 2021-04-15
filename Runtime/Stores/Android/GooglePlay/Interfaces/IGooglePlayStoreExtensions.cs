@@ -58,6 +58,13 @@ namespace UnityEngine.Purchasing
         void SetDeferredPurchaseListener(Action<Product> action);
 
         /// <summary>
+        /// Set listener for deferred subscription change events.
+        /// Deferred subscription changes only take effect at the renewal cycle and no transaction is done immediately, therefore there is no receipt nor token.
+        /// </summary>
+        /// <param name="action">Deferred subscription change event. No payout is granted here. Instead, notify the user that the subscription change will take effect at the next renewal cycle. </param>
+        void SetDeferredProrationUpgradeDowngradeSubscriptionListener(Action<Product> action);
+
+        /// <summary>
         /// Optional obfuscation string to detect irregular activities when making a purchase.
         /// For more information please visit <a href="https://developer.android.com/google/play/billing/security">https://developer.android.com/google/play/billing/security</a>
         /// </summary>

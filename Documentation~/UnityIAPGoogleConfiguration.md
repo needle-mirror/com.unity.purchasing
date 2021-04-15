@@ -62,7 +62,7 @@ In the Developer Console, add one or more in-app purchases for the game.
 
     You can specify a consumable or non-consumable Product Type in __Managed product__. __Subscription__ is also supported by Unity IAP.
 
-**NOTE**: The "Product ID" here is the same identifier used in the game source code, added to the [Unity IAP ConfigurationBuilder](ScriptRef:Purchasing.ConfigurationBuilder.html) instance via `AddProduct()` or `AddProducts()`. 
+**NOTE**: The "Product ID" here is the same identifier used in the game source code, added to the [Unity IAP ConfigurationBuilder](xref:UnityEngine.Purchasing.ConfigurationBuilder) instance via `AddProduct()` or `AddProducts()`. 
 
 ![](images/IAPGoogleImage6.png)
 

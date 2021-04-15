@@ -73,11 +73,9 @@ namespace UnityEngine.Purchasing
 
         internal void FetchProducts(Action<HashSet<ProductDefinition>> callback, int delayInSeconds)
         {
-            m_Logger.Log("Fetching IAP cloud catalog...");
             m_AsyncUtil.Get(m_CatalogURL,
                 response =>
                 {
-                    m_Logger.Log("Fetched catalog");
                     try
                     {
                         var result = ParseProductsFromJSON(response, m_StoreName);
@@ -86,8 +84,8 @@ namespace UnityEngine.Purchasing
                     }
                     catch (SerializationException s)
                     {
-                        m_Logger.LogError("Error parsing IAP catalog", s);
-                        m_Logger.Log(response);
+                        m_Logger.LogError("Unity IAP", "Error parsing IAP catalog " + s);
+                        m_Logger.LogError("Unity IAP", "Response: " + response);
                         callback(TryLoadCachedCatalog());
                     }
                 },
@@ -98,11 +96,12 @@ namespace UnityEngine.Purchasing
                     var cached = TryLoadCachedCatalog();
                     if (cached != null && cached.Count > 0)
                     {
-                        m_Logger.Log("Failed to fetch IAP catalog, using cache.");
+                        m_Logger.LogWarning("Unity IAP", "Failed to fetch IAP catalog, using cache.");
                         callback(cached);
                     }
                     else
                     {
+                        m_Logger.LogWarning("Unity IAP", "Failed to fetch IAP catalog, trying again.");
                         delayInSeconds = Math.Max(5, delayInSeconds * 2);
                         delayInSeconds = Math.Min(kMaxRetryDelayInSeconds, delayInSeconds);
                         m_AsyncUtil.Schedule(() => FetchProducts(callback, delayInSeconds), delayInSeconds);

@@ -109,7 +109,7 @@ namespace UnityEngine.Purchasing
             return (promoProducts.Count > 0) ? promoProducts : null;
         }
 
-        internal static void ProvideProductsToAds (JSONStore purchaser, IStoreCallback manager, bool shouldLog = false)
+        internal static void ProvideProductsToAds (JSONStore purchaser, IStoreCallback manager)
         {
             if((purchaser == null)||(manager == null))
             {
@@ -119,10 +119,10 @@ namespace UnityEngine.Purchasing
             s_PromoPurchaser = purchaser;
             s_Unity = manager;
 
-            ProvideProductsToAds(UpdatePromoProductList(), shouldLog);
+            ProvideProductsToAds(UpdatePromoProductList());
         }
 
-        private static void ProvideProductsToAds (HashSet<Product> productsForAds, bool shouldLog)
+        private static void ProvideProductsToAds (HashSet<Product> productsForAds)
         {
                 var promos = new List<Dictionary<string, object>>();
                 if(productsForAds != null)
@@ -141,18 +141,12 @@ namespace UnityEngine.Purchasing
                         promos.Add(promoDic);
                     }
                 }
-                else
-                {
-                    s_Logger.Log("UnityIAP Promo", "Clearing promo product metadata");
-                }
+
                 // Now storing the last-delivered JSON for future queries
                 s_ProductJSON = MiniJSON.Json.Serialize(promos);
                 if(promos.Count > 0)
                 {
                     s_IsReady = true;
-                    if(shouldLog)
-                        s_Logger.Log("UnityIAP: Initialization complete with  " + promos.Count + " items");
-                        // s_Logger.Log("UnityIAP: " + s_ProductJSON);
 
 #if HIGH_PERMISSION_DATA
                     // Send an async notification to Ads SDK to simplify refresh on their end
@@ -286,10 +280,6 @@ namespace UnityEngine.Purchasing
 
                     case "close":
                         // I don't think we're currently receiving these
-                        if(s_Logger != null)
-                        {
-                            s_Logger.Log("UnityIAP Promo: AdUnit closed without purchase");
-                        }
                         // we may want to send an event here
                         return true;
 
@@ -357,7 +347,6 @@ namespace UnityEngine.Purchasing
             tagDict.Add("storeSpecificId", toPurchase.definition.storeSpecificId);
             string tag = MiniJSON.Json.Serialize(tagDict);
 
-            // s_Logger.Log("UnityIAP: Attempting store.Purchase() \"" + prodId + "\" Tag: " + tag);
             s_PromoPurchaser.Purchase(toPurchase.definition, tag);
             return true;
         }

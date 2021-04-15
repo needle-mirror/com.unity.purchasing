@@ -1,5 +1,6 @@
 using System;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
@@ -23,6 +24,7 @@ namespace UnityEngine.Purchasing
             m_OnAcknowledgePurchaseResponse = onAcknowledgePurchaseResponseAction;
         }
 
+        [Preserve]
         void onAcknowledgePurchaseResponse(AndroidJavaObject billingResult)
         {
             m_OnAcknowledgePurchaseResponse(m_Product, m_Purchase, new GoogleBillingResult(billingResult));
