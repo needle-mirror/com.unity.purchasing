@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using static UnityEditor.Purchasing.UnityPurchasingEditor;
 
 namespace UnityEditor.Purchasing
 {
@@ -28,12 +29,12 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// The path in the Menu bar where the <c>ProductCatalogEditor</c> item is located.
         /// </summary>
-        public const string ProductCatalogEditorMenuPath = "Window/Unity IAP/IAP Catalog";
+        public const string ProductCatalogEditorMenuPath = MenuItemRoot + "/IAP Catalog";
 
         /// <summary>
         /// Opens the <c>ProductCatalogEditor</c> Window or moves it to the front of the draw order.
         /// </summary>
-        [MenuItem(ProductCatalogEditorMenuPath, false, 5)]
+        [MenuItem(ProductCatalogEditorMenuPath, false, 200)]
         public static void ShowWindow()
         {
             EditorWindow.GetWindow(typeof(ProductCatalogEditor));
@@ -880,6 +881,12 @@ namespace UnityEditor.Purchasing
                         foreach (string storeKey in kStoreKeys) {
                             BeginErrorBlock(validation, "storeID." + storeKey);
                             Item.SetStoreID(storeKey, EditorGUILayout.TextField(storeKey, Item.GetStoreID(storeKey)));
+                            if (storeKey == SamsungApps.Name)
+                            {
+                                var errStyle = new GUIStyle();
+                                errStyle.normal.textColor = new Color(0.63f, 0.32f, 0.18f); // sienna brown
+                                EditorGUILayout.LabelField("*NOTE* Samsung Galaxy is obsolete and will be removed in v4. Please use Unity Distribution Platform instead.", errStyle);
+                            }
                             EndErrorBlock(validation, "storeID." + storeKey);
                         }
                         EditorGUI.indentLevel--;

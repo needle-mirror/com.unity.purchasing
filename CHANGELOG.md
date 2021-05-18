@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.2.1] - 2021-05-18
+### Changed
+- Manual and API documentation updated. 
+
+## [3.2.0] - 2021-05-17
+### Added
+- GooglePlay - Automatic resumption of initialization when a user's device initially does not have a Google account, and they correct that Android setting without killing the app, then they resume the app. NOTE this does not impact Unity IAP's behavior when a user removes their Google account after initialization.
+- GooglePlay - API `IGooglePlayConfiguration.SetServiceDisconnectAtInitializeListener(Action)` called when Unity IAP fails to connect to the underlying Google Play Billing service. The `Action` may be called multiple times after `UnityPurchasing.Initialize` if a user does not have a Google account added to their Android device. Initialization of Unity IAP will remain paused until this is corrected. Inform the user they must add a Google account in order to be able to purchase. See documentation "Store Guides" > "Google Play" for a sample usage.
+- GooglePlay - It is now possible to check if a purchased product is pending or not by calling IsPurchasedProductDeferred() from GooglePlayStoreExtensions.
+- UDP - RegisterPurchaseDeferredListener in IUDPExtensions can be used to assign a callback for pending purchases.
+
+### Fixed
+- GooglePlay - Receipts for Pending purchases are now UnifiedReceipts and not raw Google receipts. Any parsers you have for these can extract the raw receipt json by parsing the "Payload" field.
+- Editor - The Fake Store UI used in Play Mode in the Editor, as well as some unsupported platforms has been restored. A null reference exception when trying to make a purchase no longer occurs.
+- UDP - Added a null check when comparing Store-Specific IDs
+
+### Changed:
+- Samsung Galaxy - Support is being deprecated when not using Unity Distribution Portal as a target. The feature will be removed soon. Please use the Unity Distribution Portal package with IAP for full Samsung Galaxy support.
+
 ## [3.1.0] - 2021-04-15
 ### Added
 - GooglePlay - Google Play Billing Library version 3.0.3.
@@ -19,7 +38,7 @@
 ## [3.0.2] - 2021-03-30
 
 ### Added
-Comprehensive manual and API documentation.
+- Comprehensive manual and API documentation.
 
 ## [3.0.1] - 2021-03-08
 ### Removed
@@ -29,7 +48,7 @@ Comprehensive manual and API documentation.
 
 ## [3.0.0-pre.7] - 2021-03-03
 ### Added
-GooglePlay - populate `Product.receipt` for `Action<Product>` parameter returned by `IGooglePlayStoreExtensions.SetDeferredPurchaseListener` callback
+- GooglePlay - populate `Product.receipt` for `Action<Product>` parameter returned by `IGooglePlayStoreExtensions.SetDeferredPurchaseListener` callback
 
 ### Changed 
 - WinRT - This feature is now shipped as C# code under assembly definitions instead of .dll files.

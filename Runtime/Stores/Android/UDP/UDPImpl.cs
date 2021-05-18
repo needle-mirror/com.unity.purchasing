@@ -13,6 +13,9 @@ namespace UnityEngine.Purchasing
         private string m_LastInitError;
         private const string k_Unknown = "Unknown"; // From PurchaseFailureReason
         private bool m_Initialized = false;
+        private const int PURCHASE_PENDING_CODE = -303;
+        private Action<Product> m_DeferredCallback;
+        private const string k_Errorcode = "errorCode"; // From UDP sdk purchase pending state
 
         public void SetNativeStore(INativeUDPStore nativeUdpStore)
         {
@@ -122,6 +125,15 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
+                    if (dic.ContainsKey(k_Errorcode) && Convert.ToInt32(dic[k_Errorcode]) == PURCHASE_PENDING_CODE)
+                    {
+                        if (null != m_DeferredCallback)
+                        {
+                            OnPurchaseDeferred(product.storeSpecificId);
+                        }
+                        return;
+                    }
+
                     PurchaseFailureReason reason = (PurchaseFailureReason) Enum.Parse(typeof(PurchaseFailureReason),
                         k_Unknown);
 
@@ -138,6 +150,21 @@ namespace UnityEngine.Purchasing
                     unity.OnPurchaseFailed(pfd);
                 }
             }, developerPayload);
+        }
+
+        private void OnPurchaseDeferred(string productId)
+        {
+            if (null == productId || productId == "")
+            {
+                return;
+            }
+
+            var product = unity.products?.WithStoreSpecificID(productId);
+
+            if (null != product)
+            {
+                m_DeferredCallback(product);
+            }
         }
 
         public override void FinishTransaction(ProductDefinition product, string transactionId)
@@ -165,6 +192,11 @@ namespace UnityEngine.Purchasing
         public object GetUserInfo()
         {
             return m_UserInfo;
+        }
+
+        public void RegisterPurchaseDeferredListener(Action<Product> callback)
+        {
+            this.m_DeferredCallback = callback;
         }
 
         public void EnableDebugLog(bool enable)

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using Uniject;
 using UnityEngine.Purchasing.Extension;
@@ -82,6 +81,7 @@ namespace UnityEngine.Purchasing
         {
             if (!isPaused)
             {
+                m_RetrieveProductsService.ResumeConnection();
                 m_FetchPurchases.FetchPurchases();
             }
         }

@@ -79,6 +79,14 @@ namespace UnityEngine.Purchasing
         void SetObfuscatedProfileId(string profileId);
 
         /// <summary>
+        /// Determines if the purchase of a product in the Google Play Store is deferred based on its receipt. This indicates if there is an additional step to complete a transaction in between when a user initiates a purchase and when the payment method for the purchase is processed.
+        /// <a href="https://developer.android.com/google/play/billing/integrate#pending">Handling pending transactions</a>
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <returns><c>true</c>if the input contains a receipt for a deferred or a pending transaction for a Google Play billing purchase, and <c>false</c> otherwise.</returns>
+        bool IsPurchasedProductDeferred(Product product);
+
+        /// <summary>
         /// GetProductJSONDictionary is deprecated, nothing will be returns and no code will be executed. Will be removed soon. Use the `GoogleProductMetadata` of `product.metadata.GetGoogleProductMetadata()` from `IStoreController.products`
         /// </summary>
         /// <returns>null</returns>

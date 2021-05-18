@@ -18,5 +18,6 @@ namespace UnityEngine.Purchasing.Interfaces
         void SetObfuscatedProfileId(string obfuscatedProfileId);
         void EndConnection();
         void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<GoogleBillingResult> onPriceChangeAction);
+        void ResumeConnection();
     }
 }

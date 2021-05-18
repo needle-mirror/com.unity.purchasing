@@ -13,7 +13,8 @@
         "UnityEngine.Purchasing.SecurityStub",
         "UnityEngine.Purchasing.WinRT",
         "UnityEngine.Purchasing.WinRTCore",
-        "UnityEngine.Purchasing.WinRTStub"
+        "UnityEngine.Purchasing.WinRTStub",
+        "Unity.Services.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

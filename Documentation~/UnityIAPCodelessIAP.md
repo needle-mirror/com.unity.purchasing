@@ -109,7 +109,7 @@ To add a __Restore__ button:
 2. With your __IAP Button__ selected, locate its **IAP Button (Script)** component in the Inspector, then select **Restore** from the **Button Type** drop-down menu (most of the component's other fields will disappear from the Inspector view).
    ![Modifying an IAP Button to restore purchases](images/RestoreButton.png)
 
-When a user selects this button at run time, the button calls the purchase restoration API for the current store. This functionality works on the iOS App Store, the Mac App Store, the Windows Store, Samsung Apps, and the Cloud Moolah app store. You may want to hide the __Restore__ button on other platforms.
+When a user selects this button at run time, the button calls the purchase restoration API for the current store. This functionality works on the iOS App Store, the Mac App Store and the Windows Store. You may want to hide the __Restore__ button on other platforms.
 
 If the restore succeeds, Unity IAP invokes the __On Purchase Complete (Product)__ function on the __IAP Button__ associated with that Product. 
 
@@ -131,5 +131,3 @@ To add an __IAP Listener__:
 The Codeless IAP feature does not expose most of Unity IAP’s [extended functionality](UnityIAPStoreExtensions.md). However, Codeless IAP is implemented on top of the existing scripting APIs, so you can modify much of its functionality in the _IAPButton.cs_ script (_Assets/Plugins/UnityPurchasing/script/IAPButton.cs_) to suit your needs.
 
 To use Unity IAP’s extended functionality, access the Unity IAP [```IStoreController```](xref:UnityEngine.Purchasing.IStoreController) and [```IExtensionProvider```](xref:UnityEngine.Purchasing.IExtensionProvider) instances returned by [```IStoreListener.OnInitialized```](xref:UnityEngine.Purchasing.IStoreListener).
-
-

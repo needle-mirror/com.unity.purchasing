@@ -56,5 +56,14 @@ namespace UnityEngine.Purchasing
         {
             return;
         }
+
+        /// <summary>
+        /// Called when a processing a purchase from UDP that is in the "OnPurchasePending" state.
+        /// </summary>
+        /// <param name="action">Action will be called with the product that is in the "OnPurchasePending" state.</param>
+        public void RegisterPurchaseDeferredListener(Action<Product> action)
+        {
+
+        }
     }
 }

@@ -9,9 +9,10 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreService : IGooglePlayStoreService
     {
+        GoogleBillingConnectionState m_GoogleConnectionState = GoogleBillingConnectionState.Disconnected;
+
         IGoogleBillingClient m_BillingClient;
-        bool m_IsConnectedToGoogle;
-        bool m_HasConnectionAttempted;
+        IBillingClientStateListener m_BillingClientStateListener;
         IQuerySkuDetailsService m_QuerySkuDetailsService;
         Queue<ProductDescriptionQuery> m_ProductsToQuery = new Queue<ProductDescriptionQuery>();
         Queue<Action<List<GooglePurchase>>> m_OnPurchaseSucceededQueue = new Queue<Action<List<GooglePurchase>>>();
@@ -38,38 +39,81 @@ namespace UnityEngine.Purchasing
             m_GoogleQueryPurchasesService = queryPurchasesService;
             m_GooglePriceChangeService = priceChangeService;
             m_GoogleLastKnownProductService = lastKnownProductService;
+            m_BillingClientStateListener = billingClientStateListener;
 
-            InitConnectionWithGooglePlay(billingClientStateListener);
+            InitConnectionWithGooglePlay();
         }
 
-        void InitConnectionWithGooglePlay(IBillingClientStateListener billingClientStateListener)
+        void InitConnectionWithGooglePlay()
         {
-            billingClientStateListener.RegisterOnConnected(OnConnected);
-            billingClientStateListener.RegisterOnDisconnected(OnDisconnected);
-            m_BillingClient.StartConnection(billingClientStateListener);
+            m_BillingClientStateListener.RegisterOnConnected(OnConnected);
+            m_BillingClientStateListener.RegisterOnDisconnected(OnDisconnected);
+
+            StartConnection();
+        }
+
+        void StartConnection()
+        {
+            m_GoogleConnectionState = GoogleBillingConnectionState.Connecting;
+            m_BillingClient.StartConnection(m_BillingClientStateListener);
+        }
+
+        public void ResumeConnection()
+        {
+            if (m_GoogleConnectionState == GoogleBillingConnectionState.Disconnected)
+            {
+                StartConnection();
+            }
         }
 
         void OnConnected()
         {
-            m_HasConnectionAttempted = true;
-            m_IsConnectedToGoogle = true;
+            m_GoogleConnectionState = GoogleBillingConnectionState.Connected;
             DequeueQueryProducts();
             DequeueFetchPurchases();
         }
 
         void DequeueQueryProducts()
         {
-            while (m_ProductsToQuery.Count > 0)
+            var productsFailedToDequeue = new Queue<ProductDescriptionQuery>();
+            var stop = false;
+
+            while (m_ProductsToQuery.Count > 0 && !stop)
             {
-                ProductDescriptionQuery productDescriptionQuery = m_ProductsToQuery.Dequeue();
-                if (m_IsConnectedToGoogle)
+                switch (m_GoogleConnectionState)
                 {
-                    m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products, productDescriptionQuery.onProductsReceived);
+                    case GoogleBillingConnectionState.Connected:
+                    {
+                        var productDescriptionQuery = m_ProductsToQuery.Dequeue();
+                        m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products, productDescriptionQuery.onProductsReceived);
+                        break;
+                    }
+                    case GoogleBillingConnectionState.Disconnected:
+                    {
+                        var productDescriptionQuery = m_ProductsToQuery.Dequeue();
+                        productDescriptionQuery.onRetrieveProductsFailed();
+
+                        productsFailedToDequeue.Enqueue(productDescriptionQuery);
+                        break;
+                    }
+                    case GoogleBillingConnectionState.Connecting:
+                    {
+                        stop = true;
+                        break;
+                    }
+                    default:
+                    {
+                        Debug.LogErrorFormat("GooglePlayStoreService state ({0}) unrecognized, cannot process ProductDescriptionQuery",
+                            m_GoogleConnectionState);
+                        stop = true;
+                        break;
+                    }
                 }
-                else if (m_HasConnectionAttempted)
-                {
-                    productDescriptionQuery.onRetrieveProductsFailed();
-                }
+            }
+
+            foreach (var product in productsFailedToDequeue)
+            {
+                m_ProductsToQuery.Enqueue(product);
             }
         }
 
@@ -77,27 +121,26 @@ namespace UnityEngine.Purchasing
         {
             while (m_OnPurchaseSucceededQueue.Count > 0)
             {
-                Action<List<GooglePurchase>> onPurchaseSucceed = m_OnPurchaseSucceededQueue.Dequeue();
+                var onPurchaseSucceed = m_OnPurchaseSucceededQueue.Dequeue();
                 FetchPurchases(onPurchaseSucceed);
             }
         }
 
         void OnDisconnected()
         {
-            m_HasConnectionAttempted = true;
-            m_IsConnectedToGoogle = false;
+            m_GoogleConnectionState = GoogleBillingConnectionState.Disconnected;
             DequeueQueryProducts();
         }
 
         public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action onRetrieveProductFailed)
         {
-            if (m_IsConnectedToGoogle)
+            if (m_GoogleConnectionState == GoogleBillingConnectionState.Connected)
             {
                 m_QuerySkuDetailsService.QueryAsyncSku(products, onProductsReceived);
             }
             else
             {
-                if (m_HasConnectionAttempted)
+                if (m_GoogleConnectionState == GoogleBillingConnectionState.Disconnected)
                 {
                     onRetrieveProductFailed();
                 }
@@ -124,7 +167,7 @@ namespace UnityEngine.Purchasing
 
         public void FetchPurchases(Action<List<GooglePurchase>> onQueryPurchaseSucceed)
         {
-            if (m_IsConnectedToGoogle)
+            if (m_GoogleConnectionState == GoogleBillingConnectionState.Connected)
             {
                 m_GoogleQueryPurchasesService.QueryPurchases(onQueryPurchaseSucceed);
             }
@@ -146,7 +189,7 @@ namespace UnityEngine.Purchasing
 
         public void EndConnection()
         {
-            m_IsConnectedToGoogle = false;
+            m_GoogleConnectionState = GoogleBillingConnectionState.Disconnected;
             m_BillingClient.EndConnection();
         }
 

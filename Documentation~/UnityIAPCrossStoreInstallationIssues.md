@@ -1,6 +1,6 @@
 #Cross-store installation issues with Android in-app purchase stores
 
-There are cross-store installation issues when using shared Android bundle identifiers to publish to multiple Android in-app purchase stores (such as Samsung and Google) simultaneously. This page describes the results of these conflicts, and how to resolve the issue.
+There are cross-store installation issues when using shared Android bundle identifiers to publish to multiple Android in-app purchase stores simultaneously. This page describes the results of these conflicts, and how to resolve the issue.
 
 The cross-store install scenario is one where a user installs an application from one store (store A), and then upgrades the installation with an application from another store (store B). The opportunity to upgrade a user's installation belongs to the store hosting the newest application version. This scenario can arise when both builds of the application use the same Android bundle identifier and signing key.
 
@@ -22,7 +22,7 @@ The resulting IAP problems are:
 
 There are two ways to resolve cross-store conflicts:
 
-* use unique signing keys for each store (This results in upgrade error messages from the conflicting store), or
-* use unique bundle identifiers for each store (This may result in duplicate installed apps for the user).
+* use unique signing keys for each store (this results in upgrade error messages from the conflicting store), or
+* use unique bundle identifiers for each store (this may result in duplicate installed apps for the user).
 
 

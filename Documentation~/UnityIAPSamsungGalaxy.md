@@ -2,6 +2,8 @@
 
 ## Extended functionality
 
+**Note**: The Samsung Galaxy store only apply to version 3.1.0 and earlier of the Unity In App Purchasing package and is now deprecated. Please use the [Unity Distribution Platform](https://docs.unity3d.com/2021.2/Documentation/Manual/udp.html) instead.
+
 ### Developer mode testing
 
 Developer mode allows you to carry out IAP testing without incurring real-world monetary charges for products. To get started, create your configuration with an `ISamsungAppsConfiguration` instance, with its mode set to `SamsungAppsMode.AlwaysSucceed`:
@@ -55,4 +57,6 @@ public void OnInitialized(IStoreController controller, IExtensionProvider extens
 ````
 
 On Samsung Galaxy platforms, users may be required to input their Samsung Galaxy App Store password to retrieve previous transactions, if they haven’t already done so.
+
+<!-- area:monetization -->
 

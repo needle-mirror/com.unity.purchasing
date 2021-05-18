@@ -10,10 +10,13 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGoogleFetchPurchases m_GoogleFetchPurchases;
         IStoreCallback m_StoreCallback;
-        internal GooglePlayStoreRetrieveProductsService(IGooglePlayStoreService googlePlayStoreService, IGoogleFetchPurchases googleFetchPurchases)
+        IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
+
+        internal GooglePlayStoreRetrieveProductsService(IGooglePlayStoreService googlePlayStoreService, IGoogleFetchPurchases googleFetchPurchases, IGooglePlayConfigurationInternal googlePlayConfigurationInternal)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_GoogleFetchPurchases = googleFetchPurchases;
+            m_GooglePlayConfigurationInternal = googlePlayConfigurationInternal;
         }
 
         public void SetStoreCallback(IStoreCallback storeCallback)
@@ -34,9 +37,14 @@ namespace UnityEngine.Purchasing
                     });
                 }, () =>
                 {
-                    m_StoreCallback.OnSetupFailed(InitializationFailureReason.NoProductsAvailable);
+                    m_GooglePlayConfigurationInternal.NotifyInitializationConnectionFailed();
                 });
             }
+        }
+
+        public void ResumeConnection()
+        {
+            m_GooglePlayStoreService.ResumeConnection();
         }
 
         static List<ProductDescription> MakePurchasesIntoProducts(List<ProductDescription> retrievedProducts, IEnumerable<Product> purchaseProducts)

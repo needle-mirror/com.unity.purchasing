@@ -11,12 +11,16 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
         IStoreCallback m_StoreCallback;
+        GooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensionsInternal;
         Action<Product> m_DeferredPurchaseAction;
         Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
-        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService)
+
+        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, GooglePlayStoreExtensionsInternal googlePlayStoreExtensionsInternal)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_GooglePlayStoreFinishTransactionService = googlePlayStoreFinishTransactionService;
+            m_GooglePlayStoreExtensionsInternal = googlePlayStoreExtensionsInternal;
+            m_GooglePlayStoreExtensionsInternal.SetGooglePlayStoreExtensions(this);
         }
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku)
@@ -101,8 +105,7 @@ namespace UnityEngine.Purchasing
             Product product = m_StoreCallback.FindProductById(productId);
             if (product != null)
             {
-                product.transactionID = transactionId;
-                product.receipt = receipt;
+                ProductPurchaseUpdater.UpdateProductReceiptAndTransactionID(product, receipt, transactionId, GooglePlay.Name);
                 m_DeferredPurchaseAction?.Invoke(product);
             }
         }
@@ -124,6 +127,29 @@ namespace UnityEngine.Purchasing
         public void SetObfuscatedProfileId(string profileId)
         {
             m_GooglePlayStoreService.SetObfuscatedProfileId(profileId);
+        }
+
+        public bool IsPurchasedProductDeferred(Product product)
+        {
+            try
+            {
+                var unifiedReceipt = MiniJson.JsonDecode(product.receipt) as Dictionary<string, object>;
+                var payloadStr = unifiedReceipt["Payload"] as string;
+
+                var payload = MiniJson.JsonDecode(payloadStr) as Dictionary<string, object>;
+                var jsonStr = payload["json"] as string;
+
+                var jsonDic = MiniJson.JsonDecode(jsonStr) as Dictionary<string, object>;
+                var purchaseState = (long)jsonDic["purchaseState"];
+
+                //PurchaseState codes: https://developer.android.com/reference/com/android/billingclient/api/Purchase.PurchaseState#pending
+                return purchaseState == 2 || purchaseState == 4;
+            }
+            catch
+            {
+                Debug.LogWarning("Cannot parse Google receipt for transaction " + product.transactionID);
+                return false;
+            }
         }
 
         public Dictionary<string, string> GetProductJSONDictionary()

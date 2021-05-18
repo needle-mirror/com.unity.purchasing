@@ -40,4 +40,4 @@ FetchAdditionalProducts behaves similarly to initialization:
 * If network is unavailable it will wait until network become available to retrieve products
 * It will fail for the same unrecoverable reasons initialization can fail, such as IAP being disabled in device settings
 
-**You must not call FetchAdditionalProducts whilst a previous call to it is still pending.**
+**You must not call FetchAdditionalProducts while a previous call to it is still pending.**

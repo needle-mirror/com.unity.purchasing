@@ -17,7 +17,7 @@ namespace UnityEngine.Purchasing
 			m_Java = java;
 		}
 
-		public void SetMode(SamsungAppsMode mode) 
+		public void SetMode(SamsungAppsMode mode)
 		{
 			m_Java.Call("setMode", mode.ToString());
 		}
@@ -31,7 +31,7 @@ namespace UnityEngine.Purchasing
 
 		public void OnTransactionsRestored(bool result)
 		{
-			if (m_RestoreCallback != null) 
+			if (m_RestoreCallback != null)
 			{
 				m_RestoreCallback(result);
 			}

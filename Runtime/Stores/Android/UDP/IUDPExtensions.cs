@@ -1,4 +1,6 @@
-﻿namespace UnityEngine.Purchasing
+﻿using System;
+
+namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Common interface for all UDP store purchasing extensions.
@@ -22,5 +24,11 @@
         /// </summary>
         /// <param name="enable"> Whether or not the logging is to be enabled. </param>
         void EnableDebugLog(bool enable);
+
+        /// <summary>
+        /// Called when a processing a purchase from UDP that is in the "OnPurchasePending" state.
+        /// </summary>
+        /// <param name="action">Action will be called with the product that is in the "OnPurchasePending" state.</param>
+        void RegisterPurchaseDeferredListener(Action<Product> action);
     }
 }

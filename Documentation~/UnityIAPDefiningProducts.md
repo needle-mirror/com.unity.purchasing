@@ -15,7 +15,7 @@ Each Product must be of one of the following Types:
 | **Type** | **Description** | **Examples** |
 |:---|:---|:---|
 |__Consumable__| Users can purchase the Product repeatedly. Consumable Products cannot be restored. | * Virtual currencies <br/> * Health potions <br/> * Temporary power-ups. |
-|__Non-Consumable__| Users can only purchased the Product once. Non-Consumable Products can be restored. | * Weapons or armor <br/> * Access to extra content|
+|__Non-Consumable__| Users can only purchase the Product once. Non-Consumable Products can be restored. | * Weapons or armor <br/> * Access to extra content|
 |__Subscription__|Users can access the Product for a finite period of time. Subscription Products can be restored. | * Monthly access to an online game <br/> * VIP status granting daily bonuses <br/> * A free trial |
 
 **Note**: For more information on Subscription type support, see the section on [**Subscription Product support**](UnityIAPSubscriptionProducts).
@@ -66,8 +66,6 @@ Note that the IAP Catalog acts as a Product catalog dictionary, not as an invent
 By default, Unity IAP assumes that your Product has the same identifier (specified in the **ID** field, above) across all app stores. Unity recommends doing this where possible. However, there are occasions when this is not possible, such as when publishing to both iOS and Mac stores, which prohibit developers from using the same product ID across both.
 
 In these cases, use the override fields to specify the Product's correct identifier where it differs from the cross-platform ID.
-
-![Populating **Sore ID Overrides** fields for Products in the **IAP Catalog** GUI](images/StoreOverrides.png)
 
 You can also do this programmatically, as follows:
 

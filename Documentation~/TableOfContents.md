@@ -4,7 +4,7 @@
     * [Configuring for Google Play Store](UnityIAPGoogleConfiguration.md)
     * [Configuring for Windows Store](UnityIAPWindowsConfiguration.md)
     * [Configuration for the Amazon Appstore](UnityIAPAmazonConfiguration.md)
-    * [Samsung Galaxy IAP configuration](UnityIAPSamsungConfiguration.md)
+    * [Configuration for Samsung Galaxy IAP](UnityIAPSamsungConfiguration.md)
 * Cross Platform Guide
     * [Codeless IAP](UnityIAPCodelessIAP.md)
     * [Defining products](UnityIAPDefiningProducts.md)

@@ -357,14 +357,23 @@ namespace UnityEngine.Purchasing
 
             var googlePlayStoreService = BuildGooglePlayStoreServiceAar(googlePurchaseCallback);
 
+            var googlePlayStoreExtensionsInternal = new GooglePlayStoreExtensionsInternal();
+            var googlePlayConfigurationInternal = new GooglePlayConfigurationInternal();
+
             IGooglePlayStorePurchaseService googlePlayStorePurchaseService = new GooglePlayStorePurchaseService(googlePlayStoreService);
             IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService = new GooglePlayStoreFinishTransactionService(googlePlayStoreService);
             IGoogleFetchPurchases googleFetchPurchases = new GoogleFetchPurchases(googlePlayStoreService, googlePlayStoreFinishTransactionService);
-            IGooglePlayStoreRetrieveProductsService googlePlayStoreRetrieveProductsService = new GooglePlayStoreRetrieveProductsService(googlePlayStoreService, googleFetchPurchases);
+            IGooglePlayStoreRetrieveProductsService googlePlayStoreRetrieveProductsService = new GooglePlayStoreRetrieveProductsService(
+                googlePlayStoreService,
+                googleFetchPurchases,
+                googlePlayConfigurationInternal);
             var googlePlayStoreExtensions = BuildGooglePlayStoreExtensions(
                 googlePlayStoreService,
                 googlePlayStoreFinishTransactionService,
-                googlePurchaseCallback);
+                googlePurchaseCallback,
+                googlePlayStoreExtensionsInternal);
+            var googlePlayConfiguration = new GooglePlayConfiguration();
+            googlePlayConfiguration.SetGooglePlayConfigurationInternal(googlePlayConfigurationInternal);
 
             GooglePlayStore googlePlayStore = new GooglePlayStore(
                 googlePlayStoreRetrieveProductsService,
@@ -376,8 +385,14 @@ namespace UnityEngine.Purchasing
                 util
                 );
             util.AddPauseListener (googlePlayStore.OnPause);
+            BindGoogleConfiguration(googlePlayConfiguration);
             BindGoogleExtension(googlePlayStoreExtensions);
             return googlePlayStore;
+        }
+
+        void BindGoogleConfiguration(IGooglePlayConfiguration googlePlayConfiguration)
+        {
+            BindConfiguration(googlePlayConfiguration);
         }
 
         void BindGoogleExtension(GooglePlayStoreExtensions googlePlayStoreExtensions)
@@ -385,9 +400,15 @@ namespace UnityEngine.Purchasing
             BindExtension<IGooglePlayStoreExtensions>(googlePlayStoreExtensions);
         }
 
-        static GooglePlayStoreExtensions BuildGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, IGooglePurchaseCallback googlePurchaseCallback)
+        static GooglePlayStoreExtensions BuildGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService,
+            IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService,
+            IGooglePurchaseCallback googlePurchaseCallback,
+            GooglePlayStoreExtensionsInternal googlePlayStoreExtensionsInternal)
         {
-            GooglePlayStoreExtensions googlePlayStoreExtensions = new GooglePlayStoreExtensions(googlePlayStoreService, googlePlayStoreFinishTransactionService);
+            GooglePlayStoreExtensions googlePlayStoreExtensions = new GooglePlayStoreExtensions(
+                googlePlayStoreService,
+                googlePlayStoreFinishTransactionService,
+                googlePlayStoreExtensionsInternal);
             googlePurchaseCallback.SetStoreExtension(googlePlayStoreExtensions);
             return googlePlayStoreExtensions;
         }

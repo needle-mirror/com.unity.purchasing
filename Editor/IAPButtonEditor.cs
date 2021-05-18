@@ -1,8 +1,7 @@
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Purchasing;
-using System.IO;
 using System.Collections.Generic;
+using static UnityEditor.Purchasing.UnityPurchasingEditor;
 
 namespace UnityEditor.Purchasing
 {
@@ -14,7 +13,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Add option to create a IAPButton from the GameObject menu.
         /// </summary>
-        [MenuItem("GameObject/Unity IAP/IAP Button", false, 10)]
+        [MenuItem("GameObject/" + PurchasingDisplayName + "/IAP Button", false, 10)]
         public static void GameObjectCreateUnityIAPButton()
         {
             CreateUnityIAPButton();
@@ -23,7 +22,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Add option to create a IAPButton from the Window/UnityIAP menu.
         /// </summary>
-		[MenuItem ("Window/Unity IAP/Create IAP Button", false, 5)]
+		[MenuItem (MenuItemRoot + "/Create IAP Button", false, 100)]
 		public static void CreateUnityIAPButton()
 		{
 			// Create Button
@@ -54,7 +53,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Add option to create a IAPListener from the GameObject menu.
         /// </summary>
-        [MenuItem("GameObject/Unity IAP/IAP Listener", false, 10)]
+        [MenuItem("GameObject/" + PurchasingDisplayName + "/IAP Listener", false, 10)]
         public static void GameObjectCreateUnityIAPListener()
         {
             CreateUnityIAPListener();
@@ -63,7 +62,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Add option to create a IAPListener from the Window/UnityIAP menu.
         /// </summary>
-        [MenuItem ("Window/Unity IAP/Create IAP Listener", false, 6)]
+        [MenuItem (MenuItemRoot + "/Create IAP Listener", false, 100)]
         public static void CreateUnityIAPListener()
         {
             // Create empty GameObject

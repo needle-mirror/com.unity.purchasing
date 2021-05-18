@@ -4,6 +4,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEditor.Callbacks;
+using UnityEditor.Connect;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 
@@ -30,6 +31,9 @@ namespace UnityEditor.Purchasing {
         private static StoreConfiguration config;
 
         private static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
+
+        internal const string MenuItemRoot = "Window/" + PurchasingDisplayName;
+        internal const string PurchasingDisplayName = "Unity IAP";
 
         // Check if UDP upm package is installed.
         internal static bool IsUdpUmpPackageInstalled()
@@ -152,50 +156,50 @@ namespace UnityEditor.Purchasing {
             }
         }
 
-        private const string AmazonMenuItem = "Window/Unity IAP/Android/Target Amazon";
-        [MenuItem(AmazonMenuItem, false, 20)]
+        private const string AmazonMenuItem = MenuItemRoot + "/Android/Target Amazon";
+        [MenuItem(AmazonMenuItem, false, 200)]
         private static void TargetAmazon()
         {
             TargetAndroidStore(AppStore.AmazonAppStore);
         }
         // HACK required to enable setting of checkmarks on project load
-        [MenuItem(AmazonMenuItem, true)]
+        [MenuItem(AmazonMenuItem, true, 200)]
         private static bool ValidateAmazon()
         {
             RefreshCheckmarks();
             return true;
         }
 
-        private const string GooglePlayMenuItem = "Window/Unity IAP/Android/Target Google Play";
-        [MenuItem(GooglePlayMenuItem, false, 20)]
+        private const string GooglePlayMenuItem = MenuItemRoot + "/Android/Target Google Play";
+        [MenuItem(GooglePlayMenuItem, false, 200)]
         private static void TargetGooglePlay()
         {
             TargetAndroidStore(AppStore.GooglePlay);
         }
         // HACK required to enable setting of checkmarks on project load
-        [MenuItem(GooglePlayMenuItem, true)]
+        [MenuItem(GooglePlayMenuItem, true, 200)]
         private static bool ValidateGooglePlay()
         {
             RefreshCheckmarks();
             return true;
         }
 
-        private const string SamsungAppsMenuItem = "Window/Unity IAP/Android/Target Samsung Galaxy Apps";
-        [MenuItem(SamsungAppsMenuItem, false, 20)]
+        private const string SamsungAppsMenuItem = MenuItemRoot + "/Android/Target Samsung Galaxy Apps";
+        [MenuItem(SamsungAppsMenuItem, false, 200)]
         private static void TargetSamsungApps()
         {
             TargetAndroidStore(AppStore.SamsungApps);
         }
         // HACK required to enable setting of checkmarks on project load
-        [MenuItem(SamsungAppsMenuItem, true)]
+        [MenuItem(SamsungAppsMenuItem, true, 200)]
         private static bool ValidateSamsungApps()
         {
             RefreshCheckmarks();
             return true;
         }
 
-        private const string UdpMenuItem = "Window/Unity IAP/Android/Target Unity Distribution Portal (UDP)";
-        [MenuItem(UdpMenuItem, false, 20)]
+        private const string UdpMenuItem = MenuItemRoot + "/Android/Target Unity Distribution Portal (UDP)";
+        [MenuItem(UdpMenuItem, false, 200)]
         private static void TargetUdp()
         {
             if (s_udpAvailable && (IsUdpUmpPackageInstalled() || IsUdpAssetStorePackageInstalled()) && UdpSynchronizationApi.CheckUdpCompatibility())
@@ -209,7 +213,7 @@ namespace UnityEditor.Purchasing {
         }
 
         // HACK required to enable setting of checkmarks on project load
-        [MenuItem(UdpMenuItem, true)]
+        [MenuItem(UdpMenuItem, true, 200)]
         private static bool ValidateUdp()
         {
             // If UDP is not available, the menu item will be disabled
@@ -235,6 +239,13 @@ namespace UnityEditor.Purchasing {
                 target != AppStore.NotSpecified)
             {
                 throw new ArgumentException(string.Format("AppStore parameter ({0}) must be an Android app store", target));
+            }
+
+            if (target == AppStore.SamsungApps)
+            {
+                Debug.LogWarning(
+                    AppStore.SamsungApps +
+                    " is obsolete and will be removed in v4. Please Use Unity Distribution Platform for Samsung Galaxy Apps support");
             }
             ConfigureProject(target);
             UpdateCheckmarks(target);

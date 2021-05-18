@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
-using UnityEngine.Purchasing.Security;
+using static UnityEditor.Purchasing.UnityPurchasingEditor;
 
 namespace UnityEditor.Purchasing
 {
@@ -57,7 +57,7 @@ namespace UnityEditor.Purchasing
         /// </summary>
         string m_GooglePlayPublicKey = kPublicKeyPlaceholder;
 
-        [MenuItem("Window/Unity IAP/Receipt Validation Obfuscator")]
+        [MenuItem(MenuItemRoot + "/Receipt Validation Obfuscator", false, 200)]
         static void Init()
         {
             // Get existing open window or if none, make a new one:

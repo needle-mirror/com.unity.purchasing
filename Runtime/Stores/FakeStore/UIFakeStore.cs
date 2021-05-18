@@ -18,36 +18,6 @@ namespace UnityEngine.Purchasing
 	/// </summary>
 	internal class UIFakeStore : FakeStore
 	{
-		/// <summary>
-		/// Dialog request dumb container
-		/// </summary>
-		protected class DialogRequest
-		{
-			public string QueryText;
-			public string OkayButtonText;
-			public string CancelButtonText;
-			public List<string> Options;
-			public Action<bool,int> Callback;
-		}
-
-		/// <summary>
-		/// Lifecycle notifier waits to be destroyed before calling a callback.
-		/// Use to notify script of hierarchy destruction for avoiding dynamic 
-		/// UI hierarchy collisions.
-		/// </summary>
-		protected class LifecycleNotifier : MonoBehaviour
-		{
-			public Action OnDestroyCallback;
-
-			void OnDestroy()
-			{
-				if (OnDestroyCallback != null)
-				{
-					OnDestroyCallback();
-				}
-			}
-		}
-
 		const string EnvironmentDescriptionPostfix = "\n\n[Environment: FakeStore]";
 		const string SuccessString = "Success";
 		const int RetrieveProductsDescriptionCount = 2;
@@ -55,10 +25,9 @@ namespace UnityEngine.Purchasing
 		DialogRequest m_CurrentDialog;
 		int m_LastSelectedDropdownIndex;
 
-		GameObject UIFakeStoreCanvasPrefab; // The loaded prefab
-		Canvas m_Canvas; // Cloned canvas instance not the prefab itself. Auto-null'd by UI system.
+        GameObject m_UIFakeStoreWindowObject;
+
 		GameObject m_EventSystem; // Dynamically created. Auto-null'd by UI system.
-		string m_ParentGameObjectPath;
 
 		#pragma warning disable 0414
 		IUtil m_Util;
@@ -71,9 +40,9 @@ namespace UnityEngine.Purchasing
 		{
 			m_Util = util;
 		}
-		
+
 		/// <summary>
-		/// Creates and displays a modal dialog UI. Note pointer events can "drill through" the 
+		/// Creates and displays a modal dialog UI. Note pointer events can "drill through" the
 		/// UI activating underlying interface elements. Consider using techniques mentioned in
 		/// http://forum.unity3d.com/threads/frequently-asked-ui-questions.264479/ in apps
 		/// to mitigate this. Shows only one at a time.
@@ -86,10 +55,10 @@ namespace UnityEngine.Purchasing
 		protected override bool StartUI<T>(object model, DialogType dialogType, Action<bool,T> callback)
 		{
 			List<string> options = new List<string>();
-			// Add a default option for "Success" 
+			// Add a default option for "Success"
 			options.Add(SuccessString);
 
-			foreach (T code in Enum.GetValues(typeof(T))) 
+			foreach (T code in Enum.GetValues(typeof(T)))
 			{
 				options.Add(code.ToString());
 			}
@@ -104,21 +73,21 @@ namespace UnityEngine.Purchasing
 			if (dialogType == DialogType.Purchase)
 			{
 				title = CreatePurchaseQuestion ((ProductDefinition)model);
-				if (UIMode == FakeStoreUIMode.DeveloperUser) 
+				if (UIMode == FakeStoreUIMode.DeveloperUser)
 				{
 					// Developer UIMode is one button, one option menu, so the button must support both pass and fail
 					okayButton = "OK";
-				} 
-				else 
+				}
+				else
 				{
 					okayButton = "Buy";
 				}
-			} 
+			}
 			else if (dialogType == DialogType.RetrieveProducts)
 			{
 				title = CreateRetrieveProductsQuestion ((ReadOnlyCollection<ProductDefinition>)model);
 				okayButton = "OK";
-			} 
+			}
 			else
 			{
 				Debug.LogError ("Unrecognized DialogType " + dialogType);
@@ -129,9 +98,9 @@ namespace UnityEngine.Purchasing
 		}
 
 		/// <summary>
-		/// Helper 
+		/// Helper
 		/// </summary>
-		bool StartUI(string queryText, string okayButtonText, string cancelButtonText, 
+		bool StartUI(string queryText, string okayButtonText, string cancelButtonText,
 			List<string> options, Action<bool,int> callback)
 		{
 			// One dialog at a time please
@@ -143,114 +112,103 @@ namespace UnityEngine.Purchasing
 			// Wrap this dialog request for later use
 			DialogRequest dr = new DialogRequest ();
 			dr.QueryText = queryText;
-			dr.OkayButtonText = okayButtonText; 
+			dr.OkayButtonText = okayButtonText;
 			dr.CancelButtonText = cancelButtonText;
 			dr.Options = options;
 			dr.Callback = callback;
 
 			m_CurrentDialog = dr;
 
-			InstantiateDialog();
+            InstantiateDialog();
 
 			return true;
 		}
 
-		/// <summary>
-		/// Creates the UI from a prefab. Configures the UI. Shows the dialog. 
-		/// </summary>
-		private void InstantiateDialog()
-		{
-			if (m_CurrentDialog == null)
-			{
-				Debug.LogError(this + " requires m_CurrentDialog. Not showing dialog.");
-				return;
-			}
+        private void InstantiateDialog()
+        {
+            if (m_CurrentDialog != null)
+            {
+                var runtimeCanvas = GetOrCreateFakeStoreWindow();
 
-			// Load this once
-			if (UIFakeStoreCanvasPrefab == null)
-			{
-				UIFakeStoreCanvasPrefab = Resources.Load("UIFakeStoreCanvas") as GameObject;
-			}
+                AddLifeCycleNotifierAndSetDestroyCallback(runtimeCanvas.gameObject);
+                EnsureEventSystemCreated(runtimeCanvas.transform);
+                ConfigureDialogWindow(runtimeCanvas);
+            }
+            else
+            {
+                Debug.LogError(this + " requires m_CurrentDialog. Not showing dialog.");
+            }
+        }
 
-			Canvas dialogCanvas = UIFakeStoreCanvasPrefab.GetComponent<Canvas>();
+        private UIFakeStoreWindow GetOrCreateFakeStoreWindow()
+        {
+            if (m_UIFakeStoreWindowObject == null)
+            {
+                m_UIFakeStoreWindowObject = new GameObject("UIFakeStoreWindow", typeof(Transform));
+                m_UIFakeStoreWindowObject.AddComponent<UIFakeStoreWindow>();
+            }
 
-			// To show, and to configure UI, first realize it on screen
-			m_Canvas = Object.Instantiate(dialogCanvas);
+            return m_UIFakeStoreWindowObject.GetComponent<UIFakeStoreWindow>();
+        }
 
-			// TRICKY: I support one dialog at a time but there's a delay between a request
-			// to the UI system to destroy a UI element and the UI system completing the destruction.
-			// To avoid conflicts with partially destroyed dialogs hanging around too long we add a 
-			// custom behavior to the scene explicitly to notify me when the UI has been destroyed.
+        private void AddLifeCycleNotifierAndSetDestroyCallback(GameObject gameObject)
+        {
+            LifecycleNotifier notifier = gameObject.AddComponent<LifecycleNotifier>() as LifecycleNotifier;
+            notifier.OnDestroyCallback = () =>
+            {
+                m_CurrentDialog = null;
+            };
+        }
 
-			LifecycleNotifier notifier = m_Canvas.gameObject.AddComponent<LifecycleNotifier>() as LifecycleNotifier;
-			notifier.OnDestroyCallback = () =>
-			{
-				// Indicates we've completely closed our dialog
-				m_CurrentDialog = null;
-			};
+        private void EnsureEventSystemCreated(Transform rootTransform)
+        {
+            if (Object.FindObjectOfType<EventSystem>() == null)
+            {
+                CreateEventSystem(rootTransform);
+            }
+        }
 
-			m_ParentGameObjectPath = m_Canvas.name + "/Panel/";
+        private void ConfigureDialogWindow(UIFakeStoreWindow dialogWindow)
+        {
+            bool doCancel = (UIMode != FakeStoreUIMode.DeveloperUser);
+            bool doDropDown = (UIMode != FakeStoreUIMode.StandardUser);
 
-			// Ensure existence of EventSystem for use by UI
-			if (Object.FindObjectOfType<EventSystem>() == null)
-			{
-				// No EventSystem found, create a new one and add to the Canvas
-				m_EventSystem = new GameObject("EventSystem", typeof(EventSystem));
-				m_EventSystem.AddComponent<StandaloneInputModule>();
-				m_EventSystem.transform.parent = m_Canvas.transform;
-			}
+            dialogWindow.ConfigureMainDialogText(m_CurrentDialog.QueryText, m_CurrentDialog.OkayButtonText, m_CurrentDialog.CancelButtonText);
 
-			// Configure the dialog
-			var qt = GameObject.Find(m_ParentGameObjectPath + "HeaderText");
-			Text queryTextComponent = qt.GetComponent<Text>();
-			queryTextComponent.text = m_CurrentDialog.QueryText;
+            if (doDropDown)
+            {
+                dialogWindow.ConfigureDropdownOptions(m_CurrentDialog.Options);
+            }
 
-			Text allowText = GetOkayButtonText();
-			allowText.text = m_CurrentDialog.OkayButtonText;
+            ConfigureDialogWindowCallbacks(dialogWindow, doCancel, doDropDown);
+        }
 
-			Text denyText = GetCancelButtonText();
-			denyText.text = m_CurrentDialog.CancelButtonText;
-		
-			// Populate the dropdown
-			GetDropdown().options.Clear(); // Assume it has defaults prepopulated
-			foreach (var item in m_CurrentDialog.Options)
-			{
-				GetDropdown().options.Add(new Dropdown.OptionData(item));
-			}
+        void ConfigureDialogWindowCallbacks(UIFakeStoreWindow dialogWindow, bool assignCancelCallback, bool assignDropDownCallback)
+        {
+            Action cancelAction = null;
+            Action<int> dropdownAction = null;
 
-			if (m_CurrentDialog.Options.Count > 0)
-			{
-				m_LastSelectedDropdownIndex = 0;
-			}
+            if (assignCancelCallback)
+            {
+                cancelAction = this.CancelButtonClicked;
+            }
 
-			// Ensure the dropdown renders its default value
-			GetDropdown().RefreshShownValue();
+            if (assignDropDownCallback)
+            {
+                dropdownAction = this.DropdownValueChanged;
+            }
 
-			// Wire up callbacks
-			GetOkayButton().onClick.AddListener(() => { 
-				this.OkayButtonClicked(); 
-			});
-			GetCancelButton().onClick.AddListener(() => { 
-				this.CancelButtonClicked(); 
-			});
-			GetDropdown().onValueChanged.AddListener((int selectedItem) => {
-				this.DropdownValueChanged(selectedItem);
-			});
+            dialogWindow.AssignCallbacks(this.OkayButtonClicked, cancelAction, dropdownAction);
+        }
 
-			// Honor FakeStoreUIMode 
-			if (UIMode == FakeStoreUIMode.StandardUser)
-			{
-				GetDropdown ().onValueChanged.RemoveAllListeners ();
-				GameObject.Destroy (GetDropdownContainerGameObject ());
-			} 
-			else if (UIMode == FakeStoreUIMode.DeveloperUser)
-			{
-				GetCancelButton().onClick.RemoveAllListeners();
-				GameObject.Destroy (GetCancelButtonGameObject ());
-			}
-		}
+        private void CreateEventSystem(Transform rootTransform)
+        {
+            m_EventSystem = new GameObject("EventSystem", typeof(EventSystem));
+            m_EventSystem.AddComponent<StandaloneInputModule>();
+            m_EventSystem.transform.parent = rootTransform;
+        }
 
-		private string CreatePurchaseQuestion(ProductDefinition definition) 
+		private string CreatePurchaseQuestion(ProductDefinition definition)
 		{
 			return "Do you want to Purchase " + definition.id + "?" + EnvironmentDescriptionPostfix;
 		}
@@ -268,66 +226,14 @@ namespace UnityEngine.Purchasing
 			return title;
 		}
 
-		private Button GetOkayButton()
-		{
-			return GameObject.Find(m_ParentGameObjectPath + "Button1").GetComponent<Button>();
-		}
-
-		private Button GetCancelButton()
-		{
-			GameObject gameObject = GameObject.Find (m_ParentGameObjectPath + "Button2");
-
-			if (gameObject != null)
-			{
-				return gameObject.GetComponent<Button>();
-			} 
-			else
-			{
-				return null;
-			}
-		}
-
-		private GameObject GetCancelButtonGameObject()
-		{
-			return GameObject.Find (m_ParentGameObjectPath + "Button2");
-		}
-
-		private Text GetOkayButtonText()
-		{
-			return GameObject.Find (m_ParentGameObjectPath + "Button1/Text").GetComponent<Text> ();
-		}
-
-		private Text GetCancelButtonText()
-		{
-			return GameObject.Find (m_ParentGameObjectPath + "Button2/Text").GetComponent<Text> ();
-		}
-
-		private Dropdown GetDropdown()
-		{
-			var gameObject = GameObject.Find (m_ParentGameObjectPath + "Panel2/Panel3/Dropdown");
-			if (gameObject != null)
-			{
-				return gameObject.GetComponent<Dropdown> ();
-			}
-			else
-			{
-				return null;
-			}
-		}
-
-		private GameObject GetDropdownContainerGameObject()
-		{
-			return GameObject.Find(m_ParentGameObjectPath + "Panel2");
-		}
-
 		/// <summary>
-		/// Positive button clicked. For yes/no dialog will send true message. For 
+		/// Positive button clicked. For yes/no dialog will send true message. For
 		/// multiselect (FakeStoreUIMode.DeveloperUser) dialog may send true or false
 		/// message, along with chosen option.
 		/// </summary>
 		private void OkayButtonClicked()
 		{
-			bool result = false; 
+			bool result = false;
 
 			// Return false if the user chose something other than Success, and is in Development mode.
 			// True if the "Success" option was chosen, or if this is non-Development mode.
@@ -364,18 +270,10 @@ namespace UnityEngine.Purchasing
 		{
 			m_CurrentDialog = null;
 
-			GetOkayButton().onClick.RemoveAllListeners();
-			if (GetCancelButton ()) 
-			{
-				GetCancelButton().onClick.RemoveAllListeners();
-			}
-
-			if (GetDropdown () != null) 
-			{
-				GetDropdown ().onValueChanged.RemoveAllListeners ();
-			}
-
-			GameObject.Destroy(m_Canvas.gameObject);
+            if (m_UIFakeStoreWindowObject != null)
+            {
+                GameObject.Destroy(m_UIFakeStoreWindowObject);
+            }
 		}
 
 		public bool IsShowingDialog()

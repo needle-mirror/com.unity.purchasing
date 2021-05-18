@@ -107,16 +107,15 @@ namespace UnityEngine.Purchasing
                 var definition = new ProductDefinition(id, ProductType.NonConsumable);
                 product = new Product(definition, new ProductMetadata());
             }
-            UpdateProductReceipt(product, receipt, transactionId);
+            UpdateProductReceiptAndTrandsactionID(product, receipt, transactionId);
             ProcessPurchaseIfNew(product);
         }
 
-        void UpdateProductReceipt(Product product, string receipt, string transactionId)
+        void UpdateProductReceiptAndTrandsactionID(Product product, string receipt, string transactionId)
         {
-            var unifiedReceipt = FormatUnifiedReceipt(receipt, transactionId);
             if (product != null)
             {
-                product.receipt = unifiedReceipt;
+                product.receipt = CreateUnifiedReceipt(receipt, transactionId);
                 product.transactionID = transactionId;
             }
         }
@@ -147,7 +146,7 @@ namespace UnityEngine.Purchasing
 
         void HandlePurchaseRetrieved(Product product, Product purchasedProduct)
         {
-            UpdateProductReceipt(product, purchasedProduct.receipt, purchasedProduct.transactionID);
+            UpdateProductReceiptAndTrandsactionID(product, purchasedProduct.receipt, purchasedProduct.transactionID);
         }
 
         static void ClearProductReceipt(Product product)
@@ -205,7 +204,7 @@ namespace UnityEngine.Purchasing
 
                 if (!string.IsNullOrEmpty(product.receipt))
                 {
-                    matchedProduct.receipt = FormatUnifiedReceipt(product.receipt, product.transactionId);
+                    matchedProduct.receipt = CreateUnifiedReceipt(product.receipt, product.transactionId);
                 }
             }
 
@@ -218,6 +217,11 @@ namespace UnityEngine.Purchasing
             CheckForInitialization();
 
             ProcessPurchaseOnStart();
+        }
+
+        string CreateUnifiedReceipt(string rawReceipt, string transactionId)
+        {
+            return UnifiedReceiptFormatter.FormatUnifiedReceipt(rawReceipt, transactionId, m_StoreName);
         }
 
         void ProcessPurchaseOnStart()
@@ -316,35 +320,6 @@ namespace UnityEngine.Purchasing
 
             // Start the initialisation process by fetching product metadata.
             m_Store.RetrieveProducts(productCollection);
-        }
-
-#if UNITY_5_4_OR_NEWER
-        [Serializable]
-        class UnifiedReceipt
-        {
-            public string Store, TransactionID, Payload;
-        }
-#endif
-
-        private string FormatUnifiedReceipt(string platformReceipt, string transactionId)
-        {
-#if UNITY_5_4_OR_NEWER
-
-            UnifiedReceipt ur = new UnifiedReceipt()
-            {
-                Store = this.m_StoreName,
-                TransactionID = transactionId,
-                Payload = platformReceipt
-            };
-            return JsonUtility.ToJson(ur);
-# else
-            var dic = new Dictionary<string, object>();
-            dic["Store"] = this.m_StoreName;
-            dic["TransactionID"] = transactionId ?? string.Empty;
-            dic["Payload"] = platformReceipt ?? string.Empty;
-
-            return SimpleJson.SimpleJson.SerializeObject(dic);
-#endif
         }
     }
 }
