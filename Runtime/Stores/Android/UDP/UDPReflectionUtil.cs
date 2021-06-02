@@ -225,12 +225,12 @@ namespace UnityEngine.Purchasing
 
         static PropertyInfo GetNameProp()
         {
-            return GetClassType().GetProperty(UDPReflectionConsts.k_StoreServiceNameProp, UDPReflectionUtils.k_StaticBindingFlags);
+            return GetClassType()?.GetProperty(UDPReflectionConsts.k_StoreServiceNameProp, UDPReflectionUtils.k_StaticBindingFlags);
         }
 
         internal static string GetName()
         {
-            return (string)GetNameProp().GetValue(null, null);
+            return (string)GetNameProp()?.GetValue(null, null);
         }
 
         internal static MethodInfo GetEnableDebugLoggingMethod()

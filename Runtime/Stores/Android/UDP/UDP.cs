@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
             {
                 try
                 {
-                    return StoreServiceInterface.GetName();
+                    return StoreServiceInterface.GetName() ?? "UDP";
                 }
                 catch (Exception)
                 {

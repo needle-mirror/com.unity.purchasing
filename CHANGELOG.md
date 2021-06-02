@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.2.2] - 2021-06-02
+### Fixed
+- WebGL - While WebGL is not supported with an included app store implementation, the WebGL Player will no longer crash when the `StandardPurchasingModule.Initialize` API is called if Project Settings > Player > WebGL > Publishing Settings > Enable Exceptions > "Explicitly Thrown Exceptions Only" or "None" are set.
+- Amazon - Better support for Android R8 compiler. Added minification (Project Settings > Player > Publishing Settings > Minify) "keep" ProGuard rules.
+
 ## [3.2.1] - 2021-05-18
 ### Changed
 - Manual and API documentation updated. 
