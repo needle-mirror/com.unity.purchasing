@@ -19,13 +19,13 @@ namespace UnityEngine.Purchasing
         {
             m_GoogleQueryPurchasesService.QueryPurchases(purchases =>
             {
-                foreach (var purchase in purchases.Where(PurchaseNeedsAcknowledgement(product)))
+                foreach (var purchase in purchases.Where(PurchaseToFinishTransaction(product)))
                 {
                     if (product.type == ProductType.Consumable)
                     {
                         m_BillingClient.ConsumeAsync(purchaseToken, product, purchase, onConsume);
                     }
-                    else
+                    else if (!purchase.IsAcknowledged())
                     {
                         m_BillingClient.AcknowledgePurchase(purchaseToken, product, purchase, onAcknowledge);
                     }
@@ -33,10 +33,9 @@ namespace UnityEngine.Purchasing
             });
         }
 
-        static Func<GooglePurchase, bool> PurchaseNeedsAcknowledgement(ProductDefinition product)
+        static Func<GooglePurchase, bool> PurchaseToFinishTransaction(ProductDefinition product)
         {
-            return purchase => purchase != null && purchase.sku == product.storeSpecificId
-                && purchase.IsPurchased() && !purchase.IsAcknowledged();
+            return purchase => purchase != null && purchase.sku == product.storeSpecificId && purchase.IsPurchased();
         }
     }
 }
