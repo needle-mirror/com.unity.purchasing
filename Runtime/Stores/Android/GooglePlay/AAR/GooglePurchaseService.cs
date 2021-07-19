@@ -18,7 +18,7 @@ namespace UnityEngine.Purchasing
             m_QuerySkuDetailsService = querySkuDetailsService;
         }
 
-        public void Purchase(ProductDefinition product, Product oldProduct, int desiredProrationMode)
+        public void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
             m_QuerySkuDetailsService.QueryAsyncSku(product,
                 skus =>
@@ -27,7 +27,7 @@ namespace UnityEngine.Purchasing
                 });
         }
 
-        void OnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product oldProduct, int desiredProrationMode)
+        void OnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
             if (skus?.Count > 0)
             {

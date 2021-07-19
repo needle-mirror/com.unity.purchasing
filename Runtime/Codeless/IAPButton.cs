@@ -9,7 +9,11 @@ namespace UnityEngine.Purchasing
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
     [RequireComponent(typeof(Button))]
+#if ENABLE_EDITOR_GAME_SERVICES
+    [AddComponentMenu("In-App Purchasing/IAP Button")]
+#else
     [AddComponentMenu("Unity IAP/IAP Button")]
+#endif
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
     public class IAPButton : MonoBehaviour
     {
@@ -158,26 +162,20 @@ namespace UnityEngine.Purchasing
                     Application.platform == RuntimePlatform.WSAPlayerX64 ||
                     Application.platform == RuntimePlatform.WSAPlayerARM)
                 {
-                    CodelessIAPStoreListener.Instance.ExtensionProvider.GetExtension<IMicrosoftExtensions>()
+                    CodelessIAPStoreListener.Instance.GetStoreExtensions<IMicrosoftExtensions>()
                         .RestoreTransactions();
                 }
                 else if (Application.platform == RuntimePlatform.IPhonePlayer ||
                          Application.platform == RuntimePlatform.OSXPlayer ||
                          Application.platform == RuntimePlatform.tvOS)
                 {
-                    CodelessIAPStoreListener.Instance.ExtensionProvider.GetExtension<IAppleExtensions>()
-                        .RestoreTransactions(OnTransactionsRestored);
-                }
-                else if (Application.platform == RuntimePlatform.Android &&
-                         StandardPurchasingModule.Instance().appStore == AppStore.SamsungApps)
-                {
-                    CodelessIAPStoreListener.Instance.ExtensionProvider.GetExtension<ISamsungAppsExtensions>()
+                    CodelessIAPStoreListener.Instance.GetStoreExtensions<IAppleExtensions>()
                         .RestoreTransactions(OnTransactionsRestored);
                 }
                 else if (Application.platform == RuntimePlatform.Android &&
                     StandardPurchasingModule.Instance().appStore == AppStore.GooglePlay)
                 {
-                    CodelessIAPStoreListener.Instance.ExtensionProvider.GetExtension<IGooglePlayStoreExtensions>()
+                    CodelessIAPStoreListener.Instance.GetStoreExtensions<IGooglePlayStoreExtensions>()
                         .RestoreTransactions(OnTransactionsRestored);
                 }
                 else

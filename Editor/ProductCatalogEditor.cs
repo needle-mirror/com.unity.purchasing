@@ -19,7 +19,6 @@ namespace UnityEditor.Purchasing
         private static string[] kStoreKeys = {
             AppleAppStore.Name,
             GooglePlay.Name,
-            SamsungApps.Name,
             AmazonApps.Name,
             MacAppStore.Name,
             WindowsStore.Name,
@@ -29,7 +28,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// The path in the Menu bar where the <c>ProductCatalogEditor</c> item is located.
         /// </summary>
-        public const string ProductCatalogEditorMenuPath = MenuItemRoot + "/IAP Catalog";
+        public const string ProductCatalogEditorMenuPath = IapMenuConsts.MenuItemRoot + "/IAP Catalog...";
 
         /// <summary>
         /// Opens the <c>ProductCatalogEditor</c> Window or moves it to the front of the draw order.
@@ -38,6 +37,8 @@ namespace UnityEditor.Purchasing
         public static void ShowWindow()
         {
             EditorWindow.GetWindow(typeof(ProductCatalogEditor));
+
+            GenericEditorMenuItemClickEventSenderHelpers.SendTopMenuOpenCatalogEvent();
         }
 
         private static GUIContent windowTitle = new GUIContent("IAP Catalog");
@@ -111,14 +112,16 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Property which gets the <c>ProductCatalog</c> instance which is being edited.
         /// </summary>
-        public ProductCatalog Catalog {
-            get {
+        public ProductCatalog Catalog
+        {
+            get
+            {
                 return catalog;
             }
         }
 
         /// <summary>
-        /// Sets the results of the validation of catalog items upon export or upload to the cloud catalog.
+        /// Sets the results of the validation of catalog items upon export.
         /// </summary>
         /// <param name="catalogResults"> Validation results of the exported catalog </param>
         /// <param name="itemResults"> List of validation results of the exported items </param>
@@ -202,6 +205,7 @@ namespace UnityEditor.Purchasing
         {
             dirty = false;
             File.WriteAllText(ProductCatalog.kCatalogPath, ProductCatalog.Serialize(catalog));
+
             AssetDatabase.ImportAsset(ProductCatalog.kCatalogPath);
         }
 
@@ -229,6 +233,7 @@ namespace UnityEditor.Purchasing
             if (GUILayout.Button("Add Product"))
             {
                 AddNewProduct();
+                GenericEditorButtonClickEventSenderHelpers.SendCatalogAddProductEvent();
             }
 
             EditorGUILayout.EndScrollView();
@@ -240,13 +245,7 @@ namespace UnityEditor.Purchasing
             bool catalogHasProducts = !catalog.IsEmpty();
             if (catalogHasProducts)
             {
-                EditorGUILayout.Space();
-                enableCodelessAutoInitialization = EditorGUILayout.Toggle(
-                    new GUIContent("Automatically initialize UnityPurchasing (recommended)",
-                        "Automatically start Unity IAP if there are any products defined in this catalog. Uncheck this if you plan to initialize Unity IAP manually in your code."),
-                    enableCodelessAutoInitialization);
-                catalog.enableCodelessAutoInitialization = enableCodelessAutoInitialization;
-                EditorGUILayout.Space();
+                ShowAndProcessCodelessAutoInitToggleGui();
             }
 
             EditorGUILayout.EndVertical();
@@ -255,13 +254,9 @@ namespace UnityEditor.Purchasing
             EditorGUIUtility.labelWidth = defaultLabelWidth;
 
             EditorGUILayout.LabelField("Catalog Export");
-            BeginErrorBlock(validation, "appleSKU");
-            catalog.appleSKU = EditorGUILayout.TextField("Apple SKU:", catalog.appleSKU);
-            EndErrorBlock(validation, "appleSKU");
 
-            BeginErrorBlock(validation, "appleTeamID");
-            catalog.appleTeamID = EditorGUILayout.TextField("Apple Team ID:", catalog.appleTeamID);
-            EndErrorBlock(validation, "appleTeamID");
+            catalog.appleSKU = ShowEditTextFieldGuiAndGetValue("appleSKU", "Apple SKU:", catalog.appleSKU);
+            catalog.appleTeamID = ShowEditTextFieldGuiAndGetValue("appleTeamID", "Apple Team ID:", catalog.appleTeamID);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -279,22 +274,6 @@ namespace UnityEditor.Purchasing
                 PopupWindow.Show(exportButtonRect, new ProductCatalogExportWindow(this));
             }
 
-            //Upload to dashboard depends on extension code that is only available in version 5.6 and later
-            //if (VersionCheck.GreaterThanOrEqual(Application.unityVersion, "5.6.0")) {
-            //	if (GUILayout.Button(new GUIContent("Upload to Unity Cloud", "Upload this product catalog to the Unity Cloud dashboard"))
-            //	    && EditorUtility.DisplayDialog("Upload to Unity Cloud?",
-            //	                                   "Are you sure you want to upload the catalog? This upload will replace any product catalog already uploaded to the Unity Cloud.",
-            //	                                   "Upload",
-            //	                                   "Cancel")) {
-            //
-            //		try {
-            //			UploadToCloud();
-            //		} catch (FileNotFoundException) {
-            //			Debug.LogError("Upload to Unity Cloud is only available in version 5.6 and later");
-            //		}
-            //	}
-            //}
-
             EditorGUILayout.EndVertical();
 
             if (toRemove.Count > 0)
@@ -310,7 +289,36 @@ namespace UnityEditor.Purchasing
             }
         }
 
+        private void ShowAndProcessCodelessAutoInitToggleGui()
+        {
+            EditorGUILayout.Space();
+            var oldAutoInitializationToggle = catalog.enableCodelessAutoInitialization;
+            enableCodelessAutoInitialization = EditorGUILayout.Toggle(
+                new GUIContent("Automatically initialize UnityPurchasing (recommended)",
+                    "Automatically start Unity IAP if there are any products defined in this catalog. Uncheck this if you plan to initialize Unity IAP manually in your code."),
+                enableCodelessAutoInitialization);
+            catalog.enableCodelessAutoInitialization = enableCodelessAutoInitialization;
 
+            if (oldAutoInitializationToggle != enableCodelessAutoInitialization)
+            {
+                GenericEditorClickCheckboxEventSenderHelpers.SendCatalogAutoInitToggleEvent(enableCodelessAutoInitialization);
+            }
+            EditorGUILayout.Space();
+        }
+
+        string ShowEditTextFieldGuiAndGetValue(string fieldName, string label, string oldText)
+        {
+            BeginErrorBlock(validation, fieldName);
+            var newText = EditorGUILayout.TextField(label, oldText);
+            EndErrorBlock(validation, fieldName);
+
+            if (newText != oldText)
+            {
+                GenericEditorFieldEditEventSenderHelpers.SendCatalogEditEvent(fieldName);
+            }
+
+            return newText;
+        }
 
         private static bool IsNullOrWhiteSpace(string value)
         {
@@ -369,47 +377,6 @@ namespace UnityEditor.Purchasing
             foreach (var editor in productEditors)
             {
                 editor.SetIDDuplicateError(editor.Item != null && duplicates.Contains(editor.Item.id));
-            }
-        }
-
-        private void UploadToCloud()
-        {
-            var exporter = new CloudJSONProductCatalogExporter();
-            bool valid = true;
-
-            var catalogValidation = exporter.Validate(catalog);
-            valid = valid && catalogValidation.Valid;
-
-            var itemValidation = new List<ExporterValidationResults>();
-            foreach (var item in catalog.allProducts)
-            {
-                var v = exporter.Validate(item);
-                valid = valid && v.Valid;
-                itemValidation.Add(v);
-            }
-
-            SetCatalogValidationResults(catalogValidation, itemValidation);
-
-            if (valid)
-            {
-                CloudCatalogUploader.Upload(exporter.Export(catalog),
-                    (completeEvents) =>
-                    {
-                        if (completeEvents.Error != null)
-                        {
-                            throw completeEvents.Error;
-                        }
-                        else
-                        {
-                            Debug.Log("Catalog upload complete");
-                        }
-                    },
-                    (progressEvents) =>
-                    {
-                        Debug.Log(string.Format("Catalog upload progress: {0}% complete",
-                            progressEvents.ProgressPercentage.ToString()));
-                    },
-                    "https://cloud-staging.uca.cloud.unity3d.com");
             }
         }
 
@@ -661,6 +628,8 @@ namespace UnityEditor.Purchasing
         /// </summary>
         public class ProductCatalogItemEditor
         {
+            private const float k_DuplicateIDFieldWidth = 90f;
+
             /// <summary>
             /// Property which gets the <c>ProductCatalogItem</c> instance being edited.
             /// </summary>
@@ -724,11 +693,10 @@ namespace UnityEditor.Purchasing
                 var box = EditorGUILayout.BeginVertical();
 
                 Rect rect = new Rect(box.xMax - EditorGUIUtility.singleLineHeight - 2, box.yMin, EditorGUIUtility.singleLineHeight + 2, EditorGUIUtility.singleLineHeight);
-                if (GUI.Button(rect, "x") && EditorUtility.DisplayDialog("Delete Product?",
-                                                                         "Are you sure you want to delete this product?",
-                                                                         "Delete",
-                                                                         "Do Not Delete")) {
+                if (GUI.Button(rect, "x") && EditorUtility.DisplayDialog("Delete Product?", "Are you sure you want to delete this product?","Delete","Do Not Delete"))
+                {
                     toRemove.Add(this);
+                    GenericEditorButtonClickEventSenderHelpers.SendCatalogRemoveProductEvent();
                 }
 
                 ShowValidationResultsGUI(validation);
@@ -747,26 +715,12 @@ namespace UnityEditor.Purchasing
                 EditorGUILayout.LabelField(productLabel);
                 EditorGUILayout.Space();
 
-                BeginErrorBlock(validation, "id");
-                var duplicateIDFieldWidth = 90;
                 var idRect = EditorGUILayout.GetControlRect(true);
-                idRect.width -= duplicateIDFieldWidth;
-                Item.id = EditorGUI.TextField(idRect, "ID:", Item.id);
-                var style = new GUIStyle();
-                style.normal.textColor = Color.red;
+                idRect.width -= k_DuplicateIDFieldWidth;
 
-                var duplicateIDLabelRect = new Rect(idRect.xMax + 5, idRect.yMin, duplicateIDFieldWidth,
-                    EditorGUIUtility.singleLineHeight);
-                EditorGUI.LabelField(duplicateIDLabelRect, idDuplicate ? "ID is a duplicate" : string.Empty, style);
-                EditorGUI.LabelField(duplicateIDLabelRect,
-                    !idDuplicate && idInvalid && shouldBeMarked ? "ID is empty" : string.Empty, style);
-                EndErrorBlock(validation, "id");
+                ShowAndProcessProductIDBlockGui(idRect);
 
-                BeginErrorBlock(validation, "type");
-                var typeRect = EditorGUILayout.GetControlRect(true);
-                typeRect.width = idRect.width;
-                Item.type = (ProductType) EditorGUI.EnumPopup(typeRect, "Type:", Item.type);
-                EndErrorBlock(validation, "type");
+                ShowAndProcessProductTypeBlockGui(idRect.width);
 
                 advancedVisible = CompatibleGUI.Foldout(advancedVisible, "Advanced", true, s);
                 if (advancedVisible)
@@ -792,6 +746,8 @@ namespace UnityEditor.Purchasing
                         if (Item.HasAvailableLocale && GUI.Button(plusButtonRect, "+"))
                         {
                             Item.AddDescription(Item.NextAvailableLocale);
+
+                            GenericEditorButtonClickEventSenderHelpers.SendCatalogAddTranslationEvent();
                         }
 
                         foreach (var desc in Item.translatedDescriptions)
@@ -799,6 +755,8 @@ namespace UnityEditor.Purchasing
                             if (DescriptionEditorGUI(desc, true, "translatedDescriptions." + desc.googleLocale))
                             {
                                 descriptionsToRemove.Add(desc);
+
+                                GenericEditorButtonClickEventSenderHelpers.SendCatalogRemoveTranslationEvent();
                             }
                         }
 
@@ -843,17 +801,11 @@ namespace UnityEditor.Purchasing
                                         "Do Not Delete"))
                                 {
                                     payoutsToRemove.Add(payout);
+                                    GenericEditorButtonClickEventSenderHelpers.SendCatalogRemovePayoutEvent();
                                 }
 
                                 EditorGUI.indentLevel++;
-                                payout.type =
-                                    (ProductCatalogPayout.ProductCatalogPayoutType) EditorGUILayout.EnumPopup("Type",
-                                        payout.type);
-                                payout.subtype = TruncateString(EditorGUILayout.TextField("Subtype", payout.subtype),
-                                    ProductCatalogPayout.MaxSubtypeLength);
-                                payout.quantity = EditorGUILayout.DoubleField("Quantity", payout.quantity);
-                                payout.data = TruncateString(EditorGUILayout.TextField("Data", payout.data),
-                                    ProductCatalogPayout.MaxDataLength);
+                                ShowAndProcessPayoutBlockGui(payout);
                                 EditorGUI.indentLevel--;
 
                                 EditorGUILayout.EndVertical();
@@ -867,6 +819,7 @@ namespace UnityEditor.Purchasing
                             if (GUILayout.Button("Add Payout"))
                             {
                                 Item.AddPayout();
+                                GenericEditorButtonClickEventSenderHelpers.SendCatalogAddPayoutEvent();
                             }
 
                             EditorGUI.indentLevel--;
@@ -878,16 +831,10 @@ namespace UnityEditor.Purchasing
                     storeIDsVisible = CompatibleGUI.Foldout(storeIDsVisible, "Store ID Overrides", true, s);
                     if (storeIDsVisible) {
                         EditorGUI.indentLevel++;
-                        foreach (string storeKey in kStoreKeys) {
-                            BeginErrorBlock(validation, "storeID." + storeKey);
-                            Item.SetStoreID(storeKey, EditorGUILayout.TextField(storeKey, Item.GetStoreID(storeKey)));
-                            if (storeKey == SamsungApps.Name)
-                            {
-                                var errStyle = new GUIStyle();
-                                errStyle.normal.textColor = new Color(0.63f, 0.32f, 0.18f); // sienna brown
-                                EditorGUILayout.LabelField("*NOTE* Samsung Galaxy is obsolete and will be removed in v4. Please use Unity Distribution Platform instead.", errStyle);
-                            }
-                            EndErrorBlock(validation, "storeID." + storeKey);
+                        foreach (string storeKey in kStoreKeys)
+                        {
+                            var newStoreID = ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue("storeID." + storeKey, storeKey, Item.GetStoreID(storeKey));
+                            Item.SetStoreID(storeKey, newStoreID);
                         }
                         EditorGUI.indentLevel--;
                     }
@@ -895,21 +842,11 @@ namespace UnityEditor.Purchasing
                     EditorGUILayout.Separator();
 
                     googleVisible = CompatibleGUI.Foldout(googleVisible, "Google Configuration", true, s);
-                    if (googleVisible) {
+                    if (googleVisible)
+                    {
                         EditorGUI.indentLevel++;
 
-                        EditorGUILayout.LabelField("Provide either a price or an ID for a pricing template created in Google Play");
-
-                        BeginErrorBlock(validation, "googlePrice");
-                        var priceStr = EditorGUILayout.TextField("Price:", Item.googlePrice == null || Item.googlePrice.value == 0 ? string.Empty : Item.googlePrice.value.ToString());
-                        decimal priceDecimal;
-                        if (decimal.TryParse(priceStr, out priceDecimal)) {
-                            Item.googlePrice.value = priceDecimal;
-                        } else {
-                            Item.googlePrice.value = 0;
-                        }
-                        Item.pricingTemplateID = EditorGUILayout.TextField("Pricing Template:", Item.pricingTemplateID);
-                        EndErrorBlock(validation, "googlePrice");
+                        ShowAndProcessGoogleConfigGui();
 
                         EditorGUI.indentLevel--;
                     }
@@ -917,30 +854,12 @@ namespace UnityEditor.Purchasing
                     EditorGUILayout.Separator();
 
                     appleVisible = CompatibleGUI.Foldout(appleVisible, "Apple Configuration", true, s);
-                    if (appleVisible) {
+                    if (appleVisible)
+                    {
                         EditorGUI.indentLevel++;
-                        BeginErrorBlock(validation, "applePriceTier");
-                        Item.applePriceTier = EditorGUILayout.Popup("Price Tier:", Item.applePriceTier, ApplePriceTiers.Strings);
-                        EndErrorBlock(validation, "applePriceTier");
 
-                        // Screenshot
-                        BeginErrorBlock(validation, "screenshotPath");
-                        EditorGUILayout.LabelField("Screenshot path:", Item.screenshotPath);
-                        EndErrorBlock(validation, "screenshotPath");
-                        var screenshotButtonBox = EditorGUILayout.BeginVertical();
+                        ShowAndProcessAppleConfigGui();
 
-                        var screenshotButtonRect = new Rect(screenshotButtonBox.xMax - ProductCatalogExportWindow.kWidth,
-                                                            screenshotButtonBox.yMin,
-                                                            ProductCatalogExportWindow.kWidth,
-                                                            EditorGUIUtility.singleLineHeight);
-                        if (GUI.Button(screenshotButtonRect, new GUIContent("Select a screenshot", "Required for Apple XML Delivery."))) {
-                            string selectedPath = EditorUtility.OpenFilePanel("Select a screenshot", "", "");
-                            if (selectedPath != null) {
-                                Item.screenshotPath = selectedPath;
-                            }
-                        }
-
-                        EditorGUILayout.EndVertical();
                         EditorGUI.indentLevel--;
                     }
 
@@ -1050,6 +969,8 @@ namespace UnityEditor.Purchasing
                                     }
 
                                     udpItemSyncing = true;
+
+                                    GenericEditorButtonClickEventSenderHelpers.SendCatalogSyncToUdpEvent();
                                 }
                                 else
                                 {
@@ -1069,6 +990,124 @@ namespace UnityEditor.Purchasing
 
                 EditorGUILayout.EndVertical();
             }
+
+            void ShowAndProcessProductIDBlockGui(Rect idRect)
+            {
+                BeginErrorBlock(validation, "id");
+
+                var oldID = Item.id;
+
+                Item.id = EditorGUI.TextField(idRect, "ID:", Item.id);
+
+                if (oldID != Item.id)
+                {
+                    GenericEditorFieldEditEventSenderHelpers.SendCatalogEditEvent("productId");
+                }
+
+                var style = new GUIStyle();
+                style.normal.textColor = Color.red;
+                var duplicateIDLabelRect = new Rect(idRect.xMax + 5, idRect.yMin, k_DuplicateIDFieldWidth,EditorGUIUtility.singleLineHeight);
+
+                EditorGUI.LabelField(duplicateIDLabelRect, idDuplicate ? "ID is a duplicate" : string.Empty, style);
+                EditorGUI.LabelField(duplicateIDLabelRect, idDuplicate && idInvalid && shouldBeMarked ? "ID is empty" : string.Empty, style);
+
+                EndErrorBlock(validation, "id");
+            }
+
+            void ShowAndProcessProductTypeBlockGui(float width)
+            {
+                BeginErrorBlock(validation, "type");
+
+                var oldType = Item.type;
+
+                var typeRect = EditorGUILayout.GetControlRect(true);
+                typeRect.width = width;
+                Item.type = (ProductType) EditorGUI.EnumPopup(typeRect, "Type:", Item.type);
+
+                if (oldType != Item.type)
+                {
+                    var typeName = Enum.GetName(typeof(ProductType), Item.type);
+                    GenericEditorDropdownSelectEventSenderHelpers.SendCatalogSetProductTypeEvent(typeName);
+                }
+
+                EndErrorBlock(validation, "type");
+            }
+
+            void ShowAndProcessPayoutBlockGui(ProductCatalogPayout payout)
+            {
+                var oldType = payout.type;
+                payout.type = (ProductCatalogPayout.ProductCatalogPayoutType) EditorGUILayout.EnumPopup("Type", payout.type);
+                if (oldType != payout.type)
+                {
+                    var typeName = Enum.GetName(typeof(ProductCatalogPayout.ProductCatalogPayoutType), payout.type);
+                    GenericEditorDropdownSelectEventSenderHelpers.SendCatalogSetPayoutTypeEvent(typeName);
+                }
+
+                payout.subtype = TruncateString(ShowEditTextFieldGuiAndGetValue("payoutSubtype", "Subtype", payout.subtype), ProductCatalogPayout.MaxSubtypeLength);
+                payout.quantity = ShowEditDoubleFieldGuiAndGetValue("payoutQuantity", "Quantity", payout.quantity);
+                payout.data = TruncateString(ShowEditTextFieldGuiAndGetValue("payoutData","Data", payout.data), ProductCatalogPayout.MaxDataLength);
+            }
+
+            void ShowAndProcessGoogleConfigGui()
+            {
+                EditorGUILayout.LabelField("Provide either a price or an ID for a pricing template created in Google Play");
+
+                var fieldName = "googlePrice";
+                BeginErrorBlock(validation, fieldName);
+                var priceStr = ShowEditTextFieldGuiAndGetValue(fieldName, "Price:", Item.googlePrice == null || Item.googlePrice.value == 0 ? string.Empty : Item.googlePrice.value.ToString());
+
+                decimal priceDecimal;
+                if (decimal.TryParse(priceStr, out priceDecimal))
+                {
+                    Item.googlePrice.value = priceDecimal;
+                }
+                else
+                {
+                    Item.googlePrice.value = 0;
+                }
+
+                Item.pricingTemplateID = ShowEditTextFieldGuiAndGetValue("googlePriceTemplate","Pricing Template:", Item.pricingTemplateID);
+                EndErrorBlock(validation, fieldName);
+            }
+
+            void ShowAndProcessAppleConfigGui()
+            {
+                BeginErrorBlock(validation, "applePriceTier");
+
+                var oldTier = Item.applePriceTier;
+
+                Item.applePriceTier = EditorGUILayout.Popup("Price Tier:", Item.applePriceTier, ApplePriceTiers.Strings);
+                EndErrorBlock(validation, "applePriceTier");
+
+                if ((oldTier != Item.applePriceTier) && (Item.applePriceTier < ApplePriceTiers.Strings.Length))
+                {
+                    GenericEditorDropdownSelectEventSenderHelpers.SendCatalogSetApplePriceTierEvent(ApplePriceTiers.Strings[Item.applePriceTier]);
+                }
+
+                BeginErrorBlock(validation, "screenshotPath");
+                EditorGUILayout.LabelField("Screenshot path:", Item.screenshotPath);
+                EndErrorBlock(validation, "screenshotPath");
+                var screenshotButtonBox = EditorGUILayout.BeginVertical();
+
+                var screenshotButtonRect = new Rect(screenshotButtonBox.xMax - ProductCatalogExportWindow.kWidth,
+                    screenshotButtonBox.yMin,
+                    ProductCatalogExportWindow.kWidth,
+                    EditorGUIUtility.singleLineHeight);
+                if (GUI.Button(screenshotButtonRect, new GUIContent("Select a screenshot", "Required for Apple XML Delivery.")))
+                {
+                    string selectedPath = EditorUtility.OpenFilePanel("Select a screenshot", "", "");
+                    if (selectedPath != null)
+                    {
+                        Item.screenshotPath = selectedPath;
+                    }
+
+                    GenericEditorButtonClickEventSenderHelpers.SendCatalogSelectAppleScreenshotEvent();
+                }
+
+                EditorGUILayout.EndVertical();
+
+            }
+
 
             /// <summary>
             /// Sets the validation results upon export of this item.
@@ -1125,18 +1164,10 @@ namespace UnityEditor.Purchasing
                     rect.width -= removeButtonWidth;
                 }
 
-                BeginErrorBlock(validation, fieldValidationPrefix + ".googleLocale");
-                description.googleLocale = (TranslationLocale)EditorGUI.Popup(rect, "Locale:", (int)description.googleLocale,
-                    LocaleExtensions.GetLabelsWithSupportedPlatforms());
-                EndErrorBlock(validation, fieldValidationPrefix + ".googleLocale");
+                ShowAndProcessLocaleBlockGui(description, fieldValidationPrefix, rect);
 
-                BeginErrorBlock(validation, fieldValidationPrefix + ".Title");
-                description.Title = EditorGUILayout.TextField("Title:", description.Title);
-                EndErrorBlock(validation, fieldValidationPrefix + ".Title");
-
-                BeginErrorBlock(validation, fieldValidationPrefix + ".Description");
-                description.Description = EditorGUILayout.TextField("Description:", description.Description);
-                EndErrorBlock(validation, fieldValidationPrefix + ".Description");
+                description.Title = ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue(fieldValidationPrefix + ".Title", "Title:", description.Title);
+                description.Description = ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue(fieldValidationPrefix + ".Description", "Description:", description.Description);
 
                 var removeButtonRect = new Rect(box.xMax - removeButtonWidth, box.yMin, removeButtonWidth, EditorGUIUtility.singleLineHeight);
                 var remove = (showRemoveButton
@@ -1147,6 +1178,54 @@ namespace UnityEditor.Purchasing
                                                              "Do Not Delete"));
                 EditorGUILayout.EndVertical();
                 return remove;
+            }
+
+            void ShowAndProcessLocaleBlockGui(LocalizedProductDescription description, string fieldValidationPrefix, Rect rect)
+            {
+                BeginErrorBlock(validation, fieldValidationPrefix + ".googleLocale");
+
+                var oldLocale = description.googleLocale;
+                description.googleLocale = (TranslationLocale)EditorGUI.Popup(rect, "Locale:", (int)description.googleLocale,LocaleExtensions.GetLabelsWithSupportedPlatforms());
+                if (oldLocale != description.googleLocale)
+                {
+                    var localeName = Enum.GetName(typeof(TranslationLocale), description.googleLocale);
+                    GenericEditorDropdownSelectEventSenderHelpers.SendCatalogSetTranslationLocaleEvent(localeName);
+                }
+
+                EndErrorBlock(validation, fieldValidationPrefix + ".googleLocale");
+            }
+
+            string ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue(string fieldName, string label, string oldText)
+            {
+                BeginErrorBlock(validation, fieldName);
+                var newText = ShowEditTextFieldGuiAndGetValue(fieldName, label, oldText);
+                EndErrorBlock(validation, fieldName);
+
+                return newText;
+            }
+
+            string ShowEditTextFieldGuiAndGetValue(string fieldName, string label, string oldText)
+            {
+                var newText = EditorGUILayout.TextField(label, oldText);
+
+                if (newText != oldText)
+                {
+                    GenericEditorFieldEditEventSenderHelpers.SendCatalogEditEvent(fieldName);
+                }
+
+                return newText;
+            }
+
+            double ShowEditDoubleFieldGuiAndGetValue(string fieldName, string label, double oldAmount)
+            {
+                var newAmount = EditorGUILayout.DoubleField(label, oldAmount);
+
+                if (newAmount != oldAmount)
+                {
+                    GenericEditorFieldEditEventSenderHelpers.SendCatalogEditEvent(fieldName);
+                }
+
+                return newAmount;
             }
 
             private static string TruncateString (string s, int len)
@@ -1180,7 +1259,6 @@ namespace UnityEditor.Purchasing
 
                 exporters.Add(new AppleXMLProductCatalogExporter());
                 exporters.Add(new GooglePlayProductCatalogExporter());
-                exporters.Add(new CloudJSONProductCatalogExporter());
             }
 
             /// <summary>
@@ -1211,6 +1289,7 @@ namespace UnityEditor.Purchasing
                     {
                         editorWindow.Close();
                         Export(exporter);
+                        GenericEditorButtonClickEventSenderHelpers.SendCatalogAppStoreExportEvent(exporter.DisplayName);
                     }
                 }
 

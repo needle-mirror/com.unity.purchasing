@@ -16,6 +16,7 @@ namespace UnityEditor.Purchasing {
     [InitializeOnLoad]
     public static class UnityPurchasingEditor
     {
+        private const string PurchasingPackageName = "com.unity.purchasing";
         private const string UdpPackageName = "com.unity.purchasing.udp";
 
         private const string ModePath = "Assets/Resources/BillingMode.json";
@@ -26,15 +27,17 @@ namespace UnityEditor.Purchasing {
         private const string AssetStoreUdpBinPath = "Assets/Plugins/UDP/Android";
         private static readonly string PackManUdpBinPath = $"Packages/{UdpPackageName}/Android";
 
-        private static bool hasRegisteredForPlaymodeStateChanges = false;
-
         private static StoreConfiguration config;
+        private static readonly AppStore defaultAppStore = AppStore.GooglePlay;
+        internal delegate void AndroidTargetChange(AppStore store);
+        internal static AndroidTargetChange OnAndroidTargetChange;
 
         private static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
-
-        internal const string MenuItemRoot = "Window/" + PurchasingDisplayName;
-        internal const string PurchasingDisplayName = "Unity IAP";
-
+        #if ENABLE_EDITOR_GAME_SERVICES
+        internal const string MenuItemRoot = "Services/" + PurchasingDisplayName;
+        internal const string PurchasingDisplayName = "In-App Purchasing";
+        #else
+        #endif
         // Check if UDP upm package is installed.
         internal static bool IsUdpUmpPackageInstalled()
         {
@@ -62,7 +65,6 @@ namespace UnityEditor.Purchasing {
                         if (package.name.Equals(UdpPackageName))
                         {
                             m_UmpPackageInstalled = true;
-                            break;
                         }
                     }
                 }
@@ -125,8 +127,7 @@ namespace UnityEditor.Purchasing {
         private static Dictionary<string, AppStore> StoreSpecificFiles = new Dictionary<string, AppStore>()
         {
             {"billing-3.0.3.aar", AppStore.GooglePlay},
-            {"AmazonAppStore.aar", AppStore.AmazonAppStore},
-            {"SamsungApps.aar", AppStore.SamsungApps},
+            {"AmazonAppStore.aar", AppStore.AmazonAppStore}
         };
         private static Dictionary<string, AppStore> UdpSpecificFiles = new Dictionary<string, AppStore>() {
             { "udp.aar", AppStore.UDP},
@@ -137,93 +138,50 @@ namespace UnityEditor.Purchasing {
         // Create or read BillingMode.json at Project Editor load
         static UnityPurchasingEditor()
         {
-            EditorApplication.delayCall += () => {
-                if (File.Exists(ModePath)) {
+            EditorApplication.delayCall += () =>
+            {
+                if (File.Exists(ModePath))
+                {
+                    var oldAppStore = GetAppStoreSafe();
                     config = StoreConfiguration.Deserialize(File.ReadAllText(ModePath));
-                    RefreshCheckmarks();
-                } else {
-                    // New project. Create default BillingMode.json.
-                    TargetAndroidStore(AppStore.GooglePlay);
+                    if (oldAppStore != config.androidStore)
+                    {
+                        OnAndroidTargetChange?.Invoke(config.androidStore);
+                    }
+                }
+                else
+                {
+                    CreateDefaultBillingModeFile();
                 }
             };
+        }
 
-            if (!hasRegisteredForPlaymodeStateChanges) {
-#if UNITY_2017_2_OR_NEWER
-                EditorApplication.playModeStateChanged += RefreshCheckmarksOnPlaymodeState;
-#else
-                EditorApplication.playmodeStateChanged += RefreshCheckmarks;
+        static void CreateDefaultBillingModeFile()
+        {
+            TargetAndroidStore(defaultAppStore);
+        }
+
+#if !ENABLE_EDITOR_GAME_SERVICES
+        const string SwitchStoreMenuItem = IapMenuConsts.MenuItemRoot + "/Switch Store...";
+        [MenuItem(SwitchStoreMenuItem, false, 200)]
+        static void OnSwitchStoreMenu()
+        {
+            var window = EditorWindow.GetWindow(typeof(SwitchStoreEditorWindow));
+            window.titleContent.text = IapMenuConsts.SwitchStoreTitleText;
+            window.minSize = new Vector2(340, 180);
+            window.Show();
+        }
 #endif
-            }
-        }
 
-        private const string AmazonMenuItem = MenuItemRoot + "/Android/Target Amazon";
-        [MenuItem(AmazonMenuItem, false, 200)]
-        private static void TargetAmazon()
+        private static AppStore GetAppStoreSafe()
         {
-            TargetAndroidStore(AppStore.AmazonAppStore);
-        }
-        // HACK required to enable setting of checkmarks on project load
-        [MenuItem(AmazonMenuItem, true, 200)]
-        private static bool ValidateAmazon()
-        {
-            RefreshCheckmarks();
-            return true;
-        }
-
-        private const string GooglePlayMenuItem = MenuItemRoot + "/Android/Target Google Play";
-        [MenuItem(GooglePlayMenuItem, false, 200)]
-        private static void TargetGooglePlay()
-        {
-            TargetAndroidStore(AppStore.GooglePlay);
-        }
-        // HACK required to enable setting of checkmarks on project load
-        [MenuItem(GooglePlayMenuItem, true, 200)]
-        private static bool ValidateGooglePlay()
-        {
-            RefreshCheckmarks();
-            return true;
-        }
-
-        private const string SamsungAppsMenuItem = MenuItemRoot + "/Android/Target Samsung Galaxy Apps";
-        [MenuItem(SamsungAppsMenuItem, false, 200)]
-        private static void TargetSamsungApps()
-        {
-            TargetAndroidStore(AppStore.SamsungApps);
-        }
-        // HACK required to enable setting of checkmarks on project load
-        [MenuItem(SamsungAppsMenuItem, true, 200)]
-        private static bool ValidateSamsungApps()
-        {
-            RefreshCheckmarks();
-            return true;
-        }
-
-        private const string UdpMenuItem = MenuItemRoot + "/Android/Target Unity Distribution Portal (UDP)";
-        [MenuItem(UdpMenuItem, false, 200)]
-        private static void TargetUdp()
-        {
-            if (s_udpAvailable && (IsUdpUmpPackageInstalled() || IsUdpAssetStorePackageInstalled()) && UdpSynchronizationApi.CheckUdpCompatibility())
+            var store = AppStore.NotSpecified;
+            if (config != null)
             {
-                TargetAndroidStore(AppStore.UDP);
-            }
-            else
-            {
-                UdpInstaller.PromptUdpInstallation();
-            }
-        }
-
-        // HACK required to enable setting of checkmarks on project load
-        [MenuItem(UdpMenuItem, true, 200)]
-        private static bool ValidateUdp()
-        {
-            // If UDP is not available, the menu item will be disabled
-            if (UdpSynchronizationApi.CheckUdpAvailability())
-            {
-                RefreshCheckmarks();
-                return true;
+                store = config.androidStore;
             }
 
-            return false;
+            return store;
         }
 
         /// <summary>
@@ -231,47 +189,38 @@ namespace UnityEditor.Purchasing {
         /// This sets the correct plugin importer settings for the store
         /// and writes the choice to BillingMode.json so the player
         /// can choose the correct store API at runtime.
+        /// Note: This can fail if preconditions are not met for the AppStore.UDP target.
         /// </summary>
         /// <param name="target">App store to enable for next build</param>
         public static void TargetAndroidStore(AppStore target)
         {
-            if (((int)target < (int)AppStoreMeta.AndroidStoreStart || (int)target > (int)AppStoreMeta.AndroidStoreEnd) &&
-                target != AppStore.NotSpecified)
+            TryTargetAndroidStore(target);
+        }
+
+        internal static AppStore TryTargetAndroidStore(AppStore target)
+        {
+            if (!target.IsAndroid())
             {
                 throw new ArgumentException(string.Format("AppStore parameter ({0}) must be an Android app store", target));
             }
 
-            if (target == AppStore.SamsungApps)
+            if (target == AppStore.UDP)
             {
-                Debug.LogWarning(
-                    AppStore.SamsungApps +
-                    " is obsolete and will be removed in v4. Please Use Unity Distribution Platform for Samsung Galaxy Apps support");
+                if (!s_udpAvailable || (!IsUdpUmpPackageInstalled() && !IsUdpAssetStorePackageInstalled()) || !UdpSynchronizationApi.CheckUdpCompatibility())
+                {
+                    UdpInstaller.PromptUdpInstallation();
+                    return ConfiguredAppStore();
+                }
             }
+
             ConfigureProject(target);
-            UpdateCheckmarks(target);
             SaveConfig(target);
-        }
-        /// <summary>
-        /// Target a specified Android store.
-        /// This sets the correct plugin importer settings for the store
-        /// and writes the choice to BillingMode.json so the player
-        /// can choose the correct store API at runtime.
-        /// </summary>
-        /// <see cref="TargetAndroidStore(UnityEngine.Purchasing.AppStore)"/>
-        /// <param name="target">App store to enable for next build</param>
-        [System.Obsolete("Use TargetAndroidStore(AppStore) instead")]
-        public static void TargetAndroidStore(AndroidStore target)
-        {
-            AppStore appStore = AppStore.NotSpecified;
-            try
-            {
-                appStore = (AppStore) Enum.Parse(typeof(AppStore), target.ToString());
-            }
-            catch (Exception)
-            {
-                // No-op
-            }
-            TargetAndroidStore(appStore);
+            OnAndroidTargetChange?.Invoke(target);
+
+            var targetString = Enum.GetName(typeof(AppStore), target);
+            GenericEditorDropdownSelectEventSenderHelpers.SendIapMenuSelectTargetStoreEvent(targetString);
+
+            return ConfiguredAppStore();
         }
 
         // Unfortunately the UnityEditor API updates only the in-memory list of
@@ -373,44 +322,14 @@ namespace UnityEditor.Purchasing {
             config = configToSave;
         }
 
-
-#if UNITY_2017_1_OR_NEWER
-        private static void RefreshCheckmarksOnPlaymodeState(PlayModeStateChange state)
+        internal static AppStore ConfiguredAppStore()
         {
-            RefreshCheckmarks();
-        }
-#endif
-        private static void RefreshCheckmarks()
-        {
-            if (config == null) {
-                return;
-            }
-
-            try
+            if (config == null)
             {
-                UpdateCheckmarks(config.androidStore);
-            }
-            catch (Exception)
-            {
-                // Ignored
-            }
-        }
-
-        private static void UpdateCheckmarks(AppStore target)
-        {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            if (null == Array.Find<System.Reflection.Assembly>(assemblies, (a) => a.GetName().Name == "UnityEngine.Purchasing")) {
-                // If the assembly is not available, the menu items below won't exist
-                Debug.LogError("The Unity IAP plugin is installed, but Unity IAP is disabled. Please enable Unity IAP in the Services window.");
-                return;
+                return defaultAppStore;
             }
 
-            // GooglePlay is default when none specified
-
-            Menu.SetChecked(AmazonMenuItem, target == AppStore.AmazonAppStore);
-            Menu.SetChecked(GooglePlayMenuItem, target == AppStore.GooglePlay || target == AppStore.NotSpecified);
-            Menu.SetChecked(SamsungAppsMenuItem, target == AppStore.SamsungApps);
-            Menu.SetChecked(UdpMenuItem, target == AppStore.UDP);
+            return config.androidStore;
         }
 
         // Run me to configure the project's set of Android stores before build
@@ -423,10 +342,28 @@ namespace UnityEditor.Purchasing {
                     config = StoreConfiguration.Deserialize(File.ReadAllText(ModePath));
                     ConfigureProject(config.androidStore);
                 } catch (Exception e) {
-                    Debug.LogError("Unity IAP unable to strip undesired Android stores from build, use menu (e.g. "+GooglePlayMenuItem+") and check file: " + ModePath);
+                    #if ENABLE_EDITOR_GAME_SERVICES
+                    Debug.LogError("Unity IAP unable to strip undesired Android stores from build, check file: " + ModePath);
+                    #else
+                    Debug.LogError("Unity IAP unable to strip undesired Android stores from build, use menu (e.g. "
+                        + SwitchStoreMenuItem + ") and check file: " + ModePath);
+                    #endif
                     Debug.LogError(e);
                 }
             }
+        }
+
+        [MenuItem(IapMenuConsts.MenuItemRoot + "/Configure...", false, 0)]
+        private static void ConfigurePurchasingSettings()
+        {
+#if ENABLE_EDITOR_GAME_SERVICES && SERVICES_SDK_CORE_ENABLED
+            var path = PurchasingSettingsProvider.GetSettingsPath();
+            SettingsService.OpenProjectSettings(path);
+#elif UNITY_2020_3_OR_NEWER
+            ServicesUtils.OpenServicesProjectSettings(PurchasingService.instance.projectSettingsPath, PurchasingService.instance.settingsProviderClassName);
+#else
+            EditorApplication.ExecuteMenuItem("Window/General/Services");
+#endif
         }
     }
 }

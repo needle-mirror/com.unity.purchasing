@@ -120,11 +120,6 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public void OnPurchasesRetrieved(List<Product> purchasedProducts)
-        {
-            //DEPRECATED
-        }
-
         public void OnAllPurchasesRetrieved(List<Product> purchasedProducts)
         {
             if (products != null)

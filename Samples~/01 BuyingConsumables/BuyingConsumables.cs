@@ -4,7 +4,7 @@ using UnityEngine.Purchasing;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-namespace Samples.BuyingConsumables
+namespace Samples.Purchasing.Core.BuyingConsumables
 {
     public class BuyingConsumables : MonoBehaviour, IStoreListener
     {

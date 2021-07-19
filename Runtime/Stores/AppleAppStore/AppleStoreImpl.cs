@@ -155,9 +155,6 @@ namespace UnityEngine.Purchasing
             // Pass along the enriched product descriptions
             unity.OnProductsRetrieved (finalProductDescriptions ?? productDescriptions);
 
-            // Set up IAP promo product list (since we bypassed the JSON store here)
-            Promo.ProvideProductsToAds(this, unity);
-
             // If there is a promotional purchase callback, tell the store to intercept those purchases.
             if (m_PromotionalPurchaseCallback != null)
             {

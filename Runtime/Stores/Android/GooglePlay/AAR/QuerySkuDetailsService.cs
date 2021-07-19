@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -14,22 +15,24 @@ namespace UnityEngine.Purchasing
         const string k_AndroidSkuDetailsParamClassName = "com.android.billingclient.api.SkuDetailsParams";
         const string k_InApp = "inapp";
         const string k_Subs = "subs";
-        List<AndroidJavaClass> m_CachedQueriedSku = new List<AndroidJavaClass>();
+
+        IGoogleBillingClient m_BillingClient;
+        IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
+        const int k_RequiredNumberOfCallbacks = 2;
+        int m_NumberReceivedCallbacks;
+        List<AndroidJavaObject> m_QueriedSkuDetails = new List<AndroidJavaObject>();
+        IUtil m_Util;
 
         static AndroidJavaClass GetSkuDetailsParamClass()
         {
             return new AndroidJavaClass(k_AndroidSkuDetailsParamClassName);
         }
 
-        IGoogleBillingClient m_BillingClient;
-        IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
-        const int k_RequiredNumberOfCallbacks = 2;
-        int m_NumberReceivedCallbacks = 0;
-        List<AndroidJavaObject> m_QueriedSkuDetails = new List<AndroidJavaObject>();
-        internal QuerySkuDetailsService(IGoogleBillingClient billingClient, IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService)
+        internal QuerySkuDetailsService(IGoogleBillingClient billingClient, IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService, IUtil util)
         {
             m_BillingClient = billingClient;
             m_GoogleCachedQuerySkuDetailsService = googleCachedQuerySkuDetailsService;
+            m_Util = util;
         }
 
         public void QueryAsyncSku(ProductDefinition product, Action<List<AndroidJavaObject>> onSkuDetailsResponse)
@@ -54,7 +57,7 @@ namespace UnityEngine.Purchasing
 
         void QueryInAppsAsync(ReadOnlyCollection<ProductDefinition> products, Action<List<AndroidJavaObject>> onSkuDetailsResponse)
         {
-            List<string> skus = products
+            var skus = products
                 .Where(product => product.type != ProductType.Subscription)
                 .Select(product => product.storeSpecificId)
                 .ToList();
@@ -63,7 +66,7 @@ namespace UnityEngine.Purchasing
 
         void QuerySubsAsync(ReadOnlyCollection<ProductDefinition> products, Action<List<AndroidJavaObject>> onSkuDetailsResponse)
         {
-            List<string> skus = products
+            var skus = products
                 .Where(product => product.type == ProductType.Subscription)
                 .Select(product => product.storeSpecificId)
                 .ToList();
@@ -72,11 +75,11 @@ namespace UnityEngine.Purchasing
 
         void QuerySkuDetails(List<string> skus, string type, Action<List<AndroidJavaObject>> onSkuDetailsResponse)
         {
-            AndroidJavaObject skuDetailsParamsBuilder = GetSkuDetailsParamClass().CallStatic<AndroidJavaObject>("newBuilder");
+            var skuDetailsParamsBuilder = GetSkuDetailsParamClass().CallStatic<AndroidJavaObject>("newBuilder");
             skuDetailsParamsBuilder = skuDetailsParamsBuilder.Call<AndroidJavaObject>("setSkusList", skus.ToJava());
             skuDetailsParamsBuilder = skuDetailsParamsBuilder.Call<AndroidJavaObject>("setType", type);
 
-            SkuDetailsResponseListener listener = new SkuDetailsResponseListener((billingResult, skuDetails) => ConsolidateOnSkuDetailsReceived(billingResult, skuDetails, onSkuDetailsResponse));
+            var listener = new SkuDetailsResponseListener((billingResult, skuDetails) => ConsolidateOnSkuDetailsReceived(billingResult, skuDetails, onSkuDetailsResponse), m_Util);
 
             m_BillingClient.QuerySkuDetailsAsync(skuDetailsParamsBuilder, listener);
         }
@@ -85,7 +88,7 @@ namespace UnityEngine.Purchasing
         {
             m_NumberReceivedCallbacks++;
 
-            GoogleBillingResult billingResult = new GoogleBillingResult(javaBillingResult);
+            var billingResult = new GoogleBillingResult(javaBillingResult);
             if (billingResult.responseCode == BillingClientResponseEnum.OK())
             {
                 AddToQueriedSkuDetails(skuDetails);
@@ -101,8 +104,8 @@ namespace UnityEngine.Purchasing
 
         void AddToQueriedSkuDetails(AndroidJavaObject skusDetails)
         {
-            int size = skusDetails.Call<int>("size");
-            for (int index = 0; index < size; index++)
+            var size = skusDetails.Call<int>("size");
+            for (var index = 0; index < size; index++)
             {
                 m_QueriedSkuDetails.Add(skusDetails.Call<AndroidJavaObject>("get", index));
             }

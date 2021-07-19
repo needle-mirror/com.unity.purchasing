@@ -6,16 +6,16 @@ namespace UnityEngine.Purchasing
     class GooglePlayPurchaseCallback: IGooglePurchaseCallback
     {
         IStoreCallback m_StoreCallback;
-        IGooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensions;
+        IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
 
         public void SetStoreCallback(IStoreCallback storeCallback)
         {
             m_StoreCallback = storeCallback;
         }
 
-        public void SetStoreExtension(IGooglePlayStoreExtensionsInternal extensions)
+        public void SetStoreConfiguration(IGooglePlayConfigurationInternal configuration)
         {
-            m_GooglePlayStoreExtensions = extensions;
+            m_GooglePlayConfigurationInternal = configuration;
         }
 
         public void OnPurchaseSuccessful(string sku, string receipt, string purchaseToken)
@@ -30,12 +30,12 @@ namespace UnityEngine.Purchasing
 
         public void NotifyDeferredPurchase(string sku, string receipt, string purchaseToken)
         {
-            m_GooglePlayStoreExtensions?.NotifyDeferredPurchase(sku, receipt, purchaseToken);
+            m_GooglePlayConfigurationInternal?.NotifyDeferredPurchase(m_StoreCallback, sku, receipt, purchaseToken);
         }
 
         public void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku)
         {
-            m_GooglePlayStoreExtensions?.NotifyDeferredProrationUpgradeDowngradeSubscription(sku);
+            m_GooglePlayConfigurationInternal?.NotifyDeferredProrationUpgradeDowngradeSubscription(m_StoreCallback, sku);
         }
     }
 }

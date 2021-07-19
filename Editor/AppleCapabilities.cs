@@ -10,8 +10,7 @@ namespace UnityEditor.Purchasing
     class AppleCapabilities : IPostprocessBuildWithReport
     {
         const string k_StorekitFramework = "StoreKit.framework";
-        const int k_LateOrder = int.MaxValue;
-        public int callbackOrder => k_LateOrder;
+        public int callbackOrder => 0;
 
         public void OnPostprocessBuild(BuildReport report)
         {

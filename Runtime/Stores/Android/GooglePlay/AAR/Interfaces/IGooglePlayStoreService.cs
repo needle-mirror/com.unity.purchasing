@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing.Interfaces
     {
         void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action onRetrieveProductFailed);
         void Purchase(ProductDefinition product);
-        void Purchase(ProductDefinition product, Product oldProduct, int desiredProrationMode);
+        void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode);
         void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, GoogleBillingResult> onAcknowledge);
         void FetchPurchases(Action<List<GooglePurchase>> onQueryPurchaseSucceed);
         void SetObfuscatedAccountId(string obfuscatedAccountId);

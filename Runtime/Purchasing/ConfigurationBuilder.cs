@@ -79,17 +79,6 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Obsolete. Please use useCatalogProvider instead.
-        /// </summary>
-        /// <value> True it the project will use the catalog stored on the cloud. </value>
-		[Obsolete("This property has been renamed 'useCatalogProvider'", false)]
-        public bool useCloudCatalog
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// Whether or not the project will use the catalog stored on the cloud or the one cached locally.
         /// </summary>
         /// <value> True if the project will use the catalog stored on the cloud. </value>

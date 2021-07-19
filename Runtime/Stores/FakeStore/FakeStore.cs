@@ -87,10 +87,6 @@ namespace UnityEngine.Purchasing
                     if (allow)
                     {
                         m_Biller.OnProductsRetrieved(products);
-
-                        // Since iOS is already rigged to work this way might as well just use it...
-                        // *** if we want to use this change without Promo then we'll need to use reflection here
-                        Promo.ProvideProductsToAds(this, m_Biller);
                     }
                     else
                     {

@@ -4,18 +4,6 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Class containing store information for Universal Windows Platform builds.
     /// </summary>
-	[Obsolete("Use WindowsStore.Name for Universal Windows Apps")]
-	public class WinRT
-	{
-        /// <summary>
-        /// The name of the store used for Universal Windows Platform builds.
-        /// </summary>
-		public const string Name = "WinRT";
-	}
-
-    /// <summary>
-    /// Class containing store information for Universal Windows Platform builds.
-    /// </summary>
 	public class WindowsStore
 	{
 		// The value of this constant must be left as 'WinRT' for legacy reasons.

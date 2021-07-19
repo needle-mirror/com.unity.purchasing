@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -24,6 +25,9 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <see cref="ExtensionProvider"/>
         protected IExtensionProvider extensions;
+
+        ConfigurationBuilder m_Builder;
+
         /// <summary>
         /// For adding <typeparamref name="ProductDefinition"/> this default <typeparamref name="ProductCatalog"/> is
         /// loaded from the Project
@@ -54,11 +58,34 @@ namespace UnityEngine.Purchasing
             ConfigurationBuilder builder = ConfigurationBuilder.Instance(module);
 
             IAPConfigurationHelper.PopulateConfigurationBuilder(ref builder, instance.catalog);
+            instance.m_Builder = builder;
 
             UnityPurchasing.Initialize(instance, builder);
 
             unityPurchasingInitialized = true;
         }
+
+        /// <summary>
+        /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IStoreConfiguration"/>s.
+        /// Note, these instances are only available after initialization through Codeless IAP, currently.
+        /// </summary>
+        /// <typeparam name="T">A subclass of <typeparamref name="IStoreConfiguration"/> such as <typeparamref name="IAppleConfiguration"/></typeparam>
+        /// <returns></returns>
+        public T GetStoreConfiguration<T>() where T : IStoreConfiguration
+        {
+            return m_Builder.Configure<T>();
+        }
+
+        /// <summary>
+        /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IStoreExtension"/>s after initialization.
+        /// </summary>
+        /// <typeparam name="T">A subclass of <typeparamref name="IStoreExtension"/> such as <typeparamref name="IAppleExtensions"/></typeparam>
+        /// <returns></returns>
+        public T GetStoreExtensions<T>() where T : IStoreExtension
+        {
+            return extensions.GetExtension<T>();
+        }
+
 
         private CodelessIAPStoreListener()
         {
@@ -102,15 +129,6 @@ namespace UnityEngine.Purchasing
         public IStoreController StoreController
         {
             get { return controller; }
-        }
-
-        /// <summary>
-        /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IExtensionProvider"/>
-        /// after initialization.
-        /// </summary>
-        public IExtensionProvider ExtensionProvider
-        {
-            get { return extensions; }
         }
 
         /// <summary>

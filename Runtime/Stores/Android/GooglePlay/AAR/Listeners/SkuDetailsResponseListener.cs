@@ -1,4 +1,5 @@
 using System;
+using Uniject;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
@@ -12,16 +13,22 @@ namespace UnityEngine.Purchasing
         const string k_AndroidSkuDetailsResponseListenerClassName = "com.android.billingclient.api.SkuDetailsResponseListener";
 
         Action<AndroidJavaObject, AndroidJavaObject> m_OnSkuDetailsResponse;
-        internal SkuDetailsResponseListener(Action<AndroidJavaObject, AndroidJavaObject> onSkuDetailsResponseAction)
+        IUtil m_Util;
+
+        internal SkuDetailsResponseListener(Action<AndroidJavaObject, AndroidJavaObject> onSkuDetailsResponseAction, IUtil util)
             : base(k_AndroidSkuDetailsResponseListenerClassName)
         {
             m_OnSkuDetailsResponse = onSkuDetailsResponseAction;
+            m_Util = util;
         }
 
         [Preserve]
         void onSkuDetailsResponse(AndroidJavaObject billingResult, AndroidJavaObject skuDetails)
         {
-            m_OnSkuDetailsResponse(billingResult, skuDetails);
+            m_Util.RunOnMainThread(() =>
+            {
+                m_OnSkuDetailsResponse(billingResult, skuDetails);
+            });
         }
     }
 }

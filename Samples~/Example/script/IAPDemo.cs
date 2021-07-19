@@ -8,7 +8,6 @@
 //#define USE_PAYOUTS // Enables use of PayoutDefinitions to specify what the player should receive when a product is purchased
 //#define INTERCEPT_PROMOTIONAL_PURCHASES // Enables intercepting promotional purchases that come directly from the Apple App Store
 //#define SUBSCRIPTION_MANAGER //Enables subscription product manager for AppleStore and GooglePlay store
-//#define AGGRESSIVE_INTERRUPT_RECOVERY_GOOGLEPLAY // Enables also using getPurchaseHistory to recover from purchase interruptions, assuming developer is deduplicating to protect against "duplicate on cancel" flow
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -31,7 +30,6 @@ public class IAPDemo : MonoBehaviour, IStoreListener
     private IStoreController m_Controller;
 
     private IAppleExtensions m_AppleExtensions;
-    private ISamsungAppsExtensions m_SamsungExtensions;
     private IMicrosoftExtensions m_MicrosoftExtensions;
     private ITransactionHistoryExtensions m_TransactionHistoryExtensions;
     private IGooglePlayStoreExtensions m_GooglePlayStoreExtensions;
@@ -39,7 +37,6 @@ public class IAPDemo : MonoBehaviour, IStoreListener
 #pragma warning disable 0414
     private bool m_IsGooglePlayStoreSelected;
 #pragma warning restore 0414
-    private bool m_IsSamsungAppsStoreSelected;
 
     private bool m_PurchaseInProgress;
 
@@ -82,15 +79,9 @@ public class IAPDemo : MonoBehaviour, IStoreListener
     {
         m_Controller = controller;
         m_AppleExtensions = extensions.GetExtension<IAppleExtensions>();
-        m_SamsungExtensions = extensions.GetExtension<ISamsungAppsExtensions>();
         m_MicrosoftExtensions = extensions.GetExtension<IMicrosoftExtensions>();
         m_TransactionHistoryExtensions = extensions.GetExtension<ITransactionHistoryExtensions>();
         m_GooglePlayStoreExtensions = extensions.GetExtension<IGooglePlayStoreExtensions>();
-        // Sample code for expose product sku details for google play store
-        // Key is product Id (Sku), value is the skuDetails json string
-        //Dictionary<string, string> google_play_store_product_SKUDetails_json = m_GooglePlayStoreExtensions.GetProductJSONDictionary();
-        // Sample code for manually finish a transaction (consume a product on GooglePlay store)
-        //m_GooglePlayStoreExtensions.FinishAdditionalTransaction(productId, transactionId);
 
         InitUI(controller.products.all);
 
@@ -315,11 +306,6 @@ public class IAPDemo : MonoBehaviour, IStoreListener
 			UpdateProductPendingUI (p, remaining);
 		}
 
-        if (m_IsGooglePlayStoreSelected)
-        {
-            Debug.Log("Is " + p.definition.id + " currently owned, according to the Google Play store? "
-                      + m_GooglePlayStoreExtensions.IsOwned(p));
-        }
         Debug.Log("Confirming purchase of " + p.definition.id);
         m_Controller.ConfirmPendingPurchase(p);
         m_PendingProducts.Remove(p.definition.id);
@@ -392,19 +378,6 @@ public class IAPDemo : MonoBehaviour, IStoreListener
 
         m_IsGooglePlayStoreSelected =
             Application.platform == RuntimePlatform.Android && module.appStore == AppStore.GooglePlay;
-
-#if AGGRESSIVE_INTERRUPT_RECOVERY_GOOGLEPLAY
-        // For GooglePlay, if we have access to a backend server to deduplicate purchases, query purchase history
-        // when attempting to recover from a network-interruption encountered during purchasing. Strongly recommend
-        // deduplicating transactions across app reinstallations because this relies upon the on-device, deletable
-        // TransactionLog database.
-        builder.Configure<IGooglePlayConfiguration>().aggressivelyRecoverLostPurchases = true;
-        // Use purchaseToken instead of orderId for all transactions to avoid non-unique transactionIDs for a
-        // single purchase; two ProcessPurchase calls for one purchase, differing only by which field of the receipt
-        // is used for the Product.transactionID. Automatically true if aggressivelyRecoverLostPurchases is enabled
-        // and this API is not called at all.
-        builder.Configure<IGooglePlayConfiguration>().UsePurchaseTokenForTransactionId(true);
-#endif
 
         // Define our products.
         // Either use the Unity IAP Catalog, or manually use the ConfigurationBuilder.AddProduct API.
@@ -484,16 +457,6 @@ public class IAPDemo : MonoBehaviour, IStoreListener
         // Write Amazon's JSON description of our products to storage when using Amazon's local sandbox.
         // This should be removed from a production build.
         //builder.Configure<IAmazonConfiguration>().WriteSandboxJSON(builder.products);
-
-        // This enables simulated purchase success for Samsung IAP.
-        // You would remove this, or set to SamsungAppsMode.Production, before building your release package.
-        builder.Configure<ISamsungAppsConfiguration>().SetMode(SamsungAppsMode.AlwaysSucceed);
-        // This records whether we are using Samsung IAP. Currently ISamsungAppsExtensions.RestoreTransactions
-        // displays a blocking Android Activity, so:
-        // A) Unity IAP does not automatically restore purchases on Samsung Galaxy Apps
-        // B) IAPDemo (this) displays the "Restore" GUI button for Samsung Galaxy Apps
-        m_IsSamsungAppsStoreSelected =
-            Application.platform == RuntimePlatform.Android && module.appStore == AppStore.SamsungApps;
 
 #if INTERCEPT_PROMOTIONAL_PURCHASES
         // On iOS and tvOS we can intercept promotional purchases that come directly from the App Store.
@@ -620,11 +583,7 @@ public class IAPDemo : MonoBehaviour, IStoreListener
     /// </summary>
     public void RestoreButtonClick()
     {
-        if (m_IsSamsungAppsStoreSelected)
-        {
-            m_SamsungExtensions.RestoreTransactions(OnTransactionsRestored);
-        }
-        else if (Application.platform == RuntimePlatform.WSAPlayerX86 ||
+        if (Application.platform == RuntimePlatform.WSAPlayerX86 ||
                  Application.platform == RuntimePlatform.WSAPlayerX64 ||
                  Application.platform == RuntimePlatform.WSAPlayerARM)
         {
@@ -697,8 +656,7 @@ public class IAPDemo : MonoBehaviour, IStoreListener
                Application.platform == RuntimePlatform.tvOS ||
                Application.platform == RuntimePlatform.WSAPlayerX86 ||
                Application.platform == RuntimePlatform.WSAPlayerX64 ||
-               Application.platform == RuntimePlatform.WSAPlayerARM ||
-               m_IsSamsungAppsStoreSelected;
+               Application.platform == RuntimePlatform.WSAPlayerARM;
     }
 
     private void LogProductDefinitions()

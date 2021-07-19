@@ -6,8 +6,8 @@ namespace UnityEngine.Purchasing.Interfaces
 
         void SetLastKnownProductId(string lastKnownProductId);
 
-        int GetLastKnownProrationMode();
+        GooglePlayProrationMode? GetLastKnownProrationMode();
 
-        void SetLastKnownProrationMode(int lastKnownProrationMode);
+        void SetLastKnownProrationMode(GooglePlayProrationMode? lastKnownProrationMode);
     }
 }

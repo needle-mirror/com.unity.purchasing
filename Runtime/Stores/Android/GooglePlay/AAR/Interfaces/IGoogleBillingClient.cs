@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing.Interfaces
         void EndConnection();
         AndroidJavaObject QueryPurchase(string skuType);
         void QuerySkuDetailsAsync(AndroidJavaObject skuDetailsParamsBuilder, SkuDetailsResponseListener listener);
-        AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, int prorationMode);
+        AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode);
         void ConsumeAsync(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> onConsume);
         void AcknowledgePurchase(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, GoogleBillingResult> onAcknowledge);
         void SetObfuscationAccountId(string obfuscationAccountId);

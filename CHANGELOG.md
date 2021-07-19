@@ -1,11 +1,81 @@
 # Changelog
 
+## [4.0.0] - 2021-07-19
+### Added
+- Codeless Listener method to access the store configuration after initialization. 
+  - `CodelessIAPStoreListener.Instance.GetStoreConfiguration`
+- Several samples to the [Package Manager Details view](https://docs.unity3d.com/Manual/upm-ui-details.html) for com.unity.purchasing:
+  - Fetching additional products
+  - Integrating self-provided backend receipt validation
+  - Local receipt validation
+  - Google Play Store - Upgrade and downgrade subscriptions
+  - Google Play Store - Restoring Transactions
+  - Google Play Store - Confirming subscription price change
+  - Google Play Store - Handling Deferred Purchases
+  - Google Play Store - Fraud detection
+  - Apple App Store - Refreshing app receipts
+- Google Play - `GooglePlayProrationMode` enum that represent Google's proration modes and added `IGooglePlayStoreExtensions.UpgradeDowngradeSubscription` using the enum.
+
+### Fixed
+- GooglePlay - Fixed [Application Not Responding (ANR)](https://developer.android.com/topic/performance/vitals/anr) error at `Product` initialization. The Google Play `SkuDetailsResponseListener.onSkuDetailsResponse` callback is now quickly handled.
+- Amazon - Fixed `Product.metadata.localizedPrice` incorrectly being `0.00` for certain price formats.
+- Apple, Mac App Store - Fixes Apple Silicon "arm64" support, missing from unitypurchasing bundle.
+
+### Changed
+- Reorganized and renamed APIs:
+  - `CodelessIAPStoreListener.Instance.ExtensionProvider.GetExtension` to `CodelessIAPStoreListener.Instance.GetStoreExtensions` to match the new `GetStoreConfiguration` API, above
+  - `IGooglePlayStoreExtensions.NotifyDeferredProrationUpgradeDowngradeSubscription` to `IGooglePlayConfiguration.NotifyDeferredProrationUpgradeDowngradeSubscription`
+  - `IGooglePlayStoreExtensions.NotifyDeferredPurchase` to `IGooglePlayConfiguration.NotifyDeferredPurchase` 
+  - `IGooglePlayStoreExtensions.SetDeferredProrationUpgradeDowngradeSubscriptionListener` to `IGooglePlayConfiguration.SetDeferredProrationUpgradeDowngradeSubscriptionListener` 
+  - `IGooglePlayStoreExtensions.SetDeferredPurchaseListener` to `IGooglePlayConfiguration.SetDeferredPurchaseListener`
+  - `IGooglePlayStoreExtensions.SetObfuscatedAccountId` to `IGooglePlayConfiguration.SetObfuscatedAccountId` 
+  - `IGooglePlayStoreExtensions.SetObfuscatedProfileId` to `IGooglePlayConfiguration.SetObfuscatedProfileId`
+- Apple - Change the order of execution of the post-process build script, which adds the `StoreKitFramework` such that other post-process build scripts can run after it.
+- Changed the __Target Android__ Menu app store selection feature to display a window under `Window > Unity IAP > Switch Store...`. To set the app store for the next build, first use __Build Settings__ to activate the Android build target. 
+- For the future Unity 2022
+  - Moved Unity IAP menu items from `Window > Unity IAP > ...` to  `Services > In-App Purchasing > ...`
+  - Updated and added new functionnality to the `Services > In-App Purchasing` window in the `Project Settings`. The `Current Targeted Store` selector and `Receipt Obfuscator` settings are now accessible from this window.
+
+### Removed
+- Samsung Galaxy - Removed Samsung Galaxy Store in-app purchasing support. Use the [Unity Distribution Portal](https://unity.com/products/unity-distribution-portal) for the continued support of the Samsung Galaxy Store.
+    - All related classes and implementations have been removed including `AppStore.SamsungApps`.
+- Removed the following obsolete API:
+  - `CloudCatalogImpl`
+  - `CloudCatalogUploader`
+  - `CloudJSONProductCatalogExporter`
+  - `EventDestType`
+  - All `GooglePlayReceipt` constructors. Use `GooglePlayReceipt(string productID, string orderID, string packageName, string purchaseToken, DateTime purchaseTime, GooglePurchaseState purchaseState)` instead.
+  - `IAndroidStoreSelection.androidStore`
+  - `IDs.useCloudCatalog`
+  - `IGooglePlayConfiguration.SetPublicKey`
+  - `IGooglePlayConfiguration.UsePurchaseTokenForTransactionId`
+  - `IGooglePlayConfiguration.aggressivelyRecoverLostPurchases`
+  - `IGooglePlayStoreExtensionsMethod.FinishAdditionalTransaction`
+  - `IGooglePlayStoreExtensionsMethod.GetProductJSONDictionary`
+  - `IGooglePlayStoreExtensionsMethod.IsOwned`
+  - `IGooglePlayStoreExtensionsMethod.SetLogLevel`
+  - `IManagedStoreConfig`
+  - `IManagedStoreExtensions`
+  - `IStoreCallback.OnPurchasesRetrieved`. Use `IStoreCallback.OnAllPurchasesRetrieved` instead.
+  - `Promo`
+  - `StandardPurchasingModule.Instance(AndroidStore)`. Use `StandardPurchasingModule.Instance(AppStore)` instead.
+  - `StandardPurchasingModule.androidStore`. Use `StandardPurchasingModule.appStore` instead.
+  - `StandardPurchasingModule.useMockBillingSystem`. Use `IMicrosoftConfiguration` instead.
+  - `StoreTestMode`
+  - `UnityPurchasingEditor.TargetAndroidStore(AndroidStore)`. Use `TargetAndroidStore(AppStore)` instead.
+  - `WinRT` class. Use `WindowsStore` instead.
+  - `WindowsPhone8` class. Use `WindowsStore` instead.
+  
 ## [3.2.3] - 2021-07-08
 ### Fixed
 - GooglePlay - Fix `DuplicateTransaction` errors seen during purchase, after a purchase had previously been Acknowledged with Google.
 - GooglePlay - Fix `DuplicateTransaction` errors seen after a user starts a purchase on a game with Unity IAP 1.x or 2.x, quits their game, upgrades their game to include a version of Unity IAP 3.x, and tries to finish consuming / completing that old purchase.
 
 ## [3.2.2] - 2021-06-02
+### Added
+- Sample to the [Package Manager Details view](https://docs.unity3d.com/Manual/upm-ui-details.html) for com.unity.purchasing:
+  - Buying consumables
+
 ### Fixed
 - WebGL - While WebGL is not supported with an included app store implementation, the WebGL Player will no longer crash when the `StandardPurchasingModule.Initialize` API is called if Project Settings > Player > WebGL > Publishing Settings > Enable Exceptions > "Explicitly Thrown Exceptions Only" or "None" are set.
 - Amazon - Better support for Android R8 compiler. Added minification (Project Settings > Player > Publishing Settings > Minify) "keep" ProGuard rules.

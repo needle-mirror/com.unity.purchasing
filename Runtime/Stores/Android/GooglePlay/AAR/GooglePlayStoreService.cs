@@ -150,10 +150,10 @@ namespace UnityEngine.Purchasing
 
         public void Purchase(ProductDefinition product)
         {
-            Purchase(product, null, GooglePlayProrationMode.k_NullProrationMode);
+            Purchase(product, null, null);
         }
 
-        public void Purchase(ProductDefinition product, Product oldProduct, int desiredProrationMode)
+        public void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
             m_GoogleLastKnownProductService.SetLastKnownProductId(product.storeSpecificId);
             m_GoogleLastKnownProductService.SetLastKnownProrationMode(desiredProrationMode);

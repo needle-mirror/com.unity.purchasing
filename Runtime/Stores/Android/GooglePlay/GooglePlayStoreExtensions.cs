@@ -11,24 +11,26 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
         IStoreCallback m_StoreCallback;
-        GooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensionsInternal;
         Action<Product> m_DeferredPurchaseAction;
         Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
 
-        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, GooglePlayStoreExtensionsInternal googlePlayStoreExtensionsInternal)
+        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_GooglePlayStoreFinishTransactionService = googlePlayStoreFinishTransactionService;
-            m_GooglePlayStoreExtensionsInternal = googlePlayStoreExtensionsInternal;
-            m_GooglePlayStoreExtensionsInternal.SetGooglePlayStoreExtensions(this);
         }
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku)
         {
-            UpgradeDowngradeSubscription(oldSku, newSku, GooglePlayProrationMode.k_ImmediateWithoutProration);
+            UpgradeDowngradeSubscription(oldSku, newSku, GooglePlayProrationMode.ImmediateWithoutProration);
         }
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku, int desiredProrationMode)
+        {
+            UpgradeDowngradeSubscription(oldSku, newSku, (GooglePlayProrationMode) desiredProrationMode);
+        }
+
+        public void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode)
         {
             Product product = m_StoreCallback.FindProductById(newSku);
             Product oldProduct = m_StoreCallback.FindProductById(oldSku);
@@ -85,48 +87,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public void SetDeferredPurchaseListener(Action<Product> action)
-        {
-            m_DeferredPurchaseAction = action;
-        }
-
-        public void SetDeferredProrationUpgradeDowngradeSubscriptionListener(Action<Product> action)
-        {
-            m_DeferredProrationUpgradeDowngradeSubscriptionAction = action;
-        }
-
         public void SetStoreCallback(IStoreCallback storeCallback)
         {
             m_StoreCallback = storeCallback;
-        }
-
-        public void NotifyDeferredPurchase(string productId, string receipt, string transactionId)
-        {
-            Product product = m_StoreCallback.FindProductById(productId);
-            if (product != null)
-            {
-                ProductPurchaseUpdater.UpdateProductReceiptAndTransactionID(product, receipt, transactionId, GooglePlay.Name);
-                m_DeferredPurchaseAction?.Invoke(product);
-            }
-        }
-
-        public void NotifyDeferredProrationUpgradeDowngradeSubscription(string productId)
-        {
-            Product product = m_StoreCallback.FindProductById(productId);
-            if (product != null)
-            {
-                m_DeferredProrationUpgradeDowngradeSubscriptionAction?.Invoke(product);
-            }
-        }
-
-        public void SetObfuscatedAccountId(string accountId)
-        {
-            m_GooglePlayStoreService.SetObfuscatedAccountId(accountId);
-        }
-
-        public void SetObfuscatedProfileId(string profileId)
-        {
-            m_GooglePlayStoreService.SetObfuscatedProfileId(profileId);
         }
 
         public bool IsPurchasedProductDeferred(Product product)
@@ -150,18 +113,6 @@ namespace UnityEngine.Purchasing
                 Debug.LogWarning("Cannot parse Google receipt for transaction " + product.transactionID);
                 return false;
             }
-        }
-
-        public Dictionary<string, string> GetProductJSONDictionary()
-        {
-            return null;
-        }
-
-        public void SetLogLevel(int level) { }
-
-        public bool IsOwned(Product p)
-        {
-            return false;
         }
     }
 }

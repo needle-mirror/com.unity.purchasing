@@ -87,12 +87,12 @@ namespace UnityEngine.Purchasing.Models
             m_BillingClient.Call("querySkuDetailsAsync", skuDetailsParamsBuilder.Call<AndroidJavaObject>("build"), listener);
         }
 
-        public AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldSku,  string oldPurchaseToken, int prorationMode)
+        public AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode)
         {
             return m_BillingClient.Call<AndroidJavaObject>("launchBillingFlow", UnityActivity.GetCurrentActivity(), MakeBillingFlowParams(sku, oldSku, oldPurchaseToken, prorationMode));
         }
 
-        AndroidJavaObject MakeBillingFlowParams(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, int prorationMode)
+        AndroidJavaObject MakeBillingFlowParams(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode)
         {
             AndroidJavaObject billingFlowParams = GetBillingFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
 
@@ -106,9 +106,9 @@ namespace UnityEngine.Purchasing.Models
                 billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setOldSku", oldSku, oldPurchaseToken);
             }
 
-            if (prorationMode != GooglePlayProrationMode.k_NullProrationMode)
+            if (prorationMode != null)
             {
-                billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setReplaceSkusProrationMode", prorationMode);
+                billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setReplaceSkusProrationMode", (int) prorationMode);
             }
 
             billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("build");

@@ -3,53 +3,48 @@
     /// <summary>
     /// The type of Native App store being used.
     /// </summary>
-	public enum AppStore
-	{
+    public enum AppStore
+    {
         /// <summary>
         /// No store specified.
         /// </summary>
-	    NotSpecified,
+        NotSpecified,
 
         /// <summary>
         /// GooglePlay Store.
         /// </summary>
-		GooglePlay,     //<= Map to AndroidStore
+        GooglePlay, //<= Map to AndroidStore. First Android store. In AppStoreMeta.
 
         /// <summary>
         /// Amazon App Store.
         /// </summary>
-		AmazonAppStore, //
-
-        /// <summary>
-        /// Samsung Galaxy Store.
-        /// </summary>
-		SamsungApps,    //
+        AmazonAppStore, //
 
         /// <summary>
         /// Unity Distribution Portal, which supports a set of stores internally.
         /// </summary>
-	    UDP,            // Last Android Store
+        UDP, // Last Android store. Also in AppStoreMeta.
 
         /// <summary>
         /// MacOS App Store.
         /// </summary>
-	    MacAppStore,
+        MacAppStore,
 
         /// <summary>
         /// iOS or tvOS App Stores.
         /// </summary>
-	    AppleAppStore,
+        AppleAppStore,
 
         /// <summary>
         /// Universal Windows Platform's store.
         /// </summary>
-	    WinRT,
+        WinRT,
 
         /// <summary>
         /// A fake store used for testing and Play-In-Editor.
         /// </summary>
-	    fake
-	}
+        fake
+    }
 
     // Note these must be synchronized with constants in the AndroidStore enum.
     /// <summary>

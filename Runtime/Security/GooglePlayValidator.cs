@@ -37,7 +37,7 @@ namespace UnityEngine.Purchasing.Security
 		    var time = epoch.AddMilliseconds(Convert.ToDouble(purchaseTime));
 		    var state = (GooglePurchaseState)Convert.ToInt32(purchaseState);
 
-			return new GooglePlayReceipt ((string) productId, (string) orderID, (string) orderID, (string) packageName,
+			return new GooglePlayReceipt ((string) productId, (string) orderID, (string) packageName,
 				(string) purchaseToken, time, state);
 		}
 	}

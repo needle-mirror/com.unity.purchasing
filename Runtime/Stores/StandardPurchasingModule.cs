@@ -23,7 +23,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "3.2.3"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.0.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -31,8 +31,6 @@ namespace UnityEngine.Purchasing
         private AppStore m_AppStorePlatform;
         private INativeStoreProvider m_NativeStoreProvider;
         private RuntimePlatform m_RuntimePlatform;
-        private bool m_UseCloudCatalog;
-        private string m_persistentDataPath { get; set; }
         private static StandardPurchasingModule ModuleInstance;
 
         internal IUtil util { get; private set; }
@@ -44,11 +42,9 @@ namespace UnityEngine.Purchasing
         private static Dictionary<AppStore, string> AndroidStoreNameMap = new Dictionary<AppStore, string> () {
             { AppStore.AmazonAppStore, AmazonApps.Name },
             { AppStore.GooglePlay, GooglePlay.Name },
-            { AppStore.SamsungApps, SamsungApps.Name },
             { AppStore.UDP, UDP.Name},
             { AppStore.NotSpecified, GooglePlay.Name }
         };
-        private CloudCatalogImpl m_CloudCatalog;
 
         internal class StoreInstance
         {
@@ -62,8 +58,7 @@ namespace UnityEngine.Purchasing
         }
 
         internal StandardPurchasingModule(IUtil util, IAsyncWebUtil webUtil, ILogger logger,
-            INativeStoreProvider nativeStoreProvider, RuntimePlatform platform, AppStore android, bool useCloudCatalog,
-            string persistentDataPath)
+            INativeStoreProvider nativeStoreProvider, RuntimePlatform platform, AppStore android)
         {
             this.util = util;
             this.webUtil = webUtil;
@@ -73,30 +68,6 @@ namespace UnityEngine.Purchasing
             useFakeStoreUIMode = FakeStoreUIMode.Default;
             useFakeStoreAlways = false;
             m_AppStorePlatform = android;
-            m_UseCloudCatalog = useCloudCatalog;
-            m_persistentDataPath = persistentDataPath;
-            Promo.InitPromo(platform, logger, Version, util, webUtil);
-        }
-
-        /// <summary>
-        /// A property that retrieves the <c>AndroidStore</c> type, if applicabble.
-        /// </summary>
-        [System.Obsolete("Use StandardPurchasingModule.appStore instead")]
-        public AndroidStore androidStore
-        {
-            get
-            {
-                AndroidStore store = AndroidStore.NotSpecified;
-                try
-                {
-                    store = (AndroidStore) Enum.Parse(typeof(AndroidStore), m_AppStorePlatform.ToString());
-                }
-                catch (Exception)
-                {
-                    // No-op
-                }
-                return store;
-            }
         }
 
         /// <summary>
@@ -113,23 +84,6 @@ namespace UnityEngine.Purchasing
         // At some point we should remove this but to do so will cause a compile error
         // for App developers who used this property directly.
         private bool usingMockMicrosoft;
-
-        /// <summary>
-        /// Whether or not to use the mock billing system for Universal Windows Platform apps.
-        /// </summary>
-        [Obsolete ("Use IMicrosoftConfiguration to toggle use of the Microsoft IAP simulator.")]
-        public bool useMockBillingSystem
-        {
-            get
-            {
-                return usingMockMicrosoft;
-            }
-            set
-            {
-                UseMockWindowsStore (value);
-                usingMockMicrosoft = value;
-            }
-        }
 
         /// <summary>
         /// The UI mode for the Fake store, if it's in use.
@@ -149,27 +103,6 @@ namespace UnityEngine.Purchasing
         {
             // Default to Google Play on Android.
             return Instance (AppStore.NotSpecified);
-        }
-
-        /// <summary>
-        /// Creates an instance of StandardPurchasingModule or retrieves the existing one, specifying a type of Android store.
-        /// </summary>
-        /// <param name="androidStore"> The type of Android Store with which to create the instance. </param>
-        /// <returns> The existing instance or the one just created. </returns>
-        [System.Obsolete("Use StandardPurchasingModule.Instance(AppStore) instead")]
-        public static StandardPurchasingModule Instance(AndroidStore androidStore)
-        {
-            AppStore store = AppStore.NotSpecified;
-            try
-            {
-                store = (AppStore)Enum.Parse(typeof(AppStore), androidStore.ToString());
-            }
-            catch (Exception)
-            {
-                // No-op
-            }
-
-            return Instance(store);
         }
 
         /// <summary>
@@ -212,9 +145,7 @@ namespace UnityEngine.Purchasing
                     logger,
                     new NativeStoreProvider (),
                     Application.platform,
-                    androidStore,
-                    false,
-                    Application.persistentDataPath);
+                    androidStore);
             }
 
             return ModuleInstance;
@@ -234,16 +165,10 @@ namespace UnityEngine.Purchasing
             BindConfiguration<IAmazonConfiguration>(new FakeAmazonExtensions());
             BindExtension<IAmazonExtensions>(new FakeAmazonExtensions ());
 
-            BindConfiguration<ISamsungAppsConfiguration>(new FakeSamsungAppsExtensions());
-            BindExtension<ISamsungAppsExtensions>(new FakeSamsungAppsExtensions ());
-
             BindConfiguration<IMicrosoftConfiguration>(new MicrosoftConfiguration (this));
             BindExtension<IMicrosoftExtensions>(new FakeMicrosoftExtensions());
 
             BindConfiguration<IAndroidStoreSelection>(this);
-
-            BindConfiguration<IManagedStoreConfig>(new FakeManagedStoreConfig());
-            BindExtension<IManagedStoreExtensions>(new FakeManagedStoreExtensions());
 
             BindExtension<IUDPExtensions>(new FakeUDPExtension());
             BindExtension<ITransactionHistoryExtensions>(new FakeTransactionHistoryExtensions());
@@ -256,47 +181,12 @@ namespace UnityEngine.Purchasing
 
             RegisterStore(storeInstance.storeName, storeInstance.instance);
 
-            if (m_UseCloudCatalog) {
-                // Use reflection to call SetCatalogProviderFunction so this implementation can remain
-                // backward-compatible with older engine versions that do not contain an implementation of the method.
-                var setCatalog = m_Binder.GetType ().GetMethod ("SetCatalogProviderFunction");
-                if (setCatalog != null) {
-                    // Create an instance of the CloudCatalogImpl
-                    m_CloudCatalog = CloudCatalogImpl.CreateInstance (storeInstance.storeName);
-
-                    // Create the function to invoke when fetching products
-                    Action<Action<HashSet<ProductDefinition>>> catalogProviderFunction = (Action<HashSet<ProductDefinition>> callback) => {
-                        // This call must be done through reflection because IL2CPP will choke on the call. It seems
-                        // IL2CPP treats the Action<HashSet<ProductDefinition>> type in the signature of
-                        // FetchProducts as a different type than the Action<HashSet<ProductDefinition>> passed as
-                        // a callback here. This does work with the Mono build.
-                        // Equivalent to: m_CloudCatalog.FetchProducts (callback);
-                        var cloudCatalogImplFetchProducts = typeof (CloudCatalogImpl).GetMethod ("FetchProducts");
-                        if (cloudCatalogImplFetchProducts != null) {
-                            cloudCatalogImplFetchProducts.Invoke (m_CloudCatalog, new object[] { callback });
-                        } else {
-                            callback (new HashSet<ProductDefinition> ());
-                        }
-                    };
-
-                    // Use reflection to set the function on the IPurchasingBinder
-                    // Equivalent to: SetCatalogProviderFunction(catalogProviderFunction)
-                    setCatalog.Invoke (m_Binder, new object [] { catalogProviderFunction });
-                }
-            }
-
             // Moving SetModule from reflection to an interface
             var internalStore = storeInstance.instance as IStoreInternal;
             if (internalStore != null)
             {
                 // NB: as currently implemented this is also doing Init work for ManagedStore
                 internalStore.SetModule(this);
-            }
-
-            var managedStore = storeInstance.instance as IManagedStoreExtensions;
-            if (managedStore != null)
-            {
-                BindExtension<IManagedStoreExtensions>(managedStore);
             }
 
             // If we are using a JSONStore, bind to it to get transaction history.
@@ -346,7 +236,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                var store = new JSONStore (m_persistentDataPath);
+                var store = new JSONStore ();
                 return InstantiateAndroidHelper(store);
             }
         }
@@ -357,23 +247,17 @@ namespace UnityEngine.Purchasing
 
             var googlePlayStoreService = BuildGooglePlayStoreServiceAar(googlePurchaseCallback);
 
-            var googlePlayStoreExtensionsInternal = new GooglePlayStoreExtensionsInternal();
-            var googlePlayConfigurationInternal = new GooglePlayConfigurationInternal();
-
             IGooglePlayStorePurchaseService googlePlayStorePurchaseService = new GooglePlayStorePurchaseService(googlePlayStoreService);
             IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService = new GooglePlayStoreFinishTransactionService(googlePlayStoreService);
             IGoogleFetchPurchases googleFetchPurchases = new GoogleFetchPurchases(googlePlayStoreService, googlePlayStoreFinishTransactionService);
+            var googlePlayConfiguration = BuildGooglePlayStoreConfiguration(googlePlayStoreService, googlePurchaseCallback);
             IGooglePlayStoreRetrieveProductsService googlePlayStoreRetrieveProductsService = new GooglePlayStoreRetrieveProductsService(
                 googlePlayStoreService,
                 googleFetchPurchases,
-                googlePlayConfigurationInternal);
+                googlePlayConfiguration);
             var googlePlayStoreExtensions = BuildGooglePlayStoreExtensions(
                 googlePlayStoreService,
-                googlePlayStoreFinishTransactionService,
-                googlePurchaseCallback,
-                googlePlayStoreExtensionsInternal);
-            var googlePlayConfiguration = new GooglePlayConfiguration();
-            googlePlayConfiguration.SetGooglePlayConfigurationInternal(googlePlayConfigurationInternal);
+                googlePlayStoreFinishTransactionService);
 
             GooglePlayStore googlePlayStore = new GooglePlayStore(
                 googlePlayStoreRetrieveProductsService,
@@ -390,43 +274,44 @@ namespace UnityEngine.Purchasing
             return googlePlayStore;
         }
 
-        void BindGoogleConfiguration(IGooglePlayConfiguration googlePlayConfiguration)
-        {
-            BindConfiguration(googlePlayConfiguration);
-        }
-
         void BindGoogleExtension(GooglePlayStoreExtensions googlePlayStoreExtensions)
         {
             BindExtension<IGooglePlayStoreExtensions>(googlePlayStoreExtensions);
         }
 
-        static GooglePlayStoreExtensions BuildGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService,
-            IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService,
-            IGooglePurchaseCallback googlePurchaseCallback,
-            GooglePlayStoreExtensionsInternal googlePlayStoreExtensionsInternal)
+        static GooglePlayStoreExtensions BuildGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService)
         {
-            GooglePlayStoreExtensions googlePlayStoreExtensions = new GooglePlayStoreExtensions(
-                googlePlayStoreService,
-                googlePlayStoreFinishTransactionService,
-                googlePlayStoreExtensionsInternal);
-            googlePurchaseCallback.SetStoreExtension(googlePlayStoreExtensions);
+            GooglePlayStoreExtensions googlePlayStoreExtensions = new GooglePlayStoreExtensions(googlePlayStoreService, googlePlayStoreFinishTransactionService);
             return googlePlayStoreExtensions;
         }
 
-        static IGooglePlayStoreService BuildGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback)
+        static GooglePlayConfiguration BuildGooglePlayStoreConfiguration(IGooglePlayStoreService googlePlayStoreService, IGooglePurchaseCallback googlePurchaseCallback)
         {
-            IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService = new GoogleCachedQuerySkuDetailsService();
-            IGoogleLastKnownProductService googleLastKnownProductService = new GoogleLastKnownProductService();
-            IGooglePurchaseUpdatedListener googlePurchaseUpdatedListener = new GooglePurchaseUpdatedListener(googleLastKnownProductService, googlePurchaseCallback, googleCachedQuerySkuDetailsService);
-            IGoogleBillingClient googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener);
-            IQuerySkuDetailsService googleQuerySkuDetailsService = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService);
-            IGooglePurchaseService purchaseService = new GooglePurchaseService(googleBillingClient, googlePurchaseCallback, googleQuerySkuDetailsService);
-            IGoogleQueryPurchasesService queryPurchasesService = new GoogleQueryPurchasesService(googleBillingClient, googleCachedQuerySkuDetailsService);
-            IGoogleFinishTransactionService finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
-            IBillingClientStateListener billingClientStateListener = new BillingClientStateListener();
-            IGooglePriceChangeService priceChangeService = new GooglePriceChangeService(googleBillingClient, googleCachedQuerySkuDetailsService);
+            GooglePlayConfiguration googlePlayConfiguration = new GooglePlayConfiguration(googlePlayStoreService);
+            googlePurchaseCallback.SetStoreConfiguration(googlePlayConfiguration);
+            return googlePlayConfiguration;
+        }
 
-            IGooglePlayStoreService googlePlayStoreService = new GooglePlayStoreService(
+        void BindGoogleConfiguration(GooglePlayConfiguration googlePlayConfiguration)
+        {
+            BindConfiguration<IGooglePlayConfiguration>(googlePlayConfiguration);
+        }
+
+        IGooglePlayStoreService BuildGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback)
+        {
+            var googleCachedQuerySkuDetailsService = new GoogleCachedQuerySkuDetailsService();
+            var googleLastKnownProductService = new GoogleLastKnownProductService();
+            var googlePurchaseUpdatedListener = new GooglePurchaseUpdatedListener(googleLastKnownProductService, googlePurchaseCallback, googleCachedQuerySkuDetailsService);
+            var googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener);
+            var googleQuerySkuDetailsService = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService, util);
+            var purchaseService = new GooglePurchaseService(googleBillingClient, googlePurchaseCallback, googleQuerySkuDetailsService);
+            var queryPurchasesService = new GoogleQueryPurchasesService(googleBillingClient, googleCachedQuerySkuDetailsService);
+            var finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
+            var billingClientStateListener = new BillingClientStateListener();
+            var googleQuerySkuDetailsServicePriceChange = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService, util);
+            var priceChangeService = new GooglePriceChangeService(googleBillingClient, googleQuerySkuDetailsServicePriceChange);
+
+            return new GooglePlayStoreService(
                 googleBillingClient,
                 googleQuerySkuDetailsService,
                 purchaseService,
@@ -436,7 +321,6 @@ namespace UnityEngine.Purchasing
                 priceChangeService,
                 googleLastKnownProductService
             );
-            return googlePlayStoreService;
         }
 
         private IStore InstantiateUDP()

@@ -42,10 +42,9 @@ namespace UnityEngine.Purchasing.Security
 		public string orderID { get; private set; }
 
         /// <summary>
-        /// The ID  of the transaction. Obsolete use <c>orderID</c>
+        /// The ID  of the transaction.
         /// </summary>
-        [Obsolete("Use orderID")]
-		public string transactionID { get; private set; }
+        public string transactionID => orderID;
 
         /// <summary>
         /// The package name of the app.
@@ -71,38 +70,19 @@ namespace UnityEngine.Purchasing.Security
         /// Constructor that initializes the members from the input parameters.
         /// </summary>
         /// <param name="productID"> The item's product identifier. </param>
-        /// <param name="transactionID"> The ID  of the transaction. Obsolete. </param>
         /// <param name="orderID"> The unique order identifier for the transaction. </param>
         /// <param name="packageName"> The package name of the app. </param>
         /// <param name="purchaseToken"> The token that uniquely identifies a purchase for a given item and user pair. </param>
         /// <param name="purchaseTime"> The time the product was purchased, in milliseconds since the epoch (Jan 1, 1970). </param>
         /// <param name="purchaseState"> The purchase state of the order. </param>
-		public GooglePlayReceipt(string productID, string transactionID, string orderID, string packageName,
+		public GooglePlayReceipt(string productID, string orderID, string packageName,
 			string purchaseToken, DateTime purchaseTime, GooglePurchaseState purchaseState) {
 			this.productID = productID;
-#pragma warning disable 618
-            this.transactionID = transactionID;
-#pragma warning restore 618
             this.orderID = orderID;
 			this.packageName = packageName;
 			this.purchaseToken = purchaseToken;
 			this.purchaseDate = purchaseTime;
 			this.purchaseState = purchaseState;
 		}
-
-        /// <summary>
-        /// Constructor that initializes the members from the input parameters. Obsolete.
-        /// </summary>
-        /// <param name="productID"> The item's product identifier. </param>
-        /// <param name="transactionID"> The ID  of the transaction. Obsolete, copies itself to the orderID as well. </param>
-        /// <param name="packageName"> The package name of the app. </param>
-        /// <param name="purchaseToken"> The token that uniquely identifies a purchase for a given item and user pair. </param>
-        /// <param name="purchaseTime"> The time the product was purchased, in milliseconds since the epoch (Jan 1, 1970). </param>
-        /// <param name="purchaseState"> The purchase state of the order. </param>
-		[Obsolete("Use variant with string orderID in signature")]
-		public GooglePlayReceipt(string productID, string transactionID, string packageName,
-			string purchaseToken, DateTime purchaseTime, GooglePurchaseState purchaseState) :
-			this(productID, transactionID, transactionID, packageName, purchaseToken, purchaseTime, purchaseState) {
-		}
-	}
+    }
 }

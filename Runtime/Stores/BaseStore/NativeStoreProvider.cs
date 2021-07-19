@@ -43,28 +43,6 @@ namespace UnityEngine.Purchasing
                         return new AndroidJavaStore (instance);
                     }
 
-                case AppStore.SamsungApps:
-                    using (var pluginClass = new AndroidJavaClass("com.unity.purchasing.samsung.SamsungPurchasing"))
-                    {
-                        // Java code needs to call back to our extensions;
-                        // there is a 2 way dependency so create C# side first.
-                        var extensions = new SamsungAppsStoreExtensions();
-
-                        // Switch Android callbacks to the scripting thread, via ScriptingUnityCallback.
-                        var proxy = new JavaBridge (new ScriptingUnityCallback(callback, util));
-                        var instance = pluginClass.CallStatic<AndroidJavaObject> ("instance", proxy, extensions);
-
-                        // Extensions need to call into Java.
-                        extensions.SetAndroidJavaObject(instance);
-
-                        // Hook up our Samsung specific functionality.
-                        // Wiring up extension to store
-                        binder.RegisterExtension<ISamsungAppsExtensions> (extensions);
-                        binder.RegisterConfiguration<ISamsungAppsConfiguration> (extensions);
-
-                        return new AndroidJavaStore(instance);
-                    }
-
                 case AppStore.UDP:
                     {
                         Type udpIapBridge = UdpIapBridgeInterface.GetClassType();

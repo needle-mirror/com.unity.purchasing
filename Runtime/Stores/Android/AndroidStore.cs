@@ -8,7 +8,7 @@
         /// <summary>
         /// GooglePlay Store
         /// </summary>
-        GooglePlay,     //<= Map to AppStore
+        GooglePlay, //<= Map to AppStore
 
         /// <summary>
         /// Amazon App Store.
@@ -16,15 +16,10 @@
         AmazonAppStore, //
 
         /// <summary>
-        /// Samsung Galaxy Store.
-        /// </summary>
-        SamsungApps,    //
-
-        /// <summary>
         /// Unity Distribution Portal, which manages other stores internally.
         /// </summary>
         /// <seealso cref="https://unity.com/products/unity-distribution-portal"/>
-        UDP,            //
+        UDP, //
 
         /// <summary>
         /// No Android Store specified. Usually the case if not using Android.

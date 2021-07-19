@@ -41,11 +41,6 @@ namespace UnityEngine.Purchasing
             m_Util.RunOnMainThread(() => m_ForwardTo.OnAllPurchasesRetrieved(purchasedProducts));
         }
 
-        public void OnPurchasesRetrieved(List<Product> purchasedProducts)
-        {
-            //DEPRECATED
-        }
-
         public void OnPurchaseFailed(PurchaseFailureDescription desc)
         {
             m_Util.RunOnMainThread(() => m_ForwardTo.OnPurchaseFailed(desc));

@@ -38,10 +38,12 @@ List of devices attached
 
 Setting up to use Unity's IAP takes a few steps.
 
-1. Import the Unity IAP plug-in. See [Setting up Unity IAP](UnityIAPSettingUp) for more information (Unity 5.3 or higher).
-1. Set the IAP target store. You should already have an Android app set up. Set the target store using __Unity IAP's Window > Unity IAP > Android > Target Amazon__ menu item. This is used to toggle between Google, Amazon, and other Android stores.
+1. Import the Unity IAP plug-in. See [Setting up Unity IAP](UnityIAPSettingUp) for more information.
+1. Set the IAP target store. You should already have an Android app set up. Switch to and activate the Android platform in __File > Build Settings__. Set the target store using __Unity IAP's Project Settings > Services > In-App Purchasing__ window. To open that window the shortcut menu __Services > In-App Purchasing > Configure__ is also available. This is used to toggle between Google, Amazon, and other Android stores.
 
     ![](images/AmazonConfiguration-TargetAmazonMenu.png)
+
+In case Unity does not show a __Services__ menu, set the target store using __Window > Unity IAP > Switch Store...__.
 
 Alternatively, call the API: 
 

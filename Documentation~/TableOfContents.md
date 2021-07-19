@@ -4,7 +4,6 @@
     * [Configuring for Google Play Store](UnityIAPGoogleConfiguration.md)
     * [Configuring for Windows Store](UnityIAPWindowsConfiguration.md)
     * [Configuration for the Amazon Appstore](UnityIAPAmazonConfiguration.md)
-    * [Configuration for Samsung Galaxy IAP](UnityIAPSamsungConfiguration.md)
 * Cross Platform Guide
     * [Codeless IAP](UnityIAPCodelessIAP.md)
     * [Defining products](UnityIAPDefiningProducts.md)
@@ -24,7 +23,6 @@
     * [Universal Windows Platform](UnityIAPUniversalWindows.md)
     * [Google Play](UnityIAPGooglePlay.md)
     * [Amazon Appstore and Amazon Underground Store](UnityIAPAmazonExtendedFunctionality.md)
-    * [Samsung Galaxy apps](UnityIAPSamsungGalaxy.md)
 * [Implementing a Store](UnityIAPImplementingAStore.md)
     * [Initialization](UnityIAPIStoreInitialization.md)
     * [Retrieving products](UnityIAPIStoreRetrievingProducts.md)
