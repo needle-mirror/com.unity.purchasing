@@ -1,34 +1,21 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.Interfaces;
 
 namespace UnityEngine.Purchasing.Utils
 {
-    static class SkuDetailsConverter
+    class SkuDetailsConverter : ISkuDetailsConverter
     {
-        internal static void ConvertOnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, Action<List<ProductDescription>> onProductsReceived)
+        public List<ProductDescription> ConvertOnQuerySkuDetailsResponse(IEnumerable<AndroidJavaObject> skus)
         {
-            var products = ConvertSkusDetailsToProducts(skus);
-            onProductsReceived(products);
+            return skus.Select(ToProductDescription).ToList();
         }
 
-        static List<ProductDescription> ConvertSkusDetailsToProducts(List<AndroidJavaObject> skus)
+        static ProductDescription ToProductDescription(AndroidJavaObject skusDetails)
         {
-            List<ProductDescription> products = new List<ProductDescription>();
-            foreach (AndroidJavaObject skuDetails in skus)
-            {
-                products.AddRange(skuDetails.ToListProducts());
-            }
-
-            return products;
-        }
-
-        static List<ProductDescription> ToListProducts(this AndroidJavaObject skusDetails)
-        {
-            return new List<ProductDescription>()
-            {
-                BuildProductDescription(new AndroidJavaObjectWrapper(skusDetails))
-            };
+            return BuildProductDescription(new AndroidJavaObjectWrapper(skusDetails));
         }
 
         /// <summary>

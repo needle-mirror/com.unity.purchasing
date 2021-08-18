@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing
             m_GoogleQueryPurchasesService = googleQueryPurchasesService;
         }
 
-        public void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, GoogleBillingResult> onAcknowledge)
+        public void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> onAcknowledge)
         {
             m_GoogleQueryPurchasesService.QueryPurchases(purchases =>
             {

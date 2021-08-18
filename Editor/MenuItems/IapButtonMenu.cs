@@ -3,6 +3,9 @@ using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// IAPButtonMenu class creates options in menus to create the <see cref="IAPButton"/>.
+    /// </summary>
     public static class IAPButtonMenu
     {
         /// <summary>

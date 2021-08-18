@@ -82,7 +82,7 @@ namespace UnityEngine.Purchasing
             {
                 m_GooglePlayStoreService.ConfirmSubscriptionPriceChange(product.definition, result =>
                 {
-                    callback(result.responseCode == GoogleBillingResponseCode.k_Ok);
+                    callback(result.responseCode == GoogleBillingResponseCode.Ok);
                 });
             }
         }

@@ -9,7 +9,10 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreService : IGooglePlayStoreService
     {
+        const int k_MaxConnectionAttempts = 1;
+
         GoogleBillingConnectionState m_GoogleConnectionState = GoogleBillingConnectionState.Disconnected;
+        int m_CurrentConnectionAttempts = 0;
 
         IGoogleBillingClient m_BillingClient;
         IBillingClientStateListener m_BillingClientStateListener;
@@ -55,6 +58,7 @@ namespace UnityEngine.Purchasing
         void StartConnection()
         {
             m_GoogleConnectionState = GoogleBillingConnectionState.Connecting;
+            m_CurrentConnectionAttempts++;
             m_BillingClient.StartConnection(m_BillingClientStateListener);
         }
 
@@ -69,6 +73,7 @@ namespace UnityEngine.Purchasing
         void OnConnected()
         {
             m_GoogleConnectionState = GoogleBillingConnectionState.Connected;
+            m_CurrentConnectionAttempts = 0;
             DequeueQueryProducts();
             DequeueFetchPurchases();
         }
@@ -130,6 +135,15 @@ namespace UnityEngine.Purchasing
         {
             m_GoogleConnectionState = GoogleBillingConnectionState.Disconnected;
             DequeueQueryProducts();
+            AttemptReconnection();
+        }
+
+        void AttemptReconnection()
+        {
+            if (m_CurrentConnectionAttempts < k_MaxConnectionAttempts)
+            {
+                StartConnection();
+            }
         }
 
         public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action onRetrieveProductFailed)
@@ -160,7 +174,7 @@ namespace UnityEngine.Purchasing
             m_GooglePurchaseService.Purchase(product, oldProduct, desiredProrationMode);
         }
 
-        public void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, GoogleBillingResult> onAcknowledge)
+        public void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> onAcknowledge)
         {
             m_GoogleFinishTransactionService.FinishTransaction(product, purchaseToken, onConsume, onAcknowledge);
         }
@@ -187,13 +201,7 @@ namespace UnityEngine.Purchasing
             m_BillingClient.SetObfuscationProfileId(obfuscatedProfileId);
         }
 
-        public void EndConnection()
-        {
-            m_GoogleConnectionState = GoogleBillingConnectionState.Disconnected;
-            m_BillingClient.EndConnection();
-        }
-
-        public void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<GoogleBillingResult> onPriceChangeAction)
+        public void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangeAction)
         {
             m_GooglePriceChangeService.PriceChange(product, onPriceChangeAction);
         }

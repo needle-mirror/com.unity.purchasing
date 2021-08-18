@@ -26,21 +26,21 @@ namespace UnityEngine.Purchasing
             m_GooglePlayStoreService.FinishTransaction(product, purchaseToken, OnConsume, OnAcknowledge);
         }
 
-        public void OnConsume(ProductDefinition product, GooglePurchase googlePurchase, GoogleBillingResult billingResult, string purchaseToken)
+        public void OnConsume(ProductDefinition product, GooglePurchase googlePurchase, IGoogleBillingResult billingResult, string purchaseToken)
         {
             HandleFinishTransaction(product, googlePurchase, billingResult, purchaseToken);
         }
 
-        public void OnAcknowledge(ProductDefinition product, GooglePurchase googlePurchase, GoogleBillingResult billingResult)
+        public void OnAcknowledge(ProductDefinition product, GooglePurchase googlePurchase, IGoogleBillingResult billingResult)
         {
             HandleFinishTransaction(product, googlePurchase, billingResult, googlePurchase.purchaseToken);
         }
 
-        public void HandleFinishTransaction(ProductDefinition product, GooglePurchase googlePurchase, GoogleBillingResult billingResult, string purchaseToken)
+        public void HandleFinishTransaction(ProductDefinition product, GooglePurchase googlePurchase, IGoogleBillingResult billingResult, string purchaseToken)
         {
             if (!m_ProcessedPurchaseToken.Contains(purchaseToken))
             {
-                if (billingResult.responseCode == GoogleBillingResponseCode.k_Ok)
+                if (billingResult.responseCode == GoogleBillingResponseCode.Ok)
                 {
                     m_ProcessedPurchaseToken.Add(purchaseToken);
                     CallPurchaseSucceededUpdateReceipt(product, googlePurchase, purchaseToken);
@@ -71,14 +71,14 @@ namespace UnityEngine.Purchasing
             );
         }
 
-        static bool IsResponseCodeInRecoverableState(GoogleBillingResult billingResult)
+        static bool IsResponseCodeInRecoverableState(IGoogleBillingResult billingResult)
         {
             // DeveloperError is only a possible recoverable state because of this
             // https://github.com/android/play-billing-samples/issues/337
             // usually works like a charm next acknowledge
-            return billingResult.responseCode == GoogleBillingResponseCode.k_ServiceUnavailable ||
-                billingResult.responseCode == GoogleBillingResponseCode.k_DeveloperError ||
-                billingResult.responseCode == GoogleBillingResponseCode.k_FatalError;
+            return billingResult.responseCode == GoogleBillingResponseCode.ServiceUnavailable ||
+                billingResult.responseCode == GoogleBillingResponseCode.DeveloperError ||
+                billingResult.responseCode == GoogleBillingResponseCode.FatalError;
         }
     }
 }

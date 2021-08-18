@@ -14,9 +14,9 @@ namespace UnityEngine.Purchasing
 
         ProductDefinition m_Product;
         GooglePurchase m_Purchase;
-        Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> m_OnConsumeResponse;
+        Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> m_OnConsumeResponse;
 
-        internal GoogleConsumeResponseListener(ProductDefinition product, GooglePurchase purchase, Action<ProductDefinition, GooglePurchase, GoogleBillingResult, string> onConsumeResponseAction)
+        internal GoogleConsumeResponseListener(ProductDefinition product, GooglePurchase purchase, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> onConsumeResponseAction)
             : base(k_AndroidConsumeResponseListenerClassName)
         {
             m_Product = product;

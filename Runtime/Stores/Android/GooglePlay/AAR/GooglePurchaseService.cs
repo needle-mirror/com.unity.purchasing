@@ -56,9 +56,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void HandleBillingFlowResult(GoogleBillingResult billingResult, AndroidJavaObject sku)
+        void HandleBillingFlowResult(IGoogleBillingResult billingResult, AndroidJavaObject sku)
         {
-            if (billingResult.responseCode != BillingClientResponseEnum.OK())
+            if (billingResult.responseCode != GoogleBillingResponseCode.Ok)
             {
                 m_GooglePurchaseCallback.OnPurchaseFailed(
                     new PurchaseFailureDescription(

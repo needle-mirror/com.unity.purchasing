@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.0.3] - 2021-08-18
+### Added
+- Added samples to the [Package Manager Details view](https://docs.unity3d.com/Manual/upm-ui-details.html):
+  - Apple Sample - Restoring Transactions
+  - Apple Sample - Handling Deferred Purchases
+
+### Fixed
+- GooglePlay - Fixed issue that led to purchases failing with a `ProductUnavailable` error when  fetching additional products multiple times in quick succession.
+- GooglePlay - Fixed issue that led to purchases failing with a `ProductUnavailable` error when a game had been running for some time.
+- GooglePlay - Fixed issue that led to initialization failing with a `NoProductsAvailable` error when the network is interrupted while initializing, requiring the user to restart the app. Now Unity IAP handle initialization with poor network
+  connectivity by retrying periodically. This retry behavior is consistent with our Apple App Store's, and with the previous version of our Google Play Store's implementations.
+
+### Changed
+- Restructured [Manual documentation](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/index.html) to improve readability.
+
 ## [4.0.0] - 2021-07-19
 ### Added
 - Codeless Listener method to access the store configuration after initialization. 

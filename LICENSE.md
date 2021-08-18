@@ -1,4 +1,4 @@
-Unity IAP copyright © 2021 Unity Technologies SF
+com.unity.purchasing copyright © 2021 Unity Technologies ApS
 
 This software is subject to, and made available under, the Operate Terms of Service (see https://unity3d.com/legal/one-operate-services-terms-of-service).
 

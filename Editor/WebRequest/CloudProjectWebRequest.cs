@@ -2,12 +2,12 @@ using UnityEngine.Networking;
 
 namespace UnityEditor.Purchasing
 {
-    class CloudProjectWebRequest: IWebRequest
+    class CloudProjectWebRequest: IWebRequestInternal
     {
         const string k_AuthHeaderName = "AUTHORIZATION";
         static readonly string k_AuthHeaderValue = $"Bearer {CloudProjectSettings.accessToken}";
 
-        public UnityWebRequest BuildWebRequest(string uri)
+        UnityWebRequest IWebRequestInternal.BuildWebRequest(string uri)
         {
             var authSignatureRequest = UnityWebRequest.Get(uri);
             authSignatureRequest.suppressErrorsToConsole = true;

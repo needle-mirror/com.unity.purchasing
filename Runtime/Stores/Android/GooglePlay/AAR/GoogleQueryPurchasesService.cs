@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing
 
         void HandleGooglePurchaseResult(GooglePurchaseResult purchaseResult, Action<List<GooglePurchase>> onPurchaseResult)
         {
-            onPurchaseResult(purchaseResult.m_ResponseCode == BillingClientResponseEnum.OK() ? purchaseResult.m_Purchases : new List<GooglePurchase>());
+            onPurchaseResult(purchaseResult.m_ResponseCode == GoogleBillingResponseCode.Ok ? purchaseResult.m_Purchases : new List<GooglePurchase>());
         }
     }
 }

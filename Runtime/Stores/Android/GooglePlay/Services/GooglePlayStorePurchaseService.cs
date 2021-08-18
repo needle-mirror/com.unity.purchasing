@@ -1,5 +1,3 @@
-
-using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 
 namespace UnityEngine.Purchasing

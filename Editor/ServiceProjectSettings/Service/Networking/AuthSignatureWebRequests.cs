@@ -8,7 +8,7 @@ namespace UnityEditor.Purchasing
     {
         const string k_AuthSignatureKeyJsonLabel = "auth_signature";
 
-        internal static void RequestAuthSignature(IWebRequest webRequest, Action<string> projectAuthSignature)
+        internal static void RequestAuthSignature(IWebRequestInternal webRequest, Action<string> projectAuthSignature)
         {
             var request = webRequest.BuildWebRequest(BuildCoreProjectUri());
             var operation = request.SendWebRequest();

@@ -1,5 +1,4 @@
 using System;
-using Uniject;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 
@@ -16,7 +15,7 @@ namespace UnityEngine.Purchasing
             m_QuerySkuDetailsService = querySkuDetailsService;
         }
 
-        public void PriceChange(ProductDefinition product, Action<GoogleBillingResult> onPriceChangedListener)
+        public void PriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangedListener)
         {
             m_QuerySkuDetailsService.QueryAsyncSku(product, skuDetailsList =>
             {

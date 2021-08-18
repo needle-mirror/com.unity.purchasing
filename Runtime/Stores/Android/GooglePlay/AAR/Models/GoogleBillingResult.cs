@@ -6,15 +6,15 @@ namespace UnityEngine.Purchasing.Models
     /// This is C# representation of the Java Class BillingResult
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingResult">See more</a>
     /// </summary>
-    class GoogleBillingResult
+    class GoogleBillingResult : IGoogleBillingResult
     {
-        internal int responseCode;
-        internal string debugMessage;
+        public GoogleBillingResponseCode responseCode { get; }
+        public string debugMessage { get; }
         internal GoogleBillingResult(AndroidJavaObject billingResult)
         {
             if (billingResult != null)
             {
-                responseCode = billingResult.Call<int>("getResponseCode");
+                responseCode = (GoogleBillingResponseCode) billingResult.Call<int>("getResponseCode");
                 debugMessage = billingResult.Call<string>("getDebugMessage");
             }
         }

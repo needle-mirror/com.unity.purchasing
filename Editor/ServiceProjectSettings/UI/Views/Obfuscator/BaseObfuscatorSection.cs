@@ -1,8 +1,14 @@
+using System;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// This is an internal API.
+    /// We recommend that you do not use it as it will be removed in a future release.
+    /// </summary>
+    [Obsolete("Internal API, it will be removed soon.")]
     public abstract class BaseObfuscatorSection
     {
         const string k_ErrorLabelClass = "warning-message";
@@ -12,6 +18,12 @@ namespace UnityEditor.Purchasing
 
         VisualElement m_ObfuscatorBlock;
 
+        /// <summary>
+        /// This is an internal API.
+        /// We recommend that you do not use it as it will be removed in a future release.
+        /// </summary>
+        /// <returns></returns>
+        [Obsolete("Internal API, it will be removed soon.")]
         protected string m_ErrorMessage;
 
         internal BaseObfuscatorSection()
@@ -43,6 +55,11 @@ namespace UnityEditor.Purchasing
             UpdateVerificationSection();
         }
 
+        /// <summary>
+        /// This is an internal API.
+        /// We recommend that you do not use it as it will be removed in a future release.
+        /// </summary>
+        [Obsolete("Internal API, it will be removed soon.")]
         protected abstract void ObfuscateKeys();
 
         void SetupVerification()
@@ -59,6 +76,12 @@ namespace UnityEditor.Purchasing
                 : DisplayStyle.None;
         }
 
+        /// <summary>
+        /// This is an internal API.
+        /// We recommend that you do not use it as it will be removed in a future release.
+        /// </summary>
+        /// <returns></returns>
+        [Obsolete("Internal API, it will be removed soon.")]
         protected abstract bool DoesTangleFileExist();
 
         void SetupErrorMessages()

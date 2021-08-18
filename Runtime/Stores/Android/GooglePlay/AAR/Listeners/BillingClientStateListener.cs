@@ -32,8 +32,8 @@ namespace UnityEngine.Purchasing
         [Preserve]
         void onBillingSetupFinished(AndroidJavaObject billingResult)
         {
-            GoogleBillingResult result = new GoogleBillingResult(billingResult);
-            if (result.responseCode == BillingClientResponseEnum.OK())
+            IGoogleBillingResult result = new GoogleBillingResult(billingResult);
+            if (result.responseCode == GoogleBillingResponseCode.Ok)
             {
                 m_OnConnected();
             }

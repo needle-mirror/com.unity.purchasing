@@ -17,7 +17,7 @@ namespace UnityEditor.Purchasing
         const string k_ContentHeaderName = "Content-Type";
         const string k_ContentHeaderValue = "application/json;charset=UTF-8";
 
-        IWebRequest m_WebRequest = new CloudProjectWebRequest();
+        IWebRequestInternal m_WebRequest = new CloudProjectWebRequest();
 
         UnityWebRequest m_GetGoogleKeyRequest;
         GoogleConfigurationData m_PurchasingRemoteDataRef;

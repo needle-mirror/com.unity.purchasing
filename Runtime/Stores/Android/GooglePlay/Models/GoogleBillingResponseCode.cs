@@ -1,14 +1,16 @@
 namespace UnityEngine.Purchasing.Models
 {
     /// <summary>
-    /// Values from Java BillingResponseCode
+    /// Values from Java Class BillingResponseCode
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingClient.BillingResponseCode">See more</a>
     /// </summary>
-    class GoogleBillingResponseCode
+    enum GoogleBillingResponseCode
     {
-        internal const int k_Ok = 0;
-        internal const int k_ServiceUnavailable = 2;
-        internal const int k_DeveloperError = 5;
-        internal const int k_FatalError = 6;
+        Ok = 0,
+        UserCanceled = 1,
+        ServiceUnavailable = 2,
+        DeveloperError = 5,
+        FatalError = 6,
+        ItemAlreadyOwned = 7,
     }
 }

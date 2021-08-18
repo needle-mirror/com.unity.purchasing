@@ -5,8 +5,9 @@ namespace UnityEngine.Purchasing
 {
     interface IGoogleCachedQuerySkuDetailsService
     {
-        HashSet<AndroidJavaObject> GetCachedQueriedSkus();
-
-        void AddCachedQueriedSkus(List<AndroidJavaObject> queriedSkus);
+        IEnumerable<AndroidJavaObject> GetCachedQueriedSkus();
+        IEnumerable<AndroidJavaObject> GetCachedQueriedSkus(IEnumerable<ProductDefinition> products);
+        bool Contains(ProductDefinition products);
+        void AddCachedQueriedSkus(IEnumerable<AndroidJavaObject> queriedSkus);
     }
 }

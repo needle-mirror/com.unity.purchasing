@@ -5,6 +5,6 @@ namespace UnityEngine.Purchasing
 {
     interface IGooglePriceChangeService
     {
-        void PriceChange(ProductDefinition product, Action<GoogleBillingResult> onPriceChangedListener);
+        void PriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangedListener);
     }
 }

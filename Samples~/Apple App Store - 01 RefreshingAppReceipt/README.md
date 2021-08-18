@@ -12,7 +12,7 @@ manually check for new purchases without creating new transactions, in contrast 
    or change the `noAdsProductId` field in the `RefreshingAppReceipt.cs` script.
 4. Build your project for `iOS`.
    1. If you are using a simulator with Xcode 12+, follow these [instructions](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode)
-   to set up StoreKit testing.
+   to set up StoreKit Testing.
       
 ## Refreshing App Receipts
 

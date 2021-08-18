@@ -5,42 +5,44 @@ namespace UnityEngine.Purchasing
 {
     class GoogleCachedQuerySkuDetailsService: IGoogleCachedQuerySkuDetailsService
     {
-        HashSet<AndroidJavaObject> m_CachedQueriedSkus = new HashSet<AndroidJavaObject>();
+        Dictionary<string, AndroidJavaObject> m_CachedQueriedSkus = new Dictionary<string, AndroidJavaObject>();
 
-        public HashSet<AndroidJavaObject> GetCachedQueriedSkus()
+        public IEnumerable<AndroidJavaObject> GetCachedQueriedSkus()
         {
-            return m_CachedQueriedSkus;
+            return m_CachedQueriedSkus.Values;
         }
 
-        bool ContainsSku(string sku)
+        AndroidJavaObject GetCachedQueriedSku(string sku)
         {
-            return m_CachedQueriedSkus.Any(skuDetails => skuDetails.Call<string>("getSku") == sku);
+            return m_CachedQueriedSkus[sku];
         }
 
-        public void AddCachedQueriedSkus(List<AndroidJavaObject> queriedSkus)
+        IEnumerable<AndroidJavaObject> GetCachedQueriedSkus(IEnumerable<string> skus)
+        {
+            return skus.Select(GetCachedQueriedSku);
+        }
+
+        public IEnumerable<AndroidJavaObject> GetCachedQueriedSkus(IEnumerable<ProductDefinition> products)
+        {
+            return GetCachedQueriedSkus(products.Select(product => product.storeSpecificId));
+        }
+
+        bool Contains(string sku)
+        {
+            return m_CachedQueriedSkus.ContainsKey(sku);
+        }
+
+        public bool Contains(ProductDefinition products)
+        {
+            return Contains(products.storeSpecificId);
+        }
+
+        public void AddCachedQueriedSkus(IEnumerable<AndroidJavaObject> queriedSkus)
         {
             foreach (var queriedSkuDetails in queriedSkus)
             {
-                string queriedSku = queriedSkuDetails.Call<string>("getSku");
-
-                if (ContainsSku(queriedSku))
-                {
-                    UpdateCachedQueriedSku(queriedSku, queriedSkuDetails);
-                }
-                else
-                {
-                    m_CachedQueriedSkus.Add(queriedSkuDetails);
-                }
-            }
-        }
-
-        void UpdateCachedQueriedSku(string queriedSku, AndroidJavaObject queriedSkuDetails)
-        {
-            var foundSkuDetails = m_CachedQueriedSkus
-                .FirstOrDefault(skuDetails => skuDetails.Call<string>("getSku") == queriedSku);
-            if (foundSkuDetails != null)
-            {
-                foundSkuDetails = queriedSkuDetails;
+                var queriedSku = queriedSkuDetails.Call<string>("getSku");
+                m_CachedQueriedSkus[queriedSku] = queriedSkuDetails;
             }
         }
     }

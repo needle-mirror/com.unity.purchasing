@@ -5,7 +5,7 @@ using UnityEngine.Purchasing;
 namespace UnityEditor.Purchasing
 {
     /// <summary>
-    /// IAPListenerMenu class creates options in menus to create the IAPListener.
+    /// IAPListenerMenu class creates options in menus to create the <see cref="IAPListener"/>.
     /// </summary>
     public static class IAPListenerMenu
     {

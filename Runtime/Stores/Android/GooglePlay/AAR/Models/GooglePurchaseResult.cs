@@ -10,32 +10,30 @@ namespace UnityEngine.Purchasing.Models
     /// </summary>
     class GooglePurchaseResult
     {
-        internal int m_ResponseCode;
+        internal GoogleBillingResponseCode m_ResponseCode;
         internal List<GooglePurchase> m_Purchases = new List<GooglePurchase>();
 
         internal GooglePurchaseResult(AndroidJavaObject purchaseResult, IGoogleCachedQuerySkuDetailsService cachedQuerySkuDetailsService)
         {
-            m_ResponseCode = purchaseResult.Call<int>("getResponseCode");
+            m_ResponseCode = (GoogleBillingResponseCode) purchaseResult.Call<int>("getResponseCode");
             FillPurchases(purchaseResult, cachedQuerySkuDetailsService);
         }
 
         void FillPurchases(AndroidJavaObject purchaseResult, IGoogleCachedQuerySkuDetailsService cachedQuerySkuDetailsService)
         {
             AndroidJavaObject purchaseList = purchaseResult.Call<AndroidJavaObject>("getPurchasesList");
-            if (purchaseList != null)
+
+            var purchases = purchaseList.Enumerate<AndroidJavaObject>().ToList();
+            for (var index = 0; index < purchases.Count; index++)
             {
-                int size = purchaseList.Call<int>("size");
-                for (int index = 0; index < size; index++)
+                var purchase = purchases[index];
+                if (purchase != null)
                 {
-                    AndroidJavaObject purchase = purchaseList.Call<AndroidJavaObject>("get", index);
-                    if (purchase != null)
-                    {
-                        m_Purchases.Add(GooglePurchaseHelper.MakeGooglePurchase(cachedQuerySkuDetailsService.GetCachedQueriedSkus().ToList(), purchase));
-                    }
-                    else
-                    {
-                        Debug.LogWarning("Failed to retrieve Purchase from Purchase List at index " + index + " of " + size + ". FillPurchases will skip this item");
-                    }
+                    m_Purchases.Add(GooglePurchaseHelper.MakeGooglePurchase(cachedQuerySkuDetailsService.GetCachedQueriedSkus().ToList(), purchase));
+                }
+                else
+                {
+                    Debug.LogWarning("Failed to retrieve Purchase from Purchase List at index " + index + " of " + purchases.Count + ". FillPurchases will skip this item");
                 }
             }
         }

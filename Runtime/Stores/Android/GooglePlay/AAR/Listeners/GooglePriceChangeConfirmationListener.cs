@@ -12,9 +12,9 @@ namespace UnityEngine.Purchasing
     {
         const string k_AndroidPriceChangeConfirmationListenerClassName = "com.android.billingclient.api.PriceChangeConfirmationListener";
 
-        Action<GoogleBillingResult> m_OnPriceChangeConfirmationResult;
+        Action<IGoogleBillingResult> m_OnPriceChangeConfirmationResult;
 
-        internal GooglePriceChangeConfirmationListener(Action<GoogleBillingResult> onPriceChangeConfirmationResult)
+        internal GooglePriceChangeConfirmationListener(Action<IGoogleBillingResult> onPriceChangeConfirmationResult)
             : base(k_AndroidPriceChangeConfirmationListenerClassName)
         {
             m_OnPriceChangeConfirmationResult = onPriceChangeConfirmationResult;
@@ -23,7 +23,7 @@ namespace UnityEngine.Purchasing
         [Preserve]
         void onPriceChangeConfirmationResult(AndroidJavaObject javaBillingResult)
         {
-            GoogleBillingResult billingResult = new GoogleBillingResult(javaBillingResult);
+            IGoogleBillingResult billingResult = new GoogleBillingResult(javaBillingResult);
             m_OnPriceChangeConfirmationResult(billingResult);
         }
     }
