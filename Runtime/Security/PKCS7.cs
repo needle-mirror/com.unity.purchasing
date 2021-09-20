@@ -40,14 +40,35 @@ namespace UnityEngine.Purchasing.Security {
 
 					if (signCert != null && signCert.PubKey != null) {
 						ok = ok && signCert.CheckCertTime (certificateCreationTime);
-						ok = ok && signCert.PubKey.Verify (data.Data, sinfo.EncryptedDigest);
-						ok = ok && ValidateChain (cert, signCert, certificateCreationTime);
-					}
-				}
-				return ok && sinfos.Count > 0;
-			}
-			return false;
-		}
+
+                        if (IsStoreKitSimulatorData())
+                        {
+                            ok = ok && signCert.PubKey.Verify256(data.GetChildNode(0).Data, sinfo.EncryptedDigest);
+                            ok = ok && ValidateStorekitSimulatorCertRoot(cert, signCert);
+                        }
+                        else
+                        {
+                            ok = ok && signCert.PubKey.Verify(data.Data, sinfo.EncryptedDigest);
+                            ok = ok && ValidateChain(cert, signCert, certificateCreationTime);
+                        }
+                    }
+                }
+
+                return ok && sinfos.Count > 0;
+            }
+
+            return false;
+        }
+
+        bool IsStoreKitSimulatorData()
+        {
+            return data.IsIndefiniteLength && data.ChildNodeCount == 1;
+        }
+
+        bool ValidateStorekitSimulatorCertRoot(X509Cert root, X509Cert cert)
+        {
+            return cert.CheckSignature256(root);
+        }
 
 		private bool ValidateChain(X509Cert root, X509Cert cert, DateTime certificateCreationTime) {
 			if (cert.Issuer.Equals(root.Subject))
@@ -64,9 +85,9 @@ namespace UnityEngine.Purchasing.Security {
 						// cert was issued by c
 						if (cert.CheckSignature (c))
 							return ValidateChain (root, c, certificateCreationTime);
+                        }
 					}
 				}
-			}
 
 			return false;
 		}

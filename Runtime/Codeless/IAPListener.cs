@@ -9,11 +9,7 @@ namespace UnityEngine.Purchasing
     /// An invisible GUI component for initializing Unity IAP and processing lifecycle events.
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
-#if ENABLE_EDITOR_GAME_SERVICES
     [AddComponentMenu("In-App Purchasing/IAP Listener")]
-#else
-    [AddComponentMenu("Unity IAP/IAP Listener")]
-#endif
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
     public class IAPListener : MonoBehaviour
     {

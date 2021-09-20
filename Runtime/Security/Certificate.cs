@@ -38,7 +38,8 @@ namespace UnityEngine.Purchasing.Security {
 					if (oi.MaskedTag != Asn1Tag.OBJECT_IDENTIFIER ||
 						!(
 							(txt.MaskedTag == Asn1Tag.PRINTABLE_STRING) ||
-							(txt.MaskedTag == Asn1Tag.UTF8_STRING)))
+							(txt.MaskedTag == Asn1Tag.UTF8_STRING) ||
+                            (txt.MaskedTag == Asn1Tag.IA5_STRING)))
 					{
 						throw new InvalidX509Data();
 					}
@@ -125,6 +126,16 @@ namespace UnityEngine.Purchasing.Security {
 			}
 			return false;
 		}
+
+        public bool CheckSignature256(X509Cert signer)
+        {
+            if (Issuer.Equals(signer.Subject))
+            {
+                return signer.PubKey.Verify256(rawTBSCertificate, Signature.Data);
+            }
+
+            return false;
+        }
 
 		private void ParseNode(Asn1Node root) {
 			if ((root.Tag & Asn1Tag.TAG_MASK) != Asn1Tag.SEQUENCE || root.ChildNodeCount != 3)

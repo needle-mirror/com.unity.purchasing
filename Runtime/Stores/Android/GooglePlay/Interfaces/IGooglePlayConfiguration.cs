@@ -48,5 +48,17 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="profileId">The obfuscated profile id</param>
         void SetObfuscatedProfileId(string profileId);
+
+        /// <summary>
+        /// Set behavior at initialization of fetching purchase data. Use before calling <typeparamref name="UnityPurchasing.Initialize"/>.
+        ///
+        /// Disable to prevent <typeparamref name="IStoreListener.ProcessPurchase"/> from automatically returning entitled purchases at initialization.
+        /// This allows greater control when tracking the origin of purchases.
+        /// Then use <typeparamref name="IGooglePlayStoreExtensions.RestoreTransactions"/> to fetch as-yet unseen entitled purchases.
+        ///
+        /// Default is <c>true</c>.
+        /// </summary>
+        /// <param name="enable"></param>
+        void SetFetchPurchasesAtInitialize(bool enable);
     }
 }

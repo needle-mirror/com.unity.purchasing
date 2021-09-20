@@ -8,5 +8,6 @@ namespace UnityEngine.Purchasing
         void NotifyInitializationConnectionFailed();
         void NotifyDeferredPurchase(IStoreCallback storeCallback, string productId, string receipt, string transactionId);
         void NotifyDeferredProrationUpgradeDowngradeSubscription(IStoreCallback storeCallback, string productId);
+        bool IsFetchPurchasesAtInitializeSkipped();
     }
 }

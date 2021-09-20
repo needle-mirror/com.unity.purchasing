@@ -10,10 +10,11 @@ namespace UnityEngine.Purchasing
     class GooglePlayConfiguration: IGooglePlayConfiguration, IGooglePlayConfigurationInternal
     {
         Action m_InitializationConnectionLister;
-
         IGooglePlayStoreService m_GooglePlayStoreService;
         Action<Product> m_DeferredPurchaseAction;
         Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
+
+        bool m_FetchPurchasesAtInitialize = true;
 
         public GooglePlayConfiguration(IGooglePlayStoreService googlePlayStoreService)
         {
@@ -59,6 +60,11 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        public bool IsFetchPurchasesAtInitializeSkipped()
+        {
+            return !m_FetchPurchasesAtInitialize;
+        }
+
         public void NotifyDeferredPurchase(IStoreCallback storeCallback, string productId, string receipt, string transactionId)
         {
             Product product = storeCallback.FindProductById(productId);
@@ -97,6 +103,11 @@ namespace UnityEngine.Purchasing
         public void SetObfuscatedProfileId(string profileId)
         {
             m_GooglePlayStoreService.SetObfuscatedProfileId(profileId);
+        }
+
+        public void SetFetchPurchasesAtInitialize(bool enable)
+        {
+            m_FetchPurchasesAtInitialize = enable;
         }
     }
 }

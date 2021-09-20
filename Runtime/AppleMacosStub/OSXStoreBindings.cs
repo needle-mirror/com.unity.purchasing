@@ -58,7 +58,17 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        public void FetchStorePromotionOrder()
+        {
+            throw new NotImplementedException();
+        }
+
         public void SetStorePromotionOrder(string json)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FetchStorePromotionVisibility(string productId)
         {
             throw new NotImplementedException();
         }

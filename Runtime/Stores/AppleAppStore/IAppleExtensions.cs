@@ -50,10 +50,25 @@ namespace UnityEngine.Purchasing
         bool simulateAskToBuy { get; set; }
 
         /// <summary>
+        /// Returns the current promoted product order on the device
+        /// </summary>
+        /// <param name="successCallback">This action will be called when the fetch is successful. The list of products will be passed through.</param>
+        /// <param name="errorCallback">This action will be called when the fetch is in error.</param>
+        void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback);
+
+        /// <summary>
         /// Overrides the promoted product order on the device.
         /// </summary>
         /// <param name="products">The new order of promoted products for the device.</param>
         void SetStorePromotionOrder(List<Product> products);
+
+        /// <summary>
+        /// Returns the current promoted product order on the device
+        /// </summary>
+        /// <param name="product">Product to change visibility.</param>
+        /// <param name="successCallback">This action will be called when the fetch is successful. The productId and visibility will be passed through.</param>
+        /// <param name="errorCallback">This action will be called when the fetch is in error.</param>
+        void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback);
 
         /// <summary>
         /// Override the visibility of a product on the device.

@@ -1,21 +1,27 @@
-using UnityEditor;
+using System;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 
 namespace UnityEditor.Purchasing
 {
-    internal class BuildPreprocessor : IPreprocessBuildWithReport
+    class BuildPreprocessor : IPreprocessBuildWithReport
     {
-        public int callbackOrder
-        {
-            get { return 0; }
-        }
+        public int callbackOrder => 0;
 
         public void OnPreprocessBuild(BuildReport report)
         {
-            if (report.summary.platform == BuildTarget.WSAPlayer)
+            switch (report.summary.platform)
             {
-                WinRTPatcher.PatchWinRTBuild();
+                case BuildTarget.WSAPlayer:
+                    WinRTPatcher.PatchWinRTBuild();
+                    break;
+                case BuildTarget.Android:
+                    var result = UnityPurchasingEditor.OnPostProcessScene();
+                    if (result != null)
+                    {
+                        throw new BuildFailedException(result);
+                    }
+                    break;
             }
         }
     }

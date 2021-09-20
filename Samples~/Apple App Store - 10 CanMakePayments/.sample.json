@@ -1,0 +1,5 @@
+{
+  "displayName": "Apple App Store - 10 Can Make Payments",
+  "description": "This sample shows how to check whether the logged-in player is permitted to purchase from the Apple App Store on this device.",
+  "createSeparatePackage": false
+}

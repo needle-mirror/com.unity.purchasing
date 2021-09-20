@@ -35,7 +35,7 @@ namespace UnityEditor.Purchasing
         internal static readonly EditorAnalyticsDataSignature k_EditorClickCheckboxSignature = new EditorAnalyticsDataSignature()
         {
             eventName = "editor_click_checkbox",
-            version = 1
+            version = 2
         };
     }
 }

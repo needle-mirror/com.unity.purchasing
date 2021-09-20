@@ -14,14 +14,16 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreFinishTransactionService m_FinishTransactionService;
         IGooglePurchaseCallback m_GooglePurchaseCallback;
         IGooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensions;
+        IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
         IUtil m_Util;
+        bool m_HasInitiallyRetrievedProducts;
 
-        public GooglePlayStore(
-            IGooglePlayStoreRetrieveProductsService retrieveProductsService,
+        public GooglePlayStore(IGooglePlayStoreRetrieveProductsService retrieveProductsService,
             IGooglePlayStorePurchaseService storePurchaseService,
             IGoogleFetchPurchases fetchPurchases,
             IGooglePlayStoreFinishTransactionService transactionService,
             IGooglePurchaseCallback googlePurchaseCallback,
+            IGooglePlayConfigurationInternal googlePlayConfigurationInternal,
             IGooglePlayStoreExtensionsInternal googlePlayStoreExtensions,
             IUtil util)
         {
@@ -31,6 +33,7 @@ namespace UnityEngine.Purchasing
             m_FetchPurchases = fetchPurchases;
             m_FinishTransactionService = transactionService;
             m_GooglePurchaseCallback = googlePurchaseCallback;
+            m_GooglePlayConfigurationInternal = googlePlayConfigurationInternal;
             m_GooglePlayStoreExtensions = googlePlayStoreExtensions;
         }
 
@@ -46,6 +49,8 @@ namespace UnityEngine.Purchasing
             m_FinishTransactionService.SetStoreCallback(scriptingStoreCallback);
             m_GooglePurchaseCallback.SetStoreCallback(scriptingStoreCallback);
             m_GooglePlayStoreExtensions.SetStoreCallback(scriptingStoreCallback);
+
+            m_HasInitiallyRetrievedProducts = false;
         }
 
         /// <summary>
@@ -54,7 +59,23 @@ namespace UnityEngine.Purchasing
         /// <param name="products">The catalog of products to retrieve the store information from</param>
         public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
         {
-            m_RetrieveProductsService.RetrieveProducts(products);
+            var shouldFetchPurchases = ShouldFetchPurchasesNext();
+
+            m_RetrieveProductsService.RetrieveProducts(products, shouldFetchPurchases);
+        }
+
+        bool ShouldFetchPurchasesNext()
+        {
+            var shouldFetchPurchases = true;
+            
+            if (!m_HasInitiallyRetrievedProducts)
+            {
+                m_HasInitiallyRetrievedProducts = true;
+
+                shouldFetchPurchases = !m_GooglePlayConfigurationInternal.IsFetchPurchasesAtInitializeSkipped();
+            }
+
+            return shouldFetchPurchases;
         }
 
         /// <summary>

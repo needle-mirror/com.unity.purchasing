@@ -21,11 +21,16 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
 
         public UserWarning userWarning;
 
+        public Toggle appleCertificateToggle;
+
         int m_GoldCount;
+        bool m_UseAppleStoreKitTestCertificate;
 
         void Start()
         {
             userWarning.Clear();
+            appleCertificateToggle.onValueChanged.AddListener(OnAppleStoreKitTestCertificateChanged);
+            m_UseAppleStoreKitTestCertificate = appleCertificateToggle.isOn;
             InitializePurchasing();
             UpdateUI();
         }
@@ -70,7 +75,8 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
             if (IsCurrentStoreSupportedByValidator())
             {
 #if !UNITY_EDITOR
-                m_Validator = new CrossPlatformValidator(GooglePlayTangle.Data(), AppleTangle.Data(), Application.identifier);
+                var appleTangleData = m_UseAppleStoreKitTestCertificate ? AppleStoreKitTestTangle.Data() : AppleTangle.Data();
+                m_Validator = new CrossPlatformValidator(GooglePlayTangle.Data(), appleTangleData, Application.identifier);
 #endif
             }
             else
@@ -185,6 +191,12 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
                           $"Cancellation Date: {appleReceipt.cancellationDate}\n" +
                           $"Quantity: {appleReceipt.quantity}");
             }
+        }
+
+        void OnAppleStoreKitTestCertificateChanged(bool value)
+        {
+            m_UseAppleStoreKitTestCertificate = value;
+            InitializeValidator();
         }
     }
 }

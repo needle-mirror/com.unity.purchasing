@@ -5,10 +5,10 @@
             <Label text="Please follow these steps to get your license key:" class="description"/>
             <VisualElement class="label-container">
                 <Label text="1. Go to " class="numbered-item"/>
-                <Button name="GooglePlayLink" class="link-button">
-                    <TextElement text="Google Play Developer Console"/>
+                <VisualElement name="GooglePlayLink" class="link-container-integrated">
+                    <TextElement text="Google Play Developer Console" class="link-button"/>
                     <VisualElement class="external-link-icon"/>
-                </Button>
+                </VisualElement>
             </VisualElement>
             <Label text="2. Go to your appropriate project." class="numbered-item"/>
             <Label text="3. Go to &quot;Services and API&quot;, there you will find your License Key " class="numbered-item"/>

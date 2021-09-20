@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Security;
 using AOT;
+using UnityEngine.Purchasing.MiniJSON;
 
 namespace UnityEngine.Purchasing
 {
@@ -16,7 +18,11 @@ namespace UnityEngine.Purchasing
         private Action m_RefreshReceiptError;
         private Action<string> m_RefreshReceiptSuccess;
         private Action<bool> m_RestoreCallback;
+        Action m_FetchStorePromotionOrderError;
+        Action<List<Product>> m_FetchStorePromotionOrderSuccess;
         private Action<Product> m_PromotionalPurchaseCallback;
+        Action m_FetchStorePromotionVisibilityError;
+        Action<string, AppleStorePromotionVisibility> m_FetchStorePromotionVisibilitySuccess;
         private INativeAppleStore m_Native;
 
         private static IUtil util;
@@ -61,6 +67,22 @@ namespace UnityEngine.Purchasing
             set {
                 m_Native.simulateAskToBuy = value;
             }
+        }
+
+        public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)
+        {
+            m_FetchStorePromotionOrderError = errorCallback;
+            m_FetchStorePromotionOrderSuccess = successCallback;
+
+            m_Native.FetchStorePromotionOrder();
+        }
+
+        public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
+        {
+            m_FetchStorePromotionVisibilityError = errorCallback;
+            m_FetchStorePromotionVisibilitySuccess = successCallback;
+
+            m_Native.FetchStorePromotionVisibility(product.definition.id);
         }
 
         public void SetStorePromotionOrder(List<Product> products)
@@ -250,6 +272,47 @@ namespace UnityEngine.Purchasing
                 m_RefreshReceiptError();
         }
 
+        public void OnFetchStorePromotionOrderSucceeded(string productIds)
+        {
+            if (null != m_FetchStorePromotionOrderSuccess)
+            {
+                var productIdList = productIds.ArrayListFromJson();
+                var products = new List<Product>();
+
+                foreach (var productId in productIdList)
+                {
+                    var product = unity.products.WithStoreSpecificID(productId as string);
+                    products.Add(product);
+                }
+
+                m_FetchStorePromotionOrderSuccess(products);
+            }
+        }
+
+        public void OnFetchStorePromotionOrderFailed()
+        {
+            m_FetchStorePromotionOrderError?.Invoke();
+        }
+
+        public void OnFetchStorePromotionVisibilitySucceeded(String result)
+        {
+            if (null != m_FetchStorePromotionVisibilitySuccess)
+            {
+                var resultDictionary = (
+                    Json.Deserialize(result) as Dictionary<string, object>
+                    )?.ToDictionary(k => k.Key, k => k.Value.ToString());
+
+                var productId = resultDictionary?["productId"];
+                var storePromotionVisibility = resultDictionary?["visibility"];
+                Enum.TryParse(storePromotionVisibility, out AppleStorePromotionVisibility visibility);
+                m_FetchStorePromotionVisibilitySuccess(productId, visibility);
+            }
+        }
+
+        public void OnFetchStorePromotionVisibilityFailed()
+        {
+            m_FetchStorePromotionVisibilityError?.Invoke();
+        }
 
         [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
         private static void MessageCallback(string subject, string payload, string receipt, string transactionId) {
@@ -277,6 +340,18 @@ namespace UnityEngine.Purchasing
                 break;
             case "onPromotionalPurchaseAttempted":
                 OnPromotionalPurchaseAttempted (payload);
+                break;
+            case "onFetchStorePromotionOrderSucceeded":
+                OnFetchStorePromotionOrderSucceeded(payload);
+                break;
+            case "onFetchStorePromotionOrderFailed":
+                OnFetchStorePromotionOrderFailed();
+                break;
+            case "onFetchStorePromotionVisibilitySucceeded":
+                OnFetchStorePromotionVisibilitySucceeded(payload);
+                break;
+            case "onFetchStorePromotionVisibilityFailed":
+                OnFetchStorePromotionVisibilityFailed();
                 break;
             case "onTransactionsRestoredSuccess":
                 OnTransactionsRestoredSuccess ();

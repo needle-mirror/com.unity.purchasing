@@ -839,7 +839,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Enables automatic initialization when using Codeless IAP.
         /// </summary>
-        public bool enableCodelessAutoInitialization = false;
+        public bool enableCodelessAutoInitialization = true;
         [SerializeField]
         private List<ProductCatalogItem> products = new List<ProductCatalogItem>();
 

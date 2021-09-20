@@ -587,7 +587,6 @@ namespace LipingShare.LCLib.Asn1Processor
 				if (lengthBytes == 0)
 				{
 					isIndefiniteLength = true;
-					//long sPos = bt.Position;
 					return -2; // Indefinite length.
 				}
 				length = 0;

@@ -1,11 +1,7 @@
-﻿﻿﻿using System;
-using System.Collections.ObjectModel;
-using UnityEngine.Purchasing;
+﻿using System;
 using UnityEngine.Purchasing.Extension;
 using System.Collections.Generic;
-  using System.Globalization;
-  using System.Reflection;
-  using System.Threading;
+using System.Reflection;
 
 namespace UnityEngine.Purchasing
 {

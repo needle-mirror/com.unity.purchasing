@@ -18,6 +18,15 @@ static class BuildTargetGroupExtensions
         return storeNames.AsReadOnly();
     }
 
+    internal static ReadOnlyCollection<string> ToAppStoreDisplayNamesExcludingDefault(this BuildTargetGroup value)
+    {
+        var stores = value.ToAppStores();
+
+        var storeNames = stores.Where(store => store != AppStore.NotSpecified).Select(store => store.ToDisplayName()).ToList();
+
+        return storeNames.AsReadOnly();
+    }
+
     internal static ReadOnlyCollection<AppStore> ToAppStores(this BuildTargetGroup value)
     {
         AppStore[] storesArray;
@@ -51,6 +60,7 @@ static class BuildTargetGroupExtensions
                 break;
         }
 
+        storesArray.ToList().Remove(AppStore.NotSpecified);
         return Array.AsReadOnly(storesArray);
     }
 
@@ -62,6 +72,7 @@ static class BuildTargetGroupExtensions
         }
 
         var stores = new List<AppStore>();
+        stores.Add(AppStore.NotSpecified);
         for (var store = (AppStore)AppStoreMeta.AndroidStoreStart;
             store <= (AppStore)AppStoreMeta.AndroidStoreEnd;
             ++store)

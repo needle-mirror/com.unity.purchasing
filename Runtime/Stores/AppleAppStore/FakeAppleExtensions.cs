@@ -35,8 +35,18 @@ namespace UnityEngine.Purchasing
             set;
         }
 
+        public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)
+        {
+            errorCallback();
+        }
+
         public void SetStorePromotionOrder(List<Product> products)
         {
+        }
+
+        public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
+        {
+            errorCallback();
         }
 
         public void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visible)

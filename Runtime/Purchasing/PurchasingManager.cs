@@ -248,7 +248,6 @@ namespace UnityEngine.Purchasing
         {
             if (useTransactionLog && m_TransactionLog.HasRecordOf(product.transactionID))
             {
-                m_Logger.LogWarning("Unity IAP", "Already recorded transaction " + product.transactionID);
                 m_Store.FinishTransaction(product.definition, product.transactionID);
                 return;
             }

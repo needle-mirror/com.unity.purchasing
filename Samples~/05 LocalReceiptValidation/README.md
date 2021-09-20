@@ -22,12 +22,13 @@ topic.
 ## Instructions to test this sample:
 
 1. Have in-app purchasing correctly configured with
-   the [Google Play Store](https://docs.unity3d.com/Packages/com.unity.purchasing@3.1/manual/UnityIAPGoogleConfiguration.html)
-   or [Apple App Store](https://docs.unity3d.com/Packages/com.unity.purchasing@3.1/manual/UnityIAPAppleConfiguration.html).
+   the [Google Play Store](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/UnityIAPGoogleConfiguration.html)
+   or [Apple App Store](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/UnityIAPAppleConfiguration.html).
+   1. (Alternatively) For local-only Xcode testing, follow the [Apple StoreKit Testing](https://developer.apple.com/documentation/Xcode/setting-up-storekit-testing-in-xcode) process to set up a local StoreKit Configuration.
 2. Set your own product's id in
    the `InAppPurchasing game object > Local Receipt Validation script > Gold Product Id field`
    or change the `GoldProductId` value in the `LocalReceiptValidation.cs` script.
-3. This sample uses the `GooglePlayTangle` and `AppleTangle` classes. To generate these classes in your project, do the
+3. This sample uses the `GooglePlayTangle`, `AppleTangle`, and `AppleStoreKitTestTangle` classes. To generate these classes in your project, do the
    following:
     1. Get your license key from the [Google Play Developer Console](https://play.google.com/apps/publish/). _(Skip this
        step if you do not plan on supporting the Google Play Store)_
@@ -36,9 +37,10 @@ topic.
         3. Copy the key from the "Licensing" section.
     2. Open the obfuscation window from `Services > In-App Purchasing > Receipt Validation Obfuscator`.
     3. Paste your Google Play key. _(Skip this step if you do not plan on supporting the Google Play Store)_
-    4. Obfuscate the key. (Creates `GooglePlayTangle` and `AppleTangle` classes in your project.)
+    4. Obfuscate the key. (Creates `GooglePlayTangle`, `AppleTangle`, and `AppleStoreKitTestTangle` classes in your project.)
     5. (Optional) To ensure correct revenue data, enter your key in the Analytics dashboard.
 4. Add the sample scene to the build settings in the `Build Settings` window
 5. Build your project for `Android`*, `iOS`, `macOS`, or `tvOS`.
+    1. (Alternatively) For local-only [Apple StoreKit Testing](https://developer.apple.com/documentation/Xcode/setting-up-storekit-testing-in-xcode), follow the process to assign the StoreKit Configuration to the current Scheme.
 
 ###### *If you are on Android, make sure the `GooglePlayStore` is selected. You can change the currently selected store under `Services > In-App Purchasing > Configure` and changing the `Current Targeted Store` field.

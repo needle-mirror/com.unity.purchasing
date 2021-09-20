@@ -9,11 +9,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
     [RequireComponent(typeof(Button))]
-#if ENABLE_EDITOR_GAME_SERVICES
     [AddComponentMenu("In-App Purchasing/IAP Button")]
-#else
-    [AddComponentMenu("Unity IAP/IAP Button")]
-#endif
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
     public class IAPButton : MonoBehaviour
     {

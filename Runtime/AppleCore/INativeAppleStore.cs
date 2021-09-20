@@ -10,7 +10,9 @@
         string appReceipt { get; }
         bool canMakePayments { get; }
         bool simulateAskToBuy { get; set; }
+        void FetchStorePromotionOrder();
         void SetStorePromotionOrder(string json);
+        void FetchStorePromotionVisibility(string productId);
         void SetStorePromotionVisibility(string productId, string visibility);
         string GetTransactionReceiptForProductId (string productId);
         void InterceptPromotionalPurchases();

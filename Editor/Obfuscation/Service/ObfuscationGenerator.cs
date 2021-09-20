@@ -5,31 +5,33 @@ using UnityEngine;
 
 namespace UnityEditor.Purchasing
 {
-    internal class ObfuscationGenerator
+    class ObfuscationGenerator
     {
         const string m_GeneratedCredentialsTemplateFilename = "IAPGeneratedCredentials.cs.template";
         const string m_GeneratedCredentialsTemplateFilenameNoExtension = "IAPGeneratedCredentials.cs";
 
         const string k_AppleCertPath = "Packages/com.unity.purchasing/Editor/AppleIncRootCertificate.cer";
+        const string k_AppleStoreKitTestCertPath = "Packages/com.unity.purchasing/Editor/StoreKitTestCertificate.cer";
+
+        const string k_AppleClassIncompleteErr = "Invalid Apple Root Certificate";
+        const string k_AppleStoreKitTestClassIncompleteErr = "Invalid Apple StoreKit Test Certificate";
 
         internal static string ObfuscateAppleSecrets()
         {
-            var appleError = BuildObfuscatedAppleClass();
+            var appleError = WriteObfuscatedAppleClassAsAsset();
 
             AssetDatabase.Refresh();
 
             return appleError;
-
         }
 
         internal static string ObfuscateGoogleSecrets(string googlePlayPublicKey)
         {
-            string googleError = BuildObfuscatedGooglePlayClass(googlePlayPublicKey);
+            var googleError = WriteObfuscatedGooglePlayClassAsAsset(googlePlayPublicKey);
 
             AssetDatabase.Refresh();
 
             return googleError;
-
         }
 
         /// <summary>
@@ -40,11 +42,11 @@ namespace UnityEditor.Purchasing
             try
             {
                 // First things first! Obfuscate! XHTLOA!
-                appleError = BuildObfuscatedAppleClass();
+                appleError = WriteObfuscatedAppleClassAsAsset();
 
                 if (includeGoogle)
                 {
-                    googleError = BuildObfuscatedGooglePlayClass(googlePlayPublicKey);
+                    googleError = WriteObfuscatedGooglePlayClassAsAsset(googlePlayPublicKey);
                 }
             }
             catch (Exception e)
@@ -52,13 +54,12 @@ namespace UnityEditor.Purchasing
                 Debug.LogWarning(e.StackTrace);
             }
 
-            // Ensure all the Tangle classes exist, even if they were not generated at this time. Apple will always
-            // be generated.
+            // Ensure all the Tangle classes exist, even if they were not generated at this time.
             if (!DoesGooglePlayTangleClassExist())
             {
                 try
                 {
-                    BuildObfuscatedClass(TangleFileConsts.k_GooglePlayClassPrefix, 0, new int[0], new byte[0], false);
+                    WriteObfuscatedClassAsAsset(TangleFileConsts.k_GooglePlayClassPrefix, 0, new int[0], new byte[0], false);
                 }
                 catch (Exception e)
                 {
@@ -69,7 +70,19 @@ namespace UnityEditor.Purchasing
             AssetDatabase.Refresh();
         }
 
-        static string BuildObfuscatedAppleClass()
+        static string WriteObfuscatedAppleClassAsAsset()
+        {
+            var err = WriteObfuscatedAppleClassAsAsset(k_AppleCertPath, k_AppleClassIncompleteErr, TangleFileConsts.k_AppleClassPrefix);
+
+            if (err == null)
+            {
+                err = WriteObfuscatedAppleClassAsAsset(k_AppleStoreKitTestCertPath, k_AppleStoreKitTestClassIncompleteErr, TangleFileConsts.k_AppleStoreKitTestClassPrefix);
+            }
+
+            return err;
+        }
+
+        static string WriteObfuscatedAppleClassAsAsset(string certPath, string classIncompleteErr, string classPrefix)
         {
             string appleError = null;
             int key = 0;
@@ -77,7 +90,7 @@ namespace UnityEditor.Purchasing
             byte[] tangled = new byte[0];
             try
             {
-                byte[] bytes = System.IO.File.ReadAllBytes(k_AppleCertPath);
+                byte[] bytes = File.ReadAllBytes(certPath);
                 order = new int[bytes.Length / 20 + 1];
 
                 // TODO: Integrate with upgraded Tangle!
@@ -86,15 +99,16 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception e)
             {
-                Debug.LogWarning("Invalid Apple Root Certificate. Generating incomplete credentials file. " + e);
-                appleError = "  Invalid Apple Root Certificate";
+                Debug.LogWarning($"{classIncompleteErr}. Generating incomplete credentials file. " + e);
+                appleError = $"  {classIncompleteErr}";
             }
-            BuildObfuscatedClass(TangleFileConsts.k_AppleClassPrefix, key, order, tangled, tangled.Length != 0);
+
+            WriteObfuscatedClassAsAsset(classPrefix, key, order, tangled, tangled.Length != 0);
 
             return appleError;
         }
 
-        static string BuildObfuscatedGooglePlayClass(string googlePlayPublicKey)
+        static string WriteObfuscatedGooglePlayClassAsAsset(string googlePlayPublicKey)
         {
             string googleError = null;
             int key = 0;
@@ -113,20 +127,20 @@ namespace UnityEditor.Purchasing
                 googleError =
                     "  The Google Play License Key is invalid. GooglePlayTangle was generated with incomplete credentials.";
             }
-            BuildObfuscatedClass(TangleFileConsts.k_GooglePlayClassPrefix, key, order, tangled, tangled.Length != 0);
+            WriteObfuscatedClassAsAsset(TangleFileConsts.k_GooglePlayClassPrefix, key, order, tangled, tangled.Length != 0);
 
             return googleError;
         }
 
-
-        private static string FullPathForTangleClass(string classnamePrefix)
+        static string FullPathForTangleClass(string classnamePrefix)
         {
             return Path.Combine(TangleFileConsts.k_OutputPath, string.Format($"{classnamePrefix}{TangleFileConsts.k_ObfuscationClassSuffix}"));
         }
 
         internal static bool DoesAppleTangleClassExist()
         {
-            return ObfuscatedClassExists(TangleFileConsts.k_AppleClassPrefix);
+            return ObfuscatedClassExists(TangleFileConsts.k_AppleClassPrefix) &&
+                ObfuscatedClassExists(TangleFileConsts.k_AppleStoreKitTestClassPrefix);
         }
 
         internal static bool DoesGooglePlayTangleClassExist()
@@ -134,12 +148,12 @@ namespace UnityEditor.Purchasing
             return ObfuscatedClassExists(TangleFileConsts.k_GooglePlayClassPrefix);
         }
 
-        private static bool ObfuscatedClassExists(string classnamePrefix)
+        static bool ObfuscatedClassExists(string classnamePrefix)
         {
             return File.Exists(FullPathForTangleClass(classnamePrefix));
         }
 
-        private static void BuildObfuscatedClass(string classnamePrefix, int key, int[] order, byte[] data, bool populated)
+        static void WriteObfuscatedClassAsAsset(string classnamePrefix, int key, int[] order, byte[] data, bool populated)
         {
             Dictionary<string, string> substitutionDictionary = new Dictionary<string, string>()
             {
@@ -172,7 +186,7 @@ namespace UnityEditor.Purchasing
         /// </summary>
         /// <returns>The template file's text.</returns>
         /// <param name="templateRelativePath">Relative Assets/ path to template file.</param>
-        private static string LoadTemplateText(out string templateRelativePath)
+        static string LoadTemplateText(out string templateRelativePath)
         {
             string[] assetGUIDs =
                 AssetDatabase.FindAssets(m_GeneratedCredentialsTemplateFilenameNoExtension);
@@ -196,11 +210,11 @@ namespace UnityEditor.Purchasing
                 templateRelativePath = AssetDatabase.GUIDToAssetPath(templateGUID);
 
                 string templateAbsolutePath =
-                    System.IO.Path.GetDirectoryName(Application.dataPath)
-                    + System.IO.Path.DirectorySeparatorChar
+                    Path.GetDirectoryName(Application.dataPath)
+                    + Path.DirectorySeparatorChar
                     + templateRelativePath;
 
-                templateText = System.IO.File.ReadAllText(templateAbsolutePath);
+                templateText = File.ReadAllText(templateAbsolutePath);
             }
 
             return templateText;

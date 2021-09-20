@@ -164,15 +164,6 @@
     cursor:link;
 }
 
-.external-link-icon {
-    width:16px;
-    width:16px;
-    height:16px;
-    cursor:link;
-    margin-left:5px;
-    background-image:resource("Builtin Skins/Shared/Images/ServicesWindow-ExternalLink.png");
-}
-
 .multi-field-block .title {
     -unity-font-style:bold;
 }
@@ -282,15 +273,6 @@
     background-image:resource("Builtin Skins/Shared/Images/ServicesWindow-InfoTooltip.png");
 }
 
-.external-link-icon {
-    width:16px;
-    height:16px;
-    cursor:link;
-    margin-left:5px;
-    -unity-background-image-tint-color:#D2D2D2; /*from dark.uss --unity-text-color*/
-    background-image:resource("Builtin Skins/Shared/Images/ServicesWindow-ExternalLink.png");
-}
-
 .multi-field-block .title {
     -unity-font-style:bold;
 }
@@ -324,6 +306,11 @@
     background-color:rgba(0, 0, 0, 0);
     cursor:link;
     flex-grow:0;
+}
+
+.link-container-integrated {
+    flex-direction: row;
+    padding-left: 4px;
 }
 
 .toggle-section {

@@ -45,7 +45,13 @@ namespace UnityEngine.Purchasing
         private static extern bool getSimulateAskToBuy ();
 
         [DllImport("unitypurchasing")]
+        private static extern void unityPurchasingFetchStorePromotionOrder();
+
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasingUpdateStorePromotionOrder(string json);
+
+        [DllImport("unitypurchasing")]
+        private static extern void unityPurchasingFetchStorePromotionVisibility(string productId);
 
         [DllImport("unitypurchasing")]
         private static extern void unityPurchasingUpdateStorePromotionVisibility(string productId, string visibility);
@@ -120,9 +126,19 @@ namespace UnityEngine.Purchasing
             unityPurchasingSetApplicationUsername (applicationUsername);
         }
 
+        public void FetchStorePromotionOrder()
+        {
+            unityPurchasingFetchStorePromotionOrder();
+        }
+
         public void SetStorePromotionOrder(string json)
         {
             unityPurchasingUpdateStorePromotionOrder(json);
+        }
+
+        public void FetchStorePromotionVisibility(string productId)
+        {
+            unityPurchasingFetchStorePromotionVisibility(productId);
         }
 
         public void SetStorePromotionVisibility(string productId, string visibility)

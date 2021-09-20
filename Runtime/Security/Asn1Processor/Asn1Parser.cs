@@ -18,7 +18,7 @@
 //| this list of conditions and the following disclaimer in the documentation     |
 //| and/or other materials provided with the distribution.                        |
 //|                                                                               |
-//| THE SOFTWARE PRODUCT IS PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND,        |
+//| THE SOFTWARE PRODUCT IS PROVIDED ï¿½AS ISï¿½ WITHOUT WARRANTY OF ANY KIND,        |
 //| EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED         |
 //| WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR        |
 //| A PARTICULAR PURPOSE.                                                         |
@@ -31,8 +31,8 @@ namespace LipingShare.LCLib.Asn1Processor
 {
 	/// <summary>
 	/// ASN.1 encoded data parser.
-	/// This a higher level class which unilized Asn1Node class functionality to 
-	/// provide functions for ASN.1 encoded files. 
+	/// This a higher level class which unilized Asn1Node class functionality to
+	/// provide functions for ASN.1 encoded files.
 	/// </summary>
 	internal class Asn1Parser
 	{
@@ -42,8 +42,8 @@ namespace LipingShare.LCLib.Asn1Processor
 		/// <summary>
 		/// Get/Set parseEncapsulatedData. Reloading data is required after this property is reset.
 		/// </summary>
-		bool ParseEncapsulatedData 
-		{ 
+		bool ParseEncapsulatedData
+		{
 			get
 			{
 				return rootNode.ParseEncapsulatedData;
@@ -99,7 +99,7 @@ namespace LipingShare.LCLib.Asn1Processor
 			string dataStr = Asn1Util.BytesToString(data);
 			if (Asn1Util.IsPemFormated(dataStr))
 			{
-				Stream ms = Asn1Util.PemToStream(dataStr); 
+				Stream ms = Asn1Util.PemToStream(dataStr);
 				ms.Position = 0;
 				LoadData(ms);
 			}
@@ -165,7 +165,7 @@ namespace LipingShare.LCLib.Asn1Processor
 		public Asn1Node GetNodeByOid(string oid)
 		{
 			return Asn1Node.GetDecendantNodeByOid(oid, rootNode);
-		}       
+		}
 
 		/// <summary>
 		/// Generate node text header. This method is used by GetNodeText to put heading.

@@ -1,0 +1,5 @@
+{
+  "displayName": "Apple App Store - 07 Getting Product Details",
+  "description": "This sample showcases how to use Apple extensions to get additional product details.",
+  "createSeparatePackage": false
+}

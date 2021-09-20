@@ -24,9 +24,9 @@ namespace UnityEngine.Purchasing
             var currentRetryDelay = m_BaseRetryDelay;
             actionToTry(Retry);
 
-            void Retry()
+            async void Retry()
             {
-                WaitAndRetry();
+                await WaitAndRetry();
             }
 
             async Task WaitAndRetry()

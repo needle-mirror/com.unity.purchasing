@@ -51,6 +51,8 @@ void UnityPurchasingLog(NSString *format, ...) {
 
 // The max time we wait in between retrying failed SKProductRequests.
 static const int MAX_REQUEST_PRODUCT_RETRY_DELAY = 60;
+// The currency code for unknown locales, from https://en.wikipedia.org/wiki/ISO_4217#X_currencies
+static const NSString* ISO_CURRENCY_CODE_UNKNOWN = @"XXX";
 
 // Track our accumulated delay.
 int delayInSeconds = 2;
@@ -308,7 +310,7 @@ int delayInSeconds = 2;
 - (void)presentCodeRedemptionSheet {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 && TARGET_OS_TV == 0 && !MAC_APPSTORE
     if (@available(iOS 14, *)) {
-        [[SKPaymentQueue defaultQueue] presentCodeRedemptionSheet]; 
+        [[SKPaymentQueue defaultQueue] presentCodeRedemptionSheet];
     } else
 #endif
     {
@@ -387,55 +389,12 @@ int delayInSeconds = 2;
 }
 
 // The transaction status of the SKPaymentQueue is sent here.
-- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions {
+- (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions
+{
     UnityPurchasingLog(@"UpdatedTransactions");
     for(SKPaymentTransaction *transaction in transactions) {
-        switch (transaction.transactionState) {
-
-            case SKPaymentTransactionStatePurchasing:
-                // Item is still in the process of being purchased
-                break;
-
-            case SKPaymentTransactionStatePurchased: {
-#if MAC_APPSTORE
-                // There is no transactionReceipt on Mac
-                NSString* receipt = @"";
-#else
-                // The transactionReceipt field is deprecated, but is being used here to validate Ask-To-Buy purchases
-                NSString* receipt = [transaction.transactionReceipt base64EncodedStringWithOptions:0];
-#endif
-                if (transaction.payment.productIdentifier != nil) {
-                    transactionReceipts[transaction.payment.productIdentifier] = receipt;
-                }
-                [self onTransactionSucceeded:transaction];
-                break;
-            }
-            case SKPaymentTransactionStateRestored: {
-                [self onTransactionSucceeded:transaction];
-                break;
-            }
-            case SKPaymentTransactionStateDeferred:
-                UnityPurchasingLog(@"PurchaseDeferred");
-                [self UnitySendMessage:@"onProductPurchaseDeferred" payload:transaction.payment.productIdentifier];
-                break;
-            case SKPaymentTransactionStateFailed: {
-                // Purchase was either cancelled by user or an error occurred.
-                NSString* errorCode = [NSString stringWithFormat:@"%ld",(long)transaction.error.code];
-                UnityPurchasingLog(@"PurchaseFailed: %@", errorCode);
-
-                NSString* reason = [self purchaseErrorCodeToReason:transaction.error.code];
-                NSString* errorCodeString = [UnityPurchasing storeKitErrorCodeNames][@(transaction.error.code)];
-                if (errorCodeString == nil) {
-                    errorCodeString = @"SKErrorUnknown";
-                }
-                NSString* errorDescription = [NSString stringWithFormat:@"APPLE_%@", transaction.error.localizedDescription];
-                [self onPurchaseFailed:transaction.payment.productIdentifier reason:reason errorCode:errorCodeString errorDescription:errorDescription];
-
-                // Finished transactions should be removed from the payment queue.
-                [[SKPaymentQueue defaultQueue] finishTransaction: transaction];
-            }
-                break;
-        }
+        
+        [self handleTransaction:transaction];
     }
 }
 
@@ -461,6 +420,111 @@ int delayInSeconds = 2;
     [self UnitySendMessage:@"onTransactionsRestoredFail" payload:error.localizedDescription];
 }
 
+- (void) handleTransaction:(SKPaymentTransaction *) transaction
+{
+    if (transaction.payment.productIdentifier == nil) {
+        return;
+    }
+    
+    SKProduct* product = [validProducts objectForKey:transaction.payment.productIdentifier];
+    
+    switch (transaction.transactionState) {
+
+        case SKPaymentTransactionStatePurchasing:
+            // Item is still in the process of being purchased
+            break;
+        case SKPaymentTransactionStatePurchased:
+            [self handleTransactionPurchased:transaction forProduct:product];
+            break;
+        case SKPaymentTransactionStateRestored:
+            [self handleTransactionRestored:transaction forProduct:product];
+            break;
+        case SKPaymentTransactionStateDeferred:
+            [self handleTransactionDeferred:transaction forProduct:product];
+            break;
+        case SKPaymentTransactionStateFailed:
+            [self handleTransactionFailed:transaction];
+            break;
+    }
+}
+
+- (void) handleTransactionPurchased:(SKPaymentTransaction*) transaction forProduct:(SKProduct*) product
+{
+    
+#if MAC_APPSTORE
+    // There is no transactionReceipt on Mac
+    NSString* receipt = @"";
+#else
+    // The transactionReceipt field is deprecated, but is being used here to validate Ask-To-Buy purchases
+    NSString* receipt = [transaction.transactionReceipt base64EncodedStringWithOptions:0];
+#endif
+
+    transactionReceipts[transaction.payment.productIdentifier] = receipt;
+            
+    if (product != nil) {
+        [self onTransactionSucceeded:transaction];
+    }
+}
+
+- (void) handleTransactionRestored:(SKPaymentTransaction*) transaction forProduct:(SKProduct*) product
+{
+    if (product != nil) {
+        [self onTransactionSucceeded:transaction];
+    }
+}
+
+- (void) handleTransactionDeferred:(SKPaymentTransaction*) transaction forProduct:(SKProduct*) product
+{
+    if (product != nil) {
+        UnityPurchasingLog(@"PurchaseDeferred");
+        [self UnitySendMessage:@"onProductPurchaseDeferred" payload:transaction.payment.productIdentifier];
+    }
+}
+
+- (void) handleTransactionFailed:(SKPaymentTransaction*) transaction
+{
+    // Purchase was either cancelled by user or an error occurred.
+    NSString* errorCode = [NSString stringWithFormat:@"%ld",(long)transaction.error.code];
+    UnityPurchasingLog(@"PurchaseFailed: %@", errorCode);
+
+    NSString* reason = [self purchaseErrorCodeToReason:transaction.error.code];
+    NSString* errorCodeString = [UnityPurchasing storeKitErrorCodeNames][@(transaction.error.code)];
+    if (errorCodeString == nil) {
+        errorCodeString = @"SKErrorUnknown";
+    }
+    NSString* errorDescription = [NSString stringWithFormat:@"APPLE_%@", transaction.error.localizedDescription];
+    [self onPurchaseFailed:transaction.payment.productIdentifier reason:reason errorCode:errorCodeString errorDescription:errorDescription];
+
+    // Finished transactions should be removed from the payment queue.
+    [[SKPaymentQueue defaultQueue] finishTransaction: transaction];
+}
+
+- (void)fetchStorePromotionOrder
+{
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
+    if (@available(iOS 11.0, *)) {
+        [[SKProductStorePromotionController defaultController] fetchStorePromotionOrderWithCompletionHandler:^(NSArray<SKProduct *> * _Nonnull storePromotionOrder, NSError * _Nullable error) {
+            if (error) {
+                UnityPurchasingLog(@"Error in fetchStorePromotionOrder: %@ - %@ - %@", [error code], [error domain], [error localizedDescription]);
+
+                [self UnitySendMessage:@"onFetchStorePromotionOrderFailed" payload:nil];
+            } else {
+                UnityPurchasingLog(@"Fetched %lu store-promotion ordered products", (unsigned long) [storePromotionOrder count]);
+
+                NSString *productIdsJSON = [UnityPurchasing serializeProductIdList:storePromotionOrder];
+
+                [self UnitySendMessage:@"onFetchStorePromotionOrderSucceeded" payload:productIdsJSON];
+            }
+        }];
+    }
+    else
+#endif
+    {
+        UnityPurchasingLog(@"Fetch store promotion order is only available on iOS and tvOS 11 or later");
+        [self UnitySendMessage:@"onFetchStorePromotionOrderFailed" payload:nil];
+    }
+}
+
 - (void)updateStorePromotionOrder:(NSArray*)productIds
 {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
@@ -484,6 +548,37 @@ int delayInSeconds = 2;
 #endif
     {
         UnityPurchasingLog(@"Update store promotion order is only available on iOS and tvOS 11 or later");
+    }
+}
+
+- (void)fetchStorePromotionVisibilityForProduct:(NSString*)productId
+{
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
+    if (@available(iOS 11.0, macOS 11.0, tvOS 11.0, *)) {
+        SKProduct *product = [validProducts objectForKey:productId];
+
+        [[SKProductStorePromotionController defaultController]
+         fetchStorePromotionVisibilityForProduct:product completionHandler:^(SKProductStorePromotionVisibility storePromotionVisibility, NSError * _Nullable error) {
+                if (error) {
+                    UnityPurchasingLog(@"Error in fetchStorePromotionVisibilityForProduct: %@ - %@ - %@", [error code], [error domain], [error localizedDescription]);
+
+                    [self UnitySendMessage:@"onFetchStorePromotionVisibilityFailed" payload:nil];
+                } else {
+                    NSString *visibility = [UnityPurchasing getStringForStorePromotionVisibility: storePromotionVisibility];
+                    
+                    UnityPurchasingLog(@"Fetched Store Promotion Visibility for %@", product.productIdentifier);
+
+                    NSString *payload = [UnityPurchasing serializeVisibilityResultForProduct:productId withVisiblity:visibility];
+
+                    [self UnitySendMessage:@"onFetchStorePromotionVisibilitySucceeded" payload:payload];
+                }
+            }
+         ];
+    } else
+#endif
+    {
+        UnityPurchasingLog(@"Fetch store promotion visibility is only available on iOS, macOS and tvOS 11 or later");
+        [self UnitySendMessage:@"onFetchStorePromotionVisibilityFailed" payload:nil];
     }
 }
 
@@ -528,6 +623,22 @@ int delayInSeconds = 2;
 #endif
     return YES;
 }
+
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
++ (NSString*)getStringForStorePromotionVisibility:(SKProductStorePromotionVisibility)storePromotionVisibility
+API_AVAILABLE(macos(11.0), ios(11.0), tvos(11.0)){
+    switch(storePromotionVisibility) {
+        case SKProductStorePromotionVisibilityShow:
+            return @"Show";
+        case SKProductStorePromotionVisibilityHide:
+            return @"Hide";
+        case SKProductStorePromotionVisibilityDefault:
+            return @"Default";
+        default:
+            return @"Default";
+    }
+}
+#endif
 
 +(ProductDefinition*) decodeProductDefinition:(NSDictionary*) hash
 {
@@ -581,7 +692,13 @@ int delayInSeconds = 2;
 
         if (NULL != [product priceLocale]) {
             NSString *currencyCode = [[product priceLocale] objectForKey:NSLocaleCurrencyCode];
-            [metadata setObject:currencyCode forKey:@"isoCurrencyCode"];
+            // NSLocaleCurrencyCode has been seen to return nil. Avoid crashing and report the issue to the log. E.g. https://developer.apple.com/forums/thread/119838
+            if (currencyCode != nil) {
+                [metadata setObject:currencyCode forKey:@"isoCurrencyCode"];
+            } else {
+                UnityPurchasingLog(@"Error: unable to determine localized currency code for product {%@}, [SKProduct priceLocale] identifier {%@}. NSLocaleCurrencyCode {%@} is nil. Using ISO Unknown Currency code, instead: {%@}.", [product productIdentifier], [[product priceLocale] localeIdentifier], currencyCode, ISO_CURRENCY_CODE_UNKNOWN);
+                [metadata setObject:ISO_CURRENCY_CODE_UNKNOWN forKey:@"isoCurrencyCode"];
+            }
         }
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000 || __TV_OS_VERSION_MAX_ALLOWED >= 110000 || __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -684,11 +801,30 @@ int delayInSeconds = 2;
     return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 }
 
++ (NSString*) serializeProductIdList:(NSArray<SKProduct *> *)products
+{
+    NSMutableArray *productIds = [NSMutableArray arrayWithCapacity:products.count];
+    for (SKProduct *product in products) {
+        [productIds addObject:product.productIdentifier];
+    }
+
+    NSData *data = [NSJSONSerialization dataWithJSONObject:productIds options:0 error:nil];
+    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+}
+
 + (NSArray*) deserializeProductIdList:(NSString*)json
 {
     NSData* data = [json dataUsingEncoding:NSUTF8StringEncoding];
     NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
     return [[dict objectForKey:@"products"] copy];
+}
+
++ (NSString*) serializeVisibilityResultForProduct:(NSString *)productId withVisiblity:(NSString *)visibility
+{
+    NSDictionary *result = @{@"productId": productId, @"visibility": visibility};
+
+    NSData *data = [NSJSONSerialization dataWithJSONObject:result options:0 error:nil];
+    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 }
 
 // Note: this will need to be updated if Apple ever adds more StoreKit error codes.
@@ -818,6 +954,15 @@ void unityPurchasingSetApplicationUsername(const char *username) {
     if (username == NULL)
         return;
     UnityPurchasing_getInstance().applicationUsername = [NSString stringWithUTF8String:username];
+}
+
+void unityPurchasingFetchStorePromotionOrder(void) {
+    [UnityPurchasing_getInstance() fetchStorePromotionOrder];
+}
+
+void unityPurchasingFetchStorePromotionVisibility(const char *productId) {
+    NSString* prodId = [NSString stringWithUTF8String:productId];
+    [UnityPurchasing_getInstance() fetchStorePromotionVisibilityForProduct:prodId];
 }
 
 // Expects json in this format:

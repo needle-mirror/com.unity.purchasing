@@ -18,7 +18,7 @@
 //| this list of conditions and the following disclaimer in the documentation     |
 //| and/or other materials provided with the distribution.                        |
 //|                                                                               |
-//| THE SOFTWARE PRODUCT IS PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND,        |
+//| THE SOFTWARE PRODUCT IS PROVIDED ï¿½AS ISï¿½ WITHOUT WARRANTY OF ANY KIND,        |
 //| EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED         |
 //| WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR        |
 //| A PARTICULAR PURPOSE.                                                         |
@@ -28,200 +28,12 @@
 using System;
 using System.IO;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace LipingShare.LCLib.Asn1Processor
 {
-	/// <summary>
-	/// IAsn1Node interface.
-	/// </summary>
-	internal interface IAsn1Node
-	{
-		/// <summary>
-		/// Load data from Stream.
-		/// </summary>
-		/// <param name="xdata"></param>
-		/// <returns>true:Succeed; false:failed.</returns>
-		bool LoadData(Stream xdata);
-
-		/// <summary>
-		/// Save node data into Stream.
-		/// </summary>
-		/// <param name="xdata">Stream.</param>
-		/// <returns>true:Succeed; false:failed.</returns>
-		bool SaveData(Stream xdata);
-		
-		/// <summary>
-		/// Get parent node.
-		/// </summary>
-		Asn1Node ParentNode { get; }
-
-		/// <summary>
-		/// Add child node at the end of children list.
-		/// </summary>
-		/// <param name="xdata">Asn1Node</param>
-		void AddChild(Asn1Node xdata);
-
-		/// <summary>
-		/// Insert a node in the children list before the pointed index.
-		/// </summary>
-		/// <param name="xdata">Asn1Node</param>
-		/// <param name="index">0 based index.</param>
-		int InsertChild(Asn1Node xdata, int index);
-
-		/// <summary>
-		/// Insert a node in the children list before the pointed node.
-		/// </summary>
-		/// <param name="xdata">Asn1Node that will be instered in the children list.</param>
-		/// <param name="indexNode">Index node.</param>
-		/// <returns>New node index.</returns>
-		int InsertChild(Asn1Node xdata, Asn1Node indexNode);
-
-		/// <summary>
-		/// Insert a node in the children list after the pointed index.
-		/// </summary>
-		/// <param name="xdata">Asn1Node</param>
-		/// <param name="index">0 based index.</param>
-		/// <returns>New node index.</returns>
-		int InsertChildAfter(Asn1Node xdata, int index);
-
-		/// <summary>
-		/// Insert a node in the children list after the pointed node.
-		/// </summary>
-		/// <param name="xdata">Asn1Node that will be instered in the children list.</param>
-		/// <param name="indexNode">Index node.</param>
-		/// <returns>New node index.</returns>
-		int InsertChildAfter(Asn1Node xdata, Asn1Node indexNode);
-
-		/// <summary>
-		/// Remove a child from children node list by index.
-		/// </summary>
-		/// <param name="index">0 based index.</param>
-		/// <returns>The Asn1Node just removed from the list.</returns>
-		Asn1Node RemoveChild(int index);
-
-		/// <summary>
-		/// Remove the child from children node list.
-		/// </summary>
-		/// <param name="node">The node needs to be removed.</param>
-		/// <returns></returns>
-		Asn1Node RemoveChild(Asn1Node node);
-
-		/// <summary>
-		/// Get child node count.
-		/// </summary>
-		long ChildNodeCount { get; }
-
-		/// <summary>
-		/// Retrieve child node by index.
-		/// </summary>
-		/// <param name="index">0 based index.</param>
-		/// <returns>0 based index.</returns>
-		Asn1Node GetChildNode(int index);
-
-		/// <summary>
-		/// Get descendant node by node path.
-		/// </summary>
-		/// <param name="nodePath">relative node path that refer to current node.</param>
-		/// <returns></returns>
-		Asn1Node GetDescendantNodeByPath(string nodePath);
-
-		/// <summary>
-		/// Get/Set tag value.
-		/// </summary>
-		byte Tag{ get; set; }
-
-		byte MaskedTag { get; }
-
-		/// <summary>
-		/// Get tag name.
-		/// </summary>
-		string TagName{ get; }
-
-		/// <summary>
-		/// Get data length. Not included the unused bits byte for BITSTRING.
-		/// </summary>
-		long DataLength{ get; }
-
-		/// <summary>
-		/// Get the length field bytes.
-		/// </summary>
-		long LengthFieldBytes{ get; }
-
-		/// <summary>
-		/// Get data offset.
-		/// </summary>
-		long DataOffset{ get; }
-
-		/// <summary>
-		/// Get unused bits for BITSTRING.
-		/// </summary>
-		byte UnusedBits{ get; }
-
-		/// <summary>
-		/// Get/Set node data by byte[], the data length field content and all the 
-		/// node in the parent chain will be adjusted.
-		/// </summary>
-		byte[] Data { get; set; }
-
-		/// <summary>
-		/// Get/Set parseEncapsulatedData. This property will be inherited by the 
-		/// child nodes when loading data.
-		/// </summary>
-		bool ParseEncapsulatedData { get; set; }
-
-		/// <summary>
-		/// Get the deepness of the node.
-		/// </summary>
-		long Deepness { get; }
-
-		/// <summary>
-		/// Get the path string of the node.
-		/// </summary>
-		string Path{ get; }
-
-		/// <summary>
-		/// Get the node and all the descendents text description.
-		/// </summary>
-		/// <param name="startNode">starting node.</param>
-		/// <param name="lineLen">line length.</param>
-		/// <returns></returns>
-		string GetText(Asn1Node startNode, int lineLen);
-
-		/// <summary>
-		/// Retrieve the node description.
-		/// </summary>
-		/// <param name="pureHexMode">true:Return hex string only;
-		/// false:Convert to more readable string depending on the node tag.</param>
-		/// <returns>string</returns>
-		string GetDataStr(bool pureHexMode);
-
-		/// <summary>
-		/// Get node label string.
-		/// </summary>
-		/// <param name="mask">
-		/// <code>
-		/// SHOW_OFFSET
-		/// SHOW_DATA
-		/// USE_HEX_OFFSET
-		/// SHOW_TAG_NUMBER
-		/// SHOW_PATH</code>
-		/// </param>
-		/// <returns>string</returns>
-		string GetLabel(uint mask);
-
-		/// <summary>
-		/// Clone a new Asn1Node by current node.
-		/// </summary>
-		/// <returns>new node.</returns>
-		Asn1Node Clone();
-
-		/// <summary>
-		/// Clear data and children list.
-		/// </summary>
-		void ClearAll();
-	}
-
 	/// <summary>
 	/// Asn1Node, implemented IAsn1Node interface.
 	/// </summary>
@@ -274,7 +86,7 @@ namespace LipingShare.LCLib.Asn1Processor
 			parentNode = null;
 		}
 
-		private string GetHexPrintingStr(Asn1Node startNode, string baseLine, 
+		private string GetHexPrintingStr(Asn1Node startNode, string baseLine,
 			string lStr, int lineLen)
 		{
 			string nodeStr = "";
@@ -289,9 +101,9 @@ namespace LipingShare.LCLib.Asn1Processor
 				else
 				{
 					nodeStr += baseLine + FormatLineHexString(
-						lStr, 
-						iStr.Length, 
-						lineLen, 
+						lStr,
+						iStr.Length,
+						lineLen,
 						dataStr
 						);
 				}
@@ -314,12 +126,12 @@ namespace LipingShare.LCLib.Asn1Processor
 			{
 				if (currentp+realLen > msg.Length)
 				{
-					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') + 
+					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') +
 						"'" + msg.Substring(currentp, msg.Length - currentp) + "'";
 				}
 				else
 				{
-					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') + "'" + 
+					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') + "'" +
 						msg.Substring(currentp, realLen) + "'";
 				}
 			}
@@ -337,19 +149,19 @@ namespace LipingShare.LCLib.Asn1Processor
 			{
 				if (currentp+realLen > msg.Length)
 				{
-					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') + 
+					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') +
 						msg.Substring(currentp, msg.Length - currentp);
 				}
 				else
 				{
-					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') + 
+					retval += "\r\n" + lStr + Asn1Util.GenStr(sLen,' ') +
 						msg.Substring(currentp, realLen);
 				}
 			}
 			return retval;
 		}
 
-		
+
 		//PublicMembers
 
 		/// <summary>
@@ -394,7 +206,7 @@ namespace LipingShare.LCLib.Asn1Processor
 		/// Get/Set tag value.
 		/// </summary>
 		public byte Tag
-		{ 
+		{
 			get
 			{
 				return tag;
@@ -453,7 +265,7 @@ namespace LipingShare.LCLib.Asn1Processor
 
 		/// <summary>
 		/// Load data from Stream. Start from current position.
-		/// This function sets requireRecalculatePar to false then calls InternalLoadData 
+		/// This function sets requireRecalculatePar to false then calls InternalLoadData
 		/// to complish the task.
 		/// </summary>
 		/// <param name="xdata">Stream</param>
@@ -555,7 +367,7 @@ namespace LipingShare.LCLib.Asn1Processor
 			RecalculateTreePar();
 		}
 
-		
+
 		/// <summary>
 		/// Add child node at the end of children list.
 		/// </summary>
@@ -728,15 +540,15 @@ namespace LipingShare.LCLib.Asn1Processor
 			switch (tag)
 			{
 				case Asn1Tag.BIT_STRING:
-					baseLine = 
-						String.Format("{0,6}|{1,6}|{2,7}|{3} {4} UnusedBits:{5} : ", 
-						dataOffset, 
-						dataLength, 
-						lengthFieldBytes, 
-						GetIndentStr(startNode), 
-						TagName, 
+					baseLine =
+						String.Format("{0,6}|{1,6}|{2,7}|{3} {4} UnusedBits:{5} : ",
+						dataOffset,
+						dataLength,
+						lengthFieldBytes,
+						GetIndentStr(startNode),
+						TagName,
 						unusedBits
-						); 
+						);
 					dataStr = Asn1Util.ToHexString(data);
 					if (baseLine.Length + dataStr.Length < lineLen)
 					{
@@ -752,9 +564,9 @@ namespace LipingShare.LCLib.Asn1Processor
 					else
 					{
 						nodeStr += baseLine + FormatLineHexString(
-							lStr, 
-							GetIndentStr(startNode).Length, 
-							lineLen, 
+							lStr,
+							GetIndentStr(startNode).Length,
+							lineLen,
 							dataStr + "\r\n"
 							);
 					}
@@ -763,29 +575,29 @@ namespace LipingShare.LCLib.Asn1Processor
 					Oid xoid  = new Oid();
 					oid = xoid.Decode(new MemoryStream(data));
 					oidName = xoid.GetOidName(oid);
-					nodeStr += String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : {5} [{6}]\r\n", 
+					nodeStr += String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : {5} [{6}]\r\n",
 						dataOffset,
-						dataLength, 
-						lengthFieldBytes, 
-						GetIndentStr(startNode), 
-						TagName, 
+						dataLength,
+						lengthFieldBytes,
+						GetIndentStr(startNode),
+						TagName,
 						oidName,
 						oid
-						); 
+						);
 					break;
 				case Asn1Tag.RELATIVE_OID:
 					RelativeOid xiod = new RelativeOid();
 					oid = xiod.Decode(new MemoryStream(data));
 					oidName = "";
-					nodeStr += String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : {5} [{6}]\r\n", 
+					nodeStr += String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : {5} [{6}]\r\n",
 						dataOffset,
-						dataLength, 
-						lengthFieldBytes, 
-						GetIndentStr(startNode), 
-						TagName, 
+						dataLength,
+						lengthFieldBytes,
+						GetIndentStr(startNode),
+						TagName,
 						oidName,
 						oid
-						); 
+						);
 					break;
 				case Asn1Tag.PRINTABLE_STRING:
 				case Asn1Tag.IA5_STRING:
@@ -797,20 +609,20 @@ namespace LipingShare.LCLib.Asn1Processor
 				case Asn1Tag.BMPSTRING:
 				case Asn1Tag.GENERAL_STRING:
 				case Asn1Tag.GENERALIZED_TIME:
-					baseLine = 
-						String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ", 
+					baseLine =
+						String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ",
 						dataOffset,
-						dataLength, 
-						lengthFieldBytes, 
-						GetIndentStr(startNode), 
+						dataLength,
+						lengthFieldBytes,
+						GetIndentStr(startNode),
 						TagName
 						);
 					if ( tag == Asn1Tag.UTF8_STRING )
 					{
 						UTF8Encoding unicode = new UTF8Encoding();
 						dataStr = unicode.GetString(data);
-					} 
-					else 
+					}
+					else
 					{
 						dataStr = Asn1Util.BytesToString(data);
 					}
@@ -821,32 +633,32 @@ namespace LipingShare.LCLib.Asn1Processor
 					else
 					{
 						nodeStr += baseLine + FormatLineString(
-							lStr, 
-							GetIndentStr(startNode).Length, 
-							lineLen, 
+							lStr,
+							GetIndentStr(startNode).Length,
+							lineLen,
 							dataStr) + "\r\n";
 					}
 					break;
 				case Asn1Tag.INTEGER:
 					if (data != null && dataLength < 8)
 					{
-						nodeStr += String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : {5}\r\n", 
+						nodeStr += String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : {5}\r\n",
 							dataOffset,
-							dataLength, 
-							lengthFieldBytes, 
-							GetIndentStr(startNode), 
+							dataLength,
+							lengthFieldBytes,
+							GetIndentStr(startNode),
 							TagName,
 							Asn1Util.BytesToLong(data).ToString()
 							);
 					}
 					else
 					{
-						baseLine = 
-							String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ", 
+						baseLine =
+							String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ",
 							dataOffset,
-							dataLength, 
-							lengthFieldBytes, 
-							GetIndentStr(startNode), 
+							dataLength,
+							lengthFieldBytes,
+							GetIndentStr(startNode),
 							TagName
 							);
 						nodeStr += GetHexPrintingStr(startNode, baseLine, lStr, lineLen);
@@ -855,12 +667,12 @@ namespace LipingShare.LCLib.Asn1Processor
 				default:
 					if ((tag & Asn1Tag.TAG_MASK) == 6) // Visible string for certificate
 					{
-						baseLine = 
-							String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ", 
+						baseLine =
+							String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ",
 							dataOffset,
-							dataLength, 
-							lengthFieldBytes, 
-							GetIndentStr(startNode), 
+							dataLength,
+							lengthFieldBytes,
+							GetIndentStr(startNode),
 							TagName
 							);
 						dataStr = Asn1Util.BytesToString(data);
@@ -871,20 +683,20 @@ namespace LipingShare.LCLib.Asn1Processor
 						else
 						{
 							nodeStr += baseLine + FormatLineString(
-								lStr, 
-								GetIndentStr(startNode).Length, 
-								lineLen, 
+								lStr,
+								GetIndentStr(startNode).Length,
+								lineLen,
 								dataStr) + "\r\n";
 						}
 					}
 					else
 					{
-						baseLine = 
-							String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ", 
+						baseLine =
+							String.Format("{0,6}|{1,6}|{2,7}|{3} {4} : ",
 							dataOffset,
-							dataLength, 
-							lengthFieldBytes, 
-							GetIndentStr(startNode), 
+							dataLength,
+							lengthFieldBytes,
+							GetIndentStr(startNode),
 							TagName
 							);
 						nodeStr += GetHexPrintingStr(startNode, baseLine, lStr, lineLen);
@@ -1068,8 +880,8 @@ namespace LipingShare.LCLib.Asn1Processor
 						{
 							UTF8Encoding unicode = new UTF8Encoding();
 							dataStr = unicode.GetString(data);
-						} 
-						else 
+						}
+						else
 						{
 							dataStr = Asn1Util.BytesToString(data);
 						}
@@ -1145,7 +957,7 @@ namespace LipingShare.LCLib.Asn1Processor
 		}
 
 		/// <summary>
-		/// Get/Set node data by byte[], the data length field content and all the 
+		/// Get/Set node data by byte[], the data length field content and all the
 		/// node in the parent chain will be adjusted.
 		/// <br></br>
 		/// It return all the child data for constructed node.
@@ -1275,7 +1087,7 @@ namespace LipingShare.LCLib.Asn1Processor
 			}
 			return retval;
 		}
-		
+
 		/// <summary>
 		/// Constant of tag field length.
 		/// </summary>
@@ -1319,7 +1131,7 @@ namespace LipingShare.LCLib.Asn1Processor
 
 		/// <summary>
 		/// Set/Get requireRecalculatePar. RecalculateTreePar function will not do anything
-		/// if it is set to false. 
+		/// if it is set to false.
 		/// </summary>
 		protected bool RequireRecalculatePar
 		{
@@ -1336,7 +1148,7 @@ namespace LipingShare.LCLib.Asn1Processor
 		//ProtectedMembers
 
 		/// <summary>
-		/// Find root node and recalculate entire tree length field, 
+		/// Find root node and recalculate entire tree length field,
 		/// path, offset and deepness.
 		/// </summary>
 		protected void RecalculateTreePar()
@@ -1468,46 +1280,155 @@ namespace LipingShare.LCLib.Asn1Processor
 		/// <returns>true:Succeed, false:Failed.</returns>
 		protected bool GeneralDecode(Stream xdata)
 		{
-			bool retval = false;
-			long nodeMaxLen;
-			nodeMaxLen = xdata.Length - xdata.Position;
+			long nodeMaxLen = xdata.Length - xdata.Position;
 			tag = (byte) xdata.ReadByte();
-			long start, end;
-			start = xdata.Position;
+			long start = xdata.Position;
 			dataLength = Asn1Util.DerLengthDecode(xdata, ref isIndefiniteLength);
-			if (dataLength < 0) return retval; // Node data length can not be negative.
-			end = xdata.Position;
-			lengthFieldBytes = end - start;
-			if (nodeMaxLen < (dataLength + TagLength + lengthFieldBytes))
-			{
-				return retval;
-			}
-			if ( ParentNode == null || ((ParentNode.tag & Asn1TagClasses.CONSTRUCTED) == 0))
-			{
-				if ((tag & Asn1Tag.TAG_MASK)<=0 || (tag & Asn1Tag.TAG_MASK)>0x1E) return retval;
-			}
-			if (tag == Asn1Tag.BIT_STRING)
-			{
-				// First byte of BIT_STRING is unused bits.
-				// BIT_STRING data does not include this byte.
 
-				// Fixed by Gustaf Björklund.
-				if (dataLength < 1) return retval; // We cannot read less than 1 - 1 bytes.
-
-				unusedBits = (byte) xdata.ReadByte();
-				data = new byte[dataLength-1];
-				xdata.Read(data, 0, (int)(dataLength-1) );
-			}
-			else
-			{
-				data = new byte[dataLength];
-				xdata.Read(data, 0, (int)(dataLength) );
-			}
-			retval = true;
-			return retval;
+            if (AreTagsOk())
+            {
+                if (isIndefiniteLength)
+                {
+                    return GeneralDecodeIndefiniteLength(xdata);
+                }
+                else
+                {
+                    return GeneralDecodeKnownLengthWithChecks(xdata, start, nodeMaxLen);
+                }
+            }
+            else
+            {
+                return false;
+            }
 		}
 
-		/// <summary>
+        private bool AreTagsOk()
+        {
+            if (ParentNode == null || ((ParentNode.tag & Asn1TagClasses.CONSTRUCTED) == 0))
+            {
+                if ((tag & Asn1Tag.TAG_MASK) <= 0 || (tag & Asn1Tag.TAG_MASK) > 0x1E)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool GeneralDecodeKnownLengthWithChecks(Stream xdata, long start, long nodeMaxLen)
+        {
+            if (IsGeneralStreamLengthOk(xdata, start, nodeMaxLen))
+            {
+                return GeneralDecodeKnownLength(xdata);
+            }
+
+            return false;
+        }
+
+        private bool IsGeneralStreamLengthOk(Stream xdata, long start, long nodeMaxLen)
+        {
+            if (dataLength >= 0)
+            {
+                lengthFieldBytes = xdata.Position - start;
+
+                if (nodeMaxLen >= (dataLength + TagLength + lengthFieldBytes))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool GeneralDecodeKnownLength(Stream xdata)
+        {
+            if (tag == Asn1Tag.BIT_STRING)
+            {
+                // First byte of BIT_STRING is unused bits.
+                // BIT_STRING data does not include this byte.
+
+                // Fixed by Gustaf Bjï¿½rklund.
+                if (dataLength < 1)
+                {
+                    return false;
+                }
+
+                unusedBits = (byte) xdata.ReadByte();
+                ReadStreamDataDefiniteLength(xdata, (int)(dataLength - 1));
+            }
+            else
+            {
+                ReadStreamDataDefiniteLength(xdata, (int)(dataLength));
+            }
+
+            return true;
+        }
+
+        private void ReadStreamDataDefiniteLength(Stream xdata, int length)
+        {
+            data = new byte[length];
+            xdata.Read(data, 0, (int)(length) );
+        }
+
+        private bool GeneralDecodeIndefiniteLength(Stream xdata)
+        {
+            if (tag == Asn1Tag.BIT_STRING)
+            {
+                unusedBits = (byte) xdata.ReadByte();
+                ReadStreamDataIndefiniteLength(xdata);
+            }
+            else
+            {
+                ReadStreamDataIndefiniteLength(xdata);
+            }
+
+            return true;
+        }
+
+        private void ReadStreamDataIndefiniteLength(Stream xdata)
+        {
+            var dataList = new List<byte>();
+            bool done = false;
+            int endOfContentsCheckCount = 0;
+
+            while (!done)
+            {
+                var readResult = xdata.ReadByte();
+                byte readByte = (byte) readResult;
+                if (readResult == -1)
+                {
+                    done = true;
+                }
+                else
+                {
+                    if (readByte == (byte) Asn1Tag.TAG_END_OF_CONTENTS)
+                    {
+                        endOfContentsCheckCount++;
+
+                        if (endOfContentsCheckCount >= 2)
+                        {
+                            done = true;
+                        }
+                    }
+                    else
+                    {
+                        endOfContentsCheckCount = 0;
+                    }
+
+                    dataList.Add(readByte);
+                }
+            }
+
+            if (endOfContentsCheckCount >= 2)
+            {
+                dataList.RemoveRange(dataList.Count -2, 2);
+            }
+
+            data = new byte[dataList.Count];
+            data = dataList.ToArray();
+        }
+
+        /// <summary>
 		/// Decode ASN.1 encoded complex data type Stream data.
 		/// </summary>
 		/// <param name="xdata">Stream data.</param>
@@ -1516,50 +1437,23 @@ namespace LipingShare.LCLib.Asn1Processor
 		{
 			bool retval = false;
 			long originalPosition = xdata.Position;
-			long childNodeMaxLen;
+
 			try
 			{
-				childNodeMaxLen = xdata.Length - xdata.Position;
+				long childNodeMaxLen = xdata.Length - xdata.Position;
 				tag = (byte) xdata.ReadByte();
-				long start, end, offset;
-				start = xdata.Position;
+				long start = xdata.Position;
 				dataLength = Asn1Util.DerLengthDecode(xdata, ref isIndefiniteLength);
-				if (dataLength<0 || childNodeMaxLen<dataLength)
-				{
-					return retval;
-				}
-				end = xdata.Position;
-				lengthFieldBytes = end - start;
-				offset = dataOffset + TagLength + lengthFieldBytes;
-				Stream secData;
-				byte[] secByte;
-				if (tag == Asn1Tag.BIT_STRING)
-				{
-					// First byte of BIT_STRING is unused bits.
-					// BIT_STRING data does not include this byte.
-					unusedBits = (byte) xdata.ReadByte();
-					dataLength--;
-					offset++;
-				}
-				if (dataLength <= 0) return retval; // List data length cann't be zero.
-				secData = new MemoryStream((int)dataLength);
-				secByte = new byte[dataLength];
-				xdata.Read(secByte, 0, (int) (dataLength));
-				if (tag == Asn1Tag.BIT_STRING) dataLength++;
-				secData.Write(secByte, 0, secByte.Length);
-				secData.Position = 0;
-				while(secData.Position<secData.Length)
-				{
-					Asn1Node node = new Asn1Node(this, offset);
-					node.parseEncapsulatedData = this.parseEncapsulatedData;
-					start = secData.Position;
-					if (!node.InternalLoadData(secData)) return retval;
-					AddChild(node);
-					end = secData.Position;
-					offset += end - start;
-				}
-				retval = true;
-			}
+
+                if (isIndefiniteLength)
+                {
+                    retval = ListDecodeIndefiniteLength(xdata, start);
+                }
+                else
+                {
+                    retval = ListDecodeKnownLengthWithChecks(xdata, start, childNodeMaxLen);
+                }
+            }
 			finally
 			{
 				if (!retval)
@@ -1570,6 +1464,141 @@ namespace LipingShare.LCLib.Asn1Processor
 			}
 			return retval;
 		}
+
+        private bool ListDecodeKnownLengthWithChecks(Stream xdata, long start, long childNodeMaxLen)
+        {
+            if (IsListStreamLengthOk(xdata, childNodeMaxLen))
+            {
+                return ListDecodeKnownLength(xdata, start);
+            }
+
+            return false;
+        }
+
+        private bool IsListStreamLengthOk(Stream xdata, long childNodeMaxLen)
+        {
+            return (dataLength >= 0 && childNodeMaxLen >= dataLength);
+        }
+
+        private bool ListDecodeKnownLength(Stream xdata, long start)
+        {
+            long offset = CalculateListEncodeFieldBytesAndOffset(xdata, start);
+
+            HandleBitStringTag(xdata, ref offset);
+
+            if (dataLength > 0)
+            {
+                return ListDecodeKnownLengthInternal(xdata, offset);
+            }
+
+            return false;
+        }
+
+        private long CalculateListEncodeFieldBytesAndOffset(Stream xdata, long start)
+        {
+            lengthFieldBytes = xdata.Position - start;
+
+            return dataOffset + TagLength + lengthFieldBytes;
+        }
+
+        private void HandleBitStringTag(Stream xdata, ref long offset)
+        {
+            if (tag == Asn1Tag.BIT_STRING)
+            {
+                // First byte of BIT_STRING is unused bits.
+                // BIT_STRING data does not include this byte.
+                unusedBits = (byte) xdata.ReadByte();
+                dataLength--;
+                offset++;
+            }
+        }
+
+        private bool ListDecodeKnownLengthInternal(Stream xdata, long offset)
+        {
+            Stream secData = CreateAndPrepareListDecodeMemoryStreamKnownLength(xdata);
+
+            return ListDecodeChildNodesWithKnownLength(secData, offset);
+        }
+
+        private Stream CreateAndPrepareListDecodeMemoryStreamKnownLength(Stream xdata)
+        {
+            Stream secData = new MemoryStream((int)dataLength);
+            byte[] secByte = new byte[dataLength];
+
+            xdata.Read(secByte, 0, (int) (dataLength));
+
+            if (tag == Asn1Tag.BIT_STRING)
+            {
+                dataLength++;
+            }
+
+            secData.Write(secByte, 0, secByte.Length);
+            secData.Position = 0;
+
+            return secData;
+        }
+
+        private bool ListDecodeChildNodesWithKnownLength(Stream secData, long offset)
+        {
+            while(secData.Position < secData.Length)
+            {
+                if (!CreateAndAddChildNode(secData, ref offset))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool CreateAndAddChildNode(Stream secData, ref long offset)
+        {
+            var node = new Asn1Node(this, offset);
+            node.parseEncapsulatedData = this.parseEncapsulatedData;
+            long start = secData.Position;
+            if (!node.InternalLoadData(secData))
+            {
+                return false;
+            }
+            AddChild(node);
+
+            offset += secData.Position - start;
+
+            return true;
+        }
+
+        private bool ListDecodeIndefiniteLength(Stream xdata, long start)
+        {
+            long offset = CalculateListEncodeFieldBytesAndOffset(xdata, start);
+
+            HandleBitStringTag(xdata, ref offset);
+
+            return ListDecodeIndefiniteLengthInternal(xdata, offset);
+        }
+
+        private bool ListDecodeIndefiniteLengthInternal(Stream xdata, long offset)
+        {
+            bool hasAtLeastOneChild = false;
+
+            while(!DetectEndOfContents(xdata))
+            {
+                xdata.Position -= 2;
+                if (CreateAndAddChildNode(xdata, ref offset))
+                {
+                    hasAtLeastOneChild = true;
+                }
+            }
+
+            return hasAtLeastOneChild;
+        }
+
+        private bool DetectEndOfContents(Stream xdata)
+        {
+            var tagByte = xdata.ReadByte();
+            var lengthByte = xdata.ReadByte();
+
+            return (tagByte == Asn1Tag.TAG_END_OF_CONTENTS && lengthByte == Asn1Tag.TAG_END_OF_CONTENTS);
+        }
 
 		/// <summary>
 		/// Set the node data and recalculate the entire tree parameters.
@@ -1584,11 +1613,16 @@ namespace LipingShare.LCLib.Asn1Processor
 			else
 			{
 				data = xdata;
-				if (data != null)
-					dataLength = data.Length;
-				else
-					dataLength = 0;
-				RecalculateTreePar();
+                if (data != null)
+                {
+                    dataLength = data.Length;
+                }
+                else
+                {
+                    dataLength = 0;
+                }
+
+                RecalculateTreePar();
 			}
 		}
 
@@ -1601,51 +1635,54 @@ namespace LipingShare.LCLib.Asn1Processor
 		{
 			bool retval = true;
 			ClearAll();
-			byte xtag; 
-			long curPosition = xdata.Position;
-			xtag = (byte) xdata.ReadByte();
-			xdata.Position = curPosition;
-			int maskedTag = xtag & Asn1Tag.TAG_MASK;
-			if (((xtag & Asn1TagClasses.CONSTRUCTED) != 0) 
-				|| (parseEncapsulatedData 
-				&& ((maskedTag == Asn1Tag.BIT_STRING)
-				|| (maskedTag == Asn1Tag.EXTERNAL)
-				|| (maskedTag == Asn1Tag.GENERAL_STRING)
-				|| (maskedTag == Asn1Tag.GENERALIZED_TIME)
-				|| (maskedTag == Asn1Tag.GRAPHIC_STRING)
-				|| (maskedTag == Asn1Tag.IA5_STRING)
-				|| (maskedTag == Asn1Tag.OCTET_STRING)
-				|| (maskedTag == Asn1Tag.PRINTABLE_STRING)
-				|| (maskedTag == Asn1Tag.SEQUENCE)
-				|| (maskedTag == Asn1Tag.SET)
-				|| (maskedTag == Asn1Tag.T61_STRING)
-				|| (maskedTag == Asn1Tag.UNIVERSAL_STRING)
-				|| (maskedTag == Asn1Tag.UTF8_STRING)
-				|| (maskedTag == Asn1Tag.VIDEOTEXT_STRING)
-				|| (maskedTag == Asn1Tag.VISIBLE_STRING)))
-				)
-			{
-				if (!ListDecode(xdata))
-				{
-					if (!GeneralDecode(xdata))
-					{
-						retval = false;
-					}
-				}
-			}
-			else
-			{
-				if (!GeneralDecode(xdata)) retval = false;
-			}
-			return retval;
-		}
+            byte xtag;
+
+            long curPosition = xdata.Position;
+            xtag = (byte) xdata.ReadByte();
+
+            xdata.Position = curPosition;
+            int maskedTag = xtag & Asn1Tag.TAG_MASK;
+            if (((xtag & Asn1TagClasses.CONSTRUCTED) != 0)
+                || (parseEncapsulatedData
+                    && ((maskedTag == Asn1Tag.BIT_STRING)
+                        || (maskedTag == Asn1Tag.EXTERNAL)
+                        || (maskedTag == Asn1Tag.GENERAL_STRING)
+                        || (maskedTag == Asn1Tag.GENERALIZED_TIME)
+                        || (maskedTag == Asn1Tag.GRAPHIC_STRING)
+                        || (maskedTag == Asn1Tag.IA5_STRING)
+                        || (maskedTag == Asn1Tag.OCTET_STRING)
+                        || (maskedTag == Asn1Tag.PRINTABLE_STRING)
+                        || (maskedTag == Asn1Tag.SEQUENCE)
+                        || (maskedTag == Asn1Tag.SET)
+                        || (maskedTag == Asn1Tag.T61_STRING)
+                        || (maskedTag == Asn1Tag.UNIVERSAL_STRING)
+                        || (maskedTag == Asn1Tag.UTF8_STRING)
+                        || (maskedTag == Asn1Tag.VIDEOTEXT_STRING)
+                        || (maskedTag == Asn1Tag.VISIBLE_STRING)))
+            )
+            {
+                if (!ListDecode(xdata))
+                {
+                    if (!GeneralDecode(xdata))
+                    {
+                        retval = false;
+                    }
+                }
+            }
+            else
+            {
+                if (!GeneralDecode(xdata)) retval = false;
+            }
+
+	    	return retval;
+	    }
 
 		/// <summary>
-		/// Get/Set parseEncapsulatedData. This property will be inherited by the 
+		/// Get/Set parseEncapsulatedData. This property will be inherited by the
 		/// child nodes when loading data.
 		/// </summary>
-		public bool ParseEncapsulatedData 
-		{ 
+		public bool ParseEncapsulatedData
+		{
 			get
 			{
 				return parseEncapsulatedData;

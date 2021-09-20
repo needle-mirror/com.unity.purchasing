@@ -102,7 +102,6 @@ namespace UnityEngine.Purchasing
         /// <returns> The existing instance or the one just created. </returns>
         public static StandardPurchasingModule Instance ()
         {
-            // Default to Google Play on Android.
             return Instance (AppStore.NotSpecified);
         }
 
@@ -129,8 +128,6 @@ namespace UnityEngine.Purchasing
 
                 // No Android target specified at runtime, use the build time setting.
                 if (androidStore == AppStore.NotSpecified) {
-                    // Default to Google Play if we don't have a build time store selection.
-                    androidStore = AppStore.GooglePlay;
 
                     if (null != config) {
                         var buildTimeStore = config.androidStore;
@@ -266,9 +263,9 @@ namespace UnityEngine.Purchasing
                 googleFetchPurchases,
                 googlePlayStoreFinishTransactionService,
                 googlePurchaseCallback,
+                googlePlayConfiguration,
                 googlePlayStoreExtensions,
-                util
-                );
+                util);
             util.AddPauseListener (googlePlayStore.OnPause);
             BindGoogleConfiguration(googlePlayConfiguration);
             BindGoogleExtension(googlePlayStoreExtensions);

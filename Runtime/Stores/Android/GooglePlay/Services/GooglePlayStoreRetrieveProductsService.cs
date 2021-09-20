@@ -24,17 +24,24 @@ namespace UnityEngine.Purchasing
             m_StoreCallback = storeCallback;
         }
 
-        public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
+        public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, bool wantPurchases = true)
         {
             if (m_StoreCallback != null)
             {
                 m_GooglePlayStoreService.RetrieveProducts(products, retrievedProducts =>
                 {
-                    m_GoogleFetchPurchases.FetchPurchases(purchaseProducts =>
+                    if (wantPurchases)
                     {
-                        var mergedProducts = MakePurchasesIntoProducts(retrievedProducts, purchaseProducts);
-                        m_StoreCallback.OnProductsRetrieved(mergedProducts);
-                    });
+                        m_GoogleFetchPurchases.FetchPurchases(purchaseProducts =>
+                        {
+                            var mergedProducts = MakePurchasesIntoProducts(retrievedProducts, purchaseProducts);
+                            m_StoreCallback.OnProductsRetrieved(mergedProducts);
+                        });
+                    }
+                    else
+                    {
+                        m_StoreCallback.OnProductsRetrieved(retrievedProducts);
+                    }
                 }, () =>
                 {
                     m_GooglePlayConfigurationInternal.NotifyInitializationConnectionFailed();

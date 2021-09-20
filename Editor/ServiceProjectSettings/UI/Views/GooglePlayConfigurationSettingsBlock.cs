@@ -72,7 +72,12 @@ namespace UnityEditor.Purchasing
         void SetupButtonActions()
         {
             m_ConfigurationBlock.Q<Button>(k_UpdateGooglePlayKeyBtn).clicked += UpdateGooglePlayKey;
-            m_ConfigurationBlock.Q<Button>(k_GooglePlayLink).clicked += OpenGooglePlayDevConsole;
+            var googlePlayExternalLink = m_ConfigurationBlock.Q(k_GooglePlayLink);
+            if (googlePlayExternalLink != null)
+            {
+                var clickable = new Clickable(OpenGooglePlayDevConsole);
+                googlePlayExternalLink.AddManipulator(clickable);
+            }
 
             m_ConfigurationBlock.Q<TextField>(k_GooglePlayKeyEntry).RegisterValueChangedCallback(evt => {
                 m_GooglePlayDataRef.googlePlayKey = evt.newValue;

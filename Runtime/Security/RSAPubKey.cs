@@ -32,6 +32,14 @@ namespace UnityEngine.Purchasing.Security {
 			return rsa.VerifyHash(msgHash, null, signature);
 		}
 
+        public bool Verify256(byte[] message, byte[] signature) {
+            var sha256hash = new SHA256Managed();
+            var msgHash = sha256hash.ComputeHash(message);
+
+            // The data is already hashed so we don't need to specify a hashing algorithm.
+            return rsa.VerifyHash(msgHash, CryptoConfig.MapNameToOID("SHA256"), signature);
+        }
+
 		/**
 		 * Parses an DER encoded RSA public key:
 		 * It will only try to get the mod and the exponent

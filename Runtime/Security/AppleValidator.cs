@@ -132,7 +132,8 @@ namespace UnityEngine.Purchasing.Security
                 throw new InvalidPKCS7Data ();
             }
 
-            Asn1Node set = data.GetChildNode (0);
+            Asn1Node set = GetSetNode(data);
+
             var result = new AppleReceipt ();
             var inApps = new List<AppleInAppPurchaseReceipt> ();
 
@@ -173,6 +174,22 @@ namespace UnityEngine.Purchasing.Security
 
             result.inAppPurchaseReceipts = inApps.ToArray ();
             return result;
+        }
+
+        private Asn1Node GetSetNode(Asn1Node data)
+        {
+            if (data.IsIndefiniteLength && data.ChildNodeCount == 1)
+            {
+                // Explanation: Receipts received from the iOS StoreKit Testing encodes the receipt data one layer deeper than expected.
+                // It also has nodes with "Indeterminate" or "Undefined" length, including the node in question.
+                // Failing to go one node deeper will result in an unparsed receipt.
+                var intermediateNode = data.GetChildNode(0);
+                return intermediateNode.GetChildNode(0);
+            }
+            else
+            {
+                return data.GetChildNode(0);
+            }
         }
 
         private AppleInAppPurchaseReceipt ParseInAppReceipt (Asn1Node inApp)

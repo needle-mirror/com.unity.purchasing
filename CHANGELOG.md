@@ -1,10 +1,40 @@
 # Changelog
+## [4.1.0] - 2021-09-20
+
+### Added
+- Apple - Add support for receipt validation with [StoreKit Test](https://developer.apple.com/documentation/Xcode/setting-up-storekit-testing-in-xcode). See the [Receipt Validation Obfuscator manual](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/UnityIAPValidatingReceipts.html) for a usage recommendation. See also the [sample](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/Overview.html#learn-more) "05 Local Receipt Validation" for an example.
+- GooglePlay - Add support for controlling automatic fetching of purchases at initialization, with `IGooglePlayConfiguration.SetFetchPurchasesAtInitialize(bool)`. Use to help distinguish previously seen purchases from new purchases. Then to fetch previously seen purchases use `IGooglePlayExtensions.RestorePurchases(Action<bool>)`.
+
+### Changed
+- Menu items for this package were renamed from *Unity IAP -> In-App Purchasing* and have been moved from *Window > Unity IAP* to *Services > In-App Purchasing*.
+- Choosing an Android app store target before building the Android Build Target is now required. A build error will be emitted otherwise. Set this with the Store Selector window (*Services > In-App Purchasing > Switch Store ...*) or the API (`UnityPurchasingEditor.TargetAndroidStore()`). The default Android app store is now AppStore.NotSpecified and is visible in the window as `<Select a targeted store>`. Previously the default app store was the Google Play Store for the Android Build Target. See the [Store Selector documentation](https://docs.unity3d.com/Packages/com.unity.purchasing@4.1/manual/StoreSelector.html) for more
+- Apple - Workaround rare crash seen if `nil` `NSLocaleCurrencyCode` is received when extracting localized currency code from `[SKProduct priceLocale]` when fetching products. Substitutes [ISO Unknown Currency code "XXX"](https://en.wikipedia.org/wiki/ISO_4217#X_currencies) into `ProductMetadata.isoCurrencyCode`.
+- Removed warning log `Already recorded transaction`.
+- Codeless - The default setting for enabling Codeless Auto Initialization in new projects' catalogs is now true instead of false. (As seen in the Catalog Editor as "Automatically initialize UnityPurchasing (recommended)").
+
+### Fixed
+- Fixed warning, missing await for async call in ExponentialRetryPolicy.cs
+
+### Removed
+- Removed the original and complex Unity IAP sample known as "Example", or "IAP Demo". Please use the recently added [samples](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/Overview.html#learn-more) for a granular introduction to In-App Purchasing features. 
 
 ## [4.0.3] - 2021-08-18
 ### Added
 - Added samples to the [Package Manager Details view](https://docs.unity3d.com/Manual/upm-ui-details.html):
   - Apple Sample - Restoring Transactions
   - Apple Sample - Handling Deferred Purchases
+  - Apple Sample - Detecting Fraud
+  - Apple Sample - Getting Introductory Prices
+  - Apple Sample - Present Code Redemption Sheet
+  - Apple Sample - Can Make Payments
+  - Apple Sample - Retrieving Product Receipts
+  - Apple Sample - Subscription Upgrade Downgrade
+  - Apple Sample - Promoting Products
+- Apple - Added support for fetching the current store promotion order of products on this device with `void IAppleExtensions.FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)`
+- Apple - Added support for fetching the current store promotion visibility of a product on this device with `void FetchStorePromotionVisibilitySuccess(Product product, AppleStorePromotionVisibility visibility)`
+
+## Fixed
+- Apple - Fixed issue with unknown products being processed with `NonConsumable` type.
 
 ### Fixed
 - GooglePlay - Fixed issue that led to purchases failing with a `ProductUnavailable` error when  fetching additional products multiple times in quick succession.

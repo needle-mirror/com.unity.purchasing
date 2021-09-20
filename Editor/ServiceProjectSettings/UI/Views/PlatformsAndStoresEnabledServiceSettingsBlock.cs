@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using UnityEditor.Build;
+using UnityEditor.Purchasing.UI.Presenters;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.UIElements;
@@ -10,10 +10,12 @@ namespace UnityEditor.Purchasing
     class PlatformsAndStoresEnabledServiceSettingsBlock : PlatformsAndStoresServiceSettingsBlock
     {
         IMGUIContainerPopupAdapter currentStoreTargetContainer { get; set; }
+        PlatformsStoreSettingsPresenter m_Presenter;
 
         internal PlatformsAndStoresEnabledServiceSettingsBlock()
         {
             RegisterOnTargetChange();
+            m_Presenter = new PlatformsStoreSettingsPresenter();
         }
 
         void RegisterOnTargetChange()
@@ -41,11 +43,15 @@ namespace UnityEditor.Purchasing
             {
                 return;
             }
+            UpdateCurrentStoreTarget(appStore);
+        }
 
-            var field = GetTagContainer(currentStoreSection) as IMGUIContainer;
-            if (field != null && currentStoreTargetContainer != null && currentStoreTargetContainer.container == field)
+        void UpdateCurrentStoreTarget(AppStore appStore)
+        {
+            if (GetTagContainer(currentStoreSection) is IMGUIContainer field &&
+                currentStoreTargetContainer != null && currentStoreTargetContainer.container == field)
             {
-                currentStoreTargetContainer.index = BuildTargetGroup.Android.ToAppStores().IndexOf(appStore);
+                currentStoreTargetContainer.index = m_Presenter.GetIndexOfAndroidStore(appStore);
             }
         }
 
@@ -56,6 +62,11 @@ namespace UnityEditor.Purchasing
             PopulateOtherStores(otherStoresSection);
         }
 
+        protected override void PopulateSupportedStoresSection(VisualElement baseElement)
+        {
+            PopulateStores(baseElement, m_Presenter.GetSupportedStores());
+        }
+
         static void PopulateCurrentBuildTarget(VisualElement baseElement)
         {
             PopulatePlatform(baseElement, GetCurrentBuildTarget());
@@ -63,19 +74,16 @@ namespace UnityEditor.Purchasing
 
         void PopulateCurrentStoreTarget(VisualElement baseElement)
         {
-            var field = GetTagContainer(baseElement) as IMGUIContainer;
-            if (field == null)
+            if (!(GetTagContainer(baseElement) is IMGUIContainer field))
             {
                 return;
             }
 
-            var stores = EditorUserBuildSettings.activeBuildTargetGroup.ToAppStoreDisplayNames();
-
-            currentStoreTargetContainer = new IMGUIContainerPopupAdapter()
+            currentStoreTargetContainer = new IMGUIContainerPopupAdapter
             {
                 popupValueChangedAction = OnCurrentStoreTargetChanged,
-                options = stores.ToArray(),
-                index = stores.IndexOf(GetCurrentStoreTarget()),
+                options = m_Presenter.GetCurrentStoreTargetContainerOptions(),
+                index = m_Presenter.GetCurrentStoreTargetContainerIndex(),
                 container = field
             };
         }
@@ -84,6 +92,10 @@ namespace UnityEditor.Purchasing
         {
             var store = e.ToAppStoreFromDisplayName();
 
+            if (store == AppStore.NotSpecified)
+            {
+                OnCurrentStoreTargetChanged(store);
+            }
             if (store.IsAndroid())
             {
                 OnCurrentStoreTargetChanged(store);
@@ -100,50 +112,14 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        static void PopulateOtherStores(VisualElement baseElement)
+        void PopulateOtherStores(VisualElement baseElement)
         {
-            PopulateStores(baseElement, GetOtherStores());
-        }
-
-        protected override IEnumerable<string> GetStoresForState()
-        {
-            return GetSupportedStores();
-        }
-
-        static IEnumerable<string> GetSupportedStores()
-        {
-            return GetSupportedStoresIncludingTarget();
-        }
-
-        static IEnumerable<string> GetSupportedStoresIncludingTarget()
-        {
-            return new List<string>(EditorUserBuildSettings.activeBuildTargetGroup.ToAppStoreDisplayNames());
-        }
-
-        static IEnumerable<string> GetOtherStores()
-        {
-            var supportedStores = GetSupportedStoresIncludingTarget();
-            var otherStores = GetAllStores().ToList();
-            otherStores.RemoveAll(store => supportedStores.Contains(store));
-
-            return otherStores;
+            PopulateStores(baseElement, m_Presenter.GetOtherStores());
         }
 
         static string GetCurrentBuildTarget()
         {
             return EditorUserBuildSettings.activeBuildTargetGroup.ToPlatformDisplayName();
-        }
-
-        static string GetCurrentStoreTarget()
-        {
-            var currentStoreTargets = EditorUserBuildSettings.activeBuildTargetGroup.ToAppStoreDisplayNames();
-
-            if (currentStoreTargets.Count == 1)
-            {
-                return currentStoreTargets.First();
-            }
-
-            return UnityPurchasingEditor.ConfiguredAppStore().ToDisplayName();
         }
 
         static void PopulatePlatform(VisualElement baseElement, string platform)

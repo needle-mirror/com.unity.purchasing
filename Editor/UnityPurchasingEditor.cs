@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEditor.Callbacks;
@@ -28,16 +29,14 @@ namespace UnityEditor.Purchasing {
         private static readonly string PackManUdpBinPath = $"Packages/{UdpPackageName}/Android";
 
         private static StoreConfiguration config;
-        private static readonly AppStore defaultAppStore = AppStore.GooglePlay;
+        private static readonly AppStore defaultAppStore = AppStore.NotSpecified;
         internal delegate void AndroidTargetChange(AppStore store);
         internal static AndroidTargetChange OnAndroidTargetChange;
 
         private static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
-        #if ENABLE_EDITOR_GAME_SERVICES
         internal const string MenuItemRoot = "Services/" + PurchasingDisplayName;
         internal const string PurchasingDisplayName = "In-App Purchasing";
-        #else
-        #endif
+
         // Check if UDP upm package is installed.
         internal static bool IsUdpUmpPackageInstalled()
         {
@@ -158,7 +157,7 @@ namespace UnityEditor.Purchasing {
 
         static void CreateDefaultBillingModeFile()
         {
-            TargetAndroidStore(defaultAppStore);
+            SaveFileContent(null);
         }
 
 #if !ENABLE_EDITOR_GAME_SERVICES
@@ -171,6 +170,8 @@ namespace UnityEditor.Purchasing {
             window.minSize = new Vector2(340, 180);
             window.Show();
         }
+#else
+        const string SwitchStoreMenuItem = IapMenuConsts.MenuItemRoot + "/Configure...";
 #endif
 
         private static AppStore GetAppStoreSafe()
@@ -199,6 +200,12 @@ namespace UnityEditor.Purchasing {
 
         internal static AppStore TryTargetAndroidStore(AppStore target)
         {
+            if (target == AppStore.NotSpecified)
+            {
+                SaveFileContent(null);
+                throw new BuildFailedException("No store selected, please select a store via Store Selector, use menu (e.g. "
+                    + SwitchStoreMenuItem + ")");
+            }
             if (!target.IsAndroid())
             {
                 throw new ArgumentException(string.Format("AppStore parameter ({0}) must be an Android app store", target));
@@ -317,9 +324,14 @@ namespace UnityEditor.Purchasing {
         private static void SaveConfig(AppStore enabled)
         {
             var configToSave = new StoreConfiguration (enabled);
-            File.WriteAllText(ModePath, StoreConfiguration.Serialize(configToSave));
-            AssetDatabase.ImportAsset(ModePath);
+            SaveFileContent(StoreConfiguration.Serialize(configToSave));
             config = configToSave;
+        }
+
+        static void SaveFileContent(string configToSave)
+        {
+            File.WriteAllText(ModePath, configToSave);
+            AssetDatabase.ImportAsset(ModePath);
         }
 
         internal static AppStore ConfiguredAppStore()
@@ -332,25 +344,46 @@ namespace UnityEditor.Purchasing {
             return config.androidStore;
         }
 
-        // Run me to configure the project's set of Android stores before build
+        //
+        /// <summary>
+        /// Run me to configure the project's set of Android stores before build
+        /// </summary>
+        /// <returns>null string if no problems. non-null error string if fatal problem detected in file.</returns>
+        /// <exception cref="BuildFailedException"></exception>
         [PostProcessSceneAttribute(0)]
-        private static void OnPostProcessScene()
+        internal static string OnPostProcessScene()
         {
             if (File.Exists(ModePath))
             {
-                try {
-                    config = StoreConfiguration.Deserialize(File.ReadAllText(ModePath));
+                var selectedModeText = File.ReadAllText(ModePath);
+
+                if (string.IsNullOrEmpty(selectedModeText))
+                {
+                    return $"No store selected, please select a store via Store Selector, use menu (e.g. {SwitchStoreMenuItem})";
+                }
+
+                try
+                {
+                    config = StoreConfiguration.Deserialize(selectedModeText);
                     ConfigureProject(config.androidStore);
-                } catch (Exception e) {
-                    #if ENABLE_EDITOR_GAME_SERVICES
-                    Debug.LogError("Unity IAP unable to strip undesired Android stores from build, check file: " + ModePath);
-                    #else
-                    Debug.LogError("Unity IAP unable to strip undesired Android stores from build, use menu (e.g. "
-                        + SwitchStoreMenuItem + ") and check file: " + ModePath);
-                    #endif
+                }
+                catch (Exception e)
+                {
+                    // ReSharper disable once JoinDeclarationAndInitializer
+                    string result;
+#if ENABLE_EDITOR_GAME_SERVICES
+                    result = $"Unity IAP unable to strip undesired Android stores from build, check file: {ModePath}";
+#else
+                    result = $"Unity IAP unable to strip undesired Android stores from build, use menu (e.g. {SwitchStoreMenuItem}) and check file: {ModePath}";
+#endif
+                    Debug.LogError(result);
                     Debug.LogError(e);
+
+                    return result;
                 }
             }
+
+            return null;
         }
 
         [MenuItem(IapMenuConsts.MenuItemRoot + "/Configure...", false, 0)]
