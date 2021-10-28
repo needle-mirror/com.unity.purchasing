@@ -128,6 +128,8 @@ namespace UnityEngine.Purchasing
 
                 // No Android target specified at runtime, use the build time setting.
                 if (androidStore == AppStore.NotSpecified) {
+                    // Default to Google Play if we don't have a build time store selection.
+                    androidStore = AppStore.GooglePlay;
 
                     if (null != config) {
                         var buildTimeStore = config.androidStore;

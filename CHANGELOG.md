@@ -1,4 +1,9 @@
 # Changelog
+## [4.1.1] - 2021-10-28
+
+### Changed
+- A default store will be selected for each platform. For Android the default store will be Google. All other platforms already had default stores.
+
 ## [4.1.0] - 2021-09-20
 
 ### Added

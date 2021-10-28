@@ -8,16 +8,26 @@ namespace UnityEditor.Purchasing
 {
     abstract class PlatformsAndStoresServiceSettingsBlock : IPurchasingSettingsUIBlock
     {
-        const string k_TagClass = "platform-tag";
-        const string k_TagContainerClass = "tag-container";
+        static readonly List<string> k_StoreNames = new List<string>()
+        {
+            "Amazon Appstore",
+            "Google Play",
+            "Apple App Store",
+            "Mac App Store",
+            "Unity Distribution Portal",
+            "Microsoft Store"
+        };
 
-        const string k_CurrentBuildTargetSectionName = "CurrentBuildTargetSection";
-        const string k_CurrentStoreSectionName = "CurrentStoreSection";
-        const string k_SupportedStoresSectionName = "SupportedStoresSection";
-        const string k_OtherStoresSectionName = "OtherStoresSection";
-        const string k_Label = "Label";
+        static readonly string k_TagClass = "platform-tag";
+        static readonly string k_TagContainerClass = "tag-container";
 
-        protected VisualElement currentStoreSection { get; private set; }
+        static readonly string k_CurrentBuildTargetSectionName = "CurrentBuildTargetSection";
+        static readonly string k_CurrentStoreSectionName = "CurrentStoreSection";
+        static readonly string k_SupportedStoresSectionName = "SupportedStoresSection";
+        static readonly string k_OtherStoresSectionName = "OtherStoresSection";
+        static readonly string k_Label = "Label";
+
+        protected VisualElement currentStoreSection { get; set; }
 
         public static PlatformsAndStoresServiceSettingsBlock CreateStateSpecificBlock(bool enabled)
         {
@@ -64,7 +74,11 @@ namespace UnityEditor.Purchasing
         }
 
         protected abstract void PopulateStateSensitiveSections(VisualElement rootElement, VisualElement currentBuildTargetSection, VisualElement otherStoresSection);
-        protected abstract void PopulateSupportedStoresSection(VisualElement baseElement);
+
+        void PopulateSupportedStoresSection(VisualElement baseElement)
+        {
+            PopulateStores(baseElement, GetStoresForState());
+        }
 
         protected static void PopulateStores(VisualElement baseElement, IEnumerable<string> stores)
         {
@@ -112,6 +126,13 @@ namespace UnityEditor.Purchasing
             }
 
             label.text = assetDisplayName;
+        }
+
+        protected abstract IEnumerable<string> GetStoresForState();
+
+        protected static IEnumerable<string> GetAllStores()
+        {
+            return k_StoreNames;
         }
     }
 }

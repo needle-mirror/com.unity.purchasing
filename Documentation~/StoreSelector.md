@@ -1,7 +1,5 @@
 # Store Selector
 
-Select an app store to be targeted when building the Android Build Target. By default no app store target will be selected if multiple are available.
-
 ## Using Unity Editor
 
 The In-App Purchasing package supplies a tool to select the desired store when building. To access this tool open the Unity Editor and in the top menu click on `Services / Unity IAP / Switch Store...`.

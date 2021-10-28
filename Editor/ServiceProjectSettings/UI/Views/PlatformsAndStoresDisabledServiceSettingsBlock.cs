@@ -1,13 +1,11 @@
 using System;
-using UnityEditor.Purchasing.UI.Presenters;
+using System.Collections.Generic;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Purchasing
 {
     class PlatformsAndStoresDisabledServiceSettingsBlock : PlatformsAndStoresServiceSettingsBlock
     {
-        PlatformsStoreSettingsPresenter m_Presenter = new PlatformsStoreSettingsPresenter();
-
         protected override void PopulateStateSensitiveSections(VisualElement rootElement, VisualElement currentBuildTargetSection, VisualElement otherStoresSection)
         {
             currentBuildTargetSection.parent.Remove(currentBuildTargetSection);
@@ -15,9 +13,9 @@ namespace UnityEditor.Purchasing
             otherStoresSection.parent.Remove(otherStoresSection);
         }
 
-        protected override void PopulateSupportedStoresSection(VisualElement baseElement)
+        protected override IEnumerable<string> GetStoresForState()
         {
-            PopulateStores(baseElement, m_Presenter.GetAllStores());
+            return GetAllStores();
         }
     }
 }

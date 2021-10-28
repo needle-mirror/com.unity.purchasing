@@ -16,11 +16,7 @@ namespace UnityEditor.Purchasing
                     WinRTPatcher.PatchWinRTBuild();
                     break;
                 case BuildTarget.Android:
-                    var result = UnityPurchasingEditor.OnPostProcessScene();
-                    if (result != null)
-                    {
-                        throw new BuildFailedException(result);
-                    }
+                    UnityPurchasingEditor.OnPostProcessScene();
                     break;
             }
         }
