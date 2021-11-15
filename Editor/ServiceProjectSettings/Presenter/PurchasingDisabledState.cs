@@ -4,13 +4,13 @@ namespace UnityEditor.Purchasing
     {
         internal const string k_StateNameDisabled = "DisabledState";
 
-        public PurchasingDisabledState(SimpleStateMachine<PurchasingServiceToggleEvent> stateMachine)
+        public PurchasingDisabledState(SimpleStateMachine<bool> stateMachine)
             : base(k_StateNameDisabled, stateMachine)
         {
-            ModifyActionForEvent(PurchasingServiceToggleEvent.Enabled, HandleEnabling);
+            ModifyActionForEvent(true, HandleEnabling);
         }
 
-        SimpleStateMachine<PurchasingServiceToggleEvent>.State HandleEnabling(PurchasingServiceToggleEvent raisedEvent)
+        SimpleStateMachine<bool>.State HandleEnabling(bool raisedEvent)
         {
             return stateMachine.GetStateByName(PurchasingEnabledState.k_StateNameEnabled);
         }

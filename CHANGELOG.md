@@ -1,4 +1,9 @@
 # Changelog
+## [4.1.2] - 2021-11-15
+
+### Fixed
+- Various internal obsolete warnings have been removed, allowing the project to be compiled with errors as warnings enabled.
+
 ## [4.1.1] - 2021-10-28
 
 ### Changed

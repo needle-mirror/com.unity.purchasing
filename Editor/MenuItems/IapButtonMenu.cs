@@ -49,9 +49,18 @@ namespace UnityEditor.Purchasing
 
         static GameObject CreateButtonObject()
         {
-            EditorApplication.ExecuteMenuItem("GameObject/UI/Button");
+            ExecuteButtonMenuItem();
 
             return Selection.activeGameObject;
+        }
+
+        static void ExecuteButtonMenuItem()
+        {
+#if UNITY_2022_1_OR_NEWER || (UNITY_2021_2_OR_NEWER && !(UNITY_2021_2_2 || UNITY_2021_2_1))
+            EditorApplication.ExecuteMenuItem("GameObject/UI/Legacy/Button");
+#else
+            EditorApplication.ExecuteMenuItem("GameObject/UI/Button");
+#endif
         }
     }
 }

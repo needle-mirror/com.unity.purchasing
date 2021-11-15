@@ -2,7 +2,7 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Purchasing
 {
-    class GoogleObfuscatorSection : BaseObfuscatorSection
+    class GoogleObfuscatorSection : AbstractObfuscatorSection
     {
         GoogleConfigurationData m_GoogleConfigDataRef;
 

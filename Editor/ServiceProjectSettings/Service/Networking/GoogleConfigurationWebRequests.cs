@@ -52,7 +52,7 @@ namespace UnityEditor.Purchasing
 
         void GetGooglePlayKey(string projectAuthSignature)
         {
-            if (m_GetGoogleKeyRequest != null)
+            if (m_GetGoogleKeyRequest == null)
             {
                 BuildGetGooglePlayKeyWebRequest(projectAuthSignature);
 

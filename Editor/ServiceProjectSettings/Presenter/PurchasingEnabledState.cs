@@ -4,21 +4,17 @@ namespace UnityEditor.Purchasing
     {
         internal const string k_StateNameEnabled = "EnabledState";
 
-        GoogleConfigurationData m_GoogleConfigData;
-
-        public PurchasingEnabledState(SimpleStateMachine<PurchasingServiceToggleEvent> stateMachine)
+        public PurchasingEnabledState(SimpleStateMachine<bool> stateMachine)
             : base(k_StateNameEnabled, stateMachine)
         {
-            m_GoogleConfigData = new GoogleConfigurationData();
-
-            m_UIBlocks.Add(new GooglePlayConfigurationSettingsBlock(m_GoogleConfigData));
+            m_UIBlocks.Add(new GooglePlayConfigurationSettingsBlock());
             m_UIBlocks.Add(new AppleConfigurationSettingsBlock());
             m_UIBlocks.Add(new IapCatalogServiceSettingsBlock());
 
-            ModifyActionForEvent(PurchasingServiceToggleEvent.Disabled, HandleDisabling);
+            ModifyActionForEvent(false, HandleDisabling);
         }
 
-        SimpleStateMachine<PurchasingServiceToggleEvent>.State HandleDisabling(PurchasingServiceToggleEvent raisedEvent)
+        SimpleStateMachine<bool>.State HandleDisabling(bool raisedEvent)
         {
             return stateMachine.GetStateByName(PurchasingDisabledState.k_StateNameDisabled);
         }

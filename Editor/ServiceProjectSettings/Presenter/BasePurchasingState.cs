@@ -4,11 +4,11 @@ using UnityEngine.UIElements;
 
 namespace UnityEditor.Purchasing
 {
-    internal abstract class BasePurchasingState : SimpleStateMachine<PurchasingServiceToggleEvent>.State
+    internal abstract class BasePurchasingState : SimpleStateMachine<bool>.State
     {
         protected List<IPurchasingSettingsUIBlock> m_UIBlocks;
 
-        protected BasePurchasingState(string stateName, SimpleStateMachine<PurchasingServiceToggleEvent> stateMachine)
+        protected BasePurchasingState(string stateName, SimpleStateMachine<bool> stateMachine)
             : base(stateName, stateMachine)
         {
             m_UIBlocks = new List<IPurchasingSettingsUIBlock>();

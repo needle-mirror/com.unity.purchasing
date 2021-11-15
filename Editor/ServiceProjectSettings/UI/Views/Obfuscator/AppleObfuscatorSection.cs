@@ -1,6 +1,6 @@
 namespace UnityEditor.Purchasing
 {
-    class AppleObfuscatorSection : BaseObfuscatorSection
+    class AppleObfuscatorSection : AbstractObfuscatorSection
     {
         protected override void ObfuscateKeys()
         {

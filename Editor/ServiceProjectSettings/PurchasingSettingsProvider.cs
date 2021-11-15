@@ -16,7 +16,7 @@ namespace UnityEditor.Purchasing
         PurchasingGameService m_Service;
         bool m_CallbacksInitialized;
 
-        SimpleStateMachine<PurchasingServiceToggleEvent> m_StateMachine;
+        SimpleStateMachine<bool> m_StateMachine;
         PurchasingDisabledState m_DisabledState;
         PurchasingEnabledState m_EnabledState;
 
@@ -42,10 +42,10 @@ namespace UnityEditor.Purchasing
 
         void ConfigureStateMachine()
         {
-            m_StateMachine = new SimpleStateMachine<PurchasingServiceToggleEvent>();
+            m_StateMachine = new SimpleStateMachine<bool>();
 
-            m_StateMachine.AddEvent(PurchasingServiceToggleEvent.Disabled);
-            m_StateMachine.AddEvent(PurchasingServiceToggleEvent.Enabled);
+            m_StateMachine.AddEvent(false);
+            m_StateMachine.AddEvent(true);
 
             m_DisabledState = new PurchasingDisabledState(m_StateMachine);
             m_EnabledState = new PurchasingEnabledState(m_StateMachine);
@@ -150,14 +150,14 @@ namespace UnityEditor.Purchasing
 
         void EnableOperationCompleted()
         {
-            m_StateMachine.ProcessEvent(PurchasingServiceToggleEvent.Enabled);
+            m_StateMachine.ProcessEvent(true);
 
             RefreshDetailUI();
         }
 
         void DisableOperationCompleted()
         {
-            m_StateMachine.ProcessEvent(PurchasingServiceToggleEvent.Disabled);
+            m_StateMachine.ProcessEvent(false);
 
             RefreshDetailUI();
         }
