@@ -28,9 +28,9 @@
 using System;
 using System.IO;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace LipingShare.LCLib.Asn1Processor
 {
@@ -64,6 +64,10 @@ namespace LipingShare.LCLib.Asn1Processor
 		/// Minium line length.
 		/// </summary>
 		public const int minLineLen = 60;
+
+        const int k_EndOfStream = -1;
+        const int k_InvalidIndeterminateContentLength = -1;
+        const int k_IndefiniteLengthFooterSize = 2;
 
 		private Asn1Node(Asn1Node parentNode, long dataOffset)
 		{
@@ -449,9 +453,9 @@ namespace LipingShare.LCLib.Asn1Processor
 			if (retval == null)
 			{
 				if (childNodeList.Count > 0)
-				{
-					retval = (Asn1Node) childNodeList[childNodeList.Count-1];
-				}
+                {
+                    retval = GetLastChild();
+                }
 				else
 				{
 					retval = this;
@@ -461,7 +465,12 @@ namespace LipingShare.LCLib.Asn1Processor
 			return retval;
 		}
 
-		/// <summary>
+        Asn1Node GetLastChild()
+        {
+            return (Asn1Node) childNodeList[childNodeList.Count - 1];
+        }
+
+        /// <summary>
 		/// Remove the child from children node list.
 		/// </summary>
 		/// <param name="node">The node needs to be removed.</param>
@@ -1289,7 +1298,7 @@ namespace LipingShare.LCLib.Asn1Processor
             {
                 if (isIndefiniteLength)
                 {
-                    return GeneralDecodeIndefiniteLength(xdata);
+                    return GeneralDecodeIndefiniteLength(xdata, nodeMaxLen - k_IndefiniteLengthFooterSize);
                 }
                 else
                 {
@@ -1370,62 +1379,81 @@ namespace LipingShare.LCLib.Asn1Processor
             xdata.Read(data, 0, (int)(length) );
         }
 
-        private bool GeneralDecodeIndefiniteLength(Stream xdata)
+        private bool GeneralDecodeIndefiniteLength(Stream xdata, long nodeMaxLen)
         {
             if (tag == Asn1Tag.BIT_STRING)
             {
                 unusedBits = (byte) xdata.ReadByte();
-                ReadStreamDataIndefiniteLength(xdata);
+                nodeMaxLen--;
+            }
+
+            return ReadStreamDataIndefiniteLength(xdata, nodeMaxLen);
+        }
+
+        bool ReadStreamDataIndefiniteLength(Stream xdata, long nodeMaxLen)
+        {
+            var streamPosition = xdata.Position;
+
+            long contentLength = MeasureContentLength(xdata);
+
+            if (contentLength != k_InvalidIndeterminateContentLength && contentLength <= nodeMaxLen)
+            {
+                ReadMeasuredLengthDataFromStart(xdata, streamPosition, contentLength);
+                return true;
             }
             else
             {
-                ReadStreamDataIndefiniteLength(xdata);
+                return false;
             }
-
-            return true;
         }
 
-        private void ReadStreamDataIndefiniteLength(Stream xdata)
+        long MeasureContentLength(Stream xdata)
         {
-            var dataList = new List<byte>();
-            bool done = false;
-            int endOfContentsCheckCount = 0;
+            long contentLength = 0;
+            bool firstEocByteFound = false;
+            bool foundEoc = false;
 
-            while (!done)
+            while (!foundEoc)
             {
-                var readResult = xdata.ReadByte();
-                byte readByte = (byte) readResult;
-                if (readResult == -1)
-                {
-                    done = true;
-                }
-                else
-                {
-                    if (readByte == (byte) Asn1Tag.TAG_END_OF_CONTENTS)
-                    {
-                        endOfContentsCheckCount++;
+                var currentByte = xdata.ReadByte();
 
-                        if (endOfContentsCheckCount >= 2)
-                        {
-                            done = true;
-                        }
+                if (currentByte == k_EndOfStream)
+                {
+                    foundEoc = true;
+                    contentLength = k_InvalidIndeterminateContentLength;
+                }
+                else if (currentByte == Asn1Tag.TAG_END_OF_CONTENTS)
+                {
+                    if (firstEocByteFound)
+                    {
+                        foundEoc = true;
                     }
                     else
                     {
-                        endOfContentsCheckCount = 0;
+                        firstEocByteFound = true;
+                    }
+                }
+                else
+                {
+                    if (firstEocByteFound)
+                    {
+                        firstEocByteFound = false;
+                        contentLength++;
                     }
 
-                    dataList.Add(readByte);
+                    contentLength++;
                 }
             }
 
-            if (endOfContentsCheckCount >= 2)
-            {
-                dataList.RemoveRange(dataList.Count -2, 2);
-            }
+            return contentLength;
+        }
 
-            data = new byte[dataList.Count];
-            data = dataList.ToArray();
+        void ReadMeasuredLengthDataFromStart(Stream xdata, long startPosition, long length)
+        {
+            xdata.Seek(startPosition, SeekOrigin.Begin);
+
+            data = new byte[length];
+            xdata.Read(data, 0, (int)(length));
         }
 
         /// <summary>
@@ -1440,14 +1468,15 @@ namespace LipingShare.LCLib.Asn1Processor
 
 			try
 			{
-				long childNodeMaxLen = xdata.Length - xdata.Position;
 				tag = (byte) xdata.ReadByte();
 				long start = xdata.Position;
 				dataLength = Asn1Util.DerLengthDecode(xdata, ref isIndefiniteLength);
 
+                long childNodeMaxLen = xdata.Length - xdata.Position;
+
                 if (isIndefiniteLength)
                 {
-                    retval = ListDecodeIndefiniteLength(xdata, start);
+                    retval = ListDecodeIndefiniteLength(xdata, start, childNodeMaxLen - k_IndefiniteLengthFooterSize);
                 }
                 else
                 {
@@ -1501,7 +1530,7 @@ namespace LipingShare.LCLib.Asn1Processor
             return dataOffset + TagLength + lengthFieldBytes;
         }
 
-        private void HandleBitStringTag(Stream xdata, ref long offset)
+        bool HandleBitStringTag(Stream xdata, ref long offset)
         {
             if (tag == Asn1Tag.BIT_STRING)
             {
@@ -1510,7 +1539,11 @@ namespace LipingShare.LCLib.Asn1Processor
                 unusedBits = (byte) xdata.ReadByte();
                 dataLength--;
                 offset++;
+
+                return true;
             }
+
+            return false;
         }
 
         private bool ListDecodeKnownLengthInternal(Stream xdata, long offset)
@@ -1556,6 +1589,7 @@ namespace LipingShare.LCLib.Asn1Processor
             var node = new Asn1Node(this, offset);
             node.parseEncapsulatedData = this.parseEncapsulatedData;
             long start = secData.Position;
+
             if (!node.InternalLoadData(secData))
             {
                 return false;
@@ -1567,37 +1601,100 @@ namespace LipingShare.LCLib.Asn1Processor
             return true;
         }
 
-        private bool ListDecodeIndefiniteLength(Stream xdata, long start)
+        private bool ListDecodeIndefiniteLength(Stream xdata, long start, long childNodeMaxLen)
         {
             long offset = CalculateListEncodeFieldBytesAndOffset(xdata, start);
 
-            HandleBitStringTag(xdata, ref offset);
-
-            return ListDecodeIndefiniteLengthInternal(xdata, offset);
-        }
-
-        private bool ListDecodeIndefiniteLengthInternal(Stream xdata, long offset)
-        {
-            bool hasAtLeastOneChild = false;
-
-            while(!DetectEndOfContents(xdata))
+            if (HandleBitStringTag(xdata, ref offset))
             {
-                xdata.Position -= 2;
-                if (CreateAndAddChildNode(xdata, ref offset))
-                {
-                    hasAtLeastOneChild = true;
-                }
+                childNodeMaxLen--;
             }
 
-            return hasAtLeastOneChild;
+            return ListDecodeIndefiniteLengthInternal(xdata, offset, childNodeMaxLen);
         }
 
-        private bool DetectEndOfContents(Stream xdata)
+        bool ListDecodeIndefiniteLengthInternal(Stream xdata, long offset, long childNodeMaxLen)
+        {
+            bool doneReading = false;
+
+            while(!doneReading)
+            {
+                var oldOffset = offset;
+                doneReading = ReadNextChildNodeOrEndFooterOfIndefiniteListClearIfInvalid(xdata, ref offset, childNodeMaxLen);
+                childNodeMaxLen -= (offset - oldOffset);
+            }
+
+            return ChildNodeCount > 0;
+        }
+
+        bool ReadNextChildNodeOrEndFooterOfIndefiniteListClearIfInvalid(Stream xdata, ref long offset, long childNodeMaxLen)
+        {
+            bool doneReading;
+            var byteChecks = DetectEndOfIndefiniteListContents(xdata);
+
+            if (byteChecks == Asn1EndOfIndefiniteLengthNodeType.NotEnd)
+            {
+                doneReading = !ReadNextChildNodeOfIndefiniteListClearIfInvalid(xdata, ref offset, childNodeMaxLen);
+            }
+            else
+            {
+                if (byteChecks == Asn1EndOfIndefiniteLengthNodeType.EndOfStream && ChildNodeCount > 0)
+                {
+                    //DEVELOPERS' NOTE:
+                    //End of Stream hit parsing an Indeterminate Length List Node.
+                    //This Indeterminate Length List Node is a false flag that just happens to have initial bytes matching the pattern of such a node.
+
+                    ClearAll();
+                }
+
+                doneReading = true;
+            }
+
+            return doneReading;
+        }
+
+        Asn1EndOfIndefiniteLengthNodeType DetectEndOfIndefiniteListContents(Stream xdata)
         {
             var tagByte = xdata.ReadByte();
-            var lengthByte = xdata.ReadByte();
+            if (tagByte != k_EndOfStream)
+            {
+                var lengthByte = xdata.ReadByte();
 
-            return (tagByte == Asn1Tag.TAG_END_OF_CONTENTS && lengthByte == Asn1Tag.TAG_END_OF_CONTENTS);
+                if (lengthByte != k_EndOfStream)
+                {
+                    if (tagByte == Asn1Tag.TAG_END_OF_CONTENTS && lengthByte == Asn1Tag.TAG_END_OF_CONTENTS)
+                    {
+                        return Asn1EndOfIndefiniteLengthNodeType.EndOfNodeFooter;
+                    }
+                    else
+                    {
+                        return Asn1EndOfIndefiniteLengthNodeType.NotEnd;
+                    }
+                }
+            }
+            return Asn1EndOfIndefiniteLengthNodeType.EndOfStream;
+        }
+
+        bool ReadNextChildNodeOfIndefiniteListClearIfInvalid(Stream xdata, ref long offset, long childNodeMaxLen)
+        {
+            xdata.Position -= k_IndefiniteLengthFooterSize;
+
+            bool validChildNode = false;
+            if (CreateAndAddChildNode(xdata, ref offset))
+            {
+                validChildNode = GetLastChild().DataLength < childNodeMaxLen;
+            }
+
+            if (ChildNodeCount > 0 && !validChildNode)
+            {
+                //DEVELOPERS' NOTE:
+                //Invalid sequential child Asn1Node found in an Indeterminate Length List Node.
+                //This Indeterminate Length List Node is a false flag that just happens to have initial bytes matching the pattern of such a node.
+
+                ClearAll();
+            }
+
+            return validChildNode;
         }
 
 		/// <summary>

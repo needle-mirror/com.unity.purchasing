@@ -5,8 +5,15 @@ namespace UnityEditor.Purchasing
     [InitializeOnLoad]
     internal static class PurchasingServiceAnalyticsSender
     {
+        static IAnalyticsPackageKeyHolder m_Holder;
+
         static PurchasingServiceAnalyticsSender()
         {
+#if SERVICES_SDK_CORE_ENABLED
+            m_Holder = new GameServicesAnalyticsPackageKeyHolder();
+#else
+            m_Holder = new NonGameServicesAnalyticsPackageKeyHolder();
+#endif
             RegisterEvents();
         }
 
@@ -22,8 +29,9 @@ namespace UnityEditor.Purchasing
 
         internal static void SendEvent(IEditorAnalyticsEvent eventToSend)
         {
-            SendEventInternal(eventToSend.GetSignature(), eventToSend.CreateEventParams(GetPlatform()));
+            SendEventInternal(eventToSend.GetSignature(), eventToSend.CreateEventParams(GetPlatform(), m_Holder.GetPackageKey()));
         }
+
 
         static string GetPlatform()
         {

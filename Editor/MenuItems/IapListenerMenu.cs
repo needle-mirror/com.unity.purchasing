@@ -29,6 +29,7 @@ namespace UnityEditor.Purchasing
             CreateUnityIAPListenerInternal();
 
             GenericEditorMenuItemClickEventSenderHelpers.SendIapMenuAddIapListenerEvent();
+            GameServicesEventSenderHelpers.SendTopMenuCreateIapListenerEvent();
         }
 
         static void CreateUnityIAPListenerInternal()

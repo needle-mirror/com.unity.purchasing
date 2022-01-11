@@ -27,7 +27,7 @@ namespace UnityEditor.Purchasing
             public string package;
         }
 
-        public object CreateEventParams(string packageKey)
+        public object CreateEventParams(string platformName, string packageKey)
         {
             return new GenericEditorGameServiceEventParams
             {

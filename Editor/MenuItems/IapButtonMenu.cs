@@ -28,6 +28,7 @@ namespace UnityEditor.Purchasing
             CreateUnityIAPButtonInternal();
 
             GenericEditorMenuItemClickEventSenderHelpers.SendIapMenuAddIapButtonEvent();
+            GameServicesEventSenderHelpers.SendTopMenuCreateIapButtonEvent();
         }
 
         static void CreateUnityIAPButtonInternal()

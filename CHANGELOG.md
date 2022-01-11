@@ -1,4 +1,11 @@
 # Changelog
+
+## [4.1.3] - 2022-01-11
+
+### Fixed
+- Removed deprecated UnityWebRequest calls, updating them to use safer ones. This avoids compiler warnings that may occur.
+- Fixed edge case where Apple StoreKit receipt parsing would fail, preventing validation.
+
 ## [4.1.2] - 2021-11-15
 
 ### Fixed

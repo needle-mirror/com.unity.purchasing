@@ -3,6 +3,6 @@ namespace UnityEditor.Purchasing
     internal interface IEditorAnalyticsEvent
     {
         EditorAnalyticsDataSignature GetSignature();
-        object CreateEventParams(string platformName);
+        object CreateEventParams(string platformName, string packageKey);
     }
 }

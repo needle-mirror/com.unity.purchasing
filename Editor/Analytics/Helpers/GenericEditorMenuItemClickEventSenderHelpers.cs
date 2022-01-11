@@ -22,7 +22,7 @@ namespace UnityEditor.Purchasing
             BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventSourceMenuItems.k_SourceIapMenu, EventActions.k_ActionAddIapListener);
         }
 
-        internal static void SendTopMenuOpenCatalogEvent()
+        internal static void SendIapMenuOpenCatalogEvent()
         {
             BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventSourceMenuItems.k_SourceIapMenu, EventActions.k_ActionOpenCatalog);
         }

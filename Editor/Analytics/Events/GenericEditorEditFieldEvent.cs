@@ -30,7 +30,7 @@ namespace UnityEditor.Purchasing
             public string platform;
         }
 
-        public object CreateEventParams(string platformName)
+        public object CreateEventParams(string platformName, string packageKey)
         {
             return new GenericEditorEditFieldParams
             {

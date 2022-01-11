@@ -168,6 +168,8 @@ namespace UnityEditor.Purchasing {
             window.titleContent.text = IapMenuConsts.SwitchStoreTitleText;
             window.minSize = new Vector2(340, 180);
             window.Show();
+
+            GameServicesEventSenderHelpers.SendTopMenuSwitchStoreEvent();
         }
 #else
         const string SwitchStoreMenuItem = IapMenuConsts.MenuItemRoot + "/Configure...";
@@ -364,6 +366,7 @@ namespace UnityEditor.Purchasing {
 #else
             EditorApplication.ExecuteMenuItem("Window/General/Services");
 #endif
+            GameServicesEventSenderHelpers.SendTopMenuConfigure();
         }
     }
 }

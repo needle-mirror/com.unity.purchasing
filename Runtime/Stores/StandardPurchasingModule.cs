@@ -36,7 +36,6 @@ namespace UnityEngine.Purchasing
 
         internal IUtil util { get; private set; }
         internal ILogger logger { get; private set; }
-        internal IAsyncWebUtil webUtil { get; private set; }
         internal StoreInstance storeInstance { get; private set; }
         // Map Android store enums to their public names.
         // Necessary because store enum names and public names almost, but not quite, match.
@@ -58,11 +57,10 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        internal StandardPurchasingModule(IUtil util, IAsyncWebUtil webUtil, ILogger logger,
-            INativeStoreProvider nativeStoreProvider, RuntimePlatform platform, AppStore android)
+        internal StandardPurchasingModule(IUtil util, ILogger logger, INativeStoreProvider nativeStoreProvider,
+            RuntimePlatform platform, AppStore android)
         {
             this.util = util;
-            this.webUtil = webUtil;
             this.logger = logger;
             m_NativeStoreProvider = nativeStoreProvider;
             m_RuntimePlatform = platform;
@@ -118,7 +116,6 @@ namespace UnityEngine.Purchasing
                 Object.DontDestroyOnLoad (gameObject);
                 gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
                 var util = gameObject.AddComponent<UnityUtil> ();
-                var webUtil = gameObject.AddComponent<AsyncWebUtil>();
 
                 var textAsset = (Resources.Load("BillingMode") as TextAsset);
                 StoreConfiguration config = null;
@@ -141,7 +138,6 @@ namespace UnityEngine.Purchasing
 
                 ModuleInstance = new StandardPurchasingModule (
                     util,
-                    webUtil,
                     logger,
                     new NativeStoreProvider (),
                     Application.platform,

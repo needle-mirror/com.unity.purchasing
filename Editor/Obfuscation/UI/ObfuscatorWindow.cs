@@ -63,6 +63,9 @@ namespace UnityEditor.Purchasing
             window.titleContent.text = kLabelTitle;
             window.minSize = new Vector2(340, 180);
             window.Show();
+
+            GenericEditorMenuItemClickEventSenderHelpers.SendIapMenuOpenObfuscatorEvent();
+            GameServicesEventSenderHelpers.SendTopMenuReceiptValidationObfuscatorEvent();
         }
         #endif
 

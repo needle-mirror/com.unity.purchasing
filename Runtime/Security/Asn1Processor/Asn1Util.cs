@@ -589,6 +589,7 @@ namespace LipingShare.LCLib.Asn1Processor
 					isIndefiniteLength = true;
 					return -2; // Indefinite length.
 				}
+
 				length = 0;
 				while (lengthBytes-- > 0)
 				{
@@ -599,6 +600,11 @@ namespace LipingShare.LCLib.Asn1Processor
 					b = (byte) bt.ReadByte();
 					length = (length << 8) | b;
 				}
+
+                if (length <= 0x7f)
+                {
+                    return -1; // Indicated false node
+                }
 			}
 			return length;
 		}

@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
@@ -28,11 +29,6 @@ namespace UnityEditor.Purchasing
         private const string kApplicationJson = "application/json";
         private const string kAuthHeader = "Authorization";
 
-        private static string kUnityWebRequestTypeString = "UnityEngine.Networking.UnityWebRequest";
-        private static string kUploadHandlerRawTypeString = "UnityEngine.Networking.UploadHandlerRaw";
-        private static string kDownloadHandlerBufferTypeString = "UnityEngine.Networking.DownloadHandlerBuffer";
-        private const string kUnityOAuthNamespace = "UnityEditor.Connect.UnityOAuth";
-
         private static void CheckUdpBuildConfig()
         {
             Type udpBuildConfig = BuildConfigInterface.GetClassType();
@@ -48,7 +44,18 @@ namespace UnityEditor.Purchasing
         /// </summary>
         /// <param name="authCode"> Acquired by UnityOAuth</param>
         /// <returns></returns>
+        [Obsolete("Internal API, it will be removed soon.")]
         public static object GetAccessToken(string authCode)
+        {
+            return CreateGetAccessTokenRequest(authCode);
+        }
+
+        /// <summary>
+        /// Create a Web Request to get the UDP Access Token according to authCode.
+        /// </summary>
+        /// <param name="authCode">Acquired by UnityOAuth</param>
+        /// <returns></returns>
+        internal static UnityWebRequest CreateGetAccessTokenRequest(string authCode)
         {
             CheckUdpBuildConfig();
 
@@ -58,7 +65,7 @@ namespace UnityEditor.Purchasing
             req.client_secret = kOAuthClientSecret;
             req.grant_type = "authorization_code";
             req.redirect_uri = BuildConfigInterface.GetIdEndpoint();
-            return asyncRequest(kHttpVerbPOST, BuildConfigInterface.GetApiEndpoint(), "/v1/oauth2/token", null, req);
+            return AsyncRequest(kHttpVerbPOST, BuildConfigInterface.GetApiEndpoint(), "/v1/oauth2/token", null, req);
         }
 
         /// <summary>
@@ -67,12 +74,24 @@ namespace UnityEditor.Purchasing
         /// <param name="accessToken">The bearer token to UDP.</param>
         /// <param name="projectGuid">The project id.</param>
         /// <returns>The HTTP GET Request to get the organization identifier.</returns>
+        [Obsolete("Internal API, it will be removed soon.")]
         public static object GetOrgId(string accessToken, string projectGuid)
+        {
+            return CreateGetOrgIdRequest(accessToken, projectGuid);
+        }
+
+        /// <summary>
+        /// Call UDP store asynchronously to retrieve the Organization Identifier.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="projectGuid">The project id.</param>
+        /// <returns>The HTTP GET Request to get the organization identifier.</returns>
+        internal static UnityWebRequest CreateGetOrgIdRequest(string accessToken, string projectGuid)
         {
             CheckUdpBuildConfig();
 
             string api = "/v1/core/api/projects/" + projectGuid;
-            return asyncRequest(kHttpVerbGET, BuildConfigInterface.GetApiEndpoint(), api, accessToken, null);
+            return AsyncRequest(kHttpVerbGET, BuildConfigInterface.GetApiEndpoint(), api, accessToken, null);
         }
 
         /// <summary>
@@ -82,13 +101,26 @@ namespace UnityEditor.Purchasing
         /// <param name="orgId">The organization identifier to create the store item under.</param>
         /// <param name="iapItem">The store item to create.</param>
         /// <returns>The HTTP POST Request to create a store item.</returns>
+        [Obsolete("Internal API, it will be removed soon.")]
         public static object CreateStoreItem(string accessToken, string orgId, IapItem iapItem)
+        {
+            return CreateAddStoreItemRequest(accessToken, orgId, iapItem);
+        }
+
+        /// <summary>
+        /// Call UDP store asynchronously to create a store item.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="orgId">The organization identifier to create the store item under.</param>
+        /// <param name="iapItem">The store item to create.</param>
+        /// <returns>The HTTP POST Request to create a store item.</returns>
+        internal static UnityWebRequest CreateAddStoreItemRequest(string accessToken, string orgId, IapItem iapItem)
         {
             CheckUdpBuildConfig();
 
             string api = "/v1/store/items";
             iapItem.ownerId = orgId;
-            return asyncRequest(kHttpVerbPOST, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
+            return AsyncRequest(kHttpVerbPOST, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
         }
 
         /// <summary>
@@ -97,12 +129,24 @@ namespace UnityEditor.Purchasing
         /// <param name="accessToken">The bearer token to UDP.</param>
         /// <param name="iapItem">The updated store item.</param>
         /// <returns>The HTTP PUT Request to update a store item.</returns>
+        [Obsolete("Internal API, it will be removed soon.")]
         public static object UpdateStoreItem(string accessToken, IapItem iapItem)
+        {
+            return CreateUpdateStoreItemRequest(accessToken, iapItem);
+        }
+
+        /// <summary>
+        /// Call UDP store asynchronously to update a store item.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="iapItem">The updated store item.</param>
+        /// <returns>The HTTP PUT Request to update a store item.</returns>
+        internal static UnityWebRequest CreateUpdateStoreItemRequest(string accessToken, IapItem iapItem)
         {
             CheckUdpBuildConfig();
 
             string api = "/v1/store/items/" + iapItem.id;
-            return asyncRequest(kHttpVerbPUT, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
+            return AsyncRequest(kHttpVerbPUT, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
         }
 
         /// <summary>
@@ -112,75 +156,57 @@ namespace UnityEditor.Purchasing
         /// <param name="orgId">The organization identifier where to find the store item.</param>
         /// <param name="appItemSlug">The store item slug name.</param>
         /// <returns>The HTTP GET Request to update a store item.</returns>
+        [Obsolete("Internal API, it will be removed soon.")]
         public static object SearchStoreItem(string accessToken, string orgId, string appItemSlug)
+        {
+            return CreateSearchStoreItemRequest(accessToken, orgId, appItemSlug);
+        }
+
+        /// <summary>
+        /// Call UDP store asynchronously to search for a store item.
+        /// </summary>
+        /// <param name="accessToken">The bearer token to UDP.</param>
+        /// <param name="orgId">The organization identifier where to find the store item.</param>
+        /// <param name="appItemSlug">The store item slug name.</param>
+        /// <returns>The HTTP GET Request to update a store item.</returns>
+        internal static UnityWebRequest CreateSearchStoreItemRequest(string accessToken, string orgId, string appItemSlug)
         {
             CheckUdpBuildConfig();
 
             string api = "/v1/store/items/search?ownerId=" + orgId +
                          "&ownerType=ORGANIZATION&start=0&count=20&type=IAP&masterItemSlug=" + appItemSlug;
-            return asyncRequest(kHttpVerbGET, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, null);
+            return AsyncRequest(kHttpVerbGET, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, null);
         }
 
         // Return UnityWebRequest instance
-        private static object asyncRequest(string method, string url, string api, string token,
-            object postObject)
+        static UnityWebRequest AsyncRequest(string method, string url, string api, string token, object postObject)
         {
-            Type unityWebRequestType = UnityWebRequestType();
-            object request = Activator.CreateInstance(unityWebRequestType, url + api, method);
+            UnityWebRequest request = new UnityWebRequest(url + api, method);
 
             if (postObject != null)
             {
                 string postData = HandlePostData(JsonUtility.ToJson(postObject));
                 byte[] postDataBytes = Encoding.UTF8.GetBytes(postData);
 
-                // Set UploadHandler
-                // Equivalent : request.uploadHandler = (UploadHandler) new UploadHandlerRaw(postDataBytes);
-                Type uploadHanlderRawType = UDPReflectionUtils.GetTypeByName(kUploadHandlerRawTypeString);
-
-                var uploadHandlerRaw = Activator.CreateInstance(uploadHanlderRawType, postDataBytes);
-                PropertyInfo uploadHandlerInfo =
-                    unityWebRequestType.GetProperty("uploadHandler", UDPReflectionUtils.k_InstanceBindingFlags);
-                uploadHandlerInfo.SetValue(request, uploadHandlerRaw, null);
+                request.uploadHandler = new UploadHandlerRaw(postDataBytes);
             }
 
-            // Set up downloadHandler
-            // Equivalent: request.downloadHandler = (DownloadHandler) new DownloadHandlerBuffer();
-            var downloadHandlerInstance = Activator.CreateInstance(UDPReflectionUtils.GetTypeByName(kDownloadHandlerBufferTypeString));
-            var downloadHandlerProperty =
-                unityWebRequestType.GetProperty("downloadHandler", UDPReflectionUtils.k_InstanceBindingFlags);
-            downloadHandlerProperty.SetValue(request, downloadHandlerInstance, null);
+            request.downloadHandler = new DownloadHandlerBuffer();
 
-
-            // Set up header
-            // Equivalent : request.SetRequestHeader("key", "value");
-            MethodInfo setRequestHeaderMethodInfo =
-                unityWebRequestType.GetMethod("SetRequestHeader", UDPReflectionUtils.k_InstanceBindingFlags);
-
-            setRequestHeaderMethodInfo.Invoke(request, new object[] {kContentType, kApplicationJson});
+            request.SetRequestHeader(kContentType, kApplicationJson);
             if (token != null)
             {
-                setRequestHeaderMethodInfo.Invoke(request, new object[] {kAuthHeader, "Bearer " + token});
+                request.SetRequestHeader(kAuthHeader, "Bearer " + token);
             }
 
-            // Send Web Request
-            // Equivalent: request.SendWebRequest()/request.Send()
-            MethodInfo sendWebRequest = unityWebRequestType.GetMethod("SendWebRequest");
-            if (sendWebRequest == null)
-            {
-                sendWebRequest = unityWebRequestType.GetMethod("Send");
-            }
-
-            sendWebRequest.Invoke(request, null);
+            request.SendWebRequest();
 
             return request;
         }
 
-        // Try to find UnityOAuth in assembly, if not found, udp will not be available.
-        // Also, the version must larger or equal to 5.6.1
         internal static bool CheckUdpAvailability()
         {
-            bool hasOAuth = GetUnityOAuthType() != null;
-            return hasOAuth;
+            return true;
         }
 
         internal static bool CheckUdpCompatibility()
@@ -214,60 +240,6 @@ namespace UnityEditor.Purchasing
             newData = re.Replace(newData, "");
             return newData;
         }
-
-        #region Reflection Utils
-
-        // Using UnityOAuth through reflection to avoid error on Unity lower than 5.6.1.
-        internal static Type GetUnityOAuthType()
-        {
-            return UDPReflectionUtils.GetTypeByName(kUnityOAuthNamespace);
-        }
-
-        internal static Type UnityWebRequestType()
-        {
-            return UDPReflectionUtils.GetTypeByName(kUnityWebRequestTypeString);
-        }
-
-        // get UnityWebRequest.isDone property
-        internal static bool IsUnityWebRequestDone(object request)
-        {
-            var isDoneProperty =
-                UnityWebRequestType().GetProperty("isDone", UDPReflectionUtils.k_InstanceBindingFlags);
-
-            return (bool) isDoneProperty.GetValue(request, null);
-        }
-
-        // Get UnityWebRequest.error property
-        internal static string UnityWebRequestError(object request)
-        {
-            var errorProperty = UnityWebRequestType().GetProperty("error", UDPReflectionUtils.k_InstanceBindingFlags);
-
-            return (string) errorProperty.GetValue(request, null);
-        }
-
-        // UnityWebRequest.responseCode
-        internal static long UnityWebRequestResponseCode(object request)
-        {
-            var responseProperty = UnityWebRequestType()
-                .GetProperty("responseCode", UDPReflectionUtils.k_InstanceBindingFlags);
-            return (long) responseProperty.GetValue(request, null);
-        }
-
-        // UnityWebRequest.DownloadHandler.text
-        internal static string UnityWebRequestResultString(object request)
-        {
-            var downloadHandlerProperty =
-                UnityWebRequestType().GetProperty("downloadHandler", UDPReflectionUtils.k_InstanceBindingFlags);
-
-            object downloadHandler = downloadHandlerProperty.GetValue(request, null);
-
-            var textProperty = UDPReflectionUtils.GetTypeByName(kDownloadHandlerBufferTypeString)
-                .GetProperty("text", UDPReflectionUtils.k_InstanceBindingFlags);
-
-            return (string) textProperty.GetValue(downloadHandler, null);
-        }
-
-        #endregion
     }
 
     #region model
@@ -510,7 +482,7 @@ namespace UnityEditor.Purchasing
 
     struct ReqStruct
     {
-        public object request; // UnityWebRequest object
+        public UnityWebRequest request;
         public GeneralResponse resp;
         public ProductCatalogEditor.ProductCatalogItemEditor itemEditor;
         public IapItem iapItem;

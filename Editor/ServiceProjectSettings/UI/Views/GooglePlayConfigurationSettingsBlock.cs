@@ -197,7 +197,7 @@ namespace UnityEditor.Purchasing
         {
             m_GooglePlayDataRef.revenueTrackingState = keyState;
 
-            GenericEventSenderHelpers.SendProjectSettingsValidatePublicKey();
+            GameServicesEventSenderHelpers.SendProjectSettingsValidatePublicKey();
 
             ToggleGoogleKeyStateDisplay();
         }
