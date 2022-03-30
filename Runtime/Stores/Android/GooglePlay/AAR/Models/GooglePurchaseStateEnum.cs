@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing.Models
     /// This is C# representation of the Java Class PurchaseState
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase.PurchaseState">See more</a>
     /// </summary>
-    class GooglePurchaseStateEnum
+    static class GooglePurchaseStateEnum
     {
         const string k_AndroidPurchaseStateClassName = "com.android.billingclient.api.Purchase$PurchaseState";
 

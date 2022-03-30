@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing.Utils
 {
@@ -15,7 +16,7 @@ namespace UnityEngine.Purchasing.Utils
 
         static ProductDescription ToProductDescription(AndroidJavaObject skusDetails)
         {
-            return BuildProductDescription(new AndroidJavaObjectWrapper(skusDetails));
+            return BuildProductDescription(skusDetails.Wrap());
         }
 
         /// <summary>

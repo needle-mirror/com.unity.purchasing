@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing.Utils
 {
     static class GooglePurchaseHelper
     {
-        internal static GooglePurchase MakeGooglePurchase(IEnumerable<AndroidJavaObject> skuDetails, AndroidJavaObject purchase)
+        internal static GooglePurchase MakeGooglePurchase(IEnumerable<AndroidJavaObject> skuDetails, IAndroidJavaObjectWrapper purchase)
         {
             var sku = purchase.Call<string>("getSku");
             var skuDetail = skuDetails.FirstOrDefault(skuDetailJavaObject =>

@@ -23,7 +23,7 @@ namespace UnityEngine.Purchasing.Models
         {
             AndroidJavaObject purchaseList = purchaseResult.Call<AndroidJavaObject>("getPurchasesList");
 
-            var purchases = purchaseList.Enumerate<AndroidJavaObject>().ToList();
+            var purchases = purchaseList.EnumerateAndWrap().ToList();
             for (var index = 0; index < purchases.Count; index++)
             {
                 var purchase = purchases[index];

@@ -297,7 +297,8 @@ namespace UnityEngine.Purchasing
         {
             var googleCachedQuerySkuDetailsService = new GoogleCachedQuerySkuDetailsService();
             var googleLastKnownProductService = new GoogleLastKnownProductService();
-            var googlePurchaseUpdatedListener = new GooglePurchaseUpdatedListener(googleLastKnownProductService, googlePurchaseCallback, googleCachedQuerySkuDetailsService);
+            var googlePurchaseStateEnumProvider = new GooglePurchaseStateEnumProvider();
+            var googlePurchaseUpdatedListener = new GooglePurchaseUpdatedListener(googleLastKnownProductService, googlePurchaseCallback, googleCachedQuerySkuDetailsService, googlePurchaseStateEnumProvider);
             var googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener, util);
             var skuDetailsConverter = new SkuDetailsConverter();
             var retryPolicy = new ExponentialRetryPolicy();
@@ -307,6 +308,8 @@ namespace UnityEngine.Purchasing
             var finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
             var billingClientStateListener = new BillingClientStateListener();
             var priceChangeService = new GooglePriceChangeService(googleBillingClient, googleQuerySkuDetailsService);
+
+            googlePurchaseUpdatedListener.SetGoogleQueryPurchaseService(queryPurchasesService);
 
             return new GooglePlayStoreService(
                 googleBillingClient,

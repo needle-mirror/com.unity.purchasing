@@ -1,10 +1,16 @@
 # Changelog
 
+## [4.1.4] - 2022-03-30
+
+### Fixed
+- GooglePlay - Fixed issue where if an app is backgrounded while a purchase is being processed, 
+an `OnPurchaseFailed` would be called with the purchase failure reason `UserCancelled`, even if the purchase was successful.
+
 ## [4.1.3] - 2022-01-11
 
 ### Fixed
 - Removed deprecated UnityWebRequest calls, updating them to use safer ones. This avoids compiler warnings that may occur.
-- Fixed edge case where Apple StoreKit receipt parsing would fail, preventing validation.
+- Fixed a serious edge case where Apple StoreKit receipt parsing might fail, preventing validation. A portion of receipts on iOS could be affected and cause Unity IAP to freeze after the purchase completed, but before the SDK can finalize the purchase. The user will have to uninstall and reinstall your app in order to recover from this. Your customer service will have to refund the user's purchase or apply the purchase in some other way outside of Unity IAP. This bug was accidentally introduced in Unity IAP 4.1.0. To avoid encountering this problem with your app, we suggest you update to this version.
 
 ## [4.1.2] - 2021-11-15
 

@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing.Models
     /// </summary>
     class GooglePurchase
     {
-        public AndroidJavaObject javaPurchase;
+        public IAndroidJavaObjectWrapper javaPurchase;
         public int purchaseState;
         public string sku;
         public string orderId;
@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing.Models
 
         internal GooglePurchase() { }
 
-        internal GooglePurchase(AndroidJavaObject purchase, AndroidJavaObject skuDetails)
+        internal GooglePurchase(IAndroidJavaObjectWrapper purchase, AndroidJavaObject skuDetails)
         {
             if (purchase != null)
             {
