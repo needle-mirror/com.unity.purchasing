@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine.Purchasing.Extension;
 using System.Text;
+using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
@@ -48,6 +49,7 @@ namespace UnityEngine.Purchasing
         private INativeStore m_Store;
         private List<ProductDefinition> m_StoreCatalog;
         private bool m_IsRefreshing;
+        ITelemetryMetrics m_TelemetryMetrics;
 
         private Action m_RefreshCallback;
 
@@ -71,8 +73,14 @@ namespace UnityEngine.Purchasing
         {
         }
 
-        public void SetNativeStore(INativeStore native) {
+        public void SetNativeStore(INativeStore native)
+        {
             this.m_Store = native;
+        }
+
+        public void SetTelemetryMetrics(ITelemetryMetrics telemetryMetrics)
+        {
+            m_TelemetryMetrics = telemetryMetrics;
         }
 
         void IStoreInternal.SetModule(StandardPurchasingModule module)
@@ -111,7 +119,9 @@ namespace UnityEngine.Purchasing
 
         public override void RetrieveProducts (ReadOnlyCollection<ProductDefinition> products)
         {
+            var retrieveProductsMetric = m_TelemetryMetrics?.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.retrieveProductsName);
             m_Store.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
+            retrieveProductsMetric?.StopAndSendMetric();
         }
 
         internal void ProcessManagedStoreResponse(List<ProductDefinition> storeProducts)
@@ -137,7 +147,9 @@ namespace UnityEngine.Purchasing
 
         public override void Purchase (UnityEngine.Purchasing.ProductDefinition product, string developerPayload)
         {
+            var initPurchaseMetric = m_TelemetryMetrics?.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.initPurchaseName);
             m_Store.Purchase (JSONSerializer.SerializeProductDef (product), developerPayload);
+            initPurchaseMetric?.StopAndSendMetric();
         }
 
         public override void FinishTransaction (UnityEngine.Purchasing.ProductDefinition product, string transactionId)

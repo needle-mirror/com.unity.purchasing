@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
@@ -10,14 +11,18 @@ namespace UnityEngine.Purchasing
     {
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
+        ITelemetryDiagnostics m_TelemetryDiagnostics;
+        ITelemetryMetrics m_TelemetryMetrics;
         IStoreCallback m_StoreCallback;
         Action<Product> m_DeferredPurchaseAction;
         Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
 
-        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService)
+        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ITelemetryDiagnostics telemetryDiagnostics, ITelemetryMetrics telemetryMetrics)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_GooglePlayStoreFinishTransactionService = googlePlayStoreFinishTransactionService;
+            m_TelemetryDiagnostics = telemetryDiagnostics;
+            m_TelemetryMetrics = telemetryMetrics;
         }
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku)
@@ -32,6 +37,7 @@ namespace UnityEngine.Purchasing
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode)
         {
+            var upgradeDowngradeSubscriptionMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.upgradeDowngradeSubscriptionName);
             Product product = m_StoreCallback.FindProductById(newSku);
             Product oldProduct = m_StoreCallback.FindProductById(oldSku);
             if (product != null && product.definition.type == ProductType.Subscription &&
@@ -47,10 +53,12 @@ namespace UnityEngine.Purchasing
                         PurchaseFailureReason.ProductUnavailable,
                         "Please verify that the products are subscriptions and are not null."));
             }
+            upgradeDowngradeSubscriptionMetric.StopAndSendMetric();
         }
 
         public void RestoreTransactions(Action<bool> callback)
         {
+            var restoreTransactionMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.restoreTransactionName);
             m_GooglePlayStoreService.FetchPurchases(purchase =>
             {
                 if (purchase != null)
@@ -58,6 +66,7 @@ namespace UnityEngine.Purchasing
                     callback(true);
                 }
             });
+            restoreTransactionMetric.StopAndSendMetric();
         }
 
         public void FinishAdditionalTransaction(string productId, string transactionId)
@@ -108,8 +117,9 @@ namespace UnityEngine.Purchasing
                 //PurchaseState codes: https://developer.android.com/reference/com/android/billingclient/api/Purchase.PurchaseState#pending
                 return purchaseState == 2 || purchaseState == 4;
             }
-            catch
+            catch (Exception ex)
             {
+                m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.ParseReceiptTransactionError, ex);
                 Debug.LogWarning("Cannot parse Google receipt for transaction " + product.transactionID);
                 return false;
             }

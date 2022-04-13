@@ -14,7 +14,10 @@ namespace UnityEditor.Purchasing
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            OnPostprocessBuild(report.summary.platform, report.summary.outputPath);
+            if (report.summary.platform == BuildTarget.tvOS || report.summary.platform == BuildTarget.iOS)
+            {
+                OnPostprocessBuild(report.summary.platform, report.summary.outputPath);
+            }
         }
 
         static void OnPostprocessBuild(BuildTarget buildTarget, string path)

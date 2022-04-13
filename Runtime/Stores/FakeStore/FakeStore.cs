@@ -140,7 +140,7 @@ namespace UnityEngine.Purchasing
                 {
                     if (allow)
                     {
-                        base.OnPurchaseSucceeded(product.storeSpecificId, "{ \"this\" : \"is a fake receipt\" }", Guid.NewGuid().ToString());
+                        base.OnPurchaseSucceeded(product.storeSpecificId, "ThisIsFakeReceiptData", Guid.NewGuid().ToString());
                     }
                     else
                     {

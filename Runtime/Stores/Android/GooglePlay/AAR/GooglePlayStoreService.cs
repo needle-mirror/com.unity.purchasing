@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
@@ -24,6 +25,7 @@ namespace UnityEngine.Purchasing
         IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
         IGooglePriceChangeService m_GooglePriceChangeService;
         IGoogleLastKnownProductService m_GoogleLastKnownProductService;
+        ITelemetryMetrics m_TelemetryMetrics;
 
         internal GooglePlayStoreService(
             IGoogleBillingClient billingClient,
@@ -33,7 +35,8 @@ namespace UnityEngine.Purchasing
             IGoogleQueryPurchasesService queryPurchasesService,
             IBillingClientStateListener billingClientStateListener,
             IGooglePriceChangeService priceChangeService,
-            IGoogleLastKnownProductService lastKnownProductService)
+            IGoogleLastKnownProductService lastKnownProductService,
+            ITelemetryMetrics telemetryMetrics)
         {
             m_BillingClient = billingClient;
             m_QuerySkuDetailsService = querySkuDetailsService;
@@ -43,6 +46,7 @@ namespace UnityEngine.Purchasing
             m_GooglePriceChangeService = priceChangeService;
             m_GoogleLastKnownProductService = lastKnownProductService;
             m_BillingClientStateListener = billingClientStateListener;
+            m_TelemetryMetrics = telemetryMetrics;
 
             InitConnectionWithGooglePlay();
         }
@@ -70,16 +74,23 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        public bool IsConnectionReady()
+        {
+            return m_BillingClient.IsReady();
+        }
+
         void OnConnected()
         {
             m_GoogleConnectionState = GoogleBillingConnectionState.Connected;
             m_CurrentConnectionAttempts = 0;
+
             DequeueQueryProducts();
             DequeueFetchPurchases();
         }
 
         void DequeueQueryProducts()
         {
+            var dequeueQueryProductsMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.dequeueQueryProductsTimeName);
             var productsFailedToDequeue = new Queue<ProductDescriptionQuery>();
             var stop = false;
 
@@ -96,7 +107,8 @@ namespace UnityEngine.Purchasing
                     case GoogleBillingConnectionState.Disconnected:
                     {
                         var productDescriptionQuery = m_ProductsToQuery.Dequeue();
-                        productDescriptionQuery.onRetrieveProductsFailed();
+                        var reason = AreConnectionAttemptsExhausted() ? GoogleRetrieveProductsFailureReason.BillingServiceUnavailable : GoogleRetrieveProductsFailureReason.BillingServiceDisconnected;
+                        productDescriptionQuery.onRetrieveProductsFailed(reason);
 
                         productsFailedToDequeue.Enqueue(productDescriptionQuery);
                         break;
@@ -120,15 +132,18 @@ namespace UnityEngine.Purchasing
             {
                 m_ProductsToQuery.Enqueue(product);
             }
+            dequeueQueryProductsMetric.StopAndSendMetric();
         }
 
         void DequeueFetchPurchases()
         {
+            var dequeueQueryPurchasesMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.dequeueQueryPurchasesTimeName);
             while (m_OnPurchaseSucceededQueue.Count > 0)
             {
                 var onPurchaseSucceed = m_OnPurchaseSucceededQueue.Dequeue();
                 FetchPurchases(onPurchaseSucceed);
             }
+            dequeueQueryPurchasesMetric.StopAndSendMetric();
         }
 
         void OnDisconnected()
@@ -140,26 +155,50 @@ namespace UnityEngine.Purchasing
 
         void AttemptReconnection()
         {
-            if (m_CurrentConnectionAttempts < k_MaxConnectionAttempts)
+            if (!AreConnectionAttemptsExhausted())
             {
                 StartConnection();
             }
+            else
+            {
+                OnReconnectionFailure();
+            }
         }
 
-        public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action onRetrieveProductFailed)
+        bool AreConnectionAttemptsExhausted()
         {
+            return m_CurrentConnectionAttempts >= k_MaxConnectionAttempts;
+        }
+
+        void OnReconnectionFailure()
+        {
+            m_GoogleConnectionState = GoogleBillingConnectionState.Disconnected;
+            DequeueQueryProducts();
+        }
+
+        public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
+        {
+            var retrieveProductsMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.retrieveProductsName);
             if (m_GoogleConnectionState == GoogleBillingConnectionState.Connected)
             {
                 m_QuerySkuDetailsService.QueryAsyncSku(products, onProductsReceived);
             }
             else
             {
-                if (m_GoogleConnectionState == GoogleBillingConnectionState.Disconnected)
-                {
-                    onRetrieveProductFailed();
-                }
-                m_ProductsToQuery.Enqueue(new ProductDescriptionQuery(products, onProductsReceived, onRetrieveProductFailed));
+                HandleRetrieveProductsNotConnected(products, onProductsReceived, onRetrieveProductsFailed);
             }
+            retrieveProductsMetric.StopAndSendMetric();
+        }
+
+        void HandleRetrieveProductsNotConnected(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
+        {
+            if (m_GoogleConnectionState == GoogleBillingConnectionState.Disconnected)
+            {
+                var reason = AreConnectionAttemptsExhausted() ? GoogleRetrieveProductsFailureReason.BillingServiceUnavailable : GoogleRetrieveProductsFailureReason.BillingServiceDisconnected;
+                onRetrieveProductsFailed(reason);
+            }
+
+            m_ProductsToQuery.Enqueue(new ProductDescriptionQuery(products, onProductsReceived, onRetrieveProductsFailed));
         }
 
         public void Purchase(ProductDefinition product)
@@ -169,9 +208,11 @@ namespace UnityEngine.Purchasing
 
         public void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
+            var initPurchaseMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.initPurchaseName);
             m_GoogleLastKnownProductService.SetLastKnownProductId(product.storeSpecificId);
             m_GoogleLastKnownProductService.SetLastKnownProrationMode(desiredProrationMode);
             m_GooglePurchaseService.Purchase(product, oldProduct, desiredProrationMode);
+            initPurchaseMetric.StopAndSendMetric();
         }
 
         public void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> onAcknowledge)
@@ -203,7 +244,9 @@ namespace UnityEngine.Purchasing
 
         public void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangeAction)
         {
+            var confirmSubscriptionPriceChangeMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.confirmSubscriptionPriceChangeName);
             m_GooglePriceChangeService.PriceChange(product, onPriceChangeAction);
+            confirmSubscriptionPriceChangeMetric.StopAndSendMetric();
         }
     }
 }

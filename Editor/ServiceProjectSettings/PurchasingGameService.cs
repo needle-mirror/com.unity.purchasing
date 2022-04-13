@@ -1,6 +1,7 @@
 #if SERVICES_SDK_CORE_ENABLED
 using System;
 using Unity.Services.Core.Editor;
+using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine;
 
 namespace UnityEditor.Purchasing
@@ -46,7 +47,7 @@ namespace UnityEditor.Purchasing
 
         public string GetFormattedDashboardUrl()
         {
-            return $"https://analytics.cloud.unity3d.com/projects/{CloudProjectSettings.projectId}/purchasing/";
+            return $"https://dashboard.unity3d.com/organizations/{OrganizationProvider.Organization.Key}/projects/{CloudProjectSettings.projectId}/analytics/v2/dashboards/revenue";
         }
 
         public IEditorGameServiceEnabler Enabler => m_Enabler;

@@ -9,6 +9,7 @@
         * [Coded](DefiningProductsCoded.md)
         * [IAP Catalog](UnityIAPDefiningProducts.md)
     * [Initialize IAP](UnityIAPInitialization.md)
+    * [Initialize Unity Gaming Services](UnityIAPInitializeUnityGamingServices.md)
     * [Fetching Additional Products](UnityIAPFetchingProductsIncrementally.md)
     * Creating a Purchasing Button
         * [Browsing Product Metadata](UnityIAPBrowsingMetadata.md)

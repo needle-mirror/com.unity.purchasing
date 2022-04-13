@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing
 {
@@ -11,12 +13,15 @@ namespace UnityEngine.Purchasing
         IGoogleFetchPurchases m_GoogleFetchPurchases;
         IStoreCallback m_StoreCallback;
         IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
+        bool m_HasInitiallyRetrievedProducts;
 
         internal GooglePlayStoreRetrieveProductsService(IGooglePlayStoreService googlePlayStoreService, IGoogleFetchPurchases googleFetchPurchases, IGooglePlayConfigurationInternal googlePlayConfigurationInternal)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_GoogleFetchPurchases = googleFetchPurchases;
             m_GooglePlayConfigurationInternal = googlePlayConfigurationInternal;
+
+            m_HasInitiallyRetrievedProducts = false;
         }
 
         public void SetStoreCallback(IStoreCallback storeCallback)
@@ -26,26 +31,40 @@ namespace UnityEngine.Purchasing
 
         public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, bool wantPurchases = true)
         {
-            if (m_StoreCallback != null)
+            if (wantPurchases)
             {
-                m_GooglePlayStoreService.RetrieveProducts(products, retrievedProducts =>
-                {
-                    if (wantPurchases)
-                    {
-                        m_GoogleFetchPurchases.FetchPurchases(purchaseProducts =>
-                        {
-                            var mergedProducts = MakePurchasesIntoProducts(retrievedProducts, purchaseProducts);
-                            m_StoreCallback.OnProductsRetrieved(mergedProducts);
-                        });
-                    }
-                    else
-                    {
-                        m_StoreCallback.OnProductsRetrieved(retrievedProducts);
-                    }
-                }, () =>
-                {
-                    m_GooglePlayConfigurationInternal.NotifyInitializationConnectionFailed();
-                });
+                m_GooglePlayStoreService.RetrieveProducts(products, OnProductsRetrievedWithPurchaseFetch, OnRetrieveProductsFailed);
+            }
+            else
+            {
+                m_GooglePlayStoreService.RetrieveProducts(products, OnProductsRetrieved, OnRetrieveProductsFailed);
+            }
+        }
+
+        void OnProductsRetrievedWithPurchaseFetch(List<ProductDescription> retrievedProducts)
+        {
+            m_HasInitiallyRetrievedProducts = true;
+
+            m_GoogleFetchPurchases.FetchPurchases(purchaseProducts =>
+            {
+                var mergedProducts = MakePurchasesIntoProducts(retrievedProducts, purchaseProducts);
+                m_StoreCallback?.OnProductsRetrieved(mergedProducts);
+            });
+        }
+
+        void OnProductsRetrieved(List<ProductDescription> retrievedProducts)
+        {
+            m_HasInitiallyRetrievedProducts = true;
+
+            m_StoreCallback?.OnProductsRetrieved(retrievedProducts);
+        }
+
+        void OnRetrieveProductsFailed(GoogleRetrieveProductsFailureReason reason)
+        {
+            if (reason == GoogleRetrieveProductsFailureReason.BillingServiceUnavailable && !m_HasInitiallyRetrievedProducts)
+            {
+                m_GooglePlayConfigurationInternal.NotifyInitializationConnectionFailed();
+                m_StoreCallback.OnSetupFailed(InitializationFailureReason.PurchasingUnavailable);
             }
         }
 
@@ -70,6 +89,11 @@ namespace UnityEngine.Purchasing
                 }
             }
             return updatedProducts;
+        }
+
+        public bool HasInitiallyRetrievedProducts()
+        {
+            return m_HasInitiallyRetrievedProducts;
         }
     }
 }

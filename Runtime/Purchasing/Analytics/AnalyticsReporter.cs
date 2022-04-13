@@ -8,9 +8,9 @@ namespace UnityEngine.Purchasing
     /// Responsible for adapting Unity Purchasing's unified
     /// receipts for Unity Analytics' Transaction API.
     /// </summary>
-    internal class AnalyticsReporter
+    class AnalyticsReporter
     {
-        private IUnityAnalytics m_Analytics;
+        IUnityAnalytics m_Analytics;
 
         public AnalyticsReporter(IUnityAnalytics analytics)
         {
@@ -24,11 +24,7 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            m_Analytics.Transaction(product.definition.storeSpecificId,
-                product.metadata.localizedPrice,
-                product.metadata.isoCurrencyCode,
-                product.receipt,
-                null);
+            m_Analytics.SendTransactionEvent(product);
         }
 
         public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
@@ -39,7 +35,7 @@ namespace UnityEngine.Purchasing
                 { "price", product.metadata.localizedPrice },
                 { "currency", product.metadata.isoCurrencyCode }
             };
-            m_Analytics.CustomEvent("unity.PurchaseFailed", data);
+            m_Analytics.SendCustomEvent("unity.PurchaseFailed", data);
         }
     }
 }

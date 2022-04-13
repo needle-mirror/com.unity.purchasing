@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -17,7 +16,11 @@ namespace UnityEngine.Purchasing
         /// <param name="builder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
         public static void Initialize(IStoreListener listener, ConfigurationBuilder builder)
         {
+#if DISABLE_RUNTIME_IAP_ANALYTICS
+            Initialize(listener, builder, UnityEngine.Debug.unityLogger, Application.persistentDataPath, new EmptyUnityAnalytics(), builder.factory.GetCatalogProvider());
+#else
             Initialize(listener, builder, UnityEngine.Debug.unityLogger, Application.persistentDataPath, new UnityAnalytics(), builder.factory.GetCatalogProvider());
+#endif
         }
 
         /// <summary>

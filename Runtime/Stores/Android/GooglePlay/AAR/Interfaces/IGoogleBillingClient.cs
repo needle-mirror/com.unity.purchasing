@@ -8,6 +8,7 @@ namespace UnityEngine.Purchasing.Interfaces
     {
         void StartConnection(IBillingClientStateListener billingClientStateListener);
         void EndConnection();
+        bool IsReady();
         AndroidJavaObject QueryPurchase(string skuType);
         void QuerySkuDetailsAsync(List<string> skus, string type, Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction);
         AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode);

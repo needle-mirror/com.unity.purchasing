@@ -1,6 +1,8 @@
 {
     "name": "Purchasing.Common",
     "references": [
+        "Unity.Services.Core",
+        "Unity.Services.Core.Internal"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

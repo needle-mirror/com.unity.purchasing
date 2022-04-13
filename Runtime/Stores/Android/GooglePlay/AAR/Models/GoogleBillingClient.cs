@@ -86,6 +86,11 @@ namespace UnityEngine.Purchasing.Models
             m_BillingClient.Call("endConnection");
         }
 
+        public bool IsReady()
+        {
+            return m_BillingClient.Call<bool>("isReady");
+        }
+
         public AndroidJavaObject QueryPurchase(string skuType)
         {
             return m_BillingClient.Call<AndroidJavaObject>("queryPurchases", skuType);

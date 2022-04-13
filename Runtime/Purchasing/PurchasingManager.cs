@@ -154,11 +154,12 @@ namespace UnityEngine.Purchasing
         {
             if (initialized)
             {
-                if (null != m_AdditionalProductsFailCallback)
-                    m_AdditionalProductsFailCallback(reason);
+                m_AdditionalProductsFailCallback?.Invoke(reason);
             }
             else
+            {
                 m_Listener.OnInitializeFailed(reason);
+            }
         }
 
         public void OnPurchaseFailed(PurchaseFailureDescription description)

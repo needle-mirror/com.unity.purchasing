@@ -393,7 +393,7 @@ int delayInSeconds = 2;
 {
     UnityPurchasingLog(@"UpdatedTransactions");
     for(SKPaymentTransaction *transaction in transactions) {
-        
+
         [self handleTransaction:transaction];
     }
 }
@@ -425,9 +425,9 @@ int delayInSeconds = 2;
     if (transaction.payment.productIdentifier == nil) {
         return;
     }
-    
+
     SKProduct* product = [validProducts objectForKey:transaction.payment.productIdentifier];
-    
+
     switch (transaction.transactionState) {
 
         case SKPaymentTransactionStatePurchasing:
@@ -450,7 +450,7 @@ int delayInSeconds = 2;
 
 - (void) handleTransactionPurchased:(SKPaymentTransaction*) transaction forProduct:(SKProduct*) product
 {
-    
+
 #if MAC_APPSTORE
     // There is no transactionReceipt on Mac
     NSString* receipt = @"";
@@ -460,7 +460,7 @@ int delayInSeconds = 2;
 #endif
 
     transactionReceipts[transaction.payment.productIdentifier] = receipt;
-            
+
     if (product != nil) {
         [self onTransactionSucceeded:transaction];
     }
@@ -565,7 +565,7 @@ int delayInSeconds = 2;
                     [self UnitySendMessage:@"onFetchStorePromotionVisibilityFailed" payload:nil];
                 } else {
                     NSString *visibility = [UnityPurchasing getStringForStorePromotionVisibility: storePromotionVisibility];
-                    
+
                     UnityPurchasingLog(@"Fetched Store Promotion Visibility for %@", product.productIdentifier);
 
                     NSString *payload = [UnityPurchasing serializeVisibilityResultForProduct:productId withVisiblity:visibility];

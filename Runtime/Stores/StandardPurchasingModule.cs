@@ -5,6 +5,7 @@ using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.Utils;
 
 #if UNITY_PURCHASING_GPBL
@@ -24,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.0.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.2.0-pre.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -37,6 +38,8 @@ namespace UnityEngine.Purchasing
         internal IUtil util { get; private set; }
         internal ILogger logger { get; private set; }
         internal StoreInstance storeInstance { get; private set; }
+        internal ITelemetryMetricsInstanceWrapper telemetryMetricsInstanceWrapper { get; set; }
+        internal ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper { get; set; }
         // Map Android store enums to their public names.
         // Necessary because store enum names and public names almost, but not quite, match.
         private static Dictionary<AppStore, string> AndroidStoreNameMap = new Dictionary<AppStore, string> () {
@@ -58,7 +61,7 @@ namespace UnityEngine.Purchasing
         }
 
         internal StandardPurchasingModule(IUtil util, ILogger logger, INativeStoreProvider nativeStoreProvider,
-            RuntimePlatform platform, AppStore android)
+            RuntimePlatform platform, AppStore android, ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper, ITelemetryMetricsInstanceWrapper telemetryMetricsInstanceWrapper)
         {
             this.util = util;
             this.logger = logger;
@@ -67,6 +70,8 @@ namespace UnityEngine.Purchasing
             useFakeStoreUIMode = FakeStoreUIMode.Default;
             useFakeStoreAlways = false;
             m_AppStorePlatform = android;
+            this.telemetryDiagnosticsInstanceWrapper = telemetryDiagnosticsInstanceWrapper;
+            this.telemetryMetricsInstanceWrapper = telemetryMetricsInstanceWrapper;
         }
 
         /// <summary>
@@ -141,7 +146,9 @@ namespace UnityEngine.Purchasing
                     logger,
                     new NativeStoreProvider (),
                     Application.platform,
-                    androidStore);
+                    androidStore,
+                    new TelemetryDiagnosticsInstanceWrapper(),
+                    new TelemetryMetricsInstanceWrapper());
             }
 
             return ModuleInstance;
@@ -247,13 +254,17 @@ namespace UnityEngine.Purchasing
             IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService = new GooglePlayStoreFinishTransactionService(googlePlayStoreService);
             IGoogleFetchPurchases googleFetchPurchases = new GoogleFetchPurchases(googlePlayStoreService, googlePlayStoreFinishTransactionService);
             var googlePlayConfiguration = BuildGooglePlayStoreConfiguration(googlePlayStoreService, googlePurchaseCallback);
+            var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
+            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
             IGooglePlayStoreRetrieveProductsService googlePlayStoreRetrieveProductsService = new GooglePlayStoreRetrieveProductsService(
                 googlePlayStoreService,
                 googleFetchPurchases,
                 googlePlayConfiguration);
             var googlePlayStoreExtensions = BuildGooglePlayStoreExtensions(
                 googlePlayStoreService,
-                googlePlayStoreFinishTransactionService);
+                googlePlayStoreFinishTransactionService,
+                telemetryDiagnostics,
+                telemetryMetrics);
 
             GooglePlayStore googlePlayStore = new GooglePlayStore(
                 googlePlayStoreRetrieveProductsService,
@@ -275,9 +286,9 @@ namespace UnityEngine.Purchasing
             BindExtension<IGooglePlayStoreExtensions>(googlePlayStoreExtensions);
         }
 
-        static GooglePlayStoreExtensions BuildGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService)
+        static GooglePlayStoreExtensions BuildGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ITelemetryDiagnostics telemetryDiagnostics, ITelemetryMetrics telemetryMetrics)
         {
-            GooglePlayStoreExtensions googlePlayStoreExtensions = new GooglePlayStoreExtensions(googlePlayStoreService, googlePlayStoreFinishTransactionService);
+            GooglePlayStoreExtensions googlePlayStoreExtensions = new GooglePlayStoreExtensions(googlePlayStoreService, googlePlayStoreFinishTransactionService, telemetryDiagnostics, telemetryMetrics);
             return googlePlayStoreExtensions;
         }
 
@@ -308,6 +319,7 @@ namespace UnityEngine.Purchasing
             var finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
             var billingClientStateListener = new BillingClientStateListener();
             var priceChangeService = new GooglePriceChangeService(googleBillingClient, googleQuerySkuDetailsService);
+            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
 
             googlePurchaseUpdatedListener.SetGoogleQueryPurchaseService(queryPurchasesService);
 
@@ -319,7 +331,8 @@ namespace UnityEngine.Purchasing
                 queryPurchasesService,
                 billingClientStateListener,
                 priceChangeService,
-                googleLastKnownProductService
+                googleLastKnownProductService,
+                telemetryMetrics
             );
         }
 
@@ -334,7 +347,9 @@ namespace UnityEngine.Purchasing
 
         private IStore InstantiateAndroidHelper (JSONStore store)
         {
+            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
             store.SetNativeStore (GetAndroidNativeStore(store));
+            store.SetTelemetryMetrics(telemetryMetrics);
             return store;
         }
 
@@ -361,9 +376,12 @@ namespace UnityEngine.Purchasing
 
         private IStore InstantiateApple ()
         {
-            var store = new AppleStoreImpl (util);
+            var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
+            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
+            var store = new AppleStoreImpl (util, telemetryDiagnostics, telemetryMetrics);
             var appleBindings = m_NativeStoreProvider.GetStorekit (store);
             store.SetNativeStore (appleBindings);
+            store.SetTelemetryMetrics(telemetryMetrics);
             BindExtension<IAppleExtensions> (store);
             return store;
         }

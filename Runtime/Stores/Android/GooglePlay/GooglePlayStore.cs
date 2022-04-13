@@ -16,7 +16,6 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensions;
         IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
         IUtil m_Util;
-        bool m_HasInitiallyRetrievedProducts;
 
         public GooglePlayStore(IGooglePlayStoreRetrieveProductsService retrieveProductsService,
             IGooglePlayStorePurchaseService storePurchaseService,
@@ -49,8 +48,6 @@ namespace UnityEngine.Purchasing
             m_FinishTransactionService.SetStoreCallback(scriptingStoreCallback);
             m_GooglePurchaseCallback.SetStoreCallback(scriptingStoreCallback);
             m_GooglePlayStoreExtensions.SetStoreCallback(scriptingStoreCallback);
-
-            m_HasInitiallyRetrievedProducts = false;
         }
 
         /// <summary>
@@ -64,14 +61,17 @@ namespace UnityEngine.Purchasing
             m_RetrieveProductsService.RetrieveProducts(products, shouldFetchPurchases);
         }
 
+        bool HasInitiallyRetrievedProducts()
+        {
+            return m_RetrieveProductsService.HasInitiallyRetrievedProducts();
+        }
+
         bool ShouldFetchPurchasesNext()
         {
             var shouldFetchPurchases = true;
-            
-            if (!m_HasInitiallyRetrievedProducts)
-            {
-                m_HasInitiallyRetrievedProducts = true;
 
+            if (!HasInitiallyRetrievedProducts())
+            {
                 shouldFetchPurchases = !m_GooglePlayConfigurationInternal.IsFetchPurchasesAtInitializeSkipped();
             }
 

@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.2.0-pre.1] - 2022-04-13
+
+### Added
+- Support for the [new Unity Analytics](https://unity.com/products/unity-analytics) [transaction event](https://docs.unity.com/analytics/AnalyticsSDKAPI.html#Transaction).
+- The package will now send telemetry diagnostic and metric events to help improve the long-term reliability and performance of the package.
+
+### Changed
+- The minimum Unity Editor version supported is 2020.3.
+- The In-App Purchasing service window now links to the [new Unity Dashboard](https://dashboard.unity3d.com/) for Unity Editors 2022 and up.
+
+### Fixed
+- GooglePlay - Fixed OnInitializeFailed never called if GooglePlay BillingClient is not ready during initialization.
+- GooglePlay - GoogleBilling is allowed to initialize correctly even if the user's Google account is logged out, so long as it is linked. The user will need to log in to their account to continue making purchases.
+- Fixed a build error `DirectoryNotFoundException` that occurred when the build platform was iOS or tvOS and the build target was another platform.
+
 ## [4.1.4] - 2022-03-30
 
 ### Fixed

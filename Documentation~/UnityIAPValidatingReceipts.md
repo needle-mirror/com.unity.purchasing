@@ -32,6 +32,8 @@ The `CrossPlatformValidator` performs two checks:
 
 Note that the validator only validates receipts generated on Google Play and Apple platforms. Receipts generated on any other platform, including fakes generated in the Editor, throw an __IAPSecurityException__.
 
+Be sure that your `CrossPlatformValidator` object has been created in time for processing your purchases. Note that during the initialization of Unity IAP, it is possible that pending purchases from previous sessions may be fetched from the store and processed. If you are using a persistent object of this type, create it before initializing Unity IAP.
+
 If you try to validate a receipt for a platform that you haven't supplied a secret key for, a __MissingStoreSecretException__ is thrown.
 
 ````

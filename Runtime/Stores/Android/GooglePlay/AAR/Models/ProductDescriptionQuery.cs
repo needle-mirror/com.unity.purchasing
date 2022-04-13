@@ -10,9 +10,9 @@ namespace UnityEngine.Purchasing.Models
     {
         internal ReadOnlyCollection<ProductDefinition> products;
         internal Action<List<ProductDescription>> onProductsReceived;
-        internal Action onRetrieveProductsFailed;
+        internal Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed;
 
-        internal ProductDescriptionQuery(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action onRetrieveProductsFailed)
+        internal ProductDescriptionQuery(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
         {
             this.products = products;
             this.onProductsReceived = onProductsReceived;

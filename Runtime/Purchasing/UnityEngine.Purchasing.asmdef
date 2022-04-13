@@ -1,7 +1,11 @@
 {
     "name": "UnityEngine.Purchasing",
     "references": [
-        "Purchasing.Common"
+        "Purchasing.Common",
+        "Unity.Services.Core",
+        "Unity.Services.Core.Environments",
+        "Unity.Services.Core.Internal",
+        "Unity.Services.Analytics"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
