@@ -26,7 +26,6 @@ namespace UnityEngine.Purchasing
         Action<string, AppleStorePromotionVisibility> m_FetchStorePromotionVisibilitySuccess;
         private INativeAppleStore m_Native;
         ITelemetryDiagnostics m_TelemetryDiagnostics;
-        ITelemetryMetrics m_TelemetryMetrics;
 
         private static IUtil util;
         private static AppleStoreImpl instance;
@@ -35,16 +34,14 @@ namespace UnityEngine.Purchasing
         private string products_json;
 
 
-        public AppleStoreImpl(IUtil util, ITelemetryDiagnostics telemetryDiagnostics, ITelemetryMetrics telemetryMetrics) {
+        public AppleStoreImpl(IUtil util, ITelemetryDiagnostics telemetryDiagnostics) {
             AppleStoreImpl.util = util;
             instance = this;
             m_TelemetryDiagnostics = telemetryDiagnostics;
-            m_TelemetryMetrics = telemetryMetrics;
         }
 
         public void SetNativeStore(INativeAppleStore apple) {
             base.SetNativeStore (apple);
-            base.SetTelemetryMetrics(m_TelemetryMetrics);
             this.m_Native = apple;
             apple.SetUnityPurchasingCallback (MessageCallback);
         }
@@ -75,29 +72,24 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)
+        public virtual void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)
         {
-            var fetchStorePromotionOrderMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.fetchStorePromotionOrderName);
             m_FetchStorePromotionOrderError = errorCallback;
             m_FetchStorePromotionOrderSuccess = successCallback;
 
             m_Native.FetchStorePromotionOrder();
-            fetchStorePromotionOrderMetric.StopAndSendMetric();
         }
 
-        public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
+        public virtual void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
         {
-            var fetchStorePromotionVisibilityMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.fetchStorePromotionVisibilityName);
             m_FetchStorePromotionVisibilityError = errorCallback;
             m_FetchStorePromotionVisibilitySuccess = successCallback;
 
             m_Native.FetchStorePromotionVisibility(product.definition.id);
-            fetchStorePromotionVisibilityMetric.StopAndSendMetric();
         }
 
-        public void SetStorePromotionOrder(List<Product> products)
+        public virtual void SetStorePromotionOrder(List<Product> products)
         {
-            var setStorePromotionOrderMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.setStorePromotionOrderName);
             // Encode product list as a json doc containing an array of store-specific ids:
             // { "products": [ "ssid1", "ssid2" ] }
             var productIds = new List<string>();
@@ -108,12 +100,10 @@ namespace UnityEngine.Purchasing
             }
             var dict = new Dictionary<string, object>{ { "products", productIds } };
             m_Native.SetStorePromotionOrder(MiniJson.JsonEncode(dict));
-            setStorePromotionOrderMetric.StopAndSendMetric();
         }
 
         public void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visibility)
         {
-            var setStorePromotionVisibilityMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.setStorePromotionVisibilityName);
             if (product == null)
             {
                 var ex = new ArgumentNullException(nameof(product));
@@ -121,7 +111,6 @@ namespace UnityEngine.Purchasing
                 throw ex;
             }
             m_Native.SetStorePromotionVisibility(product.definition.storeSpecificId, visibility.ToString());
-            setStorePromotionVisibilityMetric.StopAndSendMetric();
         }
 
         public string GetTransactionReceiptForProduct (Product product) {
@@ -205,21 +194,17 @@ namespace UnityEngine.Purchasing
             m_Native.AddTransactionObserver ();
         }
 
-        public void RestoreTransactions(Action<bool> callback)
+        public virtual void RestoreTransactions(Action<bool> callback)
         {
-            var restoreTransactionMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.restoreTransactionName);
             m_RestoreCallback = callback;
             m_Native.RestoreTransactions ();
-            restoreTransactionMetric.StopAndSendMetric();
         }
 
-        public void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
+        public virtual void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
         {
-            var refreshAppReceiptMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.refreshAppReceiptName);
             m_RefreshReceiptSuccess = successCallback;
             m_RefreshReceiptError = errorCallback;
             m_Native.RefreshAppReceipt ();
-            refreshAppReceiptMetric.StopAndSendMetric();
         }
 
         public void RegisterPurchaseDeferredListener(Action<Product> callback)
@@ -227,11 +212,9 @@ namespace UnityEngine.Purchasing
             m_DeferredCallback = callback;
         }
 
-        public void ContinuePromotionalPurchases()
+        public virtual void ContinuePromotionalPurchases()
         {
-            var continuePromotionalPurchases = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.continuePromotionalPurchasesName);
             m_Native.ContinuePromotionalPurchases ();
-            continuePromotionalPurchases.StopAndSendMetric();
         }
 
         public Dictionary<string, string> GetIntroductoryPriceDictionary() {
@@ -242,11 +225,9 @@ namespace UnityEngine.Purchasing
             return JSONSerializer.DeserializeProductDetails(this.products_json);
         }
 
-        public void PresentCodeRedemptionSheet()
+        public virtual void PresentCodeRedemptionSheet()
         {
-            var presentCodeRedemptionSheet = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.presentCodeRedemptionSheetName);
             m_Native.PresentCodeRedemptionSheet();
-            presentCodeRedemptionSheet.StopAndSendMetric();
         }
 
         public void OnPurchaseDeferred(string productId)

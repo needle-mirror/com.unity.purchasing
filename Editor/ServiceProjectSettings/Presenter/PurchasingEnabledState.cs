@@ -19,11 +19,6 @@ namespace UnityEditor.Purchasing
             return stateMachine.GetStateByName(PurchasingDisabledState.k_StateNameDisabled);
         }
 
-        protected override AnalyticsNoticeBlock CreateAnalyticsNoticeBlock()
-        {
-            return AnalyticsNoticeBlock.CreateEnabledAnalyticsBlock();
-        }
-
         internal override bool IsEnabled() => true;
     }
 }

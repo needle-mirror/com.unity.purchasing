@@ -20,20 +20,25 @@ namespace UnityEngine.Purchasing.Registration
         public Task Initialize(CoreRegistry registry)
         {
             var metricsInstanceWrapper = StandardPurchasingModule.Instance().telemetryMetricsInstanceWrapper;
-
-            ITelemetryMetrics telemetryMetrics = new TelemetryMetrics(metricsInstanceWrapper);
-            var packageInitTimeMetric = telemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.packageInitTimeName);
-
             var diagnosticsInstanceWrapper = StandardPurchasingModule.Instance().telemetryDiagnosticsInstanceWrapper;
+
+            ITelemetryMetricsService telemetryMetricsService = new TelemetryMetricsService(metricsInstanceWrapper);
+            telemetryMetricsService.ExecuteTimedAction(
+                () => InitializeTelemetryComponents(metricsInstanceWrapper, diagnosticsInstanceWrapper),
+                TelemetryMetricDefinitions.packageInitTimeName
+            );
+
+            return Task.CompletedTask;
+        }
+
+        private static void InitializeTelemetryComponents(ITelemetryMetricsInstanceWrapper metricsInstanceWrapper,
+            ITelemetryDiagnosticsInstanceWrapper diagnosticsInstanceWrapper)
+        {
             var diagnosticsFactory = CoreRegistry.Instance.GetServiceComponent<IDiagnosticsFactory>();
             diagnosticsInstanceWrapper.SetDiagnosticsInstance(diagnosticsFactory.Create(k_PurchasingPackageName));
 
             var metricsFactory = CoreRegistry.Instance.GetServiceComponent<IMetricsFactory>();
             metricsInstanceWrapper.SetMetricsInstance(metricsFactory.Create(k_PurchasingPackageName));
-
-            packageInitTimeMetric.StopAndSendMetric();
-
-            return Task.CompletedTask;
         }
     }
 }

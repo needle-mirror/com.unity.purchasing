@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.Services.Analytics;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -16,10 +17,25 @@ namespace UnityEngine.Purchasing
         /// <param name="builder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
         public static void Initialize(IStoreListener listener, ConfigurationBuilder builder)
         {
+            Initialize(listener, builder, UnityEngine.Debug.unityLogger, Application.persistentDataPath,
+                GenerateUnityAnalytics(), GenerateLegacyUnityAnalytics(), builder.factory.GetCatalogProvider());
+        }
+
+        private static IAnalyticsAdapter GenerateUnityAnalytics()
+        {
 #if DISABLE_RUNTIME_IAP_ANALYTICS
-            Initialize(listener, builder, UnityEngine.Debug.unityLogger, Application.persistentDataPath, new EmptyUnityAnalytics(), builder.factory.GetCatalogProvider());
+            return new EmptyAnalyticsAdapter();
 #else
-            Initialize(listener, builder, UnityEngine.Debug.unityLogger, Application.persistentDataPath, new UnityAnalytics(), builder.factory.GetCatalogProvider());
+            return new AnalyticsAdapter(AnalyticsService.Instance);
+#endif
+        }
+
+        private static IAnalyticsAdapter GenerateLegacyUnityAnalytics()
+        {
+#if DISABLE_RUNTIME_IAP_ANALYTICS || !ENABLE_CLOUD_SERVICES_ANALYTICS
+            return new EmptyAnalyticsAdapter();
+#else
+            return new LegacyAnalyticsAdapter(new LegacyUnityAnalytics());
 #endif
         }
 
@@ -40,14 +56,15 @@ namespace UnityEngine.Purchasing
         /// Created for integration testing.
         /// </summary>
         internal static void Initialize(IStoreListener listener, ConfigurationBuilder builder,
-            ILogger logger, string persistentDatapath, IUnityAnalytics analytics, ICatalogProvider catalog)
+            ILogger logger, string persistentDatapath, IAnalyticsAdapter analytics, IAnalyticsAdapter legacyAnalytics,
+            ICatalogProvider catalog)
         {
             var transactionLog = new TransactionLog(logger, persistentDatapath);
             var manager = new PurchasingManager(transactionLog, logger, builder.factory.service, builder.factory.storeName);
-            var analyticsReporter = new AnalyticsReporter(analytics);
+            var analyticsClient = new AnalyticsClient(analytics, legacyAnalytics);
 
             // Proxy the PurchasingManager's callback interface to forward Transactions to Analytics.
-            var proxy = new StoreListenerProxy(listener, analyticsReporter, builder.factory);
+            var proxy = new StoreListenerProxy(listener, analyticsClient, builder.factory);
 			FetchAndMergeProducts(builder.useCatalogProvider, builder.products, catalog, response =>
                 {
                     manager.Initialize(proxy, response);

@@ -25,7 +25,6 @@ namespace UnityEngine.Purchasing
         IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
         IGooglePriceChangeService m_GooglePriceChangeService;
         IGoogleLastKnownProductService m_GoogleLastKnownProductService;
-        ITelemetryMetrics m_TelemetryMetrics;
 
         internal GooglePlayStoreService(
             IGoogleBillingClient billingClient,
@@ -35,8 +34,7 @@ namespace UnityEngine.Purchasing
             IGoogleQueryPurchasesService queryPurchasesService,
             IBillingClientStateListener billingClientStateListener,
             IGooglePriceChangeService priceChangeService,
-            IGoogleLastKnownProductService lastKnownProductService,
-            ITelemetryMetrics telemetryMetrics)
+            IGoogleLastKnownProductService lastKnownProductService)
         {
             m_BillingClient = billingClient;
             m_QuerySkuDetailsService = querySkuDetailsService;
@@ -46,7 +44,6 @@ namespace UnityEngine.Purchasing
             m_GooglePriceChangeService = priceChangeService;
             m_GoogleLastKnownProductService = lastKnownProductService;
             m_BillingClientStateListener = billingClientStateListener;
-            m_TelemetryMetrics = telemetryMetrics;
 
             InitConnectionWithGooglePlay();
         }
@@ -88,9 +85,8 @@ namespace UnityEngine.Purchasing
             DequeueFetchPurchases();
         }
 
-        void DequeueQueryProducts()
+        protected virtual void DequeueQueryProducts()
         {
-            var dequeueQueryProductsMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.dequeueQueryProductsTimeName);
             var productsFailedToDequeue = new Queue<ProductDescriptionQuery>();
             var stop = false;
 
@@ -132,18 +128,15 @@ namespace UnityEngine.Purchasing
             {
                 m_ProductsToQuery.Enqueue(product);
             }
-            dequeueQueryProductsMetric.StopAndSendMetric();
         }
 
-        void DequeueFetchPurchases()
+        protected virtual void DequeueFetchPurchases()
         {
-            var dequeueQueryPurchasesMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.dequeueQueryPurchasesTimeName);
             while (m_OnPurchaseSucceededQueue.Count > 0)
             {
                 var onPurchaseSucceed = m_OnPurchaseSucceededQueue.Dequeue();
                 FetchPurchases(onPurchaseSucceed);
             }
-            dequeueQueryPurchasesMetric.StopAndSendMetric();
         }
 
         void OnDisconnected()
@@ -176,9 +169,8 @@ namespace UnityEngine.Purchasing
             DequeueQueryProducts();
         }
 
-        public void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
+        public virtual void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
         {
-            var retrieveProductsMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.retrieveProductsName);
             if (m_GoogleConnectionState == GoogleBillingConnectionState.Connected)
             {
                 m_QuerySkuDetailsService.QueryAsyncSku(products, onProductsReceived);
@@ -187,7 +179,6 @@ namespace UnityEngine.Purchasing
             {
                 HandleRetrieveProductsNotConnected(products, onProductsReceived, onRetrieveProductsFailed);
             }
-            retrieveProductsMetric.StopAndSendMetric();
         }
 
         void HandleRetrieveProductsNotConnected(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
@@ -206,13 +197,11 @@ namespace UnityEngine.Purchasing
             Purchase(product, null, null);
         }
 
-        public void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        public virtual void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
-            var initPurchaseMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.initPurchaseName);
             m_GoogleLastKnownProductService.SetLastKnownProductId(product.storeSpecificId);
             m_GoogleLastKnownProductService.SetLastKnownProrationMode(desiredProrationMode);
             m_GooglePurchaseService.Purchase(product, oldProduct, desiredProrationMode);
-            initPurchaseMetric.StopAndSendMetric();
         }
 
         public void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> onAcknowledge)
@@ -242,11 +231,9 @@ namespace UnityEngine.Purchasing
             m_BillingClient.SetObfuscationProfileId(obfuscatedProfileId);
         }
 
-        public void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangeAction)
+        public virtual void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangeAction)
         {
-            var confirmSubscriptionPriceChangeMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.confirmSubscriptionPriceChangeName);
             m_GooglePriceChangeService.PriceChange(product, onPriceChangeAction);
-            confirmSubscriptionPriceChangeMetric.StopAndSendMetric();
         }
     }
 }

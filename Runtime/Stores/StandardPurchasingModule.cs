@@ -239,7 +239,8 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                var store = new JSONStore ();
+                var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
+                var store = new MetricizedJsonStore(telemetryMetrics);
                 return InstantiateAndroidHelper(store);
             }
         }
@@ -255,12 +256,12 @@ namespace UnityEngine.Purchasing
             IGoogleFetchPurchases googleFetchPurchases = new GoogleFetchPurchases(googlePlayStoreService, googlePlayStoreFinishTransactionService);
             var googlePlayConfiguration = BuildGooglePlayStoreConfiguration(googlePlayStoreService, googlePurchaseCallback);
             var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
-            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
+            var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
             IGooglePlayStoreRetrieveProductsService googlePlayStoreRetrieveProductsService = new GooglePlayStoreRetrieveProductsService(
                 googlePlayStoreService,
                 googleFetchPurchases,
                 googlePlayConfiguration);
-            var googlePlayStoreExtensions = BuildGooglePlayStoreExtensions(
+            var googlePlayStoreExtensions = new MetricizedGooglePlayStoreExtensions(
                 googlePlayStoreService,
                 googlePlayStoreFinishTransactionService,
                 telemetryDiagnostics,
@@ -284,12 +285,6 @@ namespace UnityEngine.Purchasing
         void BindGoogleExtension(GooglePlayStoreExtensions googlePlayStoreExtensions)
         {
             BindExtension<IGooglePlayStoreExtensions>(googlePlayStoreExtensions);
-        }
-
-        static GooglePlayStoreExtensions BuildGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ITelemetryDiagnostics telemetryDiagnostics, ITelemetryMetrics telemetryMetrics)
-        {
-            GooglePlayStoreExtensions googlePlayStoreExtensions = new GooglePlayStoreExtensions(googlePlayStoreService, googlePlayStoreFinishTransactionService, telemetryDiagnostics, telemetryMetrics);
-            return googlePlayStoreExtensions;
         }
 
         static GooglePlayConfiguration BuildGooglePlayStoreConfiguration(IGooglePlayStoreService googlePlayStoreService, IGooglePurchaseCallback googlePurchaseCallback)
@@ -319,11 +314,11 @@ namespace UnityEngine.Purchasing
             var finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
             var billingClientStateListener = new BillingClientStateListener();
             var priceChangeService = new GooglePriceChangeService(googleBillingClient, googleQuerySkuDetailsService);
-            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
+            var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
 
             googlePurchaseUpdatedListener.SetGoogleQueryPurchaseService(queryPurchasesService);
 
-            return new GooglePlayStoreService(
+            return new MetricizedGooglePlayStoreService(
                 googleBillingClient,
                 googleQuerySkuDetailsService,
                 purchaseService,
@@ -347,9 +342,7 @@ namespace UnityEngine.Purchasing
 
         private IStore InstantiateAndroidHelper (JSONStore store)
         {
-            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
             store.SetNativeStore (GetAndroidNativeStore(store));
-            store.SetTelemetryMetrics(telemetryMetrics);
             return store;
         }
 
@@ -377,11 +370,10 @@ namespace UnityEngine.Purchasing
         private IStore InstantiateApple ()
         {
             var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
-            var telemetryMetrics = new TelemetryMetrics(telemetryMetricsInstanceWrapper);
-            var store = new AppleStoreImpl (util, telemetryDiagnostics, telemetryMetrics);
+            var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
+            var store = new MetricizedAppleStoreImpl(util, telemetryDiagnostics, telemetryMetrics);
             var appleBindings = m_NativeStoreProvider.GetStorekit (store);
             store.SetNativeStore (appleBindings);
-            store.SetTelemetryMetrics(telemetryMetrics);
             BindExtension<IAppleExtensions> (store);
             return store;
         }

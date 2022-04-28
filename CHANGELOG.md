@@ -1,10 +1,15 @@
 # Changelog
 
-## [4.2.0-pre.1] - 2022-04-13
+## [4.2.0-pre.2] - 2022-04-28
 
 ### Added
-- Support for the [new Unity Analytics](https://unity.com/products/unity-analytics) [transaction event](https://docs.unity.com/analytics/AnalyticsSDKAPI.html#Transaction).
-- The package will now send telemetry diagnostic and metric events to help improve the long-term reliability and performance of the package.
+- Support for Unity Analytics TransactionFailed event.
+- Sample showcasing how to initialize [Unity Gaming Services](https://unity.com/solutions/gaming-services) using the [Services Core API](https://docs.unity.com/ugs-overview/services-core-api.html)
+
+### Changed
+- The Analytics notice in the In-App Purchasing service window has been removed for Unity Editors 2022 and up.
+
+## [4.2.0-pre.1] - 2022-04-07
 
 ### Changed
 - The minimum Unity Editor version supported is 2020.3.
@@ -25,7 +30,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 
 ### Fixed
 - Removed deprecated UnityWebRequest calls, updating them to use safer ones. This avoids compiler warnings that may occur.
-- Fixed a serious edge case where Apple StoreKit receipt parsing might fail, preventing validation. A portion of receipts on iOS could be affected and cause Unity IAP to freeze after the purchase completed, but before the SDK can finalize the purchase. The user will have to uninstall and reinstall your app in order to recover from this. Your customer service will have to refund the user's purchase or apply the purchase in some other way outside of Unity IAP. This bug was accidentally introduced in Unity IAP 4.1.0. To avoid encountering this problem with your app, we suggest you update to this version.
+- Fixed edge case where Apple StoreKit receipt parsing would fail, preventing validation.
 
 ## [4.1.2] - 2021-11-15
 

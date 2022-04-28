@@ -7,7 +7,7 @@ the [documentation](https://docs.unity3d.com/Manual/UnityIAPProcessingPurchases.
 This sample uses a mock for the backend implementation. You can plug in your own backend by replacing
 the `MockServerSideValidation` method in `IntegratingSelfProvidedBackendReceiptValidation.cs`.
 For more information about how to do a web request in unity, see
-the [documentation](https://docs.unity3d.com/2021.2/Documentation/ScriptReference/Networking.UnityWebRequest.Post.html).
+the [documentation](https://docs.unity3d.com/2021.3/Documentation/ScriptReference/Networking.UnityWebRequest.Post.html).
 
 This sample uses a fake store for its transactions, to use a real store like the App Store or the Google Play Store, you
 would need to register your application and add In-App Purchases. For more information, follow the documentation for one

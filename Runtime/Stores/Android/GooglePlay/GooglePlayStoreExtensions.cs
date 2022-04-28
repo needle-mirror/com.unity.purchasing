@@ -12,17 +12,15 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
         ITelemetryDiagnostics m_TelemetryDiagnostics;
-        ITelemetryMetrics m_TelemetryMetrics;
         IStoreCallback m_StoreCallback;
         Action<Product> m_DeferredPurchaseAction;
         Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
 
-        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ITelemetryDiagnostics telemetryDiagnostics, ITelemetryMetrics telemetryMetrics)
+        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ITelemetryDiagnostics telemetryDiagnostics)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_GooglePlayStoreFinishTransactionService = googlePlayStoreFinishTransactionService;
             m_TelemetryDiagnostics = telemetryDiagnostics;
-            m_TelemetryMetrics = telemetryMetrics;
         }
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku)
@@ -35,9 +33,8 @@ namespace UnityEngine.Purchasing
             UpgradeDowngradeSubscription(oldSku, newSku, (GooglePlayProrationMode) desiredProrationMode);
         }
 
-        public void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode)
+        public virtual void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode)
         {
-            var upgradeDowngradeSubscriptionMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.upgradeDowngradeSubscriptionName);
             Product product = m_StoreCallback.FindProductById(newSku);
             Product oldProduct = m_StoreCallback.FindProductById(oldSku);
             if (product != null && product.definition.type == ProductType.Subscription &&
@@ -53,12 +50,10 @@ namespace UnityEngine.Purchasing
                         PurchaseFailureReason.ProductUnavailable,
                         "Please verify that the products are subscriptions and are not null."));
             }
-            upgradeDowngradeSubscriptionMetric.StopAndSendMetric();
         }
 
-        public void RestoreTransactions(Action<bool> callback)
+        public virtual void RestoreTransactions(Action<bool> callback)
         {
-            var restoreTransactionMetric = m_TelemetryMetrics.CreateAndStartMetricEvent(TelemetryMetricTypes.Histogram, TelemetryMetricNames.restoreTransactionName);
             m_GooglePlayStoreService.FetchPurchases(purchase =>
             {
                 if (purchase != null)
@@ -66,7 +61,6 @@ namespace UnityEngine.Purchasing
                     callback(true);
                 }
             });
-            restoreTransactionMetric.StopAndSendMetric();
         }
 
         public void FinishAdditionalTransaction(string productId, string transactionId)

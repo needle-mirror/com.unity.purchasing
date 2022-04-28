@@ -7,11 +7,11 @@ namespace UnityEngine.Purchasing
     /// </summary>
     internal class StoreListenerProxy : IInternalStoreListener
     {
-        private AnalyticsReporter m_Analytics;
+        private IAnalyticsClient m_Analytics;
         private IStoreListener m_ForwardTo;
         private IExtensionProvider m_Extensions;
 
-        public StoreListenerProxy(IStoreListener forwardTo, AnalyticsReporter analytics, IExtensionProvider extensions)
+        public StoreListenerProxy(IStoreListener forwardTo, IAnalyticsClient analytics, IExtensionProvider extensions)
         {
             m_ForwardTo = forwardTo;
             m_Analytics = analytics;

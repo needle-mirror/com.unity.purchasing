@@ -10,7 +10,6 @@ namespace UnityEditor.Purchasing
         internal static readonly string platformSupportUxmlPath = $"{SettingsUIConstants.packageUxmlRoot}/PlatformSupportVisual.uxml";
         internal static readonly string googlePlayConfigUxmlPath = $"{SettingsUIConstants.packageUxmlRoot}/GooglePlayConfiguration.uxml";
         internal static readonly string appleConfigUxmlPath = $"{SettingsUIConstants.packageUxmlRoot}/AppleConfiguration.uxml";
-        internal static readonly string analyticsNoticeUxmlPath = $"{SettingsUIConstants.packageUxmlRoot}/AnalyticsNotice.uxml";
 
         internal static readonly string platformSupportCommonUssPath = $"{SettingsUIConstants.packageUssRoot}/PlatformSupportVisualCommon.uss";
         internal static readonly string platformSupportDarkUssPath = $"{SettingsUIConstants.packageUssRoot}/PlatformSupportVisualDark.uss";
