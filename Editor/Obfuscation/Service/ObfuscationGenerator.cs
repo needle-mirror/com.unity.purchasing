@@ -176,7 +176,7 @@ namespace UnityEditor.Purchasing
                 {
                     outfileText = outfileText.Replace(pair.Key, pair.Value);
                 }
-                Directory.CreateDirectory (TangleFileConsts.k_OutputPath);
+                Directory.CreateDirectory(TangleFileConsts.k_OutputPath);
                 File.WriteAllText(FullPathForTangleClass(classnamePrefix), outfileText);
             }
         }

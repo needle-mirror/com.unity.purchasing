@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Purchasing
+namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// The type of Android store being run.

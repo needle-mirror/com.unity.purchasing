@@ -88,31 +88,31 @@ namespace UnityEngine.Purchasing
                 switch (m_GoogleConnectionState)
                 {
                     case GoogleBillingConnectionState.Connected:
-                    {
-                        var productDescriptionQuery = m_ProductsToQuery.Dequeue();
-                        m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products, productDescriptionQuery.onProductsReceived);
-                        break;
-                    }
+                        {
+                            var productDescriptionQuery = m_ProductsToQuery.Dequeue();
+                            m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products, productDescriptionQuery.onProductsReceived);
+                            break;
+                        }
                     case GoogleBillingConnectionState.Disconnected:
-                    {
-                        var productDescriptionQuery = m_ProductsToQuery.Dequeue();
-                        productDescriptionQuery.onRetrieveProductsFailed();
+                        {
+                            var productDescriptionQuery = m_ProductsToQuery.Dequeue();
+                            productDescriptionQuery.onRetrieveProductsFailed();
 
-                        productsFailedToDequeue.Enqueue(productDescriptionQuery);
-                        break;
-                    }
+                            productsFailedToDequeue.Enqueue(productDescriptionQuery);
+                            break;
+                        }
                     case GoogleBillingConnectionState.Connecting:
-                    {
-                        stop = true;
-                        break;
-                    }
+                        {
+                            stop = true;
+                            break;
+                        }
                     default:
-                    {
-                        Debug.LogErrorFormat("GooglePlayStoreService state ({0}) unrecognized, cannot process ProductDescriptionQuery",
-                            m_GoogleConnectionState);
-                        stop = true;
-                        break;
-                    }
+                        {
+                            Debug.LogErrorFormat("GooglePlayStoreService state ({0}) unrecognized, cannot process ProductDescriptionQuery",
+                                m_GoogleConnectionState);
+                            stop = true;
+                            break;
+                        }
                 }
             }
 

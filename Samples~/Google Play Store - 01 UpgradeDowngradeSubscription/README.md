@@ -47,4 +47,3 @@ on the topic for more information.
 Certain proration modes are recommended in certain scenarios. See
 [Google's recommended proration modes](https://developer.android.com/google/play/billing/subscriptions#proration-recommendations)
 for more information.
-

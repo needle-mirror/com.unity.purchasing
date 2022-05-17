@@ -13,8 +13,10 @@ namespace UnityEngine.Purchasing
     /// </summary>
     internal class JSONStore : AbstractStore, IUnityCallback, IStoreInternal, ITransactionHistoryExtensions
     {
-        public Product[] storeCatalog {
-            get {
+        public Product[] storeCatalog
+        {
+            get
+            {
                 var result = new List<Product>();
                 if (m_StoreCatalog != null && unity.products.all != null)
                 {
@@ -26,7 +28,8 @@ namespace UnityEngine.Purchasing
                             bool isProductOwned = false;
                             if (controllerProduct.definition.type != ProductType.Consumable)
                             {
-                                if (controllerProduct.hasReceipt || !String.IsNullOrEmpty(controllerProduct.transactionID)) {
+                                if (controllerProduct.hasReceipt || !String.IsNullOrEmpty(controllerProduct.transactionID))
+                                {
                                     isProductOwned = true;
                                 }
                             }
@@ -71,18 +74,19 @@ namespace UnityEngine.Purchasing
         {
         }
 
-        public void SetNativeStore(INativeStore native) {
+        public void SetNativeStore(INativeStore native)
+        {
             this.m_Store = native;
         }
 
         void IStoreInternal.SetModule(StandardPurchasingModule module)
         {
-            if(module == null)
+            if (module == null)
             {
                 return;
             }
             this.m_Module = module;
-            if(module.logger != null)
+            if (module.logger != null)
             {
                 this.m_Logger = module.logger;
             }
@@ -92,24 +96,24 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public override void Initialize (IStoreCallback callback)
+        public override void Initialize(IStoreCallback callback)
         {
             this.unity = callback;
 
-            if(m_Module != null)
+            if (m_Module != null)
             {
                 var storeName = m_Module.storeInstance.storeName;
             }
             else
             {
-                if(m_Logger != null)
+                if (m_Logger != null)
                 {
                     m_Logger.LogWarning("UnityIAP", "JSONStore init has no reference to SPM, can't start managed store");
                 }
             }
         }
 
-        public override void RetrieveProducts (ReadOnlyCollection<ProductDefinition> products)
+        public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
         {
             m_Store.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
         }
@@ -129,48 +133,49 @@ namespace UnityEngine.Purchasing
                 }
             }
             var products = new HashSet<ProductDefinition>();
-            if (storeProducts != null) {
+            if (storeProducts != null)
+            {
                 products.UnionWith(storeProducts);
             }
-            m_Store.RetrieveProducts (JSONSerializer.SerializeProductDefs (products));
+            m_Store.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
-        public override void Purchase (UnityEngine.Purchasing.ProductDefinition product, string developerPayload)
+        public override void Purchase(UnityEngine.Purchasing.ProductDefinition product, string developerPayload)
         {
-            m_Store.Purchase (JSONSerializer.SerializeProductDef (product), developerPayload);
+            m_Store.Purchase(JSONSerializer.SerializeProductDef(product), developerPayload);
         }
 
-        public override void FinishTransaction (UnityEngine.Purchasing.ProductDefinition product, string transactionId)
+        public override void FinishTransaction(UnityEngine.Purchasing.ProductDefinition product, string transactionId)
         {
             // Product definitions may be null if a store tells Unity IAP about an unknown product;
             // Unity IAP will not have a corresponding definition but will still finish the transaction.
-            var def = product == null ? null : JSONSerializer.SerializeProductDef (product);
-            m_Store.FinishTransaction (def, transactionId);
+            var def = product == null ? null : JSONSerializer.SerializeProductDef(product);
+            m_Store.FinishTransaction(def, transactionId);
         }
 
-        public void OnSetupFailed (string reason)
+        public void OnSetupFailed(string reason)
         {
-            var r = (InitializationFailureReason) Enum.Parse (typeof(InitializationFailureReason), reason, true);
-            unity.OnSetupFailed (r);
+            var r = (InitializationFailureReason)Enum.Parse(typeof(InitializationFailureReason), reason, true);
+            unity.OnSetupFailed(r);
         }
 
-        public virtual void OnProductsRetrieved (string json)
+        public virtual void OnProductsRetrieved(string json)
         {
             // NB: AppleStoreImpl overrides this completely and does not call the base.
-            unity.OnProductsRetrieved (JSONSerializer.DeserializeProductDescriptions (json));
+            unity.OnProductsRetrieved(JSONSerializer.DeserializeProductDescriptions(json));
         }
 
-        public virtual void OnPurchaseSucceeded (string id, string receipt, string transactionID)
+        public virtual void OnPurchaseSucceeded(string id, string receipt, string transactionID)
         {
-            unity.OnPurchaseSucceeded (id, receipt, transactionID);
+            unity.OnPurchaseSucceeded(id, receipt, transactionID);
         }
 
-        public void OnPurchaseFailed (string json)
+        public void OnPurchaseFailed(string json)
         {
             OnPurchaseFailed(JSONSerializer.DeserializeFailureReason(json), json);
         }
 
-        public void OnPurchaseFailed (PurchaseFailureDescription failure, string json = null)
+        public void OnPurchaseFailed(PurchaseFailureDescription failure, string json = null)
         {
             m_LastPurchaseFailureDescription = failure;
             m_LastPurchaseErrorCode = ParseStoreSpecificPurchaseErrorCode(json);
@@ -198,10 +203,10 @@ namespace UnityEngine.Purchasing
 
             // If the dictionary contains a storeSpecificErrorCode, return it, otherwise return Unknown.
             var purchaseFailureDictionary = MiniJson.JsonDecode(json) as Dictionary<string, object>;
-            if (purchaseFailureDictionary != null && purchaseFailureDictionary.ContainsKey(k_StoreSpecificErrorCodeKey) && Enum.IsDefined(typeof(StoreSpecificPurchaseErrorCode), (string) purchaseFailureDictionary[k_StoreSpecificErrorCodeKey]))
+            if (purchaseFailureDictionary != null && purchaseFailureDictionary.ContainsKey(k_StoreSpecificErrorCodeKey) && Enum.IsDefined(typeof(StoreSpecificPurchaseErrorCode), (string)purchaseFailureDictionary[k_StoreSpecificErrorCodeKey]))
             {
-                string storeSpecificErrorCodeString = (string) purchaseFailureDictionary[k_StoreSpecificErrorCodeKey];
-                return (StoreSpecificPurchaseErrorCode) Enum.Parse(typeof(StoreSpecificPurchaseErrorCode),
+                string storeSpecificErrorCodeString = (string)purchaseFailureDictionary[k_StoreSpecificErrorCodeKey];
+                return (StoreSpecificPurchaseErrorCode)Enum.Parse(typeof(StoreSpecificPurchaseErrorCode),
                     storeSpecificErrorCodeString);
             }
             return StoreSpecificPurchaseErrorCode.Unknown;

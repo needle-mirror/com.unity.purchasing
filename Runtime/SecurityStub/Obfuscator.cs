@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Purchasing.Security
 {
@@ -15,9 +15,9 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="order"> The array of the order of the data slices used to obfuscate the data when the tangle files were originally generated. </param>
         /// <param name="key"> The encryption key to deobfuscate the tangled data at runtime, previously generated with the tangle file. </param>
         /// <returns>The deobfucated public key</returns>
-        public static byte [] DeObfuscate (byte [] data, int [] order, int key)
+        public static byte[] DeObfuscate(byte[] data, int[] order, int key)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
     }
 }

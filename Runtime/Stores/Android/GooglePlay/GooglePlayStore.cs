@@ -6,7 +6,7 @@ using UnityEngine.Purchasing.Interfaces;
 
 namespace UnityEngine.Purchasing
 {
-    class GooglePlayStore: AbstractStore
+    class GooglePlayStore : AbstractStore
     {
         IGooglePlayStoreRetrieveProductsService m_RetrieveProductsService;
         IGooglePlayStorePurchaseService m_StorePurchaseService;
@@ -67,7 +67,7 @@ namespace UnityEngine.Purchasing
         bool ShouldFetchPurchasesNext()
         {
             var shouldFetchPurchases = true;
-            
+
             if (!m_HasInitiallyRetrievedProducts)
             {
                 m_HasInitiallyRetrievedProducts = true;

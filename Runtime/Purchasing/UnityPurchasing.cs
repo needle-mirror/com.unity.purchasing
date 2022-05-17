@@ -45,7 +45,7 @@ namespace UnityEngine.Purchasing
 
             // Proxy the PurchasingManager's callback interface to forward Transactions to Analytics.
             var proxy = new StoreListenerProxy(listener, analyticsReporter, builder.factory);
-			FetchAndMergeProducts(builder.useCatalogProvider, builder.products, catalog, response =>
+            FetchAndMergeProducts(builder.useCatalogProvider, builder.products, catalog, response =>
                 {
                     manager.Initialize(proxy, response);
                 });
@@ -54,20 +54,21 @@ namespace UnityEngine.Purchasing
         internal static void FetchAndMergeProducts(bool useCatalog,
             HashSet<ProductDefinition> localProductSet, ICatalogProvider catalog, Action<HashSet<ProductDefinition>> callback)
         {
-			if (useCatalog && catalog != null)
+            if (useCatalog && catalog != null)
             {
-                catalog.FetchProducts(cloudProducts => {
-                        var updatedProductSet = new HashSet<ProductDefinition>(localProductSet);
+                catalog.FetchProducts(cloudProducts =>
+                {
+                    var updatedProductSet = new HashSet<ProductDefinition>(localProductSet);
 
-                        foreach (var product in cloudProducts)
-                        {
-                            // Products are hashed by id, so this should remove the local product with the same id before adding the cloud product
-                            updatedProductSet.Remove(product);
-                            updatedProductSet.Add(product);
-                        }
+                    foreach (var product in cloudProducts)
+                    {
+                        // Products are hashed by id, so this should remove the local product with the same id before adding the cloud product
+                        updatedProductSet.Remove(product);
+                        updatedProductSet.Add(product);
+                    }
 
-                        callback(updatedProductSet);
-                    });
+                    callback(updatedProductSet);
+                });
             }
             else
             {

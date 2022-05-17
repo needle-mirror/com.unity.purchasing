@@ -32,5 +32,3 @@ If you are saving consumable purchases to the cloud, you **must** return `Purcha
 When returning `Pending`, Unity IAP keeps transactions open on the underlying store until confirmed as processed, ensuring consumable purchases are not lost even if a user reinstalls your application while a consumable is in this state.
 
 ![Pending Purchases](images/PurchaseProcessingResult.Pending.png)
-
-

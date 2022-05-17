@@ -25,11 +25,14 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Type of the payout
         /// </summary>
-        public PayoutType type {
-            get {
+        public PayoutType type
+        {
+            get
+            {
                 return m_Type;
             }
-            private set {
+            private set
+            {
                 m_Type = value;
             }
         }
@@ -38,9 +41,11 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Type of the payout as a string
         /// </summary>
-        public string typeString {
-            get {
-                return m_Type.ToString ();
+        public string typeString
+        {
+            get
+            {
+                return m_Type.ToString();
             }
         }
 
@@ -53,11 +58,14 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Subtype of the payout
         /// </summary>
-        public string subtype {
-            get {
+        public string subtype
+        {
+            get
+            {
                 return m_Subtype;
             }
-            private set {
+            private set
+            {
                 if (value.Length > MaxSubtypeLength)
                     throw new ArgumentException(string.Format("subtype cannot be longer than {0}", MaxSubtypeLength));
                 m_Subtype = value;
@@ -67,11 +75,14 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Quantity or value of the payout
         /// </summary>
-        public double quantity {
-            get {
+        public double quantity
+        {
+            get
+            {
                 return m_Quantity;
             }
-            private set {
+            private set
+            {
                 m_Quantity = value;
             }
         }
@@ -84,13 +95,16 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Payload data of the payout
         /// </summary>
-        public string data {
-            get {
+        public string data
+        {
+            get
+            {
                 return m_Data;
             }
-            private set {
+            private set
+            {
                 if (value.Length > MaxDataLength)
-                    throw new ArgumentException (string.Format ("data cannot be longer than {0}", MaxDataLength));
+                    throw new ArgumentException(string.Format("data cannot be longer than {0}", MaxDataLength));
                 m_Data = value;
             }
         }
@@ -108,7 +122,7 @@ namespace UnityEngine.Purchasing
         /// <param name="typeString"> The payout type, as a string. </param>
         /// <param name="subtype"> The payout subtype. </param>
         /// <param name="quantity"> The payout quantity. </param>
-        public PayoutDefinition (string typeString, string subtype, double quantity) : this (typeString, subtype, quantity, string.Empty)
+        public PayoutDefinition(string typeString, string subtype, double quantity) : this(typeString, subtype, quantity, string.Empty)
         {
         }
 
@@ -119,11 +133,11 @@ namespace UnityEngine.Purchasing
         /// <param name="subtype"> The payout subtype. </param>
         /// <param name="quantity"> The payout quantity. </param>
         /// <param name="data"> The payout data. </param>
-        public PayoutDefinition (string typeString, string subtype, double quantity, string data)
+        public PayoutDefinition(string typeString, string subtype, double quantity, string data)
         {
             PayoutType t = PayoutType.Other;
             if (Enum.IsDefined(typeof(PayoutType), typeString))
-                t = (PayoutType)Enum.Parse (typeof (PayoutType), typeString);
+                t = (PayoutType)Enum.Parse(typeof(PayoutType), typeString);
 
             this.type = t;
             this.subtype = subtype;
@@ -136,7 +150,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="subtype"> The payout subtype. </param>
         /// <param name="quantity"> The payout quantity. </param>
-        public PayoutDefinition (string subtype, double quantity) : this (PayoutType.Other, subtype, quantity, string.Empty)
+        public PayoutDefinition(string subtype, double quantity) : this(PayoutType.Other, subtype, quantity, string.Empty)
         {
         }
 
@@ -146,7 +160,7 @@ namespace UnityEngine.Purchasing
         /// <param name="subtype"> The payout subtype. </param>
         /// <param name="quantity"> The payout quantity. </param>
         /// <param name="data"> The payout data. </param>
-        public PayoutDefinition (string subtype, double quantity, string data) : this (PayoutType.Other, subtype, quantity, data)
+        public PayoutDefinition(string subtype, double quantity, string data) : this(PayoutType.Other, subtype, quantity, data)
         {
         }
 
@@ -156,7 +170,7 @@ namespace UnityEngine.Purchasing
         /// <param name="type"> The payout type. </param>
         /// <param name="subtype"> The payout subtype. </param>
         /// <param name="quantity"> The payout quantity. </param>
-        public PayoutDefinition (PayoutType type, string subtype, double quantity) : this (type, subtype, quantity, string.Empty)
+        public PayoutDefinition(PayoutType type, string subtype, double quantity) : this(type, subtype, quantity, string.Empty)
         {
         }
 
@@ -167,7 +181,7 @@ namespace UnityEngine.Purchasing
         /// <param name="subtype"> The payout subtype. </param>
         /// <param name="quantity"> The payout quantity. </param>
         /// <param name="data"> The payout data. </param>
-        public PayoutDefinition (PayoutType type, string subtype, double quantity, string data)
+        public PayoutDefinition(PayoutType type, string subtype, double quantity, string data)
         {
             this.type = type;
             this.subtype = subtype;

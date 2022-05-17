@@ -28,7 +28,7 @@ When your catalog contains at least one Product, you can define __IAP Button__ b
 public void GrantCredits (int credits){
     userCredits = userCredits + credits;
     Debug.Log(“You received “ + credits “ Credits!”);
-} 
+}
 ```
 
 Run your game to test the __IAP Button__.

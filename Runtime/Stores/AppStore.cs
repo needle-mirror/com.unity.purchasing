@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Purchasing
+namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// The type of Native App store being used.

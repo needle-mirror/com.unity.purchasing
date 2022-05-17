@@ -24,30 +24,30 @@ static class BuildTargetGroupExtensions
         switch (value)
         {
             case BuildTargetGroup.Android:
-            {
-                storesArray = ToAndroidAppStores(value);
-                break;
-            }
+                {
+                    storesArray = ToAndroidAppStores(value);
+                    break;
+                }
 
             case BuildTargetGroup.iOS:
             case BuildTargetGroup.tvOS:
-                storesArray = new[] {AppStore.AppleAppStore};
+                storesArray = new[] { AppStore.AppleAppStore };
                 break;
 
             case BuildTargetGroup.WSA:
-                storesArray = new[] {AppStore.WinRT};
+                storesArray = new[] { AppStore.WinRT };
                 break;
 
             case BuildTargetGroup.Standalone:
                 if (Application.platform == RuntimePlatform.OSXEditor)
                 {
-                    storesArray = new[] {AppStore.MacAppStore};
+                    storesArray = new[] { AppStore.MacAppStore };
                     break;
                 }
                 goto default;
 
             default:
-                storesArray = new[] {AppStore.fake};
+                storesArray = new[] { AppStore.fake };
                 break;
         }
 
@@ -77,22 +77,22 @@ static class BuildTargetGroupExtensions
         switch (value)
         {
             case BuildTargetGroup.iOS:
-            {
-                // TRICKY: Prefer an "iOS" string on BuildTarget, to avoid the unwanted "BuildTargetGroup.iPhone"
-                return BuildTarget.iOS.ToString();
-            }
-            case BuildTargetGroup.Standalone:
-            {
-                switch (EditorUserBuildSettings.activeBuildTarget)
                 {
-                    case BuildTarget.StandaloneOSX:
-                        return "macOS";
-                    case BuildTarget.StandaloneWindows:
-                        return "Windows";
-                    default:
-                        return BuildTargetGroup.Standalone.ToString();
+                    // TRICKY: Prefer an "iOS" string on BuildTarget, to avoid the unwanted "BuildTargetGroup.iPhone"
+                    return BuildTarget.iOS.ToString();
                 }
-            }
+            case BuildTargetGroup.Standalone:
+                {
+                    switch (EditorUserBuildSettings.activeBuildTarget)
+                    {
+                        case BuildTarget.StandaloneOSX:
+                            return "macOS";
+                        case BuildTarget.StandaloneWindows:
+                            return "Windows";
+                        default:
+                            return BuildTargetGroup.Standalone.ToString();
+                    }
+                }
             default:
                 return value.ToString();
         }

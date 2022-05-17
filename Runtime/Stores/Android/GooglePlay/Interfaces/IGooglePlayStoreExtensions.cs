@@ -5,10 +5,10 @@ using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing
 {
-	/// <summary>
-	/// Access GooglePlay store specific functionality.
-	/// </summary>
-	public interface IGooglePlayStoreExtensions : IStoreExtension
+    /// <summary>
+    /// Access GooglePlay store specific functionality.
+    /// </summary>
+    public interface IGooglePlayStoreExtensions : IStoreExtension
     {
         /// <summary>
         /// Upgrade or downgrade subscriptions, with proration mode `IMMEDIATE_WITHOUT_PRORATION` by default

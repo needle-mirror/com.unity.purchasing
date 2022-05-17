@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using UnityEngine.Purchasing.Extension;
@@ -134,11 +134,11 @@ namespace UnityEngine.Purchasing
                         return;
                     }
 
-                    PurchaseFailureReason reason = (PurchaseFailureReason) Enum.Parse(typeof(PurchaseFailureReason),
+                    PurchaseFailureReason reason = (PurchaseFailureReason)Enum.Parse(typeof(PurchaseFailureReason),
                         k_Unknown);
 
                     var reasonString = reason.ToString();
-                    var errDic = new Dictionary<string, object> {["error"] = reasonString};
+                    var errDic = new Dictionary<string, object> { ["error"] = reasonString };
 
                     if (dic.ContainsKey("purchaseInfo"))
                     {
@@ -205,7 +205,7 @@ namespace UnityEngine.Purchasing
             if (storeServiceInfo != null)
             {
                 var enableDebugLogging = StoreServiceInterface.GetEnableDebugLoggingMethod();
-                enableDebugLogging.Invoke(null, new object[] {enable});
+                enableDebugLogging.Invoke(null, new object[] { enable });
             }
             else
             {
@@ -224,7 +224,7 @@ namespace UnityEngine.Purchasing
             foreach (var property in properties)
             {
                 if (property.PropertyType == typeof(string))
-                    property.SetValue(info, (string) dic.GetString(property.Name), null);
+                    property.SetValue(info, (string)dic.GetString(property.Name), null);
             }
         }
 

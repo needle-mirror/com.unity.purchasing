@@ -37,142 +37,142 @@ namespace LipingShare.LCLib.Asn1Processor
         /// <summary>
         /// Tag mask constant value.
         /// </summary>
-        public const byte TAG_MASK              = 0x1F;
+        public const byte TAG_MASK = 0x1F;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte TAG_END_OF_CONTENTS   = 0x00;
+        public const byte TAG_END_OF_CONTENTS = 0x00;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte BOOLEAN               = 0x01;
+        public const byte BOOLEAN = 0x01;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte INTEGER               = 0x02;
+        public const byte INTEGER = 0x02;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte BIT_STRING            = 0x03;
+        public const byte BIT_STRING = 0x03;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte OCTET_STRING          = 0x04;
+        public const byte OCTET_STRING = 0x04;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte TAG_NULL              = 0x05;
+        public const byte TAG_NULL = 0x05;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte OBJECT_IDENTIFIER	    = 0x06;
+        public const byte OBJECT_IDENTIFIER = 0x06;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte OBJECT_DESCRIPTOR	    = 0x07;
+        public const byte OBJECT_DESCRIPTOR = 0x07;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte EXTERNAL              = 0x08;
+        public const byte EXTERNAL = 0x08;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte REAL                  = 0x09;
+        public const byte REAL = 0x09;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte ENUMERATED            = 0x0a;
+        public const byte ENUMERATED = 0x0a;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte UTF8_STRING           = 0x0c;
+        public const byte UTF8_STRING = 0x0c;
 
         /// <summary>
         /// Relative object identifier.
         /// </summary>
-        public const byte RELATIVE_OID          = 0x0d;
+        public const byte RELATIVE_OID = 0x0d;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte SEQUENCE              = 0x10;
+        public const byte SEQUENCE = 0x10;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte SET                   = 0x11;
+        public const byte SET = 0x11;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte NUMERIC_STRING        = 0x12;
+        public const byte NUMERIC_STRING = 0x12;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte PRINTABLE_STRING 	    = 0x13;
+        public const byte PRINTABLE_STRING = 0x13;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte T61_STRING            = 0x14;
+        public const byte T61_STRING = 0x14;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte VIDEOTEXT_STRING 	    = 0x15;
+        public const byte VIDEOTEXT_STRING = 0x15;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte IA5_STRING            = 0x16;
+        public const byte IA5_STRING = 0x16;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte UTC_TIME              = 0x17;
+        public const byte UTC_TIME = 0x17;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte GENERALIZED_TIME 	    = 0x18;
+        public const byte GENERALIZED_TIME = 0x18;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte GRAPHIC_STRING        = 0x19;
+        public const byte GRAPHIC_STRING = 0x19;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte VISIBLE_STRING        = 0x1a;
+        public const byte VISIBLE_STRING = 0x1a;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte GENERAL_STRING        = 0x1b;
+        public const byte GENERAL_STRING = 0x1b;
 
         /// <summary>
         /// Constant value.
-	    /// </summary>
-        public const byte UNIVERSAL_STRING      = 0x1C;
+        /// </summary>
+        public const byte UNIVERSAL_STRING = 0x1C;
 
         /// <summary>
-	    /// Constant value.
+        /// Constant value.
         /// </summary>
-        public const byte BMPSTRING             = 0x1E; /* 30: Basic Multilingual Plane/Unicode string */
+        public const byte BMPSTRING = 0x1E; /* 30: Basic Multilingual Plane/Unicode string */
 
         /// <summary>
         /// Constructor.
@@ -191,32 +191,32 @@ namespace LipingShare.LCLib.Asn1Processor
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte CLASS_MASK        = 0xc0;
+        public const byte CLASS_MASK = 0xc0;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte UNIVERSAL         = 0x00;
+        public const byte UNIVERSAL = 0x00;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte CONSTRUCTED       = 0x20;
+        public const byte CONSTRUCTED = 0x20;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte APPLICATION       = 0x40;
+        public const byte APPLICATION = 0x40;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte CONTEXT_SPECIFIC  = 0x80;
+        public const byte CONTEXT_SPECIFIC = 0x80;
 
         /// <summary>
         /// Constant value.
         /// </summary>
-        public const byte PRIVATE           = 0xc0;
+        public const byte PRIVATE = 0xc0;
 
         /// <summary>
         /// Constructor.

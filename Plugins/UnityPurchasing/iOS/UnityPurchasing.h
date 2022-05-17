@@ -13,14 +13,15 @@ typedef void (*UnityPurchasingCallback)(const char* subject, const char* payload
 @end
 
 
-@interface ReceiptRefresher : NSObject <SKRequestDelegate>
+@interface ReceiptRefresher : NSObject<SKRequestDelegate>
 
 @property (nonatomic, strong) void (^callback)(BOOL);
 
 @end
 
 
-@interface UnityPurchasing : NSObject <SKProductsRequestDelegate, SKPaymentTransactionObserver> {
+@interface UnityPurchasing : NSObject<SKProductsRequestDelegate, SKPaymentTransactionObserver>
+{
     UnityPurchasingCallback messageCallback;
     NSMutableDictionary* validProducts;
     NSSet* productIds;
@@ -31,14 +32,14 @@ typedef void (*UnityPurchasingCallback)(const char* subject, const char* payload
     NSMutableDictionary<NSString *, NSString *> *transactionReceipts;
 }
 
-+ (NSArray*) deserializeProductDefs:(NSString*)json;
-+ (ProductDefinition*) deserializeProductDef:(NSString*)json;
-+ (NSString*) serializeProductMetadata:(NSArray*)products;
++ (NSArray*)deserializeProductDefs:(NSString*)json;
++ (ProductDefinition*)deserializeProductDef:(NSString*)json;
++ (NSString*)serializeProductMetadata:(NSArray*)products;
 
--(void) restorePurchases;
--(NSString*) getAppReceipt;
--(NSString*) getTransactionReceiptForProductId:(NSString *)productId;
--(void) addTransactionObserver;
+- (void)restorePurchases;
+- (NSString*)getAppReceipt;
+- (NSString*)getTransactionReceiptForProductId:(NSString *)productId;
+- (void)addTransactionObserver;
 @property (nonatomic, strong) ReceiptRefresher* receiptRefresher;
 @property (nonatomic, strong) SKReceiptRefreshRequest* refreshRequest;
 @property BOOL simulateAskToBuyEnabled;
@@ -46,4 +47,3 @@ typedef void (*UnityPurchasingCallback)(const char* subject, const char* payload
 @property (nonatomic) BOOL interceptPromotionalPurchases;
 
 @end
-

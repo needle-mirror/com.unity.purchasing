@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
@@ -8,7 +8,8 @@ using UnityEditor.Connect;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 
-namespace UnityEditor.Purchasing {
+namespace UnityEditor.Purchasing
+{
 
     /// <summary>
     /// Editor tools to set build-time configurations for app stores.
@@ -231,7 +232,8 @@ namespace UnityEditor.Purchasing {
         // below to process the
         private static void ConfigureProject(AppStore target)
         {
-            foreach (var mapping in StoreSpecificFiles) {
+            foreach (var mapping in StoreSpecificFiles)
+            {
                 // All files enabled when store is determined at runtime.
                 var enabled = target == AppStore.NotSpecified;
                 // Otherwise this file must be needed on the target.
@@ -240,14 +242,18 @@ namespace UnityEditor.Purchasing {
                 string path = string.Format("{0}/{1}", BinPath, mapping.Key);
                 PluginImporter importer = ((PluginImporter)PluginImporter.GetAtPath(path));
 
-                if (importer != null) {
-                    importer.SetCompatibleWithPlatform (BuildTarget.Android, enabled);
-                } else {
+                if (importer != null)
+                {
+                    importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
+                }
+                else
+                {
                     // Search for any occurrence of this file
                     // Only fail if more than one found
                     string[] paths = FindPaths(mapping.Key);
 
-                    if (paths.Length == 1) {
+                    if (paths.Length == 1)
+                    {
                         importer = ((PluginImporter)PluginImporter.GetAtPath(paths[0]));
                         importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
                     }
@@ -268,7 +274,7 @@ namespace UnityEditor.Purchasing {
                     enabled |= mapping.Value == target;
 
                     var path = $"{UdpBinPath}/{mapping.Key}";
-                    PluginImporter importer = ((PluginImporter) PluginImporter.GetAtPath(path));
+                    PluginImporter importer = ((PluginImporter)PluginImporter.GetAtPath(path));
 
                     if (importer != null)
                     {
@@ -282,7 +288,7 @@ namespace UnityEditor.Purchasing {
 
                         if (paths.Length == 1)
                         {
-                            importer = ((PluginImporter) PluginImporter.GetAtPath(paths[0]));
+                            importer = ((PluginImporter)PluginImporter.GetAtPath(paths[0]));
                             importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
                         }
                     }
@@ -318,7 +324,7 @@ namespace UnityEditor.Purchasing {
 
         private static void SaveConfig(AppStore enabled)
         {
-            var configToSave = new StoreConfiguration (enabled);
+            var configToSave = new StoreConfiguration(enabled);
             File.WriteAllText(ModePath, StoreConfiguration.Serialize(configToSave));
             AssetDatabase.ImportAsset(ModePath);
             config = configToSave;
@@ -340,16 +346,19 @@ namespace UnityEditor.Purchasing {
         {
             if (File.Exists(ModePath))
             {
-                try {
+                try
+                {
                     config = StoreConfiguration.Deserialize(File.ReadAllText(ModePath));
                     ConfigureProject(config.androidStore);
-                } catch (Exception e) {
-                    #if ENABLE_EDITOR_GAME_SERVICES
+                }
+                catch (Exception e)
+                {
+#if ENABLE_EDITOR_GAME_SERVICES
                     Debug.LogError("Unity IAP unable to strip undesired Android stores from build, check file: " + ModePath);
-                    #else
+#else
                     Debug.LogError("Unity IAP unable to strip undesired Android stores from build, use menu (e.g. "
                         + SwitchStoreMenuItem + ") and check file: " + ModePath);
-                    #endif
+#endif
                     Debug.LogError(e);
                 }
             }

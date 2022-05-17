@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Purchasing.Default
+namespace UnityEngine.Purchasing.Default
 {
     /// <summary>
     /// A factory for creating WinRT Store objects.

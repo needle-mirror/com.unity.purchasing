@@ -6,13 +6,15 @@ using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Security;
 using UnityEngine;
 
-namespace UnityEngine.Purchasing {
+namespace UnityEngine.Purchasing
+{
 
     /// <summary>
     /// A period of time expressed in either days, months, or years. Conveys a subscription's duration definition.
     /// Note this reflects the types of subscription durations settable on a subscription on supported app stores.
     /// </summary>
-    public class TimeSpanUnits {
+    public class TimeSpanUnits
+    {
         /// <summary>
         /// Discrete duration in days, if less than a month, otherwise zero.
         /// </summary>
@@ -32,7 +34,8 @@ namespace UnityEngine.Purchasing {
         /// <param name="d">Discrete duration in days, if less than a month, otherwise zero.</param>
         /// <param name="m">Discrete duration in months, if less than a year, otherwise zero.</param>
         /// <param name="y">Discrete duration in years, otherwise zero.</param>
-        public TimeSpanUnits (double d, int m, int y) {
+        public TimeSpanUnits(double d, int m, int y)
+        {
             this.days = d;
             this.months = m;
             this.years = y;
@@ -47,7 +50,8 @@ namespace UnityEngine.Purchasing {
     /// </summary>
     /// <seealso cref="IAppleExtensions.GetIntroductoryPriceDictionary"/>
     /// <seealso cref="UpdateSubscription"/>
-    public class SubscriptionManager {
+    public class SubscriptionManager
+    {
 
         private string receipt;
         private string productId;
@@ -62,46 +66,54 @@ namespace UnityEngine.Purchasing {
         /// <param name="developerPayload">Carried-over metadata from prior call to <typeparamref name="SubscriptionManager.UpdateSubscription"/> </param>
         /// <param name="appleStore">Triggered upon completion of the subscription update.</param>
         /// <param name="googleStore">Triggered upon completion of the subscription update.</param>
-        public static void UpdateSubscription(Product newProduct, Product oldProduct, string developerPayload, Action<Product, string> appleStore, Action<string, string> googleStore) {
-            if (oldProduct.receipt == null) {
+        public static void UpdateSubscription(Product newProduct, Product oldProduct, string developerPayload, Action<Product, string> appleStore, Action<string, string> googleStore)
+        {
+            if (oldProduct.receipt == null)
+            {
                 Debug.LogError("The product has not been purchased, a subscription can only be upgrade/downgrade when has already been purchased");
                 return;
             }
             var receipt_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(oldProduct.receipt);
-            if (receipt_wrapper == null || !receipt_wrapper.ContainsKey("Store") || !receipt_wrapper.ContainsKey("Payload")) {
+            if (receipt_wrapper == null || !receipt_wrapper.ContainsKey("Store") || !receipt_wrapper.ContainsKey("Payload"))
+            {
                 Debug.LogWarning("The product receipt does not contain enough information");
                 return;
             }
-            var store = (string)receipt_wrapper ["Store"];
-            var payload = (string)receipt_wrapper ["Payload"];
+            var store = (string)receipt_wrapper["Store"];
+            var payload = (string)receipt_wrapper["Payload"];
 
-            if (payload != null ) {
-                switch (store) {
-                case "GooglePlay":
-                    {
-                        SubscriptionManager oldSubscriptionManager = new SubscriptionManager(oldProduct, null);
-                        SubscriptionInfo oldSubscriptionInfo = null;
-                        try {
-                            oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
-                        } catch (Exception e) {
-                            Debug.unityLogger.LogError("Error: the product that will be updated does not have a valid receipt", e);
+            if (payload != null)
+            {
+                switch (store)
+                {
+                    case "GooglePlay":
+                        {
+                            SubscriptionManager oldSubscriptionManager = new SubscriptionManager(oldProduct, null);
+                            SubscriptionInfo oldSubscriptionInfo = null;
+                            try
+                            {
+                                oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.unityLogger.LogError("Error: the product that will be updated does not have a valid receipt", e);
+                                return;
+                            }
+                            string newSubscriptionId = newProduct.definition.storeSpecificId;
+                            googleStore(oldSubscriptionInfo.getSubscriptionInfoJsonString(), newSubscriptionId);
                             return;
                         }
-                        string newSubscriptionId = newProduct.definition.storeSpecificId;
-                        googleStore(oldSubscriptionInfo.getSubscriptionInfoJsonString(), newSubscriptionId);
-                        return;
-                    }
-                case "AppleAppStore":
-                case "MacAppStore":
-                    {
-                        appleStore(newProduct, developerPayload);
-                        return;
-                    }
-                default:
-                    {
-                        Debug.LogWarning("This store does not support update subscriptions");
-                        return;
-                    }
+                    case "AppleAppStore":
+                    case "MacAppStore":
+                        {
+                            appleStore(newProduct, developerPayload);
+                            return;
+                        }
+                    default:
+                        {
+                            Debug.LogWarning("This store does not support update subscriptions");
+                            return;
+                        }
                 }
             }
         }
@@ -113,12 +125,16 @@ namespace UnityEngine.Purchasing {
         /// <param name="oldProduct">Source subscription product, belonging to the same subscription group as <paramref name="newProduct"/></param>
         /// <param name="newProduct">Destination subscription product, belonging to the same subscription group as <paramref name="oldProduct"/></param>
         /// <param name="googlePlayUpdateCallback">Triggered upon completion of the subscription update.</param>
-        public static void UpdateSubscriptionInGooglePlayStore(Product oldProduct, Product newProduct, Action<string, string> googlePlayUpdateCallback) {
+        public static void UpdateSubscriptionInGooglePlayStore(Product oldProduct, Product newProduct, Action<string, string> googlePlayUpdateCallback)
+        {
             SubscriptionManager oldSubscriptionManager = new SubscriptionManager(oldProduct, null);
             SubscriptionInfo oldSubscriptionInfo = null;
-            try {
+            try
+            {
                 oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 Debug.unityLogger.LogError("Error: the product that will be updated does not have a valid receipt", e);
                 return;
             }
@@ -133,7 +149,8 @@ namespace UnityEngine.Purchasing {
         /// <param name="newProduct">Destination subscription product, belonging to the same subscription group as <paramref name="oldProduct"/></param>
         /// <param name="developerPayload">Carried-over metadata from prior call to <typeparamref name="SubscriptionManager.UpdateSubscription"/> </param>
         /// <param name="appleStoreUpdateCallback">Triggered upon completion of the subscription update.</param>
-        public static void UpdateSubscriptionInAppleStore(Product newProduct, string developerPayload, Action<Product, string> appleStoreUpdateCallback) {
+        public static void UpdateSubscriptionInAppleStore(Product newProduct, string developerPayload, Action<Product, string> appleStoreUpdateCallback)
+        {
             appleStoreUpdateCallback(newProduct, developerPayload);
         }
 
@@ -142,7 +159,8 @@ namespace UnityEngine.Purchasing {
         /// </summary>
         /// <param name="product">Subscription to be inspected</param>
         /// <param name="intro_json">From <typeparamref name="IAppleExtensions.GetIntroductoryPriceDictionary"/></param>
-        public SubscriptionManager(Product product, string intro_json) {
+        public SubscriptionManager(Product product, string intro_json)
+        {
             this.receipt = product.receipt;
             this.productId = product.definition.storeSpecificId;
             this.intro_json = intro_json;
@@ -154,7 +172,8 @@ namespace UnityEngine.Purchasing {
         /// <param name="receipt">A Unity IAP unified receipt from <typeparamref name="Product.receipt"/></param>
         /// <param name="id">A product identifier.</param>
         /// <param name="intro_json">From <typeparamref name="IAppleExtensions.GetIntroductoryPriceDictionary"/></param>
-        public SubscriptionManager(string receipt, string id, string intro_json) {
+        public SubscriptionManager(string receipt, string id, string intro_json)
+        {
             this.receipt = receipt;
             this.productId = id;
             this.intro_json = intro_json;
@@ -169,13 +188,15 @@ namespace UnityEngine.Purchasing {
         /// <exception cref="NullProductIdException">My Product must have a non-null product identifier</exception>
         /// <exception cref="StoreSubscriptionInfoNotSupportedException">A supported app store must be used as my product</exception>
         /// <exception cref="NullReceiptException">My product must have</exception>
-        public SubscriptionInfo getSubscriptionInfo() {
+        public SubscriptionInfo getSubscriptionInfo()
+        {
 
-            if (this.receipt != null) {
+            if (this.receipt != null)
+            {
                 var receipt_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(receipt);
 
                 var validPayload = receipt_wrapper.TryGetValue("Payload", out var payloadAsObject);
-                var validStore  = receipt_wrapper.TryGetValue("Store", out var storeAsObject);
+                var validStore = receipt_wrapper.TryGetValue("Store", out var storeAsObject);
 
                 if (validPayload && validStore)
                 {
@@ -183,27 +204,29 @@ namespace UnityEngine.Purchasing {
                     var payload = payloadAsObject as string;
                     var store = storeAsObject as string;
 
-                    switch (store) {
-                    case GooglePlay.Name:
-                        {
-                            return getGooglePlayStoreSubInfo(payload);
-                        }
-                    case AppleAppStore.Name:
-                    case MacAppStore.Name:
-                        {
-                            if (this.productId == null) {
-                                throw new NullProductIdException();
+                    switch (store)
+                    {
+                        case GooglePlay.Name:
+                            {
+                                return getGooglePlayStoreSubInfo(payload);
                             }
-                            return getAppleAppStoreSubInfo(payload, this.productId);
-                        }
-                    case AmazonApps.Name:
-                        {
-                            return getAmazonAppStoreSubInfo(this.productId);
-                        }
-                    default:
-                        {
-                            throw new StoreSubscriptionInfoNotSupportedException("Store not supported: " + store);
-                        }
+                        case AppleAppStore.Name:
+                        case MacAppStore.Name:
+                            {
+                                if (this.productId == null)
+                                {
+                                    throw new NullProductIdException();
+                                }
+                                return getAppleAppStoreSubInfo(payload, this.productId);
+                            }
+                        case AmazonApps.Name:
+                            {
+                                return getAmazonAppStoreSubInfo(this.productId);
+                            }
+                        default:
+                            {
+                                throw new StoreSubscriptionInfoNotSupportedException("Store not supported: " + store);
+                            }
                     }
                 }
             }
@@ -212,30 +235,42 @@ namespace UnityEngine.Purchasing {
 
         }
 
-        private SubscriptionInfo getAmazonAppStoreSubInfo(string productId) {
+        private SubscriptionInfo getAmazonAppStoreSubInfo(string productId)
+        {
             return new SubscriptionInfo(productId);
         }
-        private SubscriptionInfo getAppleAppStoreSubInfo(string payload, string productId) {
+        private SubscriptionInfo getAppleAppStoreSubInfo(string payload, string productId)
+        {
 
             AppleReceipt receipt = null;
 
             var logger = UnityEngine.Debug.unityLogger;
 
-            try {
+            try
+            {
                 receipt = new AppleReceiptParser().Parse(Convert.FromBase64String(payload));
-            } catch (ArgumentException e) {
-                logger.Log ("Unable to parse Apple receipt", e);
-            } catch (Security.IAPSecurityException e) {
-                logger.Log ("Unable to parse Apple receipt", e);
-            } catch (NullReferenceException e) {
-                logger.Log ("Unable to parse Apple receipt", e);
+            }
+            catch (ArgumentException e)
+            {
+                logger.Log("Unable to parse Apple receipt", e);
+            }
+            catch (Security.IAPSecurityException e)
+            {
+                logger.Log("Unable to parse Apple receipt", e);
+            }
+            catch (NullReferenceException e)
+            {
+                logger.Log("Unable to parse Apple receipt", e);
             }
 
             List<AppleInAppPurchaseReceipt> inAppPurchaseReceipts = new List<AppleInAppPurchaseReceipt>();
 
-            if (receipt != null && receipt.inAppPurchaseReceipts != null && receipt.inAppPurchaseReceipts.Length > 0) {
-                foreach (AppleInAppPurchaseReceipt r in receipt.inAppPurchaseReceipts) {
-                    if (r.productID.Equals(productId)) {
+            if (receipt != null && receipt.inAppPurchaseReceipts != null && receipt.inAppPurchaseReceipts.Length > 0)
+            {
+                foreach (AppleInAppPurchaseReceipt r in receipt.inAppPurchaseReceipts)
+                {
+                    if (r.productID.Equals(productId))
+                    {
                         inAppPurchaseReceipts.Add(r);
                     }
                 }
@@ -243,14 +278,15 @@ namespace UnityEngine.Purchasing {
             return inAppPurchaseReceipts.Count == 0 ? null : new SubscriptionInfo(findMostRecentReceipt(inAppPurchaseReceipts), this.intro_json);
         }
 
-        private AppleInAppPurchaseReceipt findMostRecentReceipt(List<AppleInAppPurchaseReceipt> receipts) {
+        private AppleInAppPurchaseReceipt findMostRecentReceipt(List<AppleInAppPurchaseReceipt> receipts)
+        {
             receipts.Sort((b, a) => (a.purchaseDate.CompareTo(b.purchaseDate)));
             return receipts[0];
         }
 
         private SubscriptionInfo getGooglePlayStoreSubInfo(string payload)
         {
-            var payload_wrapper = (Dictionary<string, object>) MiniJson.JsonDecode(payload);
+            var payload_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(payload);
             var validSkuDetailsKey = payload_wrapper.TryGetValue("skuDetails", out var skuDetailsObject);
 
             string skuDetails = null;
@@ -259,13 +295,13 @@ namespace UnityEngine.Purchasing {
             var purchaseHistorySupported = false;
 
             var original_json_payload_wrapper =
-                (Dictionary<string, object>) MiniJson.JsonDecode((string) payload_wrapper["json"]);
+                (Dictionary<string, object>)MiniJson.JsonDecode((string)payload_wrapper["json"]);
 
             var validIsAutoRenewingKey =
                 original_json_payload_wrapper.TryGetValue("autoRenewing", out var autoRenewingObject);
 
             var isAutoRenewing = false;
-            if (validIsAutoRenewingKey) isAutoRenewing = (bool) autoRenewingObject;
+            if (validIsAutoRenewingKey) isAutoRenewing = (bool)autoRenewingObject;
 
             // Google specifies times in milliseconds since 1970.
             DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
@@ -275,7 +311,7 @@ namespace UnityEngine.Purchasing {
 
             long purchaseTime = 0;
 
-            if (validPurchaseTimeKey) purchaseTime = (long) purchaseTimeObject;
+            if (validPurchaseTimeKey) purchaseTime = (long)purchaseTimeObject;
 
             var purchaseDate = epoch.AddMilliseconds(purchaseTime);
 
@@ -288,30 +324,30 @@ namespace UnityEngine.Purchasing {
 
             if (validDeveloperPayloadKey)
             {
-                var developerPayloadJSON = (string) developerPayloadObject;
-                var developerPayload_wrapper = (Dictionary<string, object>) MiniJson.JsonDecode(developerPayloadJSON);
+                var developerPayloadJSON = (string)developerPayloadObject;
+                var developerPayload_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(developerPayloadJSON);
                 var validIsFreeTrialKey =
                     developerPayload_wrapper.TryGetValue("is_free_trial", out var isFreeTrialObject);
-                if (validIsFreeTrialKey) isFreeTrial = (bool) isFreeTrialObject;
+                if (validIsFreeTrialKey) isFreeTrial = (bool)isFreeTrialObject;
 
                 var validHasIntroductoryPriceKey =
                     developerPayload_wrapper.TryGetValue("has_introductory_price_trial",
                         out var hasIntroductoryPriceObject);
 
-                if (validHasIntroductoryPriceKey) hasIntroductoryPrice = (bool) hasIntroductoryPriceObject;
+                if (validHasIntroductoryPriceKey) hasIntroductoryPrice = (bool)hasIntroductoryPriceObject;
 
                 var validIsUpdatedKey = developerPayload_wrapper.TryGetValue("is_updated", out var isUpdatedObject);
 
                 var isUpdated = false;
 
-                if (validIsUpdatedKey) isUpdated = (bool) isUpdatedObject;
+                if (validIsUpdatedKey) isUpdated = (bool)isUpdatedObject;
 
                 if (isUpdated)
                 {
                     var isValidUpdateMetaKey = developerPayload_wrapper.TryGetValue("update_subscription_metadata",
                         out var updateMetadataObject);
 
-                    if (isValidUpdateMetaKey) updateMetadata = (string) updateMetadataObject;
+                    if (isValidUpdateMetaKey) updateMetadata = (string)updateMetadataObject;
                 }
             }
 
@@ -326,7 +362,8 @@ namespace UnityEngine.Purchasing {
     /// A container for a Product’s subscription-related information.
     /// </summary>
     /// <seealso cref="SubscriptionManager.getSubscriptionInfo"/>
-    public class SubscriptionInfo {
+    public class SubscriptionInfo
+    {
         private Result is_subscribed;
         private Result is_expired;
         private Result is_cancelled;
@@ -358,33 +395,43 @@ namespace UnityEngine.Purchasing {
         /// <c>unit</c>, which can be fetched from Apple's remote service.</param>
         /// <exception cref="InvalidProductTypeException">Error found involving an invalid product type.</exception>
         /// <see cref="UnityEngine.Purchasing.Security.CrossPlatformValidator"/>
-        public SubscriptionInfo(AppleInAppPurchaseReceipt r, string intro_json) {
+        public SubscriptionInfo(AppleInAppPurchaseReceipt r, string intro_json)
+        {
 
-            var productType = (AppleStoreProductType) Enum.Parse(typeof(AppleStoreProductType), r.productType.ToString());
+            var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), r.productType.ToString());
 
-            if (productType == AppleStoreProductType.Consumable || productType == AppleStoreProductType.NonConsumable) {
+            if (productType == AppleStoreProductType.Consumable || productType == AppleStoreProductType.NonConsumable)
+            {
                 throw new InvalidProductTypeException();
             }
 
-            if (!string.IsNullOrEmpty(intro_json)) {
-                var intro_wrapper = (Dictionary<string, object>) MiniJson.JsonDecode(intro_json);
+            if (!string.IsNullOrEmpty(intro_json))
+            {
+                var intro_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(intro_json);
                 var nunit = -1;
                 var unit = SubscriptionPeriodUnit.NotAvailable;
                 this.introductory_price = intro_wrapper.TryGetString("introductoryPrice") + intro_wrapper.TryGetString("introductoryPriceLocale");
-                if (string.IsNullOrEmpty(this.introductory_price)) {
+                if (string.IsNullOrEmpty(this.introductory_price))
+                {
                     this.introductory_price = "not available";
-                } else {
-                    try {
+                }
+                else
+                {
+                    try
+                    {
                         this.introductory_price_cycles = Convert.ToInt64(intro_wrapper.TryGetString("introductoryPriceNumberOfPeriods"));
                         nunit = Convert.ToInt32(intro_wrapper.TryGetString("numberOfUnits"));
                         unit = (SubscriptionPeriodUnit)Convert.ToInt32(intro_wrapper.TryGetString("unit"));
-                    } catch(Exception e) {
-                        Debug.unityLogger.Log ("Unable to parse introductory period cycles and duration, this product does not have configuration of introductory price period", e);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.unityLogger.Log("Unable to parse introductory period cycles and duration, this product does not have configuration of introductory price period", e);
                         unit = SubscriptionPeriodUnit.NotAvailable;
                     }
                 }
                 DateTime now = DateTime.Now;
-                switch (unit) {
+                switch (unit)
+                {
                     case SubscriptionPeriodUnit.Day:
                         this.introductory_price_period = TimeSpan.FromTicks(TimeSpan.FromDays(1).Ticks * nunit);
                         break;
@@ -404,7 +451,9 @@ namespace UnityEngine.Purchasing {
                         this.introductory_price_cycles = 0;
                         break;
                 }
-            } else {
+            }
+            else
+            {
                 this.introductory_price = "not available";
                 this.introductory_price_period = TimeSpan.Zero;
                 this.introductory_price_cycles = 0;
@@ -418,14 +467,17 @@ namespace UnityEngine.Purchasing {
             this.subscriptionCancelDate = r.cancellationDate;
 
             // if the product is non-renewing subscription, apple store will not return expiration date for this product
-            if (productType == AppleStoreProductType.NonRenewingSubscription) {
+            if (productType == AppleStoreProductType.NonRenewingSubscription)
+            {
                 this.is_subscribed = Result.Unsupported;
                 this.is_expired = Result.Unsupported;
                 this.is_cancelled = Result.Unsupported;
                 this.is_free_trial = Result.Unsupported;
                 this.is_auto_renewing = Result.Unsupported;
                 this.is_introductory_price_period = Result.Unsupported;
-            } else {
+            }
+            else
+            {
                 this.is_cancelled = (r.cancellationDate.Ticks > 0) && (r.cancellationDate.Ticks < current_date.Ticks) ? Result.True : Result.False;
                 this.is_subscribed = r.subscriptionExpirationDate.Ticks >= current_date.Ticks ? Result.True : Result.False;
                 this.is_expired = (r.subscriptionExpirationDate.Ticks > 0 && r.subscriptionExpirationDate.Ticks < current_date.Ticks) ? Result.True : Result.False;
@@ -435,9 +487,12 @@ namespace UnityEngine.Purchasing {
                 this.is_introductory_price_period = r.isIntroductoryPricePeriod == 1 ? Result.True : Result.False;
             }
 
-            if (this.is_subscribed == Result.True) {
+            if (this.is_subscribed == Result.True)
+            {
                 this.remainedTime = r.subscriptionExpirationDate.Subtract(current_date);
-            } else {
+            }
+            else
+            {
                 this.remainedTime = TimeSpan.Zero;
             }
 
@@ -457,12 +512,14 @@ namespace UnityEngine.Purchasing {
         /// <param name="updateMetadata">Unsupported. Mechanism previously propagated subscription upgrade information to new subscription. </param>
         /// <exception cref="InvalidProductTypeException">For non-subscription product types. </exception>
         public SubscriptionInfo(string skuDetails, bool isAutoRenewing, DateTime purchaseDate, bool isFreeTrial,
-                bool hasIntroductoryPriceTrial, bool purchaseHistorySupported, string updateMetadata) {
+                bool hasIntroductoryPriceTrial, bool purchaseHistorySupported, string updateMetadata)
+        {
 
             var skuDetails_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(skuDetails);
             var validTypeKey = skuDetails_wrapper.TryGetValue("type", out var typeObject);
 
-            if (!validTypeKey || (string)typeObject == "inapp") {
+            if (!validTypeKey || (string)typeObject == "inapp")
+            {
                 throw new InvalidProductTypeException();
             }
 
@@ -479,23 +536,28 @@ namespace UnityEngine.Purchasing {
 
 
             string sub_period = null;
-            if (skuDetails_wrapper.ContainsKey("subscriptionPeriod")) {
+            if (skuDetails_wrapper.ContainsKey("subscriptionPeriod"))
+            {
                 sub_period = (string)skuDetails_wrapper["subscriptionPeriod"];
             }
             string free_trial_period = null;
-            if (skuDetails_wrapper.ContainsKey("freeTrialPeriod")) {
+            if (skuDetails_wrapper.ContainsKey("freeTrialPeriod"))
+            {
                 free_trial_period = (string)skuDetails_wrapper["freeTrialPeriod"];
             }
             string introductory_price = null;
-            if (skuDetails_wrapper.ContainsKey("introductoryPrice")) {
+            if (skuDetails_wrapper.ContainsKey("introductoryPrice"))
+            {
                 introductory_price = (string)skuDetails_wrapper["introductoryPrice"];
             }
             string introductory_price_period_string = null;
-            if (skuDetails_wrapper.ContainsKey("introductoryPricePeriod")) {
+            if (skuDetails_wrapper.ContainsKey("introductoryPricePeriod"))
+            {
                 introductory_price_period_string = (string)skuDetails_wrapper["introductoryPricePeriod"];
             }
             long introductory_price_cycles = 0;
-            if (skuDetails_wrapper.ContainsKey("introductoryPriceCycles")) {
+            if (skuDetails_wrapper.ContainsKey("introductoryPriceCycles"))
+            {
                 introductory_price_cycles = (long)skuDetails_wrapper["introductoryPriceCycles"];
             }
 
@@ -505,7 +567,8 @@ namespace UnityEngine.Purchasing {
             this.subscriptionPeriod = computePeriodTimeSpan(parsePeriodTimeSpanUnits(sub_period));
 
             this.freeTrialPeriod = TimeSpan.Zero;
-            if (isFreeTrial) {
+            if (isFreeTrial)
+            {
                 this.freeTrialPeriod = parseTimeSpan(free_trial_period);
             }
 
@@ -515,10 +578,14 @@ namespace UnityEngine.Purchasing {
             this.is_introductory_price_period = Result.False;
             TimeSpan total_introductory_duration = TimeSpan.Zero;
 
-            if (hasIntroductoryPriceTrial) {
-                if (introductory_price_period_string != null && introductory_price_period_string.Equals(sub_period)) {
+            if (hasIntroductoryPriceTrial)
+            {
+                if (introductory_price_period_string != null && introductory_price_period_string.Equals(sub_period))
+                {
                     this.introductory_price_period = this.subscriptionPeriod;
-                } else {
+                }
+                else
+                {
                     this.introductory_price_period = parseTimeSpan(introductory_price_period_string);
                 }
                 // compute the total introductory duration according to the introductory price period and period cycles
@@ -532,20 +599,27 @@ namespace UnityEngine.Purchasing {
 
 
             // this subscription is still in the extra time (the time left by the previous subscription when updated to the current one)
-            if (time_since_purchased <= extra_time) {
+            if (time_since_purchased <= extra_time)
+            {
                 // this subscription is in the remaining credits from the previous updated one
                 this.subscriptionExpireDate = purchaseDate.Add(extra_time);
-            } else if (time_since_purchased <= this.freeTrialPeriod.Add(extra_time)) {
+            }
+            else if (time_since_purchased <= this.freeTrialPeriod.Add(extra_time))
+            {
                 // this subscription is in the free trial period
                 // this product will be valid until free trial ends, the beginning of next billing date
                 this.is_free_trial = Result.True;
                 this.subscriptionExpireDate = purchaseDate.Add(this.freeTrialPeriod.Add(extra_time));
-            } else if (time_since_purchased < this.freeTrialPeriod.Add(extra_time).Add(total_introductory_duration)) {
+            }
+            else if (time_since_purchased < this.freeTrialPeriod.Add(extra_time).Add(total_introductory_duration))
+            {
                 // this subscription is in the introductory price period
                 this.is_introductory_price_period = Result.True;
                 DateTime introductory_price_begin_date = this.purchaseDate.Add(this.freeTrialPeriod.Add(extra_time));
                 this.subscriptionExpireDate = nextBillingDate(introductory_price_begin_date, parsePeriodTimeSpanUnits(introductory_price_period_string));
-            } else {
+            }
+            else
+            {
                 // no matter sub is cancelled or not, the expire date will be next billing date
                 DateTime billing_begin_date = this.purchaseDate.Add(this.freeTrialPeriod.Add(extra_time).Add(total_introductory_duration));
                 this.subscriptionExpireDate = nextBillingDate(billing_begin_date, parsePeriodTimeSpanUnits(sub_period));
@@ -560,7 +634,8 @@ namespace UnityEngine.Purchasing {
         /// Note this is intended to be called internally.
         /// </summary>
         /// <param name="productId">This subscription's product identifier</param>
-        public SubscriptionInfo(string productId) {
+        public SubscriptionInfo(string productId)
+        {
             this.productId = productId;
             this.is_subscribed = Result.True;
             this.is_expired = Result.False;
@@ -790,7 +865,8 @@ namespace UnityEngine.Purchasing {
         /// A JSON with keys: <c>productId</c>, <c>is_free_trial</c>, <c>is_introductory_price_period</c>, <c>remaining_time_in_seconds</c>.
         /// </returns>
         /// <seealso cref="SubscriptionManager.UpdateSubscription"/>
-        public string getSubscriptionInfoJsonString() {
+        public string getSubscriptionInfoJsonString()
+        {
             Dictionary<string, object> dict = new Dictionary<string, object>();
             dict.Add("productId", this.productId);
             dict.Add("is_free_trial", this.is_free_trial);
@@ -799,52 +875,65 @@ namespace UnityEngine.Purchasing {
             return MiniJson.JsonEncode(dict);
         }
 
-        private DateTime nextBillingDate(DateTime billing_begin_date, TimeSpanUnits units) {
+        private DateTime nextBillingDate(DateTime billing_begin_date, TimeSpanUnits units)
+        {
 
             if (units.days == 0.0 && units.months == 0 && units.years == 0) return new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
             DateTime next_billing_date = billing_begin_date;
             // find the next billing date that after the current date
-            while (DateTime.Compare(next_billing_date, DateTime.UtcNow) <= 0) {
+            while (DateTime.Compare(next_billing_date, DateTime.UtcNow) <= 0)
+            {
 
                 next_billing_date = next_billing_date.AddDays(units.days).AddMonths(units.months).AddYears(units.years);
             }
             return next_billing_date;
         }
 
-        private TimeSpan accumulateIntroductoryDuration(TimeSpanUnits units, long cycles) {
+        private TimeSpan accumulateIntroductoryDuration(TimeSpanUnits units, long cycles)
+        {
             TimeSpan result = TimeSpan.Zero;
-            for (long i = 0; i < cycles; i++) {
+            for (long i = 0; i < cycles; i++)
+            {
                 result = result.Add(computePeriodTimeSpan(units));
             }
             return result;
         }
 
-        private TimeSpan computePeriodTimeSpan(TimeSpanUnits units) {
+        private TimeSpan computePeriodTimeSpan(TimeSpanUnits units)
+        {
             DateTime now = DateTime.Now;
             return now.AddDays(units.days).AddMonths(units.months).AddYears(units.years).Subtract(now);
         }
 
 
-        private double computeExtraTime(string metadata, double new_sku_period_in_seconds) {
+        private double computeExtraTime(string metadata, double new_sku_period_in_seconds)
+        {
             var wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(metadata);
             long old_sku_remaining_seconds = (long)wrapper["old_sku_remaining_seconds"];
             long old_sku_price_in_micros = (long)wrapper["old_sku_price_in_micros"];
 
             double old_sku_period_in_seconds = (parseTimeSpan((string)wrapper["old_sku_period_string"])).TotalSeconds;
             long new_sku_price_in_micros = (long)wrapper["new_sku_price_in_micros"];
-            double result = ((((double)old_sku_remaining_seconds / (double)old_sku_period_in_seconds ) * (double)old_sku_price_in_micros) / (double)new_sku_price_in_micros) * new_sku_period_in_seconds;
+            double result = ((((double)old_sku_remaining_seconds / (double)old_sku_period_in_seconds) * (double)old_sku_price_in_micros) / (double)new_sku_price_in_micros) * new_sku_period_in_seconds;
             return result;
         }
 
-        private TimeSpan parseTimeSpan(string period_string) {
+        private TimeSpan parseTimeSpan(string period_string)
+        {
             TimeSpan result = TimeSpan.Zero;
-            try {
+            try
+            {
                 result = XmlConvert.ToTimeSpan(period_string);
-            } catch(Exception) {
-                if (period_string == null || period_string.Length == 0) {
+            }
+            catch (Exception)
+            {
+                if (period_string == null || period_string.Length == 0)
+                {
                     result = TimeSpan.Zero;
-                } else {
+                }
+                else
+                {
                     // .Net "P1W" is not supported and throws a FormatException
                     // not sure if only weekly billing contains "W"
                     // need more testing
@@ -854,26 +943,28 @@ namespace UnityEngine.Purchasing {
             return result;
         }
 
-        private TimeSpanUnits parsePeriodTimeSpanUnits(string time_span) {
-            switch (time_span) {
-            case "P1W":
-                // weekly subscription
-                return new TimeSpanUnits(7.0, 0, 0);
-            case "P1M":
-                // monthly subscription
-                return new TimeSpanUnits(0.0, 1, 0);
-            case "P3M":
-                // 3 months subscription
-                return new TimeSpanUnits(0.0, 3, 0);
-            case "P6M":
-                // 6 months subscription
-                return new TimeSpanUnits(0.0, 6, 0);
-            case "P1Y":
-                // yearly subscription
-                return new TimeSpanUnits(0.0, 0, 1);
-            default:
-                // seasonal subscription or duration in days
-                return new TimeSpanUnits((double)parseTimeSpan(time_span).Days, 0, 0);
+        private TimeSpanUnits parsePeriodTimeSpanUnits(string time_span)
+        {
+            switch (time_span)
+            {
+                case "P1W":
+                    // weekly subscription
+                    return new TimeSpanUnits(7.0, 0, 0);
+                case "P1M":
+                    // monthly subscription
+                    return new TimeSpanUnits(0.0, 1, 0);
+                case "P3M":
+                    // 3 months subscription
+                    return new TimeSpanUnits(0.0, 3, 0);
+                case "P6M":
+                    // 6 months subscription
+                    return new TimeSpanUnits(0.0, 6, 0);
+                case "P1Y":
+                    // yearly subscription
+                    return new TimeSpanUnits(0.0, 0, 1);
+                default:
+                    // seasonal subscription or duration in days
+                    return new TimeSpanUnits((double)parseTimeSpan(time_span).Days, 0, 0);
             }
         }
 
@@ -884,7 +975,8 @@ namespace UnityEngine.Purchasing {
     /// <summary>
     /// For representing boolean values which may also be not available.
     /// </summary>
-    public enum Result {
+    public enum Result
+    {
         /// <summary>
         /// Corresponds to boolean <c> true </c>.
         /// </summary>
@@ -903,7 +995,8 @@ namespace UnityEngine.Purchasing {
     /// Used internally to parse Apple receipts. Corresponds to Apple SKProductPeriodUnit.
     /// </summary>
     /// <see cref="https://developer.apple.com/documentation/storekit/skproductperiodunit?language=objc"/>
-    public enum SubscriptionPeriodUnit {
+    public enum SubscriptionPeriodUnit
+    {
         /// <summary>
         /// An interval lasting one day.
         /// </summary>
@@ -926,7 +1019,8 @@ namespace UnityEngine.Purchasing {
         NotAvailable = 4,
     };
 
-    enum AppleStoreProductType {
+    enum AppleStoreProductType
+    {
         NonConsumable = 0,
         Consumable = 1,
         NonRenewingSubscription = 2,
@@ -936,7 +1030,8 @@ namespace UnityEngine.Purchasing {
     /// <summary>
     /// Error found during receipt parsing.
     /// </summary>
-    public class ReceiptParserException : System.Exception {
+    public class ReceiptParserException : System.Exception
+    {
         /// <summary>
         /// Construct an error object for receipt parsing.
         /// </summary>
@@ -952,27 +1047,29 @@ namespace UnityEngine.Purchasing {
     /// <summary>
     /// An error was found when an invalid <typeparamref name="Product.definition.type"/> is provided.
     /// </summary>
-    public class InvalidProductTypeException : ReceiptParserException {}
+    public class InvalidProductTypeException : ReceiptParserException { }
 
     /// <summary>
     /// An error was found when an unexpectedly null <typeparamref name="Product.definition.id"/> is provided.
     /// </summary>
-    public class NullProductIdException : ReceiptParserException {}
+    public class NullProductIdException : ReceiptParserException { }
 
     /// <summary>
     /// An error was found when an unexpectedly null <typeparamref name="Product.receipt"/> is provided.
     /// </summary>
-    public class NullReceiptException : ReceiptParserException {}
+    public class NullReceiptException : ReceiptParserException { }
 
     /// <summary>
     /// An error was found when an unsupported app store <typeparamref name="Product.receipt"/> is provided.
     /// </summary>
-    public class StoreSubscriptionInfoNotSupportedException : ReceiptParserException {
+    public class StoreSubscriptionInfoNotSupportedException : ReceiptParserException
+    {
         /// <summary>
         /// An error was found when an unsupported app store <typeparamref name="Product.receipt"/> is provided.
         /// </summary>
         /// <param name="message">Human readable explanation of this error</param>
-        public StoreSubscriptionInfoNotSupportedException (string message) : base (message) {
+        public StoreSubscriptionInfoNotSupportedException(string message) : base(message)
+        {
         }
     }
 }

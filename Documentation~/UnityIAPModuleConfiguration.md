@@ -9,4 +9,3 @@ BindConfiguration<MyConfiguration>(new MyConfiguration());
 ````
 
 When developers request an instance of your configuration type, Unity IAP first tries to cast your store implementation to the configuration type. Only if that cast fails will any instance bound via ``BindConfiguration`` will be used.
-

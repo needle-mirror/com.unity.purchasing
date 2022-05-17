@@ -11,7 +11,7 @@ public class MyStore : IStore
     private IStoreCallback callback;
     public void Initialize (IStoreCallback callback)
     {
-        this.callback = callback;   
+        this.callback = callback;
     }
 
     public void RetrieveProducts (System.Collections.ObjectModel.ReadOnlyCollection<UnityEngine.Purchasing.ProductDefinition> products)
@@ -26,8 +26,7 @@ public class MyStore : IStore
 
     public void FinishTransaction (UnityEngine.Purchasing.ProductDefinition product, string transactionId)
     {
-        // Perform transaction related housekeeping 
+        // Perform transaction related housekeeping
     }
 }
 ````
-

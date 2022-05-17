@@ -2,10 +2,12 @@ namespace UnityEngine.Purchasing.Models
 {
     interface IGoogleBillingResult
     {
-        GoogleBillingResponseCode responseCode {
+        GoogleBillingResponseCode responseCode
+        {
             get;
         }
-        string debugMessage {
+        string debugMessage
+        {
             get;
         }
     }

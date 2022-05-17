@@ -35,8 +35,8 @@ namespace UnityEditor.Purchasing
 
         public static bool IsAndroid(this AppStore value)
         {
-            return (int) value >= (int) AppStoreMeta.AndroidStoreStart &&
-                   (int) value <= (int) AppStoreMeta.AndroidStoreEnd;
+            return (int)value >= (int)AppStoreMeta.AndroidStoreStart &&
+                   (int)value <= (int)AppStoreMeta.AndroidStoreEnd;
         }
     }
 }

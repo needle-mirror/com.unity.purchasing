@@ -1,4 +1,4 @@
-﻿namespace UnityEngine.Purchasing
+namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// The various reasons a purchase can fail. These codes are store-specific, so that developers can have access to

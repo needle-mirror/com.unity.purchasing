@@ -58,4 +58,4 @@ More information can be found in the `Stores` section of this manual
 
 #### Unity Learn IAP classes
 
-[Refer to the Unity Learn IAP classes](https://learn.unity.com/tutorial/unity-iap) for more guidance. 
+[Refer to the Unity Learn IAP classes](https://learn.unity.com/tutorial/unity-iap) for more guidance.

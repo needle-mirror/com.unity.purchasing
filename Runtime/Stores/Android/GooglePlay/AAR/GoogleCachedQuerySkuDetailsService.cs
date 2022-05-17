@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace UnityEngine.Purchasing
 {
-    class GoogleCachedQuerySkuDetailsService: IGoogleCachedQuerySkuDetailsService
+    class GoogleCachedQuerySkuDetailsService : IGoogleCachedQuerySkuDetailsService
     {
         Dictionary<string, AndroidJavaObject> m_CachedQueriedSkus = new Dictionary<string, AndroidJavaObject>();
 

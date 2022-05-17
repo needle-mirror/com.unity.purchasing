@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Access Google Play store specific configurations.
     /// </summary>
-    public interface IGooglePlayConfiguration: IStoreConfiguration
+    public interface IGooglePlayConfiguration : IStoreConfiguration
     {
         /// <summary>
         /// Set an optional listener for failures when connecting to the base Google Play Billing service. This may be called

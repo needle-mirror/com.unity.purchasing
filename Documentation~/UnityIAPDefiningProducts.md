@@ -1,9 +1,9 @@
 # IAP Catalog
 
 To open the __IAP Catalog__ GUI one of two ways:
- 
+
 * Select  __Services &gt; In-App Purchasing &gt; IAP Catalog__.
-* Or, with your __IAP Button__ selected, locate its __IAP Button (Script)__ component in the Inspector, then click __IAP Catalog…__. 
+* Or, with your __IAP Button__ selected, locate its __IAP Button (Script)__ component in the Inspector, then click __IAP Catalog…__.
 
 ![Accessing the **IAP Catalog** GUI through an **IAP Button** script component](images/OpenCatalogGUI.png)
 
@@ -16,7 +16,7 @@ Next, use the GUI to define the following attributes for each Product in your ca
 
 ![Populating Product information in the **IAP Catalog** GUI](images/IAPCatalogGUI.png)
 
-**Note:** 
+**Note:**
 - The __IAP Catalog__ GUI provides additional tools for configuring your Products. Before [exporting a catalog](#Exporting-to-an-app-store) for upload to its respective store, you must populate description and pricing information as well.
 - The __IAP Catalog__ acts as a Product catalog dictionary, not as an inventory manager. You must still implement the code that handles conveyance of the purchased content.
 
@@ -31,7 +31,7 @@ This sections defines the [descriptions of a product](DefiningProductsOverview.m
 Add __Translations__ for the __Title__ and __Description__ fields by clicking the plus (__+__) icon and selecting an additional locale. You can add as many translations as you like.
 
 ### Payouts
-This sections defines the [payout of a product](DefiningProductsOverview.md#Payouts). 
+This sections defines the [payout of a product](DefiningProductsOverview.md#Payouts).
 
 ![Populating **Payouts** fields for Products in the **IAP Catalog** GUI](images/Payouts.png)
 
@@ -48,7 +48,7 @@ Provide either a Product price, or an ID for a [Pricing Template](https://suppor
 ### Apple Configuration (required for Apple export)
 Select a **Pricing Tier** from the dropdown menu. Unity supports predefined Apple price points, but not arbitrary values.
 
-__Select a screenshot__ to upload. 
+__Select a screenshot__ to upload.
 
 For information on screenshot specs, see Apple’s publisher support documentation.
 

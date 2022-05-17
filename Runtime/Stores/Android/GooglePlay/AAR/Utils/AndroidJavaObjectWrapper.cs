@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing.Utils
 
         public ReturnType Call<ReturnType>(string methodName, params object[] args)
         {
-            var obj = (AndroidJavaObject) androidJavaObject;
+            var obj = (AndroidJavaObject)androidJavaObject;
             return obj.Call<ReturnType>(methodName, args);
         }
     }

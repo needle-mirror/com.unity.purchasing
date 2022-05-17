@@ -9,7 +9,8 @@ namespace UnityEngine.Purchasing.Utils
             return FormatPayload(purchaseOriginalJson, purchaseSignature, skuDetailsJson);
         }
 
-        static string FormatPayload(string json, string signature, string skuDetails) {
+        static string FormatPayload(string json, string signature, string skuDetails)
+        {
             var dic = new Dictionary<string, object>
             {
                 ["json"] = json,

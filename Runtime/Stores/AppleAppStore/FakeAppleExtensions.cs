@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
@@ -30,7 +30,8 @@ namespace UnityEngine.Purchasing
         {
         }
 
-        public bool simulateAskToBuy {
+        public bool simulateAskToBuy
+        {
             get;
             set;
         }
@@ -53,11 +54,11 @@ namespace UnityEngine.Purchasing
         {
         }
 
-        public void SetApplicationUsername (string applicationUsername)
+        public void SetApplicationUsername(string applicationUsername)
         {
         }
 
-        public string GetTransactionReceiptForProduct (Product product)
+        public string GetTransactionReceiptForProduct(Product product)
         {
             return "";
         }
@@ -66,11 +67,13 @@ namespace UnityEngine.Purchasing
         {
         }
 
-        public Dictionary<string, string> GetIntroductoryPriceDictionary() {
+        public Dictionary<string, string> GetIntroductoryPriceDictionary()
+        {
             return new Dictionary<string, string>();
         }
 
-        public Dictionary<string, string> GetProductDetails() {
+        public Dictionary<string, string> GetProductDetails()
+        {
             return new Dictionary<string, string>();
         }
 

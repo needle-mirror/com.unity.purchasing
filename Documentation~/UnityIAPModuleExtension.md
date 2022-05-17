@@ -20,5 +20,3 @@ Applications request extended functionality via the ``IExtensionProvider``. When
 If that cast fails, Unity IAP will provide any instance registered via a call your store module has provided via ``RegisterExtension``, or null if no instance has been provided.
 
 Modules should provide instances for the extension interfaces they define even when running on unsupported platforms, so as to avoid forcing application developers to use platform dependent compilation.
-
-

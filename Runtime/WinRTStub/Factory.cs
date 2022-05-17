@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Purchasing.Default
 {
@@ -18,4 +18,3 @@ namespace UnityEngine.Purchasing.Default
         }
     }
 }
-

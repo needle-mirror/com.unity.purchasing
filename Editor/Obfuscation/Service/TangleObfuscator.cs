@@ -12,7 +12,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// An Exception thrown when the tangle order array provided is invalid or shorter than the number of data slices made.
         /// </summary>
-        public class InvalidOrderArray : Exception {}
+        public class InvalidOrderArray : Exception { }
 
         /// <summary>
         /// Generates the obfucscation tangle data.
@@ -30,18 +30,18 @@ namespace UnityEditor.Purchasing
 
             if (order == null || order.Length < slices)
             {
-				throw new InvalidOrderArray();
-			}
+                throw new InvalidOrderArray();
+            }
 
             Array.Copy(data, res, data.Length);
-            for (int i = 0; i < slices - 1; i ++)
+            for (int i = 0; i < slices - 1; i++)
             {
                 int j = rnd.Next(i, slices - 1);
                 order[i] = j;
                 int sliceSize = 20; // prob should be configurable
                 var tmp = res.Skip(i * 20).Take(sliceSize).ToArray(); // tmp = res[i*20 .. slice]
-                Array.Copy(res, j * 20, res, i * 20, sliceSize);	  // res[i] = res[j*20 .. slice]
-                Array.Copy(tmp, 0, res, j * 20, sliceSize);		      // res[j] = tmp
+                Array.Copy(res, j * 20, res, i * 20, sliceSize);      // res[i] = res[j*20 .. slice]
+                Array.Copy(tmp, 0, res, j * 20, sliceSize);           // res[j] = tmp
             }
             order[slices - 1] = slices - 1;
 

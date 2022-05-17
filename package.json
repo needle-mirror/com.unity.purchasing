@@ -3,18 +3,9 @@
   "displayName": "In App Purchasing",
   "unity": "2019.4",
   "_upm": {
-    "gameService": {
-      "groupIndex": 4,
-      "groupName": "Monetize",
-      "configurePath": "Project/Services/In-App Purchasing",
-      "genericDashboardUrl": "https://unity3d.com/unity/features/iap"
-    },
-    "supportedPlatforms": [
-      "Android",
-      "iOS"
-    ]
+    "changelog": "### Fixed\n- GooglePlay - Fixed a null reference exception introduced in Unity IAP 4.1.4 that could happen when cancelling an in-app purchase."
   },
-  "version": "4.1.4",
+  "version": "4.1.5",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -31,19 +22,16 @@
   ],
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
-  "upm": {
-    "changelog": "### Fixed\n- GooglePlay - Fixed issue where if an app is backgrounded while a purchase is being processed, \nan `OnPurchaseFailed` would be called with the purchase failure reason `UserCancelled`, even if the purchase was successful."
-  },
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.1.4"
+    "com.unity.purchasing.tests": "4.1.5"
   },
   "upmCi": {
-    "footprint": "ac1e0aec8721b92c8930e070637d8ef9b1f34811"
+    "footprint": "4522553ac350509286a56df3b19e3e6ef28c8e2e"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "25048fc7bf20fd8f0a1a548fc73d024ffa7b25fe"
+    "revision": "e85a08b1c40e0237d1455cd2032430b72b82d183"
   },
   "samples": [
     {

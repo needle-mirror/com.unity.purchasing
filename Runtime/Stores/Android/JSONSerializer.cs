@@ -1,21 +1,24 @@
-﻿using System;
+using System;
 using UnityEngine.Purchasing.Extension;
 using System.Collections.Generic;
 using System.Reflection;
 
 namespace UnityEngine.Purchasing
 {
-	static class SerializationExtensions {
-		public static string TryGetString(this Dictionary<string, object> dic, string key)
-		{
-			if (dic.ContainsKey (key)) {
-				if (dic [key] != null) {
-					return dic [key].ToString ();
-				}
-			}
-			return null;
-		}
-	}
+    static class SerializationExtensions
+    {
+        public static string TryGetString(this Dictionary<string, object> dic, string key)
+        {
+            if (dic.ContainsKey(key))
+            {
+                if (dic[key] != null)
+                {
+                    return dic[key].ToString();
+                }
+            }
+            return null;
+        }
+    }
 
     internal class JSONSerializer
     {
@@ -51,13 +54,13 @@ namespace UnityEngine.Purchasing
 
         public static List<ProductDescription> DeserializeProductDescriptions(string json)
         {
-            var objects = (List<object>) MiniJson.JsonDecode(json);
+            var objects = (List<object>)MiniJson.JsonDecode(json);
             var result = new List<ProductDescription>();
             foreach (Dictionary<string, object> obj in objects)
             {
-                var metadata = DeserializeMetadata((Dictionary<string, object>) obj["metadata"]);
+                var metadata = DeserializeMetadata((Dictionary<string, object>)obj["metadata"]);
                 var product = new ProductDescription(
-                    (string) obj["storeSpecificId"],
+                    (string)obj["storeSpecificId"],
                     metadata,
                     obj.TryGetString("receipt"),
                     obj.TryGetString("transactionId"),
@@ -69,14 +72,14 @@ namespace UnityEngine.Purchasing
 
         public static Dictionary<string, string> DeserializeSubscriptionDescriptions(string json)
         {
-            var objects = (List<object>) MiniJson.JsonDecode(json);
+            var objects = (List<object>)MiniJson.JsonDecode(json);
             var result = new Dictionary<string, string>();
             foreach (Dictionary<string, object> obj in objects)
             {
                 var subscription = new Dictionary<string, string>();
                 if (obj.TryGetValue("metadata", out var metadata))
                 {
-                    var metadataDict = (Dictionary<string, object>) metadata;
+                    var metadataDict = (Dictionary<string, object>)metadata;
                     subscription["introductoryPrice"] = metadataDict.TryGetString("introductoryPrice");
                     subscription["introductoryPriceLocale"] = metadataDict.TryGetString("introductoryPriceLocale");
                     subscription["introductoryPriceNumberOfPeriods"] = metadataDict.TryGetString("introductoryPriceNumberOfPeriods");
@@ -84,7 +87,8 @@ namespace UnityEngine.Purchasing
                     subscription["unit"] = metadataDict.TryGetString("unit");
 
                     // this is a double check for Apple side's bug
-                    if (!string.IsNullOrEmpty(subscription["numberOfUnits"]) && string.IsNullOrEmpty(subscription["unit"])) {
+                    if (!string.IsNullOrEmpty(subscription["numberOfUnits"]) && string.IsNullOrEmpty(subscription["unit"]))
+                    {
                         subscription["unit"] = "0";
                     }
                 }
@@ -95,7 +99,7 @@ namespace UnityEngine.Purchasing
 
                 if (obj.TryGetValue("storeSpecificId", out var id))
                 {
-                    var idStr = (string) id;
+                    var idStr = (string)id;
                     result.Add(idStr, MiniJson.JsonEncode(subscription));
                 }
                 else
@@ -109,7 +113,7 @@ namespace UnityEngine.Purchasing
 
         public static Dictionary<string, string> DeserializeProductDetails(string json)
         {
-            var objects = (List<object>) MiniJson.JsonDecode(json);
+            var objects = (List<object>)MiniJson.JsonDecode(json);
             var result = new Dictionary<string, string>();
             foreach (Dictionary<string, object> obj in objects)
             {
@@ -117,7 +121,7 @@ namespace UnityEngine.Purchasing
                 var details = new Dictionary<string, string>();
                 if (obj.TryGetValue("metadata", out var metadata))
                 {
-                    var metadataStr = (Dictionary<string, object>) metadata;
+                    var metadataStr = (Dictionary<string, object>)metadata;
                     details["subscriptionNumberOfUnits"] = metadataStr.TryGetString("subscriptionNumberOfUnits");
                     details["subscriptionPeriodUnit"] = metadataStr.TryGetString("subscriptionPeriodUnit");
                     details["localizedPrice"] = metadataStr.TryGetString("localizedPrice");
@@ -132,12 +136,14 @@ namespace UnityEngine.Purchasing
                     details["unit"] = metadataStr.TryGetString("unit");
 
                     // this is a double check for Apple side's bug
-                    if (!string.IsNullOrEmpty(details["subscriptionNumberOfUnits"]) && string.IsNullOrEmpty(details["subscriptionPeriodUnit"])) {
+                    if (!string.IsNullOrEmpty(details["subscriptionNumberOfUnits"]) && string.IsNullOrEmpty(details["subscriptionPeriodUnit"]))
+                    {
                         details["subscriptionPeriodUnit"] = "0";
                     }
 
                     // this is a double check for Apple side's bug
-                    if (!string.IsNullOrEmpty(details["numberOfUnits"]) && string.IsNullOrEmpty(details["unit"])) {
+                    if (!string.IsNullOrEmpty(details["numberOfUnits"]) && string.IsNullOrEmpty(details["unit"]))
+                    {
                         details["unit"] = "0";
                     }
                 }
@@ -148,7 +154,7 @@ namespace UnityEngine.Purchasing
 
                 if (obj.TryGetValue("storeSpecificId", out var id))
                 {
-                    var idStr = (string) id;
+                    var idStr = (string)id;
                     result.Add(idStr, MiniJson.JsonEncode(details));
                 }
                 else
@@ -162,19 +168,19 @@ namespace UnityEngine.Purchasing
 
         public static PurchaseFailureDescription DeserializeFailureReason(string json)
         {
-            var dic = (Dictionary<string, object>) MiniJson.JsonDecode(json);
+            var dic = (Dictionary<string, object>)MiniJson.JsonDecode(json);
             var reason = PurchaseFailureReason.Unknown;
 
             if (dic.TryGetValue("reason", out var reasonStr))
             {
-                if (Enum.IsDefined(typeof(PurchaseFailureReason), (string) reasonStr))
+                if (Enum.IsDefined(typeof(PurchaseFailureReason), (string)reasonStr))
                 {
-                    reason = (PurchaseFailureReason) Enum.Parse(typeof(PurchaseFailureReason), (string) reasonStr);
+                    reason = (PurchaseFailureReason)Enum.Parse(typeof(PurchaseFailureReason), (string)reasonStr);
                 }
 
                 if (dic.TryGetValue("productId", out var productId))
                 {
-                    return new PurchaseFailureDescription( (string) productId, reason, dic.TryGetString("message"));
+                    return new PurchaseFailureDescription((string)productId, reason, dic.TryGetString("message"));
                 }
             }
             else
@@ -182,7 +188,7 @@ namespace UnityEngine.Purchasing
                 Debug.LogWarning("Reason key not found in purchase failure json: " + json);
             }
 
-            return new PurchaseFailureDescription( "Unknown ProductID", reason, dic.TryGetString("message"));
+            return new PurchaseFailureDescription("Unknown ProductID", reason, dic.TryGetString("message"));
         }
 
         private static ProductMetadata DeserializeMetadata(Dictionary<string, object> data)
@@ -194,9 +200,12 @@ namespace UnityEngine.Purchasing
             // an exception. The best solution is to pass a number for localizedPrice when possible, to avoid any string
             // parsing issues.
             decimal localizedPrice = 0.0m;
-			try {
+            try
+            {
                 localizedPrice = Convert.ToDecimal(data["localizedPrice"]);
-			} catch {
+            }
+            catch
+            {
                 localizedPrice = 0.0m;
             }
 
@@ -217,10 +226,14 @@ namespace UnityEngine.Purchasing
 
             bool enabled = true;
             var enabledProp = typeof(ProductDefinition).GetProperty("enabled");
-			if (enabledProp != null) {
-				try {
+            if (enabledProp != null)
+            {
+                try
+                {
                     enabled = Convert.ToBoolean(enabledProp.GetValue(product, null));
-				} catch {
+                }
+                catch
+                {
                     enabled = true;
                 }
             }
@@ -228,11 +241,14 @@ namespace UnityEngine.Purchasing
 
             var payoutsArray = new List<object>();
             var payoutsProp = typeof(ProductDefinition).GetProperty("payouts");
-			if (payoutsProp != null) {
+            if (payoutsProp != null)
+            {
                 var payoutsObject = payoutsProp.GetValue(product, null);
                 Array payouts = payoutsObject as Array;
-				if (payouts != null) {
-					foreach (object payout in payouts) {
+                if (payouts != null)
+                {
+                    foreach (object payout in payouts)
+                    {
                         var payoutDict = new Dictionary<string, object>();
                         var payoutType = payout.GetType();
                         payoutDict["t"] = payoutType.GetField("typeString").GetValue(payout);
@@ -250,7 +266,7 @@ namespace UnityEngine.Purchasing
 
         private static Dictionary<string, object> EncodeProductDesc(ProductDescription product)
         {
-            var prod = new Dictionary<string, object> {{"storeSpecificId", product.storeSpecificId}};
+            var prod = new Dictionary<string, object> { { "storeSpecificId", product.storeSpecificId } };
 
             // ProductDescription.type field available in Unity 5.4+. Access by reflection here.
             Type pdClassType = typeof(ProductDescription);

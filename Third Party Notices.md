@@ -29,4 +29,3 @@ ASN.1-Editor
 //| WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR        |
 //| A PARTICULAR PURPOSE.                                                         |
 //+-------------------------------------------------------------------------------+
-

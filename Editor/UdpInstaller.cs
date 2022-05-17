@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing
 
         internal static void PromptUdpInstallation()
         {
-            var window = (UdpInstallInstructionsWindow) EditorWindow.GetWindow(typeof(UdpInstallInstructionsWindow));
+            var window = (UdpInstallInstructionsWindow)EditorWindow.GetWindow(typeof(UdpInstallInstructionsWindow));
 #if UNITY_2019_3_OR_NEWER
             window.titleContent.text = k_PackManWindowTitle;
 #else

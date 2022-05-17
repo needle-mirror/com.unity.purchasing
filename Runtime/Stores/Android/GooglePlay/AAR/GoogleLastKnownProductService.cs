@@ -2,7 +2,7 @@ using UnityEngine.Purchasing.Interfaces;
 
 namespace UnityEngine.Purchasing
 {
-    class GoogleLastKnownProductService: IGoogleLastKnownProductService
+    class GoogleLastKnownProductService : IGoogleLastKnownProductService
     {
         string m_LastKnownProductId = null;
         GooglePlayProrationMode? m_LastKnownProrationMode = GooglePlayProrationMode.UnknownSubscriptionUpgradeDowngradePolicy;

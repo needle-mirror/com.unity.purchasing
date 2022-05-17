@@ -1,7 +1,7 @@
 # Defining products
 
 ## Product ID
-Enter a cross-platform unique identifier to serve as the Product’s default ID when communicating with an app store. 
+Enter a cross-platform unique identifier to serve as the Product’s default ID when communicating with an app store.
 
 **Important**: The ID may only contain lowercase letters, numbers, underscores, or periods.
 
@@ -34,12 +34,11 @@ Use this section to add local, fixed definitions for the content you pay out to 
 | __Payout Type__ | Enum | Defines the category of content the purchaser receives. There are four possible Types. | * Currency <br/> * Item<br/> * Resource <br/> * Other|
 | __Payout Subtype__ | String | Provides a level of granularity to the content category. |* “Gold” and “Silver” subtypes of a __Currency__ type <br/> * “Potion” and “Boost” subtypes of an __Item__ type |
 | __Quantity__ | Int | Specifies the number of items, currency, and so on, that the purchaser receives in the payout. | * 1 <br/> * &gt;25<br/>* 100|
-| __Data__ | | Use this field any way you like as a property to reference in code. | * Flag for a UI element<br/> * Item rarity |  
+| __Data__ | | Use this field any way you like as a property to reference in code. | * Flag for a UI element<br/> * Item rarity |
 
-**Note**: You can add multiple Payouts to a single Product. 
+**Note**: You can add multiple Payouts to a single Product.
 
 For more information on the PayoutDefinition class, see the [Scripting Reference](xref:UnityEngine.Purchasing.PayoutDefinition). You can always add Payout information to a Product in a script using this class. For example:
 
 ### Store ID Overrides
 By default, Unity IAP assumes that your Product has the same identifier (specified in the **ID** field, above) across all app stores. Unity recommends doing this where possible. However, there are occasions when this is not possible, such as when publishing to both iOS and Mac stores, which prohibit developers from using the same product ID across both.
-

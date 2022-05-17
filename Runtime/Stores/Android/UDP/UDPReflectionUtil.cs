@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
 
         static Dictionary<Assembly, Type[]> s_assemblyTypeCache = new Dictionary<Assembly, Type[]>();
         static Dictionary<string, Type> s_typeCache = new Dictionary<string, Type>();
-        static readonly string[] k_whiteListedAssemblies = {"UnityEngine", "UnityEditor", "UDP", "com.unity"};
+        static readonly string[] k_whiteListedAssemblies = { "UnityEngine", "UnityEditor", "UDP", "com.unity" };
 
         internal static Type GetTypeByName(string typeName)
         {

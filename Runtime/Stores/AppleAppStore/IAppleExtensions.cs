@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
@@ -22,7 +22,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">The product to fetch the receipt from.</param>
         /// <returns>Returns the receipt if the product has a receipt or an empty string.</returns>
-        string GetTransactionReceiptForProduct (Product product);
+        string GetTransactionReceiptForProduct(Product product);
 
         /// <summary>
         /// Initiate a request to Apple to restore previously made purchases.

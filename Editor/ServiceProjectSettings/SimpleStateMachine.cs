@@ -243,7 +243,7 @@ namespace UnityEditor.Purchasing
             /// It allows to do a common operation on the current state without having all the other states repeat this
             /// code within their transition actions.
             /// </summary>
-            public virtual void EnterState() {}
+            public virtual void EnterState() { }
 
             class ActionForEvent
             {

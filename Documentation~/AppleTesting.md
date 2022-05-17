@@ -31,5 +31,3 @@ To sign the bundle, you may first need to remove the Contents.meta file if it ex
 In order to install the package correctly you must delete the unpackaged .app file before running the newly created package.
 
 You must then launch your App from the Applications folder. The first time you do so, you will be prompted to enter your iTunes account details, for which you should enter your App Store Connect test user account login. You will then be able to make test purchases against the sandbox environment.
-
-

@@ -136,7 +136,7 @@ namespace UnityEngine.Purchasing
             IEnumerable<GooglePurchase> googlePurchases)
         {
             var googlePurchase = googlePurchases.FirstOrDefault(purchase =>
-                purchase.sku == m_LastKnownProductService.GetLastKnownProductId());
+                purchase?.sku == m_LastKnownProductService.GetLastKnownProductId());
 
             if (googlePurchase != null && !googlePurchase.IsAcknowledged())
             {
