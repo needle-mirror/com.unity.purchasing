@@ -15,4 +15,4 @@
 
 7. Click the toggle next to **In-App Purchasing Settings** to **ON**.
 
-This will automatically install the IAP package from the Package Manager, providing you with new features and menu items to help you manage IAP.  
+This will automatically install the IAP package from the Package Manager, providing you with new features and menu items to help you manage IAP.

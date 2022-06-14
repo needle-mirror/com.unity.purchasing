@@ -25,4 +25,3 @@ NOTE: Testing may be complicated and not convincing when using the Apple Sandbox
 See
 [Apple's documentation](https://help.apple.com/app-store-connect/#/dev75708c031)
 on the topic for more information.
-

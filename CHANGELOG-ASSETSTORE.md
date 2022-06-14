@@ -29,7 +29,7 @@
 - GooglePlay - Missing ProcessPurchase callback at app start when the transaction is (1) purchased, (2) processed by the app with a ProcessPurchaseResult.Pending result, (3) the app is terminated, and (4) the app is restarted
 - GooglePlay - NullReferenceException from "FillPurchases" (logged internal API) when returning from background, unpredictably
 - Apple - Unity IAP 2.2.2's Apple Silicon fix not included in release; continuous integration pipeline fixed
-- `StandardPurchasingModule.appStore` returns `AppStore.MacAppStore` for Mac App Store, `AppStore.AppleAppStore` for iOS App Store, and `AppStore.WinRT` for Windows Desktop. (No change to 
+- `StandardPurchasingModule.appStore` returns `AppStore.MacAppStore` for Mac App Store, `AppStore.AppleAppStore` for iOS App Store, and `AppStore.WinRT` for Windows Desktop. (No change to
 `AppStore.SamsungApps`, `AppStore.AmazonAppStore`, or `AppStore.GooglePlay`.)
 
 ## [2.2.4] - 2020-12-03
@@ -38,7 +38,7 @@
 - GooglePlay - `IStoreListener.ProcessPurchase` called more than once for any purchase which is not consumed, i.e. when `ProcessPurchaseResult.Pending` is returned, by fixing a race-condition.
 
 ### Changed
-- GooglePlay - To receive `ProcessPurchase` calls after foregrounding the app, when a purchase is made outside the app (e.g. in the Play Store app), please upgrade the core package via the Package Manager to `com.unity.purchasing@2.2.1` or higher. 
+- GooglePlay - To receive `ProcessPurchase` calls after foregrounding the app, when a purchase is made outside the app (e.g. in the Play Store app), please upgrade the core package via the Package Manager to `com.unity.purchasing@2.2.1` or higher.
 
 ## [2.2.3] - 2020-12-01
 
@@ -63,13 +63,13 @@
 ## [2.2.1] - 2020-11-13
 
 ### Fixed
-- GooglePlay - ProductMetadata.localizedPrice always `0` 
+- GooglePlay - ProductMetadata.localizedPrice always `0`
 - GooglePlay - "Main" thread warning seen in IStoreListener.OnInitialized and related callbacks.
 
 ### Added
 - GooglePlay - Subscription metadata is now available in `GoogleProductMetadata` from `ProductMetadata.GetGoogleProductMetadata()` via `IStoreController.products`.
    - For example, use `GoogleProductMetadata googleMetadata = storeController.product.all[0].metadata.GetGoogleProductMetadata();` now instead of the deprecated, `IGooglePlayStoreExtensions.GetProductJSONDictionary`.
-   - string originalJson - Note, a single SkuDetails JSON, instead of multiple from `GetProductJSONDictionary` 
+   - string originalJson - Note, a single SkuDetails JSON, instead of multiple from `GetProductJSONDictionary`
    - string subscriptionPeriod
    - string freeTrialPeriod
    - string introductoryPrice
@@ -105,14 +105,14 @@
 - IAP Catalog - GooglePlay - pricing template when exporting to CSV, now sets autofill pricing to `false` instead of `true`
 - GooglePlay - Subscription receipts will update, e.g. after an upgrade or downgrade, whenever the player pauses or resumes their app. See this change reflected in the `product.receipt` of `IStoreController.products`.
 
-### Added 
+### Added
 - Apple Macos - Support for building IL2CPP on MacOS
 
 ## [2.1.1] - 2020-10-23
 
 ### Fixed
 - Amazon - Fix build failure caused by duplicate classes
-- Amazon - Fix ResponseReceiver flaw reported by Amazon APK audit caused by permission attribute location in AndroidManifest.xml 
+- Amazon - Fix ResponseReceiver flaw reported by Amazon APK audit caused by permission attribute location in AndroidManifest.xml
 
 ## [2.1.0] - 2020-10-14
 ### Future
@@ -122,8 +122,8 @@
 
 - GooglePlay - Live payments using `aggressivelyRecoverLostPurchases = true` - switched to Google's Purchase Token from using Google's Order ID to represent all transaction IDs. Automatically sets `Product.transactionID` to GooglePlay `purchaseToken` when `aggressivelyRecoverLostPurchases` is `true`. Continues to use `orderId`, otherwise. CLARIFICATION: To reinforce the preferred usage of `aggressivelyRecoverLostPurchases`, a de-duplicating backend purchase verification server is recommended to be added to a game's transaction verification pipeline when using this feature. Without such a server the recovered purchases may not be easily or safely de-duplicated by a client.
    - When upgrading from previous versions of Unity IAP, and if enabled `bool IGooglePlayConfiguration.aggressivelyRecoverLostPurchases`, any purchases your users have made will be processed again by Unity IAP; ProcessPurchase will be called for all these purchases.
-   - Afterwards, for future purchases, this change reduces future duplicate processing calls; ProcessPurchase should no longer be called after an interrupted purchase for an item already purcahsed by the user. 
-  - Update purchase verification servers to treat orderId and purchaseToken as the same ID. Extract the purchaseToken from the JSON receipt, or fetch the orderId using a purchaseToken and the server API [`purchases.products` Google Play Developer API](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products). 
+   - Afterwards, for future purchases, this change reduces future duplicate processing calls; ProcessPurchase should no longer be called after an interrupted purchase for an item already purcahsed by the user.
+  - Update purchase verification servers to treat orderId and purchaseToken as the same ID. Extract the purchaseToken from the JSON receipt, or fetch the orderId using a purchaseToken and the server API [`purchases.products` Google Play Developer API](https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products).
   - Override this behavior with `UsePurchaseTokenForTransactionId`, below.
 - GooglePlay Security - Add GooglePlayReceipt.orderID and obsolete GooglePlayReceipt.transactionID for the local receipt validator, for clarity.
 - GooglePlay - Reduce the frequency of double-processing when a purchase is canceled, if using `aggressivelyRecoverLostPurchases = true`. Always records purchaseToken in TransactionLog when a transaction is completed.
@@ -131,9 +131,9 @@
 ### Added
 - GooglePlay - Ability to override the `Product.transactionID` and use either Google's Purchase Token, or the legacy Order ID when possible, with `UsePurchaseTokenForTransactionId`.
   - Call `void IGooglePlayConfiguration.UsePurchaseTokenForTransactionId(bool usePurchaseToken)` to disable the default behavior
-     - a) `false` to use the `orderId`, when possible; this is the legacy and non-unique transaction ID behavior. This must switch to the purchaseToken when the orderId is not available from Google, which is when `aggressivelyRecoverLostPurchases = true`. 
+     - a) `false` to use the `orderId`, when possible; this is the legacy and non-unique transaction ID behavior. This must switch to the purchaseToken when the orderId is not available from Google, which is when `aggressivelyRecoverLostPurchases = true`.
      - b) `true` to always use the unique purchaseToken in transactionID. NOTE: this is the preferred option, and it will be the only behavior available in a future version of Unity IAP.
-  - **Background:** The GooglePlay purchaseToken is the unique identifier for all GooglePlay purchases; it is always available for all purchase types and all purchase records. The GooglePlay orderId is not available for all purchase types, notably sandbox and promo code, and also is currently not available for those purchase records which are returned for `aggressivelyRecoverLostPurchases = true` recovered purchases: the Google Play Billing history API used by this feature does not return orderId and therefore cannot be set as the Product.transactionID at that time. Historically, Unity IAP chose to prefer orderId for transactionID in its original implementation. And when the orderId was missing from purchase records (sandbox test purchases, and other no-money purchases), Unity IAP would use the purchaseToken as the transactionID. 
+  - **Background:** The GooglePlay purchaseToken is the unique identifier for all GooglePlay purchases; it is always available for all purchase types and all purchase records. The GooglePlay orderId is not available for all purchase types, notably sandbox and promo code, and also is currently not available for those purchase records which are returned for `aggressivelyRecoverLostPurchases = true` recovered purchases: the Google Play Billing history API used by this feature does not return orderId and therefore cannot be set as the Product.transactionID at that time. Historically, Unity IAP chose to prefer orderId for transactionID in its original implementation. And when the orderId was missing from purchase records (sandbox test purchases, and other no-money purchases), Unity IAP would use the purchaseToken as the transactionID.
   - **Impact:** Since Unity IAP version 1.23.3 this resulted in non-unique transactionIDs for purchases made which were "aggressively" restored: two distinct ProcessPurchase calls for one purchase could be generated, where Product.transactionID would change between two values (orderId and purchaseToken) and be non-unique. With this version, Unity IAP is starting a transition to only using purchaseToken, and avoids the impact for any new purchases made by a user.
 
 ### Fixed
@@ -159,7 +159,7 @@
 
 ### Changed
 - IAP Updater "Updater Settings..." button now reads "More Information..." to be more accurate
-- UDP store implementation is still available, but must be installed in a separate module, available in either Asset Store or Package manager. The UDP module will need to be updated manually. (See above) 
+- UDP store implementation is still available, but must be installed in a separate module, available in either Asset Store or Package manager. The UDP module will need to be updated manually. (See above)
 - Visibility of INativeStores is now public, mainly to support the new UDP package's needs
 - Resource files - The Product Catalog, Android Target Billing Mode, and Receipt Obfuscator Tangle files will be moved out of the plugins folder.
 
@@ -189,17 +189,17 @@
 ### Added
 - GooglePlay - Improves the chance of successfully purchasing a Consumable or NonConsumable when the _purchase flow_ is interrupted. Also addresses the dialog, "Your order is still being processed".
    - Unity IAP will now detect this _purchasing_ failure. It will call the `IStoreListener.OnPurchaseFailed` API, initially. Then it will query Google Play for purchase success during the current app session until network is restored, and it will continue querying in the next app session, after a restart. It will finally call the `IStoreListener.ProcessPurchase` API if it finds a successful, unaccounted purchase.
-   - Addresses the case where (1) a consumable or nonconsumable purchase flow is started and (2) a network disruption occurs, or the app is sent to the background and the purchasing Activity is canceled, or the app is terminated. 
+   - Addresses the case where (1) a consumable or nonconsumable purchase flow is started and (2) a network disruption occurs, or the app is sent to the background and the purchasing Activity is canceled, or the app is terminated.
 - GooglePlay - Improves the chance of successfully repurchasing a Consumable whose successful transaction failed however to be _completed_ during the current app session.
    - Unity IAP will now detect this _consumption_ failure. It will automatically retry completing the purchase until it succeeds. Note that `DuplicateTransaction` may still be reported while the retry is ongoing, until the user's product is repurchasable again. See below for new APIs to monitor the consumption flow.
    - Addresses the case where (1) a Consumable purchase calls `IStoreListener.ProcessPurchase`, then (2) the transaction is completed by returning `ProcessPurchaseResult.Complete` from `IStoreListener.ProcessPurchase` or by directly calling `IStoreController.ConfirmPendingPurchase` [internally this always records the transaction identifier to the TransactionLog], and finally (3) an interruption (network or exit) aborts the transaction consumption. Only restarting the app or refunding the purchase would reliably resolve this case.
-- GooglePlay - Adds an `"isOwned" : <boolean>` sub-entry to the `Product.receipt`'s `"Payload"` JSON entry in order to help developers understand this product's current ownership state. 
+- GooglePlay - Adds an `"isOwned" : <boolean>` sub-entry to the `Product.receipt`'s `"Payload"` JSON entry in order to help developers understand this product's current ownership state.
    - Contains `true` if the product is owned by the user. And please note that `true` may also indicate that Unity IAP is actively retrying consumption. Its boolean value will be `false` if the product is available for repurchase, or if we do not yet know Google Play's current status for this product. To clarify the receipt structure, `"isOwned"` is located in the Google Play-specific escaped-JSON sub-document. Sample `Product.receipt`, abbreviated: `{"Payload":"{\"json\": ..., \"signature\": ..., \"isOwned\":true}}"`. See the Google Play section of the [Unity IAP Receipt receipt documentation](https://docs.unity3d.com/Manual/UnityIAPPurchaseReceipts.html) for more on the receipt JSON structure.
-- GooglePlay - Adds `boolean IGooglePlayStoreExtensions.IsOwned(Product)` API to conveniently extract the new ownership state, above, from the Google Play JSON receipt. 
-   - Returns `true` if the product is still owned by the user. Returns `false` if the product is available for repurchase. Example: 
+- GooglePlay - Adds `boolean IGooglePlayStoreExtensions.IsOwned(Product)` API to conveniently extract the new ownership state, above, from the Google Play JSON receipt.
+   - Returns `true` if the product is still owned by the user. Returns `false` if the product is available for repurchase. Example:
 ```extensionProvider.GetExtension<IGooglePlayStoreExtensions>()```
 ```.IsOwned(storeController.products.WithID("100.gold.coins"));```.
-- GooglePlay - Adds `void IGooglePlayStoreExtensions.SetLogLevel(int level)` API to reduce logging. 
+- GooglePlay - Adds `void IGooglePlayStoreExtensions.SetLogLevel(int level)` API to reduce logging.
    - `level` defaults to the legacy value of `0` and configures the Google Play Java store integration to emit debug, info, warning, and error logs. Setting `1` will restrict logging to emit only warnings and errors. Example: `extensionProvider.GetExtension<IGooglePlayStoreExtensions>().SetLogLevel(1)`.
 - GooglePlay - After the purchasing dialog, "You already own this product" from Google Play is shown, the `IStoreListener.OnPurchaseFailed` API is calls with an error of `PurchaseFailureReason.DuplicateTransaction`.
    - Unity IAP now treats "You already own this product" as a successful purchase, and _also_ calls `IStoreListener.ProcessPurchase`. Note: This amends the related behavior introduced in 1.23.1.
@@ -232,7 +232,7 @@
 ### Fixed
 - GooglePlay - SubscriptionInfo.getSubscriptionInfo() KeyNotFoundException when parsing receipts which omit expected fields.
 - GooglePlay - IStoreListener.OnInitializeFailed / IStoreCallback.OnSetupFailed should return InitializationFailureReason.AppNotKnown error when user changes password off-device - user must login. Previously erroneously generated infinite error 6 codes when fetching purchase history after password change.
-- OverflowException when initializing if device locale used the comma (“,”) character as decimal separator. 
+- OverflowException when initializing if device locale used the comma (“,”) character as decimal separator.
 
 ## [1.22.0] - 2019-03-18
 ### Added
@@ -258,12 +258,12 @@
 - Added a callback function that allows developers to check the state of the upgrade/downgrade process of subscriptions on GooglePlay.
 
 ### Fixed
-- Google Daydream - Correctly Displays IAP Prompt in 3d VR version instead of native 2D. 
+- Google Daydream - Correctly Displays IAP Prompt in 3d VR version instead of native 2D.
 - Fixed issue where IAP catalog prevented deletion of Price under Google Configuration.
 - Amazon Store - Fixed bug where Amazon store could not correctly parse currencies for certain countries.
 - MacOS - Fixed bug that causes non-consumables to auto-restore on MacOS apps after re-install, instead of requiring the the Restore button to be clicked.
 - Updated Android Response Code to return correct message whenever an activity is cancelled.
-- Fixed Mono CIL linker error causing initialization failure in Unity 5.3 
+- Fixed Mono CIL linker error causing initialization failure in Unity 5.3
 - Fixed inefficient Apple Receipt Parser that was slowing down when a large number of transactions were parsed on auto-restore.
 
 ## [1.20.0] - 2018-06-29
@@ -271,20 +271,20 @@
 - API for developers to check SkuDetails for all GooglePlay store products, including those that have not been purchased.
 - Error Code Support for Amazon.
 - Support upgrade/downgrade Subscription Tiers for GooglePlayStore.
-- Support Subscription status check (valid/invalid) for Amazon Store. 
+- Support Subscription status check (valid/invalid) for Amazon Store.
 
 ### Changed
 - Location of Product Catalog from Assets/Plugins/UnityPurchasing/Resources folder to Assets/Resources.
 - Amazon Receipt with enriched product details and receipt details.
 
 ### Fixed
-- Issue where Unknown products (including non-consumables) were consumed during initialization. 
+- Issue where Unknown products (including non-consumables) were consumed during initialization.
 - ArgumentException where currency was set to null string when purchase was made.
 
 ## [1.19.0] - 2018-04-17
 ### Added
 - For GooglePlay store, `developerPayload` has been encoded to base64 string and formatted to a JSON string with two other information of the product. When extract `developerPayload` from the product receipt, firstly decode the json string and get the `developerPayload` field base64 string, secondly decode the base64 string to the original `developerPayload`.
-- `SubscriptionManager` - This new class allows developer to query the purchased subscription product's information. (available for AppleStore and GooglePlay store) 
+- `SubscriptionManager` - This new class allows developer to query the purchased subscription product's information. (available for AppleStore and GooglePlay store)
     - For GooglePlay store, this class can only be used on products purchased using IAP 1.19.0 SDK. Products purchased on previous SDKs do not have the fields in the "developerPayload" that are needed to parse the subscription information.
         - If the "Payload" json string field in the product's json string receipt has a "skuDetails" filed, then this product can use `SubscriptionManager` to get its subscription information.
 - Added the `StoreSpecificPurchaseErrorCode` enum. Currently contains values for all Apple and Google Play error codes that are returned directly from the store.
@@ -325,7 +325,7 @@
 - Version Log - Changed logging of Unity IAP version (e.g. "1.15.0") to be only at runtime and not while in the Editor
 
 ### Fixed
-- Facebook - Correctly handles situations where the number of available products exceeds the Facebook server response page size 
+- Facebook - Correctly handles situations where the number of available products exceeds the Facebook server response page size
 - Updater will no longer prompt for updates when Unity is running in batch mode
 - Gradle - Include and relocate sample Proguard configuration file to Assets/Plugins/UnityPurchasing/Android/proguard-user.txt.OPTIONAL.txt; was missing from 1.13.2
 - Security - Upgrades project to autogenerate UnityChannelTangle class if missing when GooglePlayTangle obfuscated secret receipt validation support class is present.
@@ -342,7 +342,7 @@
 ## [1.14.0] - 2017-09-18
 ### Added
 - Codeless IAP - Added an `IAPListener` Component to extend Codeless IAP functionality. Normally with Codeless IAP, purchase events are dispatched to an `IAPButton` UI Component that is associated with a particular product. The `IAPListener` does not show any UI. It will receive purchase events that do not correspond to any active `IAPButton`.
-    - The active `IAPListener` is a fallback—it will receive any successful or failed purchase events (calls to `ProcessPurchase` or `OnPurchaseFailed`) that are _not_ handled by an active Codeless `IAPButton` Component. 
+    - The active `IAPListener` is a fallback—it will receive any successful or failed purchase events (calls to `ProcessPurchase` or `OnPurchaseFailed`) that are _not_ handled by an active Codeless `IAPButton` Component.
     - When using the `IAPListener`, you should create it early in the lifecycle of your app, and not destroy it. By default, it will set its `GameObject` to not be destroyed when a new scene is loaded, by calling `DontDestroyOnLoad`. This behavior can be changed by setting the `dontDestroyOnLoad` field in the Inspector.
     - If you use an `IAPListener`, it should be ready to handle purchase events at any time, for any product. Promo codes, interrupted purchases, and slow store behavior are only a few of the reasons why you might receive a purchase event when you are not showing a corresponding `IAPButton` to handle the event.
     - Example use: If a purchase is completed successfully with the platform's app store but the user quits the app before the purchase is processed by Unity, Unity IAP will call `ProcessPurchase` the next time it is initialized—typically the next time the app is run. If your app creates an `IAPListener`, the `IAPListener` will be available to receive this `ProcessPurchase` callback, even if you are not yet ready to create and show an `IAPButton` in your UI.
@@ -386,21 +386,21 @@
 ```csharp
 public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
 {
-	// Set the order of the promoted items
-	var appleExtensions = extensions.GetExtension<IAppleExtensions>();
-	appleExtensions.SetStorePromotionOrder(new List<Product>{
-		controller.products.WithID("sword"),
-		controller.products.WithID("subscription")
-	});
+    // Set the order of the promoted items
+    var appleExtensions = extensions.GetExtension<IAppleExtensions>();
+    appleExtensions.SetStorePromotionOrder(new List<Product>{
+        controller.products.WithID("sword"),
+        controller.products.WithID("subscription")
+    });
 }
 ```
 ```csharp
 public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
 {
-	// Set the visibility of promoted items
-	var appleExtensions = extensions.GetExtension<IAppleExtensions>();
-	appleExtensions.SetStorePromotionVisibility(controller.products.WithID("subscription"), AppleStorePromotionVisibility.Hide);
-	appleExtensions.SetStorePromotionVisibility(controller.products.WithID("100.gold.coins"), AppleStorePromotionVisibility.Default);
+    // Set the visibility of promoted items
+    var appleExtensions = extensions.GetExtension<IAppleExtensions>();
+    appleExtensions.SetStorePromotionVisibility(controller.products.WithID("subscription"), AppleStorePromotionVisibility.Hide);
+    appleExtensions.SetStorePromotionVisibility(controller.products.WithID("100.gold.coins"), AppleStorePromotionVisibility.Default);
 }
 ```
 
@@ -506,7 +506,7 @@ module.useFakeStoreAlways = true;
 ### Fixed
 - Editor - checkmarks refresh for Targeted Android Store after Editor Play/Stop
 - Editor - hides spurious Component MenuItems
-- Linux Editor - BillingMode.json path case-sensitivity 
+- Linux Editor - BillingMode.json path case-sensitivity
 - IAP Catalog - clearer text for Export button: "App Store Export"
 
 ## [1.9.2] - 2016-11-29
@@ -624,10 +624,10 @@ using UnityEditor;
 
 // A sample Editor script.
 public class MyEditorScript {
-	void AnEditorMethod() {
-		// Set the store to Google Play.
-		UnityPurchasingEditor.TargetAndroidStore(AndroidStore.GooglePlay);
-	}
+    void AnEditorMethod() {
+        // Set the store to Google Play.
+        UnityPurchasingEditor.TargetAndroidStore(AndroidStore.GooglePlay);
+    }
 }
 ```
 

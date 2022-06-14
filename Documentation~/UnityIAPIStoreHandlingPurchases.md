@@ -11,6 +11,3 @@ Finishing Transactions
 When the application acknowledges that a transaction has been processed, or if the transaction has already been processed, Unity IAP invokes your store’s FinishTransaction method.
 
 Stores should use FinishTransaction to perform any housekeeping following a purchase, such as closing transactions or consuming consumable products.
-
-
-

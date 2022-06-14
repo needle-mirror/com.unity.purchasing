@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Unity.Services.Core;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -12,7 +14,7 @@ namespace UnityEngine.Purchasing
     {
         private static CodelessIAPStoreListener instance;
         private List<IAPButton> activeButtons = new List<IAPButton>();
-        private List<IAPListener> activeListeners = new List<IAPListener> ();
+        private List<IAPListener> activeListeners = new List<IAPListener>();
         private static bool unityPurchasingInitialized;
 
         /// <summary>
@@ -42,7 +44,8 @@ namespace UnityEngine.Purchasing
         public static bool initializationComplete;
 
         [RuntimeInitializeOnLoadMethod]
-        static void InitializeCodelessPurchasingOnLoad() {
+        static void InitializeCodelessPurchasingOnLoad()
+        {
             ProductCatalog catalog = ProductCatalog.LoadDefaultCatalog();
             if (catalog.enableCodelessAutoInitialization && !catalog.IsEmpty() && instance == null)
             {
@@ -112,13 +115,27 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Creates the static instance of CodelessIAPStoreListener and initializes purchasing
         /// </summary>
-        private static void CreateCodelessIAPStoreListenerInstance()
+        private static async void CreateCodelessIAPStoreListenerInstance()
         {
             instance = new CodelessIAPStoreListener();
             if (!unityPurchasingInitialized)
             {
+                await AutoInitializeUnityGamingServicesIfEnabled();
                 InitializePurchasing();
             }
+        }
+
+        private static Task AutoInitializeUnityGamingServicesIfEnabled()
+        {
+            return ShouldAutoInitUgs()
+                ? UnityServices.InitializeAsync()
+                : Task.CompletedTask;
+        }
+
+        private static bool ShouldAutoInitUgs()
+        {
+            return instance.catalog.enableCodelessAutoInitialization &&
+                   instance.catalog.enableUnityGamingServicesAutoInitialization;
         }
 
         /// <summary>
@@ -193,7 +210,7 @@ namespace UnityEngine.Purchasing
         /// <param name="listener">Listener to receive IAP purchasing events</param>
         public void AddListener(IAPListener listener)
         {
-            activeListeners.Add (listener);
+            activeListeners.Add(listener);
         }
 
         /// <summary>
@@ -202,7 +219,7 @@ namespace UnityEngine.Purchasing
         /// <param name="listener">Listener to no longer receive IAP purchasing events</param>
         public void RemoveListener(IAPListener listener)
         {
-            activeListeners.Remove (listener);
+            activeListeners.Remove(listener);
         }
 
         /// <summary>
@@ -280,7 +297,8 @@ namespace UnityEngine.Purchasing
                 {
                     result = button.ProcessPurchase(e);
 
-                    if (result == PurchaseProcessingResult.Complete) {
+                    if (result == PurchaseProcessingResult.Complete)
+                    {
 
                         consumePurchase = true;
                     }
@@ -293,7 +311,8 @@ namespace UnityEngine.Purchasing
             {
                 result = listener.ProcessPurchase(e);
 
-                if (result == PurchaseProcessingResult.Complete) {
+                if (result == PurchaseProcessingResult.Complete)
+                {
 
                     consumePurchase = true;
                 }
@@ -302,7 +321,8 @@ namespace UnityEngine.Purchasing
             }
 
             // we expect at least one receiver to get this message
-            if (!resultProcessed) {
+            if (!resultProcessed)
+            {
 
                 Debug.LogError("Purchase not correctly processed for product \"" +
                                  e.purchasedProduct.definition.id +

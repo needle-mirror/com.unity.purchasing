@@ -1,6 +1,6 @@
 # Defining Products in scripts
 
-You can declare your Product list programmatically using the [Purchasing Configuration Builder](xref:UnityEngine.Purchasing.ConfigurationBuilder). 
+You can declare your Product list programmatically using the [Purchasing Configuration Builder](xref:UnityEngine.Purchasing.ConfigurationBuilder).
 You must provide a unique cross-store __Product ID__ and __Product Type__ for each Product:
 
 ````

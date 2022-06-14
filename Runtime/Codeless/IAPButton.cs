@@ -128,7 +128,8 @@ namespace UnityEngine.Purchasing
             if (buttonType == ButtonType.Purchase)
             {
                 CodelessIAPStoreListener.Instance.AddButton(this);
-                if (CodelessIAPStoreListener.initializationComplete) {
+                if (CodelessIAPStoreListener.initializationComplete)
+                {
                     UpdateText();
                 }
             }

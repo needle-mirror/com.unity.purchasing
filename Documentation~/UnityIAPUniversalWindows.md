@@ -11,4 +11,3 @@ var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance())
 builder.Configure<IMicrosoftConfiguration>().useMockBillingSystem = true;
 ````
 Make sure you disable the mock billing system before publishing your application.
-

@@ -16,6 +16,7 @@ namespace UnityEngine.Purchasing
         private ILogger m_Logger;
         private TransactionLog m_TransactionLog;
         private string m_StoreName;
+        private IUnityServicesInitializationChecker m_UnityServicesInitializationChecker;
         private Action m_AdditionalProductsCallback;
         private Action<InitializationFailureReason> m_AdditionalProductsFailCallback;
 
@@ -24,13 +25,14 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool useTransactionLog { get; set; }
 
-        internal PurchasingManager(TransactionLog tDb, ILogger logger, IStore store, string storeName)
+        internal PurchasingManager(TransactionLog tDb, ILogger logger, IStore store, string storeName, IUnityServicesInitializationChecker unityServicesInitializationChecker)
         {
             m_TransactionLog = tDb;
             m_Store = store;
             m_Logger = logger;
             m_StoreName = storeName;
             useTransactionLog = true;
+            m_UnityServicesInitializationChecker = unityServicesInitializationChecker;
         }
 
         public void InitiatePurchase(Product product)
@@ -45,9 +47,11 @@ namespace UnityEngine.Purchasing
 
         public void InitiatePurchase(Product product, string developerPayload)
         {
+            m_UnityServicesInitializationChecker.CheckAndLogWarning();
+
             if (null == product)
             {
-                m_Logger.LogWarning("Unity IAP", "Trying to purchase null Product");
+                m_Logger.LogIAPWarning("Trying to purchase null Product");
                 return;
             }
 
@@ -76,13 +80,13 @@ namespace UnityEngine.Purchasing
         {
             if (null == product)
             {
-                m_Logger.LogError("Unity IAP", "Unable to confirm purchase with null Product");
+                m_Logger.LogIAPError("Unable to confirm purchase with null Product");
                 return;
             }
 
             if (string.IsNullOrEmpty(product.transactionID))
             {
-                m_Logger.LogError("Unity IAP", "Unable to confirm purchase; Product has missing or empty transactionID");
+                m_Logger.LogIAPError("Unable to confirm purchase; Product has missing or empty transactionID");
                 return;
             }
 

@@ -14,7 +14,7 @@ and `IAppleConfiguration.SetApplePromotionalPurchaseInterceptorCallback`.
 4. Build your project for `iOS`.
    1. If you are using a simulator with Xcode 12+, follow these [instructions](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode)
    to set up StoreKit Testing.
-      
+
 ## Promoting Products
 
 From [Apple's Documentation](https://developer.apple.com/app-store/promoting-in-app-purchases/):

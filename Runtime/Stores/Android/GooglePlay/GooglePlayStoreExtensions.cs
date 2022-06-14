@@ -7,7 +7,7 @@ using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
-    class GooglePlayStoreExtensions: IGooglePlayStoreExtensions, IGooglePlayStoreExtensionsInternal
+    class GooglePlayStoreExtensions : IGooglePlayStoreExtensions, IGooglePlayStoreExtensionsInternal
     {
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
@@ -30,7 +30,7 @@ namespace UnityEngine.Purchasing
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku, int desiredProrationMode)
         {
-            UpgradeDowngradeSubscription(oldSku, newSku, (GooglePlayProrationMode) desiredProrationMode);
+            UpgradeDowngradeSubscription(oldSku, newSku, (GooglePlayProrationMode)desiredProrationMode);
         }
 
         public virtual void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode)

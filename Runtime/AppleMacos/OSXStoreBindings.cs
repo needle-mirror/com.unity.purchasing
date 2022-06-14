@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 #if !UNITY_EDITOR
 namespace UnityEngine.Purchasing
@@ -23,26 +23,26 @@ namespace UnityEngine.Purchasing
         [DllImport("unitypurchasing")]
         private static extern void unityPurchasingAddTransactionObserver();
 
-        [DllImport ("unitypurchasing")]
-        private static extern void unityPurchasingSetApplicationUsername (string username);
+        [DllImport("unitypurchasing")]
+        private static extern void unityPurchasingSetApplicationUsername(string username);
 
         [DllImport("unitypurchasing")]
-        private static extern void setUnityPurchasingCallback (UnityPurchasingCallback AsyncCallback);
+        private static extern void setUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback);
 
         [DllImport("unitypurchasing")]
-        private static extern string getUnityPurchasingAppReceipt ();
+        private static extern string getUnityPurchasingAppReceipt();
 
         [DllImport("unitypurchasing")]
-        private static extern string getUnityPurchasingTransactionReceiptForProductId (string productId);
+        private static extern string getUnityPurchasingTransactionReceiptForProductId(string productId);
 
         [DllImport("unitypurchasing")]
-        private static extern bool getUnityPurchasingCanMakePayments ();
+        private static extern bool getUnityPurchasingCanMakePayments();
 
-        [DllImport ("unitypurchasing")]
-        private static extern void setSimulateAskToBuy (bool enabled);
+        [DllImport("unitypurchasing")]
+        private static extern void setSimulateAskToBuy(bool enabled);
 
-        [DllImport ("unitypurchasing")]
-        private static extern bool getSimulateAskToBuy ();
+        [DllImport("unitypurchasing")]
+        private static extern bool getSimulateAskToBuy();
 
         [DllImport("unitypurchasing")]
         private static extern void unityPurchasingFetchStorePromotionOrder();
@@ -57,73 +57,80 @@ namespace UnityEngine.Purchasing
         private static extern void unityPurchasingUpdateStorePromotionVisibility(string productId, string visibility);
 
         [DllImport("unitypurchasing")]
-        private static extern void unityPurchasingInterceptPromotionalPurchases ();
+        private static extern void unityPurchasingInterceptPromotionalPurchases();
 
         [DllImport("unitypurchasing")]
-        private static extern void unityPurchasingContinuePromotionalPurchases ();
+        private static extern void unityPurchasingContinuePromotionalPurchases();
 
         [DllImport("unitypurchasing")]
         private static extern void unityPurchasingPresentCodeRedemptionSheet();
 
-        public void SetUnityPurchasingCallback (UnityPurchasingCallback AsyncCallback)
+        public void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback)
         {
-            setUnityPurchasingCallback (AsyncCallback);
+            setUnityPurchasingCallback(AsyncCallback);
         }
 
-        public string appReceipt {
-            get {
-                return getUnityPurchasingAppReceipt ();
+        public string appReceipt
+        {
+            get
+            {
+                return getUnityPurchasingAppReceipt();
             }
         }
 
-        public bool canMakePayments {
-            get {
-                return getUnityPurchasingCanMakePayments ();
+        public bool canMakePayments
+        {
+            get
+            {
+                return getUnityPurchasingCanMakePayments();
             }
         }
 
-        public bool simulateAskToBuy {
-            get {
-                return getSimulateAskToBuy ();
+        public bool simulateAskToBuy
+        {
+            get
+            {
+                return getSimulateAskToBuy();
             }
-            set {
-                setSimulateAskToBuy (value);
+            set
+            {
+                setSimulateAskToBuy(value);
             }
         }
 
-        public void RetrieveProducts (string json)
+        public void RetrieveProducts(string json)
         {
-            unityPurchasingRetrieveProducts (json);
+            unityPurchasingRetrieveProducts(json);
         }
 
-        public void Purchase (string productJSON, string developerPayload)
+        public void Purchase(string productJSON, string developerPayload)
         {
-            unityPurchasingPurchase (productJSON, developerPayload);
+            unityPurchasingPurchase(productJSON, developerPayload);
         }
 
-        public void FinishTransaction (string productJSON, string transactionId)
+        public void FinishTransaction(string productJSON, string transactionId)
         {
-            unityPurchasingFinishTransaction (productJSON, transactionId);
+            unityPurchasingFinishTransaction(productJSON, transactionId);
         }
 
-        public void RestoreTransactions ()
+        public void RestoreTransactions()
         {
             unityPurchasingRestoreTransactions();
         }
 
-        public void RefreshAppReceipt ()
+        public void RefreshAppReceipt()
         {
             unityPurchasingRefreshAppReceipt();
         }
 
-        public void AddTransactionObserver ()
+        public void AddTransactionObserver()
         {
-            unityPurchasingAddTransactionObserver ();
+            unityPurchasingAddTransactionObserver();
         }
 
-        public void SetApplicationUsername (string applicationUsername)
+        public void SetApplicationUsername(string applicationUsername)
         {
-            unityPurchasingSetApplicationUsername (applicationUsername);
+            unityPurchasingSetApplicationUsername(applicationUsername);
         }
 
         public void FetchStorePromotionOrder()
@@ -146,19 +153,19 @@ namespace UnityEngine.Purchasing
             unityPurchasingUpdateStorePromotionVisibility(productId, visibility);
         }
 
-        public string GetTransactionReceiptForProductId (string productId)
+        public string GetTransactionReceiptForProductId(string productId)
         {
-            return getUnityPurchasingTransactionReceiptForProductId (productId);
+            return getUnityPurchasingTransactionReceiptForProductId(productId);
         }
 
-        public void InterceptPromotionalPurchases ()
+        public void InterceptPromotionalPurchases()
         {
-            unityPurchasingInterceptPromotionalPurchases ();
+            unityPurchasingInterceptPromotionalPurchases();
         }
 
-        public void ContinuePromotionalPurchases ()
+        public void ContinuePromotionalPurchases()
         {
-            unityPurchasingContinuePromotionalPurchases ();
+            unityPurchasingContinuePromotionalPurchases();
         }
 
         public void PresentCodeRedemptionSheet()

@@ -9,4 +9,3 @@ foreach (var product in controller.products.all) {
     Debug.Log (product.metadata.localizedPriceString);
 }
 ````
-

@@ -88,7 +88,7 @@ namespace UnityEngine.Purchasing
         long ExtractRealCurrencyAmount(Product product)
         {
             return m_Analytics.ConvertCurrencyToMinorUnits(product.metadata.isoCurrencyCode,
-                (double) product.metadata.localizedPrice);
+                (double)product.metadata.localizedPrice);
         }
     }
 }

@@ -15,28 +15,31 @@
 
 @end
 
-void UnityPurchasingLog(NSString *format, ...) {
+void UnityPurchasingLog(NSString *format, ...)
+{
     va_list args;
     va_start(args, format);
-    NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+    NSString *message = [[NSString alloc] initWithFormat: format arguments: args];
     va_end(args);
 
     NSLog(@"UnityIAP: %@", message);
 }
 
-
 @implementation ReceiptRefresher
 
--(id) initWithCallback:(void (^)(BOOL))callbackBlock {
+- (id)initWithCallback:(void (^)(BOOL))callbackBlock
+{
     self.callback = callbackBlock;
     return [super init];
 }
 
--(void) requestDidFinish:(SKRequest *)request {
+- (void)requestDidFinish:(SKRequest *)request
+{
     self.callback(true);
 }
 
--(void) request:(SKRequest *)request didFailWithError:(NSError *)error {
+- (void)request:(SKRequest *)request didFailWithError:(NSError *)error
+{
     self.callback(false);
 }
 
@@ -57,19 +60,21 @@ static const NSString* ISO_CURRENCY_CODE_UNKNOWN = @"XXX";
 // Track our accumulated delay.
 int delayInSeconds = 2;
 
--(NSString*) getAppReceipt {
-
+- (NSString*)getAppReceipt
+{
     NSBundle* bundle = [NSBundle mainBundle];
-    if ([bundle respondsToSelector:@selector(appStoreReceiptURL)]) {
+    if ([bundle respondsToSelector: @selector(appStoreReceiptURL)])
+    {
         NSURL *receiptURL = [bundle appStoreReceiptURL];
-        if ([[NSFileManager defaultManager] fileExistsAtPath:[receiptURL path]]) {
-            NSData *receipt = [NSData dataWithContentsOfURL:receiptURL];
+        if ([[NSFileManager defaultManager] fileExistsAtPath: [receiptURL path]])
+        {
+            NSData *receipt = [NSData dataWithContentsOfURL: receiptURL];
 
 #if MAC_APPSTORE
             // The base64EncodedStringWithOptions method was only added in OSX 10.9.
             NSString* result = [receipt mgb64_base64EncodedString];
 #else
-            NSString* result = [receipt base64EncodedStringWithOptions:0];
+            NSString* result = [receipt base64EncodedStringWithOptions: 0];
 #endif
 
             return result;
@@ -80,61 +85,76 @@ int delayInSeconds = 2;
     return @"";
 }
 
--(NSString*) getTransactionReceiptForProductId:(NSString *)productId {
+- (NSString*)getTransactionReceiptForProductId:(NSString *)productId
+{
     NSString *result = transactionReceipts[productId];
-    if (!result) {
+    if (!result)
+    {
         UnityPurchasingLog(@"No Transaction Receipt found for product %@", productId);
     }
-    return result ?: @"";
+    return result ? : @"";
 }
 
--(void) UnitySendMessage:(NSString*) subject payload:(NSString*) payload {
+- (void)UnitySendMessage:(NSString*)subject payload:(NSString*)payload
+{
     messageCallback(subject.UTF8String, payload.UTF8String, @"".UTF8String, @"".UTF8String);
 }
 
--(void) UnitySendMessage:(NSString*) subject payload:(NSString*) payload receipt:(NSString*) receipt {
+- (void)UnitySendMessage:(NSString*)subject payload:(NSString*)payload receipt:(NSString*)receipt
+{
     messageCallback(subject.UTF8String, payload.UTF8String, receipt.UTF8String, @"".UTF8String);
 }
 
--(void) UnitySendMessage:(NSString*) subject payload:(NSString*) payload receipt:(NSString*) receipt transactionId:(NSString*) transactionId {
+- (void)UnitySendMessage:(NSString*)subject payload:(NSString*)payload receipt:(NSString*)receipt transactionId:(NSString*)transactionId
+{
     messageCallback(subject.UTF8String, payload.UTF8String, receipt.UTF8String, transactionId.UTF8String);
 }
 
--(void) setCallback:(UnityPurchasingCallback)callback {
+- (void)setCallback:(UnityPurchasingCallback)callback
+{
     messageCallback = callback;
 }
 
 #if !MAC_APPSTORE
--(BOOL) isiOS6OrEarlier {
+- (BOOL)isiOS6OrEarlier
+{
     float version = [[[UIDevice currentDevice] systemVersion] floatValue];
     return version < 7;
 }
+
 #endif
 
 // Retrieve a receipt for the transaction, which will either
 // be the old style transaction receipt on <= iOS 6,
 // or the App Receipt in OSX and iOS 7+.
--(NSString*) selectReceipt:(SKPaymentTransaction*) transaction {
+- (NSString*)selectReceipt:(SKPaymentTransaction*)transaction
+{
 #if MAC_APPSTORE
     return [self getAppReceipt];
 #else
-    if ([self isiOS6OrEarlier]) {
-        if (nil == transaction) {
+    if ([self isiOS6OrEarlier])
+    {
+        if (nil == transaction)
+        {
             return @"";
         }
         NSString* receipt;
-        receipt = [[NSString alloc] initWithData:transaction.transactionReceipt encoding: NSUTF8StringEncoding];
+        receipt = [[NSString alloc] initWithData: transaction.transactionReceipt encoding: NSUTF8StringEncoding];
 
         return receipt;
-    } else {
+    }
+    else
+    {
         return [self getAppReceipt];
     }
 #endif
 }
 
--(void) refreshReceipt {
+- (void)refreshReceipt
+{
     #if !MAC_APPSTORE
-    if ([self isiOS6OrEarlier]) {
+    if ([self isiOS6OrEarlier])
+    {
         UnityPurchasingLog(@"RefreshReceipt not supported on iOS < 7!");
         return;
     }
@@ -142,10 +162,13 @@ int delayInSeconds = 2;
 
     self.receiptRefresher = [[ReceiptRefresher alloc] initWithCallback:^(BOOL success) {
         UnityPurchasingLog(@"RefreshReceipt status %d", success);
-        if (success) {
-            [self UnitySendMessage:@"onAppReceiptRefreshed" payload:[self getAppReceipt]];
-        } else {
-            [self UnitySendMessage:@"onAppReceiptRefreshFailed" payload:nil];
+        if (success)
+        {
+            [self UnitySendMessage: @"onAppReceiptRefreshed" payload: [self getAppReceipt]];
+        }
+        else
+        {
+            [self UnitySendMessage: @"onAppReceiptRefreshFailed" payload: nil];
         }
     }];
     self.refreshRequest = [[SKReceiptRefreshRequest alloc] init];
@@ -154,112 +177,129 @@ int delayInSeconds = 2;
 }
 
 // Handle a new or restored purchase transaction by informing Unity.
-- (void)onTransactionSucceeded:(SKPaymentTransaction*)transaction {
+- (void)onTransactionSucceeded:(SKPaymentTransaction*)transaction
+{
     NSString* transactionId = transaction.transactionIdentifier;
 
     // This should never happen according to Apple's docs, but it does!
-    if (nil == transactionId) {
+    if (nil == transactionId)
+    {
         // Make something up, allowing us to identifiy the transaction when finishing it.
         transactionId = [[NSUUID UUID] UUIDString];
         UnityPurchasingLog(@"Missing transaction Identifier!");
     }
 
     // This transaction was marked as finished, but was not cleared from the queue. Try to clear it now, then pass the error up the stack as a DuplicateTransaction
-    if ([finishedTransactions containsObject:transactionId]) {
-        [[SKPaymentQueue defaultQueue] finishTransaction:transaction];
+    if ([finishedTransactions containsObject: transactionId])
+    {
+        [[SKPaymentQueue defaultQueue] finishTransaction: transaction];
         UnityPurchasingLog(@"DuplicateTransaction error with product %@ and transactionId %@", transaction.payment.productIdentifier, transactionId);
-        [self onPurchaseFailed:transaction.payment.productIdentifier reason:@"DuplicateTransaction" errorCode:@"" errorDescription:@"Duplicate transaction occurred"];
+        [self onPurchaseFailed: transaction.payment.productIdentifier reason: @"DuplicateTransaction" errorCode: @"" errorDescription: @"Duplicate transaction occurred"];
         return; // EARLY RETURN
     }
 
     // Item was successfully purchased or restored.
-    if (nil == [pendingTransactions objectForKey:transactionId]) {
-        [pendingTransactions setObject:transaction forKey:transactionId];
+    if (nil == [pendingTransactions objectForKey: transactionId])
+    {
+        [pendingTransactions setObject: transaction forKey: transactionId];
     }
 
-    [self UnitySendMessage:@"OnPurchaseSucceeded" payload:transaction.payment.productIdentifier receipt:[self selectReceipt:transaction] transactionId:transactionId];
+    [self UnitySendMessage: @"OnPurchaseSucceeded" payload: transaction.payment.productIdentifier receipt: [self selectReceipt: transaction] transactionId: transactionId];
 }
 
 // Called back by managed code when the tranaction has been logged.
--(void) finishTransaction:(NSString *)transactionIdentifier {
-    SKPaymentTransaction* transaction = [pendingTransactions objectForKey:transactionIdentifier];
-    if (nil != transaction) {
+- (void)finishTransaction:(NSString *)transactionIdentifier
+{
+    SKPaymentTransaction* transaction = [pendingTransactions objectForKey: transactionIdentifier];
+    if (nil != transaction)
+    {
         UnityPurchasingLog(@"Finishing transaction %@", transactionIdentifier);
-        [[SKPaymentQueue defaultQueue] finishTransaction:transaction]; // If this fails (user not logged into the store?), transaction is already removed from pendingTransactions, so future calls to finishTransaction will not retry
-        [pendingTransactions removeObjectForKey:transactionIdentifier];
-        [finishedTransactions addObject:transactionIdentifier];
-    } else {
+        [[SKPaymentQueue defaultQueue] finishTransaction: transaction]; // If this fails (user not logged into the store?), transaction is already removed from pendingTransactions, so future calls to finishTransaction will not retry
+        [pendingTransactions removeObjectForKey: transactionIdentifier];
+        [finishedTransactions addObject: transactionIdentifier];
+    }
+    else
+    {
         UnityPurchasingLog(@"Transaction %@ not pending, nothing to finish here", transactionIdentifier);
     }
 }
 
 // Request information about our products from Apple.
--(void) requestProducts:(NSSet*)paramIds
+- (void)requestProducts:(NSSet*)paramIds
 {
     productIds = paramIds;
-    UnityPurchasingLog(@"Requesting %lu products", (unsigned long) [productIds count]);
+    UnityPurchasingLog(@"Requesting %lu products", (unsigned long)[productIds count]);
     // Start an immediate poll.
-    [self initiateProductPoll:0];
+    [self initiateProductPoll: 0];
 }
 
 // Execute a product metadata retrieval request via GCD.
--(void) initiateProductPoll:(int) delayInSeconds
+- (void)initiateProductPoll:(int)delayInSeconds
 {
     dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
     dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
         UnityPurchasingLog(@"Requesting product data...");
-        request = [[SKProductsRequest alloc] initWithProductIdentifiers:productIds];
+        request = [[SKProductsRequest alloc] initWithProductIdentifiers: productIds];
         request.delegate = self;
         [request start];
     });
 }
 
 // Called by managed code when a user requests a purchase.
--(void) purchaseProduct:(ProductDefinition*)productDef
+- (void)purchaseProduct:(ProductDefinition*)productDef
 {
     // Look up our corresponding product.
-    SKProduct* requestedProduct = [validProducts objectForKey:productDef.storeSpecificId];
+    SKProduct* requestedProduct = [validProducts objectForKey: productDef.storeSpecificId];
 
-    if (requestedProduct != nil) {
+    if (requestedProduct != nil)
+    {
         UnityPurchasingLog(@"PurchaseProduct: %@", requestedProduct.productIdentifier);
 
-        if ([SKPaymentQueue canMakePayments]) {
-            SKMutablePayment *payment = [SKMutablePayment paymentWithProduct:requestedProduct];
+        if ([SKPaymentQueue canMakePayments])
+        {
+            SKMutablePayment *payment = [SKMutablePayment paymentWithProduct: requestedProduct];
 
             // Modify payment request for testing ask-to-buy
-            if (_simulateAskToBuyEnabled) {
+            if (_simulateAskToBuyEnabled)
+            {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wundeclared-selector"
-                if ([payment respondsToSelector:@selector(setSimulatesAskToBuyInSandbox:)]) {
+                if ([payment respondsToSelector: @selector(setSimulatesAskToBuyInSandbox:)])
+                {
                     UnityPurchasingLog(@"Queueing payment request with simulatesAskToBuyInSandbox enabled");
-                    [payment performSelector:@selector(setSimulatesAskToBuyInSandbox:) withObject:@YES];
+                    [payment performSelector: @selector(setSimulatesAskToBuyInSandbox:) withObject: @YES];
                     //payment.simulatesAskToBuyInSandbox = YES;
                 }
 #pragma clang diagnostic pop
             }
 
             // Modify payment request with "applicationUsername" for fraud detection
-            if (_applicationUsername != nil) {
-                if ([payment respondsToSelector:@selector(setApplicationUsername:)]) {
+            if (_applicationUsername != nil)
+            {
+                if ([payment respondsToSelector: @selector(setApplicationUsername:)])
+                {
                     UnityPurchasingLog(@"Setting applicationUsername to %@", _applicationUsername);
-                    [payment performSelector:@selector(setApplicationUsername:) withObject:_applicationUsername];
+                    [payment performSelector: @selector(setApplicationUsername:) withObject: _applicationUsername];
                     //payment.applicationUsername = _applicationUsername;
                 }
             }
 
-            [[SKPaymentQueue defaultQueue] addPayment:payment];
-        } else {
-            UnityPurchasingLog(@"PurchaseProduct: IAP Disabled");
-            [self onPurchaseFailed:productDef.storeSpecificId reason:@"PurchasingUnavailable" errorCode:@"SKErrorPaymentNotAllowed" errorDescription:@"User is not authorized to make payments"];
+            [[SKPaymentQueue defaultQueue] addPayment: payment];
         }
-
-    } else {
-        [self onPurchaseFailed:productDef.storeSpecificId reason:@"ItemUnavailable" errorCode:@"" errorDescription:@"Unity IAP could not find requested product"];
+        else
+        {
+            UnityPurchasingLog(@"PurchaseProduct: IAP Disabled");
+            [self onPurchaseFailed: productDef.storeSpecificId reason: @"PurchasingUnavailable" errorCode: @"SKErrorPaymentNotAllowed" errorDescription: @"User is not authorized to make payments"];
+        }
+    }
+    else
+    {
+        [self onPurchaseFailed: productDef.storeSpecificId reason: @"ItemUnavailable" errorCode: @"" errorDescription: @"Unity IAP could not find requested product"];
     }
 }
 
 // Initiate a request to Apple to restore previously made purchases.
--(void) restorePurchases
+- (void)restorePurchases
 {
     UnityPurchasingLog(@"RestorePurchase");
     [[SKPaymentQueue defaultQueue] restoreCompletedTransactions];
@@ -268,7 +308,8 @@ int delayInSeconds = 2;
 // A transaction observer should be added at startup (by managed code)
 // and maintained for the life of the app, since transactions can
 // be delivered at any time.
--(void) addTransactionObserver {
+- (void)addTransactionObserver
+{
     SKPaymentQueue* defaultQueue = [SKPaymentQueue defaultQueue];
 
     // Detect whether an existing transaction observer is in place.
@@ -278,40 +319,50 @@ int delayInSeconds = 2;
     BOOL processExistingTransactions = false;
     if (defaultQueue != nil && defaultQueue.transactions != nil)
     {
-        if ([[defaultQueue transactions] count] > 0) {
+        if ([[defaultQueue transactions] count] > 0)
+        {
             processExistingTransactions = true;
         }
     }
 
-    [defaultQueue addTransactionObserver:self];
-    if (processExistingTransactions) {
-        [self paymentQueue:defaultQueue updatedTransactions:defaultQueue.transactions];
+    [defaultQueue addTransactionObserver: self];
+    if (processExistingTransactions)
+    {
+        [self paymentQueue: defaultQueue updatedTransactions: defaultQueue.transactions];
     }
 
 #if !MAC_APPSTORE
     UnityEarlyTransactionObserver *observer = [UnityEarlyTransactionObserver defaultObserver];
-    if (observer) {
+    if (observer)
+    {
         observer.readyToReceiveTransactionUpdates = YES;
-        if (self.interceptPromotionalPurchases) {
+        if (self.interceptPromotionalPurchases)
+        {
             observer.delegate = self;
-        } else {
+        }
+        else
+        {
             [observer initiateQueuedPayments];
         }
     }
 #endif
 }
 
-- (void)initiateQueuedEarlyTransactionObserverPayments {
+- (void)initiateQueuedEarlyTransactionObserverPayments
+{
 #if !MAC_APPSTORE
     [[UnityEarlyTransactionObserver defaultObserver] initiateQueuedPayments];
 #endif
 }
 
-- (void)presentCodeRedemptionSheet {
+- (void)presentCodeRedemptionSheet
+{
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 && TARGET_OS_TV == 0 && !MAC_APPSTORE
-    if (@available(iOS 14, *)) {
+    if (@available(iOS 14, *))
+    {
         [[SKPaymentQueue defaultQueue] presentCodeRedemptionSheet];
-    } else
+    }
+    else
 #endif
     {
         UnityPurchasingLog(@"Offer Code redemption is available on iOS and iPadOS 14 and later");
@@ -322,9 +373,10 @@ int delayInSeconds = 2;
 #pragma mark -
 #pragma mark UnityEarlyTransactionObserverDelegate Methods
 
-- (void)promotionalPurchaseAttempted:(SKPayment *)payment {
+- (void)promotionalPurchaseAttempted:(SKPayment *)payment
+{
     UnityPurchasingLog(@"Promotional purchase attempted");
-    [self UnitySendMessage:@"onPromotionalPurchaseAttempted" payload:payment.productIdentifier];
+    [self UnitySendMessage: @"onPromotionalPurchaseAttempted" payload: payment.productIdentifier];
 }
 
 #endif
@@ -333,50 +385,54 @@ int delayInSeconds = 2;
 #pragma mark SKProductsRequestDelegate Methods
 
 // Store Kit returns a response from an SKProductsRequest.
-- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response {
-
-    UnityPurchasingLog(@"Received %lu products", (unsigned long) [response.products count]);
+- (void)productsRequest:(SKProductsRequest *)request didReceiveResponse:(SKProductsResponse *)response
+{
+    UnityPurchasingLog(@"Received %lu products", (unsigned long)[response.products count]);
     // Add the retrieved products to our set of valid products.
-    NSDictionary* fetchedProducts = [NSDictionary dictionaryWithObjects:response.products forKeys:[response.products valueForKey:@"productIdentifier"]];
-    [validProducts addEntriesFromDictionary:fetchedProducts];
+    NSDictionary* fetchedProducts = [NSDictionary dictionaryWithObjects: response.products forKeys: [response.products valueForKey: @"productIdentifier"]];
+    [validProducts addEntriesFromDictionary: fetchedProducts];
 
-    NSString* productJSON = [UnityPurchasing serializeProductMetadata:response.products];
+    NSString* productJSON = [UnityPurchasing serializeProductMetadata: response.products];
 
     // Send the app receipt as a separate parameter to avoid JSON parsing a large string.
-    [self UnitySendMessage:@"OnProductsRetrieved" payload:productJSON receipt:[self selectReceipt:nil] ];
+    [self UnitySendMessage: @"OnProductsRetrieved" payload: productJSON receipt: [self selectReceipt: nil]];
 }
-
 
 #pragma mark -
 #pragma mark SKPaymentTransactionObserver Methods
 // A product metadata retrieval request failed.
 // We handle it by retrying at an exponentially increasing interval.
-- (void)request:(SKRequest *)request didFailWithError:(NSError *)error {
+- (void)request:(SKRequest *)request didFailWithError:(NSError *)error
+{
     delayInSeconds = MIN(MAX_REQUEST_PRODUCT_RETRY_DELAY, 2 * delayInSeconds);
     UnityPurchasingLog(@"SKProductRequest::didFailWithError: %ld, %@. Unity Purchasing will retry in %i seconds", (long)error.code, error.description, delayInSeconds);
 
-    [self initiateProductPoll:delayInSeconds];
+    [self initiateProductPoll: delayInSeconds];
 }
 
-- (void)requestDidFinish:(SKRequest *)req {
+- (void)requestDidFinish:(SKRequest *)req
+{
     request = nil;
 }
 
-- (void)onPurchaseFailed:(NSString*) productId reason:(NSString*)reason errorCode:(NSString*)errorCode errorDescription:(NSString*)errorDescription {
+- (void)onPurchaseFailed:(NSString*)productId reason:(NSString*)reason errorCode:(NSString*)errorCode errorDescription:(NSString*)errorDescription
+{
     NSMutableDictionary* dic = [[NSMutableDictionary alloc] init];
-    [dic setObject:productId forKey:@"productId"];
-    [dic setObject:reason forKey:@"reason"];
-    [dic setObject:errorCode forKey:@"storeSpecificErrorCode"];
-    [dic setObject:errorDescription forKey:@"message"];
+    [dic setObject: productId forKey: @"productId"];
+    [dic setObject: reason forKey: @"reason"];
+    [dic setObject: errorCode forKey: @"storeSpecificErrorCode"];
+    [dic setObject: errorDescription forKey: @"message"];
 
-    NSData* data = [NSJSONSerialization dataWithJSONObject:dic options:0 error:nil];
-    NSString* result = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSData* data = [NSJSONSerialization dataWithJSONObject: dic options: 0 error: nil];
+    NSString* result = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 
-    [self UnitySendMessage:@"OnPurchaseFailed" payload:result];
+    [self UnitySendMessage: @"OnPurchaseFailed" payload: result];
 }
 
-- (NSString*)purchaseErrorCodeToReason:(NSInteger) errorCode {
-    switch (errorCode) {
+- (NSString*)purchaseErrorCodeToReason:(NSInteger)errorCode
+{
+    switch (errorCode)
+    {
         case SKErrorPaymentCancelled:
             return @"UserCancelled";
         case SKErrorPaymentInvalid:
@@ -392,9 +448,9 @@ int delayInSeconds = 2;
 - (void)paymentQueue:(SKPaymentQueue *)queue updatedTransactions:(NSArray *)transactions
 {
     UnityPurchasingLog(@"UpdatedTransactions");
-    for(SKPaymentTransaction *transaction in transactions) {
-
-        [self handleTransaction:transaction];
+    for (SKPaymentTransaction *transaction in transactions)
+    {
+        [self handleTransaction: transaction];
     }
 }
 
@@ -405,10 +461,10 @@ int delayInSeconds = 2;
 }
 
 // Called when SKPaymentQueue has finished sending restored transactions.
-- (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue {
-
+- (void)paymentQueueRestoreCompletedTransactionsFinished:(SKPaymentQueue *)queue
+{
     UnityPurchasingLog(@"PaymentQueueRestoreCompletedTransactionsFinished");
-    [self UnitySendMessage:@"onTransactionsRestoredSuccess" payload:@""];
+    [self UnitySendMessage: @"onTransactionsRestoredSuccess" payload: @""];
 }
 
 // Called if an error occurred while restoring transactions.
@@ -417,83 +473,87 @@ int delayInSeconds = 2;
     UnityPurchasingLog(@"restoreCompletedTransactionsFailedWithError");
     // Restore was cancelled or an error occurred, so notify user.
 
-    [self UnitySendMessage:@"onTransactionsRestoredFail" payload:error.localizedDescription];
+    [self UnitySendMessage: @"onTransactionsRestoredFail" payload: error.localizedDescription];
 }
 
-- (void) handleTransaction:(SKPaymentTransaction *) transaction
+- (void)handleTransaction:(SKPaymentTransaction *)transaction
 {
-    if (transaction.payment.productIdentifier == nil) {
+    if (transaction.payment.productIdentifier == nil)
+    {
         return;
     }
 
-    SKProduct* product = [validProducts objectForKey:transaction.payment.productIdentifier];
+    SKProduct* product = [validProducts objectForKey: transaction.payment.productIdentifier];
 
-    switch (transaction.transactionState) {
-
+    switch (transaction.transactionState)
+    {
         case SKPaymentTransactionStatePurchasing:
             // Item is still in the process of being purchased
             break;
         case SKPaymentTransactionStatePurchased:
-            [self handleTransactionPurchased:transaction forProduct:product];
+            [self handleTransactionPurchased: transaction forProduct: product];
             break;
         case SKPaymentTransactionStateRestored:
-            [self handleTransactionRestored:transaction forProduct:product];
+            [self handleTransactionRestored: transaction forProduct: product];
             break;
         case SKPaymentTransactionStateDeferred:
-            [self handleTransactionDeferred:transaction forProduct:product];
+            [self handleTransactionDeferred: transaction forProduct: product];
             break;
         case SKPaymentTransactionStateFailed:
-            [self handleTransactionFailed:transaction];
+            [self handleTransactionFailed: transaction];
             break;
     }
 }
 
-- (void) handleTransactionPurchased:(SKPaymentTransaction*) transaction forProduct:(SKProduct*) product
+- (void)handleTransactionPurchased:(SKPaymentTransaction*)transaction forProduct:(SKProduct*)product
 {
-
 #if MAC_APPSTORE
     // There is no transactionReceipt on Mac
     NSString* receipt = @"";
 #else
     // The transactionReceipt field is deprecated, but is being used here to validate Ask-To-Buy purchases
-    NSString* receipt = [transaction.transactionReceipt base64EncodedStringWithOptions:0];
+    NSString* receipt = [transaction.transactionReceipt base64EncodedStringWithOptions: 0];
 #endif
 
     transactionReceipts[transaction.payment.productIdentifier] = receipt;
 
-    if (product != nil) {
-        [self onTransactionSucceeded:transaction];
+    if (product != nil)
+    {
+        [self onTransactionSucceeded: transaction];
     }
 }
 
-- (void) handleTransactionRestored:(SKPaymentTransaction*) transaction forProduct:(SKProduct*) product
+- (void)handleTransactionRestored:(SKPaymentTransaction*)transaction forProduct:(SKProduct*)product
 {
-    if (product != nil) {
-        [self onTransactionSucceeded:transaction];
+    if (product != nil)
+    {
+        [self onTransactionSucceeded: transaction];
     }
 }
 
-- (void) handleTransactionDeferred:(SKPaymentTransaction*) transaction forProduct:(SKProduct*) product
+- (void)handleTransactionDeferred:(SKPaymentTransaction*)transaction forProduct:(SKProduct*)product
 {
-    if (product != nil) {
+    if (product != nil)
+    {
         UnityPurchasingLog(@"PurchaseDeferred");
-        [self UnitySendMessage:@"onProductPurchaseDeferred" payload:transaction.payment.productIdentifier];
+        [self UnitySendMessage: @"onProductPurchaseDeferred" payload: transaction.payment.productIdentifier];
     }
 }
 
-- (void) handleTransactionFailed:(SKPaymentTransaction*) transaction
+- (void)handleTransactionFailed:(SKPaymentTransaction*)transaction
 {
     // Purchase was either cancelled by user or an error occurred.
-    NSString* errorCode = [NSString stringWithFormat:@"%ld",(long)transaction.error.code];
+    NSString* errorCode = [NSString stringWithFormat: @"%ld", (long)transaction.error.code];
     UnityPurchasingLog(@"PurchaseFailed: %@", errorCode);
 
-    NSString* reason = [self purchaseErrorCodeToReason:transaction.error.code];
+    NSString* reason = [self purchaseErrorCodeToReason: transaction.error.code];
     NSString* errorCodeString = [UnityPurchasing storeKitErrorCodeNames][@(transaction.error.code)];
-    if (errorCodeString == nil) {
+    if (errorCodeString == nil)
+    {
         errorCodeString = @"SKErrorUnknown";
     }
-    NSString* errorDescription = [NSString stringWithFormat:@"APPLE_%@", transaction.error.localizedDescription];
-    [self onPurchaseFailed:transaction.payment.productIdentifier reason:reason errorCode:errorCodeString errorDescription:errorDescription];
+    NSString* errorDescription = [NSString stringWithFormat: @"APPLE_%@", transaction.error.localizedDescription];
+    [self onPurchaseFailed: transaction.payment.productIdentifier reason: reason errorCode: errorCodeString errorDescription: errorDescription];
 
     // Finished transactions should be removed from the payment queue.
     [[SKPaymentQueue defaultQueue] finishTransaction: transaction];
@@ -502,18 +562,22 @@ int delayInSeconds = 2;
 - (void)fetchStorePromotionOrder
 {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
-    if (@available(iOS 11.0, *)) {
+    if (@available(iOS 11.0, *))
+    {
         [[SKProductStorePromotionController defaultController] fetchStorePromotionOrderWithCompletionHandler:^(NSArray<SKProduct *> * _Nonnull storePromotionOrder, NSError * _Nullable error) {
-            if (error) {
+            if (error)
+            {
                 UnityPurchasingLog(@"Error in fetchStorePromotionOrder: %@ - %@ - %@", [error code], [error domain], [error localizedDescription]);
 
-                [self UnitySendMessage:@"onFetchStorePromotionOrderFailed" payload:nil];
-            } else {
-                UnityPurchasingLog(@"Fetched %lu store-promotion ordered products", (unsigned long) [storePromotionOrder count]);
+                [self UnitySendMessage: @"onFetchStorePromotionOrderFailed" payload: nil];
+            }
+            else
+            {
+                UnityPurchasingLog(@"Fetched %lu store-promotion ordered products", (unsigned long)[storePromotionOrder count]);
 
-                NSString *productIdsJSON = [UnityPurchasing serializeProductIdList:storePromotionOrder];
+                NSString *productIdsJSON = [UnityPurchasing serializeProductIdList: storePromotionOrder];
 
-                [self UnitySendMessage:@"onFetchStorePromotionOrderSucceeded" payload:productIdsJSON];
+                [self UnitySendMessage: @"onFetchStorePromotionOrderSucceeded" payload: productIdsJSON];
             }
         }];
     }
@@ -521,7 +585,7 @@ int delayInSeconds = 2;
 #endif
     {
         UnityPurchasingLog(@"Fetch store promotion order is only available on iOS and tvOS 11 or later");
-        [self UnitySendMessage:@"onFetchStorePromotionOrderFailed" payload:nil];
+        [self UnitySendMessage: @"onFetchStorePromotionOrderFailed" payload: nil];
     }
 }
 
@@ -532,14 +596,15 @@ int delayInSeconds = 2;
     {
         NSMutableArray* products = [[NSMutableArray alloc] init];
 
-        for (NSString* productId in productIds) {
-            SKProduct* product = [validProducts objectForKey:productId];
+        for (NSString* productId in productIds)
+        {
+            SKProduct* product = [validProducts objectForKey: productId];
             if (product)
-                [products addObject:product];
+                [products addObject: product];
         }
 
         SKProductStorePromotionController* controller = [SKProductStorePromotionController defaultController];
-        [controller updateStorePromotionOrder:products completionHandler:^(NSError* error) {
+        [controller updateStorePromotionOrder: products completionHandler:^(NSError* error) {
             if (error)
                 UnityPurchasingLog(@"Error in updateStorePromotionOrder: %@ - %@ - %@", [error code], [error domain], [error localizedDescription]);
         }];
@@ -554,31 +619,36 @@ int delayInSeconds = 2;
 - (void)fetchStorePromotionVisibilityForProduct:(NSString*)productId
 {
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
-    if (@available(iOS 11.0, macOS 11.0, tvOS 11.0, *)) {
-        SKProduct *product = [validProducts objectForKey:productId];
+    if (@available(iOS 11.0, macOS 11.0, tvOS 11.0, *))
+    {
+        SKProduct *product = [validProducts objectForKey: productId];
 
         [[SKProductStorePromotionController defaultController]
-         fetchStorePromotionVisibilityForProduct:product completionHandler:^(SKProductStorePromotionVisibility storePromotionVisibility, NSError * _Nullable error) {
-                if (error) {
-                    UnityPurchasingLog(@"Error in fetchStorePromotionVisibilityForProduct: %@ - %@ - %@", [error code], [error domain], [error localizedDescription]);
+         fetchStorePromotionVisibilityForProduct: product completionHandler:^(SKProductStorePromotionVisibility storePromotionVisibility, NSError * _Nullable error) {
+            if (error)
+            {
+                UnityPurchasingLog(@"Error in fetchStorePromotionVisibilityForProduct: %@ - %@ - %@", [error code], [error domain], [error localizedDescription]);
 
-                    [self UnitySendMessage:@"onFetchStorePromotionVisibilityFailed" payload:nil];
-                } else {
-                    NSString *visibility = [UnityPurchasing getStringForStorePromotionVisibility: storePromotionVisibility];
-
-                    UnityPurchasingLog(@"Fetched Store Promotion Visibility for %@", product.productIdentifier);
-
-                    NSString *payload = [UnityPurchasing serializeVisibilityResultForProduct:productId withVisiblity:visibility];
-
-                    [self UnitySendMessage:@"onFetchStorePromotionVisibilitySucceeded" payload:payload];
-                }
+                [self UnitySendMessage: @"onFetchStorePromotionVisibilityFailed" payload: nil];
             }
-         ];
-    } else
+            else
+            {
+                NSString *visibility = [UnityPurchasing getStringForStorePromotionVisibility: storePromotionVisibility];
+
+                UnityPurchasingLog(@"Fetched Store Promotion Visibility for %@", product.productIdentifier);
+
+                NSString *payload = [UnityPurchasing serializeVisibilityResultForProduct: productId withVisiblity: visibility];
+
+                [self UnitySendMessage: @"onFetchStorePromotionVisibilitySucceeded" payload: payload];
+            }
+        }
+        ];
+    }
+    else
 #endif
     {
         UnityPurchasingLog(@"Fetch store promotion visibility is only available on iOS, macOS and tvOS 11 or later");
-        [self UnitySendMessage:@"onFetchStorePromotionVisibilityFailed" payload:nil];
+        [self UnitySendMessage: @"onFetchStorePromotionVisibilityFailed" payload: nil];
     }
 }
 
@@ -588,20 +658,21 @@ int delayInSeconds = 2;
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
     if (@available(iOS 11_0, *))
     {
-        SKProduct *product = [validProducts objectForKey:productId];
-        if (!product) {
+        SKProduct *product = [validProducts objectForKey: productId];
+        if (!product)
+        {
             UnityPurchasingLog(@"updateStorePromotionVisibility unable to find product %@", productId);
             return;
         }
 
         SKProductStorePromotionVisibility v = SKProductStorePromotionVisibilityDefault;
-        if ([visibility isEqualToString:@"Hide"])
+        if ([visibility isEqualToString: @"Hide"])
             v = SKProductStorePromotionVisibilityHide;
-        else if ([visibility isEqualToString:@"Show"])
+        else if ([visibility isEqualToString: @"Show"])
             v = SKProductStorePromotionVisibilityShow;
 
         SKProductStorePromotionController* controller = [SKProductStorePromotionController defaultController];
-        [controller updateStorePromotionVisibility:v forProduct:product completionHandler:^(NSError* error) {
+        [controller updateStorePromotionVisibility: v forProduct: product completionHandler:^(NSError* error) {
             if (error)
                 UnityPurchasingLog(@"Error in updateStorePromotionVisibility: %@ - %@ - %@", [error code], [error domain], [error localizedDescription]);
         }];
@@ -613,12 +684,13 @@ int delayInSeconds = 2;
     }
 }
 
-
-- (BOOL)paymentQueue:(SKPaymentQueue *)queue shouldAddStorePayment:(SKPayment *)payment forProduct:(SKProduct *)product {
+- (BOOL)paymentQueue:(SKPaymentQueue *)queue shouldAddStorePayment:(SKPayment *)payment forProduct:(SKProduct *)product
+{
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
-    if (@available(iOS 11_0, *)) {
+    if (@available(iOS 11_0, *))
+    {
         // Just defer to the early transaction observer. This should have no effect, just return whatever the observer returns.
-        return [[UnityEarlyTransactionObserver defaultObserver] paymentQueue:queue shouldAddStorePayment:payment forProduct:product];
+        return [[UnityEarlyTransactionObserver defaultObserver] paymentQueue: queue shouldAddStorePayment: payment forProduct: product];
     }
 #endif
     return YES;
@@ -626,8 +698,10 @@ int delayInSeconds = 2;
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000
 + (NSString*)getStringForStorePromotionVisibility:(SKProductStorePromotionVisibility)storePromotionVisibility
-API_AVAILABLE(macos(11.0), ios(11.0), tvos(11.0)){
-    switch(storePromotionVisibility) {
+    API_AVAILABLE(macos(11.0), ios(11.0), tvos(11.0))
+{
+    switch (storePromotionVisibility)
+    {
         case SKProductStorePromotionVisibilityShow:
             return @"Show";
         case SKProductStorePromotionVisibilityHide:
@@ -640,217 +714,264 @@ API_AVAILABLE(macos(11.0), ios(11.0), tvos(11.0)){
 }
 #endif
 
-+(ProductDefinition*) decodeProductDefinition:(NSDictionary*) hash
++ (ProductDefinition*)decodeProductDefinition:(NSDictionary*)hash
 {
     ProductDefinition* product = [[ProductDefinition alloc] init];
-    product.id = [hash objectForKey:@"id"];
-    product.storeSpecificId = [hash objectForKey:@"storeSpecificId"];
-    product.type = [hash objectForKey:@"type"];
+    product.id = [hash objectForKey: @"id"];
+    product.storeSpecificId = [hash objectForKey: @"storeSpecificId"];
+    product.type = [hash objectForKey: @"type"];
     return product;
 }
 
-+ (NSArray*) deserializeProductDefs:(NSString*)json
++ (NSArray*)deserializeProductDefs:(NSString*)json
 {
-    NSData* data = [json dataUsingEncoding:NSUTF8StringEncoding];
-    NSArray* hashes = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    NSData* data = [json dataUsingEncoding: NSUTF8StringEncoding];
+    NSArray* hashes = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nil];
 
     NSMutableArray* result = [[NSMutableArray alloc] init];
-    for (NSDictionary* hash in hashes) {
-        [result addObject:[self decodeProductDefinition:hash]];
+    for (NSDictionary* hash in hashes)
+    {
+        [result addObject: [self decodeProductDefinition: hash]];
     }
 
     return result;
 }
 
-+ (ProductDefinition*) deserializeProductDef:(NSString*)json
++ (ProductDefinition*)deserializeProductDef:(NSString*)json
 {
-    NSData* data = [json dataUsingEncoding:NSUTF8StringEncoding];
-    NSDictionary* hash = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    return [self decodeProductDefinition:hash];
+    NSData* data = [json dataUsingEncoding: NSUTF8StringEncoding];
+    NSDictionary* hash = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nil];
+    return [self decodeProductDefinition: hash];
 }
 
-+ (NSString*) serializeProductMetadata:(NSArray*)appleProducts
++ (NSString*)serializeProductMetadata:(NSArray*)appleProducts
 {
     NSMutableArray* hashes = [[NSMutableArray alloc] init];
-    for (id product in appleProducts) {
-        if (NULL == [product productIdentifier]) {
+    for (id product in appleProducts)
+    {
+        if (NULL == [product productIdentifier])
+        {
             UnityPurchasingLog(@"Product is missing an identifier!");
             continue;
         }
 
         NSMutableDictionary* hash = [[NSMutableDictionary alloc] init];
-        [hashes addObject:hash];
+        [hashes addObject: hash];
 
-        [hash setObject:[product productIdentifier] forKey:@"storeSpecificId"];
+        [hash setObject: [product productIdentifier] forKey: @"storeSpecificId"];
 
         NSMutableDictionary* metadata = [[NSMutableDictionary alloc] init];
-        [hash setObject:metadata forKey:@"metadata"];
+        [hash setObject: metadata forKey: @"metadata"];
 
-        if (NULL != [product price]) {
-            [metadata setObject:[product price] forKey:@"localizedPrice"];
+        if (NULL != [product price])
+        {
+            [metadata setObject: [product price] forKey: @"localizedPrice"];
         }
 
-        if (NULL != [product priceLocale]) {
-            NSString *currencyCode = [[product priceLocale] objectForKey:NSLocaleCurrencyCode];
+        if (NULL != [product priceLocale])
+        {
+            NSString *currencyCode = [[product priceLocale] objectForKey: NSLocaleCurrencyCode];
             // NSLocaleCurrencyCode has been seen to return nil. Avoid crashing and report the issue to the log. E.g. https://developer.apple.com/forums/thread/119838
-            if (currencyCode != nil) {
-                [metadata setObject:currencyCode forKey:@"isoCurrencyCode"];
-            } else {
+            if (currencyCode != nil)
+            {
+                [metadata setObject: currencyCode forKey: @"isoCurrencyCode"];
+            }
+            else
+            {
                 UnityPurchasingLog(@"Error: unable to determine localized currency code for product {%@}, [SKProduct priceLocale] identifier {%@}. NSLocaleCurrencyCode {%@} is nil. Using ISO Unknown Currency code, instead: {%@}.", [product productIdentifier], [[product priceLocale] localeIdentifier], currencyCode, ISO_CURRENCY_CODE_UNKNOWN);
-                [metadata setObject:ISO_CURRENCY_CODE_UNKNOWN forKey:@"isoCurrencyCode"];
+                [metadata setObject: ISO_CURRENCY_CODE_UNKNOWN forKey: @"isoCurrencyCode"];
             }
         }
 
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000 || __TV_OS_VERSION_MAX_ALLOWED >= 110000 || __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
-        if ((@available(iOS 11_2, macOS 10_13_2, tvOS 11_2, *)) && (nil != [product introductoryPrice]))  {
-            [metadata setObject:[[product introductoryPrice] price] forKey:@"introductoryPrice"];
-            if (nil != [[product introductoryPrice] priceLocale]) {
-                NSString *currencyCode = [[[product introductoryPrice] priceLocale] objectForKey:NSLocaleCurrencyCode];
-                [metadata setObject:currencyCode forKey:@"introductoryPriceLocale"];
-            } else {
-                [metadata setObject:@"" forKey:@"introductoryPriceLocale"];
+        if ((@available(iOS 11_2, macOS 10_13_2, tvOS 11_2, *)) && (nil != [product introductoryPrice]))
+        {
+            [metadata setObject: [[product introductoryPrice] price] forKey: @"introductoryPrice"];
+            if (nil != [[product introductoryPrice] priceLocale])
+            {
+                NSString *currencyCode = [[[product introductoryPrice] priceLocale] objectForKey: NSLocaleCurrencyCode];
+                [metadata setObject: currencyCode forKey: @"introductoryPriceLocale"];
             }
-            if (nil != [[product introductoryPrice] numberOfPeriods]) {
-                NSNumber *numberOfPeriods = [NSNumber numberWithInt:[[product introductoryPrice] numberOfPeriods]];
-                [metadata setObject:numberOfPeriods forKey:@"introductoryPriceNumberOfPeriods"];
-            } else {
-                [metadata setObject:@"" forKey:@"introductoryPriceNumberOfPeriods"];
+            else
+            {
+                [metadata setObject: @"" forKey: @"introductoryPriceLocale"];
             }
-            if (nil != [[product introductoryPrice] subscriptionPeriod]) {
-                if (nil != [[[product introductoryPrice] subscriptionPeriod] numberOfUnits]) {
-                    NSNumber *numberOfUnits = [NSNumber numberWithInt:[[[product introductoryPrice] subscriptionPeriod] numberOfUnits]];
-                    [metadata setObject:numberOfUnits forKey:@"numberOfUnits"];
-                } else {
-                    [metadata setObject:@"" forKey:@"numberOfUnits"];
+            if (nil != [[product introductoryPrice] numberOfPeriods])
+            {
+                NSNumber *numberOfPeriods = [NSNumber numberWithInt: [[product introductoryPrice] numberOfPeriods]];
+                [metadata setObject: numberOfPeriods forKey: @"introductoryPriceNumberOfPeriods"];
+            }
+            else
+            {
+                [metadata setObject: @"" forKey: @"introductoryPriceNumberOfPeriods"];
+            }
+            if (nil != [[product introductoryPrice] subscriptionPeriod])
+            {
+                if (nil != [[[product introductoryPrice] subscriptionPeriod] numberOfUnits])
+                {
+                    NSNumber *numberOfUnits = [NSNumber numberWithInt: [[[product introductoryPrice] subscriptionPeriod] numberOfUnits]];
+                    [metadata setObject: numberOfUnits forKey: @"numberOfUnits"];
                 }
-                if (nil != [[[product introductoryPrice] subscriptionPeriod] unit]) {
-                    NSNumber *unit = [NSNumber numberWithInt:[[[product introductoryPrice] subscriptionPeriod] unit]];
-                    [metadata setObject:unit forKey:@"unit"];
-                } else {
-                    [metadata setObject:@"" forKey:@"unit"];
+                else
+                {
+                    [metadata setObject: @"" forKey: @"numberOfUnits"];
                 }
-            } else {
-                [metadata setObject:@"" forKey:@"numberOfUnits"];
-                [metadata setObject:@"" forKey:@"unit"];
+                if (nil != [[[product introductoryPrice] subscriptionPeriod] unit])
+                {
+                    NSNumber *unit = [NSNumber numberWithInt: [[[product introductoryPrice] subscriptionPeriod] unit]];
+                    [metadata setObject: unit forKey: @"unit"];
+                }
+                else
+                {
+                    [metadata setObject: @"" forKey: @"unit"];
+                }
             }
-        } else {
-            [metadata setObject:@"" forKey:@"introductoryPrice"];
-            [metadata setObject:@"" forKey:@"introductoryPriceLocale"];
-            [metadata setObject:@"" forKey:@"introductoryPriceNumberOfPeriods"];
-            [metadata setObject:@"" forKey:@"numberOfUnits"];
-            [metadata setObject:@"" forKey:@"unit"];
+            else
+            {
+                [metadata setObject: @"" forKey: @"numberOfUnits"];
+                [metadata setObject: @"" forKey: @"unit"];
+            }
+        }
+        else
+        {
+            [metadata setObject: @"" forKey: @"introductoryPrice"];
+            [metadata setObject: @"" forKey: @"introductoryPriceLocale"];
+            [metadata setObject: @"" forKey: @"introductoryPriceNumberOfPeriods"];
+            [metadata setObject: @"" forKey: @"numberOfUnits"];
+            [metadata setObject: @"" forKey: @"unit"];
         }
 
-        if ((@available(iOS 11_2, macOS 10_13_2, tvOS 11_2, *)) && (nil != [product subscriptionPeriod]))  {
-            if (nil !=  [[product subscriptionPeriod] numberOfUnits]) {
-                NSNumber *numberOfUnits = [NSNumber numberWithInt:[[product subscriptionPeriod] numberOfUnits]];
-                [metadata setObject:numberOfUnits forKey:@"subscriptionNumberOfUnits"];
-            } else {
-                [metadata setObject:@"" forKey:@"subscriptionNumberOfUnits"];
+        if ((@available(iOS 11_2, macOS 10_13_2, tvOS 11_2, *)) && (nil != [product subscriptionPeriod]))
+        {
+            if (nil !=  [[product subscriptionPeriod] numberOfUnits])
+            {
+                NSNumber *numberOfUnits = [NSNumber numberWithInt: [[product subscriptionPeriod] numberOfUnits]];
+                [metadata setObject: numberOfUnits forKey: @"subscriptionNumberOfUnits"];
             }
-            if (nil != [[product subscriptionPeriod] unit]) {
-                NSNumber *unit = [NSNumber numberWithInt:[[product subscriptionPeriod] unit]];
-                [metadata setObject:unit forKey:@"subscriptionPeriodUnit"];
-            } else {
-                [metadata setObject:@"" forKey:@"subscriptionPeriodUnit"];
+            else
+            {
+                [metadata setObject: @"" forKey: @"subscriptionNumberOfUnits"];
             }
-        } else {
-            [metadata setObject:@"" forKey:@"subscriptionNumberOfUnits"];
-            [metadata setObject:@"" forKey:@"subscriptionPeriodUnit"];
+            if (nil != [[product subscriptionPeriod] unit])
+            {
+                NSNumber *unit = [NSNumber numberWithInt: [[product subscriptionPeriod] unit]];
+                [metadata setObject: unit forKey: @"subscriptionPeriodUnit"];
+            }
+            else
+            {
+                [metadata setObject: @"" forKey: @"subscriptionPeriodUnit"];
+            }
+        }
+        else
+        {
+            [metadata setObject: @"" forKey: @"subscriptionNumberOfUnits"];
+            [metadata setObject: @"" forKey: @"subscriptionPeriodUnit"];
         }
 #else
-        [metadata setObject:@"" forKey:@"introductoryPrice"];
-        [metadata setObject:@"" forKey:@"introductoryPriceLocale"];
-        [metadata setObject:@"" forKey:@"introductoryPriceNumberOfPeriods"];
-        [metadata setObject:@"" forKey:@"numberOfUnits"];
-        [metadata setObject:@"" forKey:@"unit"];
-        [metadata setObject:@"" forKey:@"subscriptionNumberOfUnits"];
-        [metadata setObject:@"" forKey:@"subscriptionPeriodUnit"];
+        [metadata setObject: @"" forKey: @"introductoryPrice"];
+        [metadata setObject: @"" forKey: @"introductoryPriceLocale"];
+        [metadata setObject: @"" forKey: @"introductoryPriceNumberOfPeriods"];
+        [metadata setObject: @"" forKey: @"numberOfUnits"];
+        [metadata setObject: @"" forKey: @"unit"];
+        [metadata setObject: @"" forKey: @"subscriptionNumberOfUnits"];
+        [metadata setObject: @"" forKey: @"subscriptionPeriodUnit"];
 #endif
 
 
         NSNumberFormatter *numberFormatter = [[NSNumberFormatter alloc] init];
-        [numberFormatter setFormatterBehavior:NSNumberFormatterBehavior10_4];
-        [numberFormatter setNumberStyle:NSNumberFormatterCurrencyStyle];
-        [numberFormatter setLocale:[product priceLocale]];
-        NSString *formattedString = [numberFormatter stringFromNumber:[product price]];
+        [numberFormatter setFormatterBehavior: NSNumberFormatterBehavior10_4];
+        [numberFormatter setNumberStyle: NSNumberFormatterCurrencyStyle];
+        [numberFormatter setLocale: [product priceLocale]];
+        NSString *formattedString = [numberFormatter stringFromNumber: [product price]];
 
-        if (NULL == formattedString) {
+        if (NULL == formattedString)
+        {
             UnityPurchasingLog(@"Unable to format a localized price");
-            [metadata setObject:@"" forKey:@"localizedPriceString"];
-        } else {
-            [metadata setObject:formattedString forKey:@"localizedPriceString"];
+            [metadata setObject: @"" forKey: @"localizedPriceString"];
         }
-        if (NULL == [product localizedTitle]) {
+        else
+        {
+            [metadata setObject: formattedString forKey: @"localizedPriceString"];
+        }
+        if (NULL == [product localizedTitle])
+        {
             UnityPurchasingLog(@"No localized title for: %@. Have your products been disapproved in itunes connect?", [product productIdentifier]);
-            [metadata setObject:@"" forKey:@"localizedTitle"];
-        } else {
-            [metadata setObject:[product localizedTitle] forKey:@"localizedTitle"];
+            [metadata setObject: @"" forKey: @"localizedTitle"];
+        }
+        else
+        {
+            [metadata setObject: [product localizedTitle] forKey: @"localizedTitle"];
         }
 
-        if (NULL == [product localizedDescription]) {
+        if (NULL == [product localizedDescription])
+        {
             UnityPurchasingLog(@"No localized description for: %@. Have your products been disapproved in itunes connect?", [product productIdentifier]);
-            [metadata setObject:@"" forKey:@"localizedDescription"];
-        } else {
-            [metadata setObject:[product localizedDescription] forKey:@"localizedDescription"];
+            [metadata setObject: @"" forKey: @"localizedDescription"];
+        }
+        else
+        {
+            [metadata setObject: [product localizedDescription] forKey: @"localizedDescription"];
         }
     }
 
 
-    NSData *data = [NSJSONSerialization dataWithJSONObject:hashes options:0 error:nil];
-    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSData *data = [NSJSONSerialization dataWithJSONObject: hashes options: 0 error: nil];
+    return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 }
 
-+ (NSString*) serializeProductIdList:(NSArray<SKProduct *> *)products
++ (NSString*)serializeProductIdList:(NSArray<SKProduct *> *)products
 {
-    NSMutableArray *productIds = [NSMutableArray arrayWithCapacity:products.count];
-    for (SKProduct *product in products) {
-        [productIds addObject:product.productIdentifier];
+    NSMutableArray *productIds = [NSMutableArray arrayWithCapacity: products.count];
+    for (SKProduct *product in products)
+    {
+        [productIds addObject: product.productIdentifier];
     }
 
-    NSData *data = [NSJSONSerialization dataWithJSONObject:productIds options:0 error:nil];
-    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSData *data = [NSJSONSerialization dataWithJSONObject: productIds options: 0 error: nil];
+    return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 }
 
-+ (NSArray*) deserializeProductIdList:(NSString*)json
++ (NSArray*)deserializeProductIdList:(NSString*)json
 {
-    NSData* data = [json dataUsingEncoding:NSUTF8StringEncoding];
-    NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-    return [[dict objectForKey:@"products"] copy];
+    NSData* data = [json dataUsingEncoding: NSUTF8StringEncoding];
+    NSDictionary* dict = [NSJSONSerialization JSONObjectWithData: data options: 0 error: nil];
+    return [[dict objectForKey: @"products"] copy];
 }
 
-+ (NSString*) serializeVisibilityResultForProduct:(NSString *)productId withVisiblity:(NSString *)visibility
++ (NSString*)serializeVisibilityResultForProduct:(NSString *)productId withVisiblity:(NSString *)visibility
 {
     NSDictionary *result = @{@"productId": productId, @"visibility": visibility};
 
-    NSData *data = [NSJSONSerialization dataWithJSONObject:result options:0 error:nil];
-    return [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+    NSData *data = [NSJSONSerialization dataWithJSONObject: result options: 0 error: nil];
+    return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 }
 
 // Note: this will need to be updated if Apple ever adds more StoreKit error codes.
 + (NSDictionary<NSNumber *, NSString *> *)storeKitErrorCodeNames
 {
     return @{
-             @(SKErrorUnknown) : @"SKErrorUnknown",
-             @(SKErrorClientInvalid) : @"SKErrorClientInvalid",
-             @(SKErrorPaymentCancelled) : @"SKErrorPaymentCancelled",
-             @(SKErrorPaymentInvalid) : @"SKErrorPaymentInvalid",
-             @(SKErrorPaymentNotAllowed) : @"SKErrorPaymentNotAllowed",
+            @(SKErrorUnknown): @"SKErrorUnknown",
+            @(SKErrorClientInvalid): @"SKErrorClientInvalid",
+            @(SKErrorPaymentCancelled): @"SKErrorPaymentCancelled",
+            @(SKErrorPaymentInvalid): @"SKErrorPaymentInvalid",
+            @(SKErrorPaymentNotAllowed): @"SKErrorPaymentNotAllowed",
 #if !MAC_APPSTORE
-             @(SKErrorStoreProductNotAvailable) : @"SKErrorStoreProductNotAvailable",
-             @(SKErrorCloudServicePermissionDenied) : @"SKErrorCloudServicePermissionDenied",
-             @(SKErrorCloudServiceNetworkConnectionFailed) : @"SKErrorCloudServiceNetworkConnectionFailed",
+            @(SKErrorStoreProductNotAvailable): @"SKErrorStoreProductNotAvailable",
+            @(SKErrorCloudServicePermissionDenied): @"SKErrorCloudServicePermissionDenied",
+            @(SKErrorCloudServiceNetworkConnectionFailed): @"SKErrorCloudServiceNetworkConnectionFailed",
 #endif
 #if !MAC_APPSTORE && (__IPHONE_OS_VERSION_MAX_ALLOWED >= 103000 || __TV_OS_VERSION_MAX_ALLOWED >= 103000)
-             @(SKErrorCloudServiceRevoked) : @"SKErrorCloudServiceRevoked",
+            @(SKErrorCloudServiceRevoked): @"SKErrorCloudServiceRevoked",
 #endif
-             };
+    };
 }
 
 #pragma mark - Internal Methods & Events
 
-- (id)init {
-    if ( self = [super init] ) {
+- (id)init
+{
+    if (self = [super init])
+    {
         validProducts = [[NSMutableDictionary alloc] init];
         pendingTransactions = [[NSMutableDictionary alloc] init];
         finishedTransactions = [[NSMutableSet alloc] init];
@@ -863,8 +984,10 @@ API_AVAILABLE(macos(11.0), ios(11.0), tvos(11.0)){
 
 UnityPurchasing* UnityPurchasing_instance = NULL;
 
-UnityPurchasing* UnityPurchasing_getInstance() {
-    if (NULL == UnityPurchasing_instance) {
+UnityPurchasing* UnityPurchasing_getInstance()
+{
+    if (NULL == UnityPurchasing_instance)
+    {
         UnityPurchasing_instance = [[UnityPurchasing alloc] init];
     }
     return UnityPurchasing_instance;
@@ -875,9 +998,10 @@ UnityPurchasing* UnityPurchasing_getInstance() {
 // which will free the string when it is garbage collected.
 // Stack allocated variables must not be returned as results
 // from managed to native calls.
-char* UnityPurchasingMakeHeapAllocatedStringCopy (NSString* string)
+char* UnityPurchasingMakeHeapAllocatedStringCopy(NSString* string)
 {
-    if (NULL == string) {
+    if (NULL == string)
+    {
         return NULL;
     }
     char* res = (char*)malloc([string length] + 1);
@@ -885,111 +1009,132 @@ char* UnityPurchasingMakeHeapAllocatedStringCopy (NSString* string)
     return res;
 }
 
-void setUnityPurchasingCallback(UnityPurchasingCallback callback) {
-    [UnityPurchasing_getInstance() setCallback:callback];
+void setUnityPurchasingCallback(UnityPurchasingCallback callback)
+{
+    [UnityPurchasing_getInstance() setCallback: callback];
 }
 
-void unityPurchasingRetrieveProducts(const char* json) {
-    NSString* str = [NSString stringWithUTF8String:json];
-    NSArray* productDefs = [UnityPurchasing deserializeProductDefs:str];
+void unityPurchasingRetrieveProducts(const char* json)
+{
+    NSString* str = [NSString stringWithUTF8String: json];
+    NSArray* productDefs = [UnityPurchasing deserializeProductDefs: str];
     NSMutableSet* productIds = [[NSMutableSet alloc] init];
-    for (ProductDefinition* product in productDefs) {
-        [productIds addObject:product.storeSpecificId];
+    for (ProductDefinition* product in productDefs)
+    {
+        [productIds addObject: product.storeSpecificId];
     }
-    [UnityPurchasing_getInstance() requestProducts:productIds];
+    [UnityPurchasing_getInstance() requestProducts: productIds];
 }
 
-void unityPurchasingPurchase(const char* json, const char* developerPayload) {
-    NSString* str = [NSString stringWithUTF8String:json];
-    ProductDefinition* product = [UnityPurchasing deserializeProductDef:str];
-    [UnityPurchasing_getInstance() purchaseProduct:product];
+void unityPurchasingPurchase(const char* json, const char* developerPayload)
+{
+    NSString* str = [NSString stringWithUTF8String: json];
+    ProductDefinition* product = [UnityPurchasing deserializeProductDef: str];
+    [UnityPurchasing_getInstance() purchaseProduct: product];
 }
 
-void unityPurchasingFinishTransaction(const char* productJSON, const char* transactionId) {
+void unityPurchasingFinishTransaction(const char* productJSON, const char* transactionId)
+{
     if (transactionId == NULL)
         return;
-    NSString* tranId = [NSString stringWithUTF8String:transactionId];
-    [UnityPurchasing_getInstance() finishTransaction:tranId];
+    NSString* tranId = [NSString stringWithUTF8String: transactionId];
+    [UnityPurchasing_getInstance() finishTransaction: tranId];
 }
 
-void unityPurchasingRestoreTransactions() {
+void unityPurchasingRestoreTransactions()
+{
     UnityPurchasingLog(@"Restore transactions");
     [UnityPurchasing_getInstance() restorePurchases];
 }
 
-void unityPurchasingAddTransactionObserver() {
+void unityPurchasingAddTransactionObserver()
+{
     UnityPurchasingLog(@"Add transaction observer");
     [UnityPurchasing_getInstance() addTransactionObserver];
 }
 
-void unityPurchasingRefreshAppReceipt() {
+void unityPurchasingRefreshAppReceipt()
+{
     UnityPurchasingLog(@"Refresh app receipt");
     [UnityPurchasing_getInstance() refreshReceipt];
 }
 
-char* getUnityPurchasingAppReceipt () {
+char* getUnityPurchasingAppReceipt()
+{
     NSString* receipt = [UnityPurchasing_getInstance() getAppReceipt];
     return UnityPurchasingMakeHeapAllocatedStringCopy(receipt);
 }
 
-char* getUnityPurchasingTransactionReceiptForProductId (const char *productId) {
-    NSString* receipt = [UnityPurchasing_getInstance() getTransactionReceiptForProductId:[NSString stringWithUTF8String:productId]];
+char* getUnityPurchasingTransactionReceiptForProductId(const char *productId)
+{
+    NSString* receipt = [UnityPurchasing_getInstance() getTransactionReceiptForProductId: [NSString stringWithUTF8String: productId]];
     return UnityPurchasingMakeHeapAllocatedStringCopy(receipt);
 }
 
-BOOL getUnityPurchasingCanMakePayments () {
+BOOL getUnityPurchasingCanMakePayments()
+{
     return [SKPaymentQueue canMakePayments];
 }
 
-void setSimulateAskToBuy(BOOL enabled) {
+void setSimulateAskToBuy(BOOL enabled)
+{
     UnityPurchasingLog(@"Set simulate Ask To Buy %@", enabled ? @"true" : @"false");
     UnityPurchasing_getInstance().simulateAskToBuyEnabled = enabled;
 }
 
-BOOL getSimulateAskToBuy() {
+BOOL getSimulateAskToBuy()
+{
     return UnityPurchasing_getInstance().simulateAskToBuyEnabled;
 }
 
-void unityPurchasingSetApplicationUsername(const char *username) {
+void unityPurchasingSetApplicationUsername(const char *username)
+{
     if (username == NULL)
         return;
-    UnityPurchasing_getInstance().applicationUsername = [NSString stringWithUTF8String:username];
+    UnityPurchasing_getInstance().applicationUsername = [NSString stringWithUTF8String: username];
 }
 
-void unityPurchasingFetchStorePromotionOrder(void) {
+void unityPurchasingFetchStorePromotionOrder(void)
+{
     [UnityPurchasing_getInstance() fetchStorePromotionOrder];
 }
 
-void unityPurchasingFetchStorePromotionVisibility(const char *productId) {
-    NSString* prodId = [NSString stringWithUTF8String:productId];
-    [UnityPurchasing_getInstance() fetchStorePromotionVisibilityForProduct:prodId];
+void unityPurchasingFetchStorePromotionVisibility(const char *productId)
+{
+    NSString* prodId = [NSString stringWithUTF8String: productId];
+    [UnityPurchasing_getInstance() fetchStorePromotionVisibilityForProduct: prodId];
 }
 
 // Expects json in this format:
 // { "products": ["storeSpecificId1", "storeSpecificId2"] }
-void unityPurchasingUpdateStorePromotionOrder(const char *json) {
-    NSString* str = [NSString stringWithUTF8String:json];
-    NSArray* productIds = [UnityPurchasing deserializeProductIdList:str];
-    [UnityPurchasing_getInstance() updateStorePromotionOrder:productIds];
+void unityPurchasingUpdateStorePromotionOrder(const char *json)
+{
+    NSString* str = [NSString stringWithUTF8String: json];
+    NSArray* productIds = [UnityPurchasing deserializeProductIdList: str];
+    [UnityPurchasing_getInstance() updateStorePromotionOrder: productIds];
 }
 
-void unityPurchasingUpdateStorePromotionVisibility(const char *productId, const char *visibility) {
-    NSString* prodId = [NSString stringWithUTF8String:productId];
-    NSString* visibilityStr = [NSString stringWithUTF8String:visibility];
-    [UnityPurchasing_getInstance() updateStorePromotionVisibility:visibilityStr forProduct:prodId];
+void unityPurchasingUpdateStorePromotionVisibility(const char *productId, const char *visibility)
+{
+    NSString* prodId = [NSString stringWithUTF8String: productId];
+    NSString* visibilityStr = [NSString stringWithUTF8String: visibility];
+    [UnityPurchasing_getInstance() updateStorePromotionVisibility: visibilityStr forProduct: prodId];
 }
 
-void unityPurchasingInterceptPromotionalPurchases() {
+void unityPurchasingInterceptPromotionalPurchases()
+{
     UnityPurchasingLog(@"Intercept promotional purchases");
     UnityPurchasing_getInstance().interceptPromotionalPurchases = YES;
 }
 
-void unityPurchasingContinuePromotionalPurchases() {
+void unityPurchasingContinuePromotionalPurchases()
+{
     UnityPurchasingLog(@"Continue promotional purchases");
     [UnityPurchasing_getInstance() initiateQueuedEarlyTransactionObserverPayments];
 }
 
-void unityPurchasingPresentCodeRedemptionSheet() {
+void unityPurchasingPresentCodeRedemptionSheet()
+{
     UnityPurchasingLog(@"Present code redemption sheet");
     [UnityPurchasing_getInstance() presentCodeRedemptionSheet];
 }

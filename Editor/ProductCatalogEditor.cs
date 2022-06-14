@@ -16,7 +16,8 @@ namespace UnityEditor.Purchasing
     {
         private const bool kValidateDebugLog = false;
 
-        private static string[] kStoreKeys = {
+        private static string[] kStoreKeys =
+        {
             AppleAppStore.Name,
             GooglePlay.Name,
             AmazonApps.Name,
@@ -48,12 +49,10 @@ namespace UnityEditor.Purchasing
         private ProductCatalog catalog;
         private Rect exportButtonRect;
         private ExporterValidationResults validation;
-        private bool enableCodelessAutoInitialization;
 
         private DateTime lastChanged;
         private bool dirty;
-        private readonly TimeSpan kSaveDelay = new TimeSpan (0, 0, 0, 0, 500); // 500 milliseconds
-
+        private readonly TimeSpan kSaveDelay = new TimeSpan(0, 0, 0, 0, 500); // 500 milliseconds
 
         #region UDP Related Fields
 
@@ -63,7 +62,7 @@ namespace UnityEditor.Purchasing
         private static readonly Queue<ReqStruct> requestQueue = new Queue<ReqStruct>();
 
         private static bool kIsPreparing = true;
-        private static TokenInfo kTokenInfo  = new TokenInfo();
+        private static TokenInfo kTokenInfo = new TokenInfo();
         private static string kOrgId;
         private static object kAppStoreSettings; //UDP AppStoreSettings via Reflection
         private static IDictionary<string, IapItem> kIapItems = new Dictionary<string, IapItem>();
@@ -82,6 +81,7 @@ namespace UnityEditor.Purchasing
             try
             {
                 FileInfo file = new FileInfo(ProductCatalog.kCatalogPath);
+
                 // This will create the new product catalog file location, if it already exists,
                 // this will not do anything.
                 file.Directory.Create();
@@ -97,7 +97,6 @@ namespace UnityEditor.Purchasing
                 {
                     AssetDatabase.MoveAsset(ProductCatalog.kPrevCatalogPath, ProductCatalog.kCatalogPath);
                 }
-
             }
             catch (Exception ex)
             {
@@ -113,13 +112,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Property which gets the <c>ProductCatalog</c> instance which is being edited.
         /// </summary>
-        public ProductCatalog Catalog
-        {
-            get
-            {
-                return catalog;
-            }
-        }
+        public ProductCatalog Catalog => catalog;
 
         /// <summary>
         /// Sets the results of the validation of catalog items upon export.
@@ -159,24 +152,22 @@ namespace UnityEditor.Purchasing
                 productEditors.Add(new ProductCatalogItemEditor(product));
             }
 
-            enableCodelessAutoInitialization = catalog.enableCodelessAutoInitialization;
-
             if (s_udpAvailable && IsUdpInstalled())
             {
-        	    kUdpErrorMsg = "";
-            	kTokenInfo = new TokenInfo();
+                kUdpErrorMsg = "";
+                kTokenInfo = new TokenInfo();
                 kValidLogin = true;
-	            kValidConfig = true;
-    	        kIsPreparing = true;
-        	    kOrgId = null;
-            	PrepareDeveloperInfo();
+                kValidConfig = true;
+                kIsPreparing = true;
+                kOrgId = null;
+                PrepareDeveloperInfo();
             }
         }
 
-		private static bool IsUdpInstalled()
-		{
-			return UnityPurchasingEditor.IsUdpUmpPackageInstalled() || UnityPurchasingEditor.IsUdpAssetStorePackageInstalled();
-		}
+        private static bool IsUdpInstalled()
+        {
+            return UnityPurchasingEditor.IsUdpUmpPackageInstalled() || UnityPurchasingEditor.IsUdpAssetStorePackageInstalled();
+        }
 
         private void OnDisable()
         {
@@ -246,7 +237,7 @@ namespace UnityEditor.Purchasing
             bool catalogHasProducts = !catalog.IsEmpty();
             if (catalogHasProducts)
             {
-                ShowAndProcessCodelessAutoInitToggleGui();
+                ShowAndProcessCodelessAutoInitToggleGuis();
             }
 
             EditorGUILayout.EndVertical();
@@ -270,7 +261,7 @@ namespace UnityEditor.Purchasing
                 ProductCatalogExportWindow.kWidth,
                 EditorGUIUtility.singleLineHeight);
             if (GUI.Button(exportButtonRect,
-                new GUIContent("App Store Export", "Export products for bulk import into app store tools.")))
+                    new GUIContent("App Store Export", "Export products for bulk import into app store tools.")))
             {
                 PopupWindow.Show(exportButtonRect, new ProductCatalogExportWindow(this));
             }
@@ -290,21 +281,59 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private void ShowAndProcessCodelessAutoInitToggleGui()
+        private void ShowAndProcessCodelessAutoInitToggleGuis()
         {
             EditorGUILayout.Space();
-            var oldAutoInitializationToggle = catalog.enableCodelessAutoInitialization;
-            enableCodelessAutoInitialization = EditorGUILayout.Toggle(
+
+            ShowAndProcessIapAutoInitToggleGui();
+            if (catalog.enableCodelessAutoInitialization)
+            {
+                ShowAndProcessUgsAutoInitToggleGui();
+            }
+
+            EditorGUILayout.Space();
+        }
+
+        private void ShowAndProcessIapAutoInitToggleGui()
+        {
+            var newValue = EditorGUILayout.Toggle(
                 new GUIContent("Automatically initialize UnityPurchasing (recommended)",
                     "Automatically start Unity IAP if there are any products defined in this catalog. Uncheck this if you plan to initialize Unity IAP manually in your code."),
-                enableCodelessAutoInitialization);
-            catalog.enableCodelessAutoInitialization = enableCodelessAutoInitialization;
+                catalog.enableCodelessAutoInitialization);
 
-            if (oldAutoInitializationToggle != enableCodelessAutoInitialization)
+            UpdateIapAutoInitValue(newValue);
+        }
+
+        private void UpdateIapAutoInitValue(bool newValue)
+        {
+            if (newValue != catalog.enableCodelessAutoInitialization)
             {
-                GenericEditorClickCheckboxEventSenderHelpers.SendCatalogAutoInitToggleEvent(enableCodelessAutoInitialization);
+                catalog.enableCodelessAutoInitialization = newValue;
+
+                GenericEditorClickCheckboxEventSenderHelpers.SendCatalogAutoInitToggleEvent(newValue);
             }
-            EditorGUILayout.Space();
+        }
+
+        private void ShowAndProcessUgsAutoInitToggleGui()
+        {
+            var newValue = EditorGUILayout.Toggle(new GUIContent(
+                    "Automatically initialize Unity Gaming Services",
+                    "This initializes Unity Gaming Services with the default `production` environment.\n" +
+                    "This way of initializing Unity Gaming Services might not be compatible with all other services as they might require special initialization options.\n" +
+                    "If the use of initialization options is needed, Unity Gaming Services should be initialized with the coded API."),
+                catalog.enableUnityGamingServicesAutoInitialization);
+
+            UpdateUgsAutoInitValue(newValue);
+        }
+
+        private void UpdateUgsAutoInitValue(bool newValue)
+        {
+            if (newValue != catalog.enableUnityGamingServicesAutoInitialization)
+            {
+                catalog.enableUnityGamingServicesAutoInitialization = newValue;
+
+                GenericEditorClickCheckboxEventSenderHelpers.SendCatalogUgsAutoInitToggleEvent(newValue);
+            }
         }
 
         string ShowEditTextFieldGuiAndGetValue(string fieldName, string label, string oldText)
@@ -413,11 +442,13 @@ namespace UnityEditor.Purchasing
 
         private static void EndErrorBlock(ExporterValidationResults validation, string fieldName)
         {
-            if (EditorGUI.EndChangeCheck() && validation != null) {
+            if (EditorGUI.EndChangeCheck() && validation != null)
+            {
                 validation.fieldErrors.Remove(fieldName);
             }
 
-            if (validation != null && validation.fieldErrors.ContainsKey(fieldName)) {
+            if (validation != null && validation.fieldErrors.ContainsKey(fieldName))
+            {
                 var style = new GUIStyle();
                 style.normal.textColor = Color.red;
                 EditorGUILayout.LabelField(validation.fieldErrors[fieldName], style);
@@ -468,45 +499,47 @@ namespace UnityEditor.Purchasing
                         kUdpErrorMsg = "";
                     }
                 }
+
                 // No error.
                 else
                 {
                     if (resp.GetType() == typeof(TokenInfo))
                     {
                         resp = JsonUtility.FromJson<TokenInfo>(downloadedRawJson);
-                        kTokenInfo.access_token = ((TokenInfo) resp).access_token;
-                        kTokenInfo.refresh_token = ((TokenInfo) resp).refresh_token;
+                        kTokenInfo.access_token = ((TokenInfo)resp).access_token;
+                        kTokenInfo.refresh_token = ((TokenInfo)resp).refresh_token;
 
                         var newRequest =
                             UdpSynchronizationApi.CreateGetOrgIdRequest(kTokenInfo.access_token, Application.cloudProjectId);
-                        ReqStruct newReqStruct = new ReqStruct {request = newRequest, resp = new OrgIdResponse()};
+                        ReqStruct newReqStruct = new ReqStruct { request = newRequest, resp = new OrgIdResponse() };
 
                         requestQueue.Enqueue(newReqStruct);
                     }
+
                     // Get orgId request
                     else if (resp.GetType() == typeof(OrgIdResponse))
                     {
                         resp = JsonUtility.FromJson<OrgIdResponse>(downloadedRawJson);
-                        kOrgId = ((OrgIdResponse) resp).org_foreign_key;
+                        kOrgId = ((OrgIdResponse)resp).org_foreign_key;
 
-            			if (kAppStoreSettings != null)
-					    {
-                        	var appSlug = AppStoreSettingsInterface.GetAppSlugField();
+                        if (kAppStoreSettings != null)
+                        {
+                            var appSlug = AppStoreSettingsInterface.GetAppSlugField();
 
-                        	// Then, get all iap items
-                        	requestQueue.Enqueue(new ReqStruct
-                        	{
-                        	    request = UdpSynchronizationApi.CreateSearchStoreItemRequest(kTokenInfo.access_token, kOrgId, (string)appSlug.GetValue(kAppStoreSettings)),
-                        	    resp = new IapItemSearchResponse()
-                        	});
-						}
+                            // Then, get all iap items
+                            requestQueue.Enqueue(new ReqStruct
+                            {
+                                request = UdpSynchronizationApi.CreateSearchStoreItemRequest(kTokenInfo.access_token, kOrgId, (string)appSlug.GetValue(kAppStoreSettings)),
+                                resp = new IapItemSearchResponse()
+                            });
+                        }
                     }
                     else if (resp.GetType() == typeof(IapItemSearchResponse))
                     {
                         if (downloadedRawJson != null)
                         {
                             resp = JsonUtility.FromJson<IapItemSearchResponse>(downloadedRawJson);
-                            foreach (var item in ((IapItemSearchResponse) resp).results)
+                            foreach (var item in ((IapItemSearchResponse)resp).results)
                             {
                                 kIapItems[item.slug] = item;
                             }
@@ -514,6 +547,7 @@ namespace UnityEditor.Purchasing
 
                         kIsPreparing = false;
                     }
+
                     // Creating/Updating IAP item succeeds
                     else if (resp.GetType() == typeof(IapItemResponse))
                     {
@@ -523,10 +557,11 @@ namespace UnityEditor.Purchasing
                         {
                             reqStruct.itemEditor.udpItemSyncing = false;
                             kIapItems[reqStruct.iapItem.slug] = reqStruct.iapItem;
-                            kIapItems[reqStruct.iapItem.slug].id = ((IapItemResponse) resp).id;
+                            kIapItems[reqStruct.iapItem.slug].id = ((IapItemResponse)resp).id;
                         }
                     }
                 }
+
                 Repaint();
             }
             else
@@ -559,7 +594,6 @@ namespace UnityEditor.Purchasing
             }
         }
 
-
         /// <summary>
         /// Get userId, orgId of the developer. Make prepare for syncing
         /// </summary>
@@ -570,7 +604,7 @@ namespace UnityEditor.Purchasing
             if (udpAppStoreSettings != null)
             {
                 var assetPathProp = AppStoreSettingsInterface.GetAssetPathField();
-              	var clientIDProp = AppStoreSettingsInterface.GetClientIDField();
+                var clientIDProp = AppStoreSettingsInterface.GetClientIDField();
 
                 kAppStoreSettings = AssetDatabase.LoadAssetAtPath((string)assetPathProp.GetValue(null), udpAppStoreSettings);
 
@@ -606,14 +640,14 @@ namespace UnityEditor.Purchasing
         {
             var authCodePropertyInfo = response.GetType().GetProperty("AuthCode");
             var exceptionPropertyInfo = response.GetType().GetProperty("Exception");
-            string authCode = (string) authCodePropertyInfo.GetValue(response, null);
-            Exception exception = (Exception) exceptionPropertyInfo.GetValue(response, null);
+            string authCode = (string)authCodePropertyInfo.GetValue(response, null);
+            Exception exception = (Exception)exceptionPropertyInfo.GetValue(response, null);
 
             if (authCode != null)
             {
                 var request = UdpSynchronizationApi.CreateGetAccessTokenRequest(authCode);
                 TokenInfo tokenInfoResp = new TokenInfo();
-                ReqStruct reqStruct = new ReqStruct {request = request, resp = tokenInfoResp};
+                ReqStruct reqStruct = new ReqStruct { request = request, resp = tokenInfoResp };
                 requestQueue.Enqueue(reqStruct);
             }
             else
@@ -695,7 +729,7 @@ namespace UnityEditor.Purchasing
                 var box = EditorGUILayout.BeginVertical();
 
                 Rect rect = new Rect(box.xMax - EditorGUIUtility.singleLineHeight - 2, box.yMin, EditorGUIUtility.singleLineHeight + 2, EditorGUIUtility.singleLineHeight);
-                if (GUI.Button(rect, "x") && EditorUtility.DisplayDialog("Delete Product?", "Are you sure you want to delete this product?","Delete","Do Not Delete"))
+                if (GUI.Button(rect, "x") && EditorUtility.DisplayDialog("Delete Product?", "Are you sure you want to delete this product?", "Delete", "Do Not Delete"))
                 {
                     toRemove.Add(this);
                     GenericEditorButtonClickEventSenderHelpers.SendCatalogRemoveProductEvent();
@@ -704,13 +738,15 @@ namespace UnityEditor.Purchasing
                 ShowValidationResultsGUI(validation);
 
                 var productLabel = Item.id + (string.IsNullOrEmpty(Item.defaultDescription.Title)
-                                          ? string.Empty
-                                          : " - " + Item.defaultDescription.Title);
+                    ? string.Empty
+                    : " - " + Item.defaultDescription.Title);
 
                 if (string.IsNullOrEmpty(productLabel) || Item.id.Trim().Length == 0)
                 {
                     productLabel = "Product ID is Empty";
-                } else {
+                }
+                else
+                {
                     idInvalid = false;
                 }
 
@@ -831,13 +867,16 @@ namespace UnityEditor.Purchasing
                     EditorGUILayout.Separator();
 
                     storeIDsVisible = CompatibleGUI.Foldout(storeIDsVisible, "Store ID Overrides", true, s);
-                    if (storeIDsVisible) {
+
+                    if (storeIDsVisible)
+                    {
                         EditorGUI.indentLevel++;
                         foreach (string storeKey in kStoreKeys)
                         {
                             var newStoreID = ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue("storeID." + storeKey, storeKey, Item.GetStoreID(storeKey));
                             Item.SetStoreID(storeKey, newStoreID);
                         }
+
                         EditorGUI.indentLevel--;
                     }
 
@@ -879,22 +918,24 @@ namespace UnityEditor.Purchasing
                         {
                             EditorGUI.indentLevel++;
 
-                            if (!string.IsNullOrEmpty(udpSyncErrorMsg)){
+                            if (!string.IsNullOrEmpty(udpSyncErrorMsg))
+                            {
                                 var errStyle = new GUIStyle();
                                 errStyle.normal.textColor = Color.red;
                                 EditorGUILayout.LabelField(udpSyncErrorMsg, errStyle);
                             }
 
-							var udpFieldsDisabled = kIsPreparing || udpItemSyncing || !kValidLogin || !kValidConfig;
+                            var udpFieldsDisabled = kIsPreparing || udpItemSyncing || !kValidLogin || !kValidConfig;
 
-							//If everything appears ok, check UDP compatibility and warn user if there's a problem
-							//This should not stop the user from doing some UDP sync work, as there is no current blocker for those features.
-							if (!udpFieldsDisabled && string.IsNullOrEmpty(kUdpErrorMsg) && !UdpSynchronizationApi.CheckUdpCompatibility())
-							{
-        	        			kUdpErrorMsg = "Please update your UDP package. Transaction features will no longer work at runtime with your current UDP version";
-							}
+                            //If everything appears ok, check UDP compatibility and warn user if there's a problem
+                            //This should not stop the user from doing some UDP sync work, as there is no current blocker for those features.
+                            if (!udpFieldsDisabled && string.IsNullOrEmpty(kUdpErrorMsg) && !UdpSynchronizationApi.CheckUdpCompatibility())
+                            {
+                                kUdpErrorMsg = "Please update your UDP package. Transaction features will no longer work at runtime with your current UDP version";
+                            }
 
-                            if (!string.IsNullOrEmpty(kUdpErrorMsg)){
+                            if (!string.IsNullOrEmpty(kUdpErrorMsg))
+                            {
                                 var errStyle = new GUIStyle();
                                 errStyle.normal.textColor = Color.red;
                                 EditorGUILayout.LabelField(kUdpErrorMsg, errStyle);
@@ -936,11 +977,11 @@ namespace UnityEditor.Purchasing
                                     price = Item.udpPrice.value.ToString()
                                 });
 
-            					if (kAppStoreSettings != null)
-					            {
-                    	            var appSlug = AppStoreSettingsInterface.GetAppSlugField();
-                                	iapItem.masterItemSlug = (string)appSlug.GetValue(kAppStoreSettings);
-								}
+                                if (kAppStoreSettings != null)
+                                {
+                                    var appSlug = AppStoreSettingsInterface.GetAppSlugField();
+                                    iapItem.masterItemSlug = (string)appSlug.GetValue(kAppStoreSettings);
+                                }
 
                                 iapItem.ownerId = kOrgId;
 
@@ -985,6 +1026,7 @@ namespace UnityEditor.Purchasing
                             EditorGUI.indentLevel--;
                         }
                     }
+
                     #endregion
 
                     EditorGUI.indentLevel--;
@@ -1008,7 +1050,7 @@ namespace UnityEditor.Purchasing
 
                 var style = new GUIStyle();
                 style.normal.textColor = Color.red;
-                var duplicateIDLabelRect = new Rect(idRect.xMax + 5, idRect.yMin, k_DuplicateIDFieldWidth,EditorGUIUtility.singleLineHeight);
+                var duplicateIDLabelRect = new Rect(idRect.xMax + 5, idRect.yMin, k_DuplicateIDFieldWidth, EditorGUIUtility.singleLineHeight);
 
                 EditorGUI.LabelField(duplicateIDLabelRect, idDuplicate ? "ID is a duplicate" : string.Empty, style);
                 EditorGUI.LabelField(duplicateIDLabelRect, idDuplicate && idInvalid && shouldBeMarked ? "ID is empty" : string.Empty, style);
@@ -1024,7 +1066,7 @@ namespace UnityEditor.Purchasing
 
                 var typeRect = EditorGUILayout.GetControlRect(true);
                 typeRect.width = width;
-                Item.type = (ProductType) EditorGUI.EnumPopup(typeRect, "Type:", Item.type);
+                Item.type = (ProductType)EditorGUI.EnumPopup(typeRect, "Type:", Item.type);
 
                 if (oldType != Item.type)
                 {
@@ -1038,7 +1080,7 @@ namespace UnityEditor.Purchasing
             void ShowAndProcessPayoutBlockGui(ProductCatalogPayout payout)
             {
                 var oldType = payout.type;
-                payout.type = (ProductCatalogPayout.ProductCatalogPayoutType) EditorGUILayout.EnumPopup("Type", payout.type);
+                payout.type = (ProductCatalogPayout.ProductCatalogPayoutType)EditorGUILayout.EnumPopup("Type", payout.type);
                 if (oldType != payout.type)
                 {
                     var typeName = Enum.GetName(typeof(ProductCatalogPayout.ProductCatalogPayoutType), payout.type);
@@ -1047,7 +1089,7 @@ namespace UnityEditor.Purchasing
 
                 payout.subtype = TruncateString(ShowEditTextFieldGuiAndGetValue("payoutSubtype", "Subtype", payout.subtype), ProductCatalogPayout.MaxSubtypeLength);
                 payout.quantity = ShowEditDoubleFieldGuiAndGetValue("payoutQuantity", "Quantity", payout.quantity);
-                payout.data = TruncateString(ShowEditTextFieldGuiAndGetValue("payoutData","Data", payout.data), ProductCatalogPayout.MaxDataLength);
+                payout.data = TruncateString(ShowEditTextFieldGuiAndGetValue("payoutData", "Data", payout.data), ProductCatalogPayout.MaxDataLength);
             }
 
             void ShowAndProcessGoogleConfigGui()
@@ -1068,7 +1110,7 @@ namespace UnityEditor.Purchasing
                     Item.googlePrice.value = 0;
                 }
 
-                Item.pricingTemplateID = ShowEditTextFieldGuiAndGetValue("googlePriceTemplate","Pricing Template:", Item.pricingTemplateID);
+                Item.pricingTemplateID = ShowEditTextFieldGuiAndGetValue("googlePriceTemplate", "Pricing Template:", Item.pricingTemplateID);
                 EndErrorBlock(validation, fieldName);
             }
 
@@ -1107,9 +1149,7 @@ namespace UnityEditor.Purchasing
                 }
 
                 EditorGUILayout.EndVertical();
-
             }
-
 
             /// <summary>
             /// Sets the validation results upon export of this item.
@@ -1162,7 +1202,8 @@ namespace UnityEditor.Purchasing
                 var removeButtonWidth = EditorGUIUtility.singleLineHeight + 2;
 
                 var rect = EditorGUILayout.GetControlRect(true);
-                if (showRemoveButton) {
+                if (showRemoveButton)
+                {
                     rect.width -= removeButtonWidth;
                 }
 
@@ -1173,11 +1214,11 @@ namespace UnityEditor.Purchasing
 
                 var removeButtonRect = new Rect(box.xMax - removeButtonWidth, box.yMin, removeButtonWidth, EditorGUIUtility.singleLineHeight);
                 var remove = (showRemoveButton
-                              && GUI.Button(removeButtonRect, "x")
-                              && EditorUtility.DisplayDialog("Delete Translation?",
-                                                             "Are you sure you want to delete this translation?",
-                                                             "Delete",
-                                                             "Do Not Delete"));
+                    && GUI.Button(removeButtonRect, "x")
+                    && EditorUtility.DisplayDialog("Delete Translation?",
+                        "Are you sure you want to delete this translation?",
+                        "Delete",
+                        "Do Not Delete"));
                 EditorGUILayout.EndVertical();
                 return remove;
             }
@@ -1187,7 +1228,7 @@ namespace UnityEditor.Purchasing
                 BeginErrorBlock(validation, fieldValidationPrefix + ".googleLocale");
 
                 var oldLocale = description.googleLocale;
-                description.googleLocale = (TranslationLocale)EditorGUI.Popup(rect, "Locale:", (int)description.googleLocale,LocaleExtensions.GetLabelsWithSupportedPlatforms());
+                description.googleLocale = (TranslationLocale)EditorGUI.Popup(rect, "Locale:", (int)description.googleLocale, LocaleExtensions.GetLabelsWithSupportedPlatforms());
                 if (oldLocale != description.googleLocale)
                 {
                     var localeName = Enum.GetName(typeof(TranslationLocale), description.googleLocale);
@@ -1230,11 +1271,11 @@ namespace UnityEditor.Purchasing
                 return newAmount;
             }
 
-            private static string TruncateString (string s, int len)
+            private static string TruncateString(string s, int len)
             {
-                if (string.IsNullOrEmpty (s)) return s;
+                if (string.IsNullOrEmpty(s)) return s;
                 if (len < 0) return string.Empty;
-                return s.Substring (0, Math.Min (s.Length, len));
+                return s.Substring(0, Math.Min(s.Length, len));
             }
         }
 
@@ -1364,6 +1405,7 @@ namespace UnityEditor.Purchasing
                         // Choose the location of the final directory
                         var directoryPath = EditorUtility.SaveFolderPanel("Export to folder", "", "");
                         directoryPath = Path.Combine(directoryPath, exporter.MandatoryExportFolder);
+
                         // Replace any existing directory
                         if (Directory.Exists(directoryPath))
                         {
@@ -1371,6 +1413,7 @@ namespace UnityEditor.Purchasing
                         }
 
                         Directory.CreateDirectory(directoryPath);
+
                         // ExportHelper needs a single file, let it create the main file and save the auxilliary files.
                         var mainFilePath = Path.Combine(directoryPath,
                             string.Format("{0}.{1}", exporter.DefaultFileName, exporter.FileExtension));
@@ -1407,7 +1450,7 @@ namespace UnityEditor.Purchasing
                             EditorUtility.DisplayDialog(
                                 "Exported Successfully",
                                 string.Format("Exported {0} to \"{2}\".\n\n" +
-                                              "Also saved copy into project at \"{1}\".",
+                                    "Also saved copy into project at \"{1}\".",
                                     exporter.DisplayName, nonInteractivePath, path),
                                 "OK");
                         }
@@ -1525,7 +1568,6 @@ namespace UnityEditor.Purchasing
             /// The list of warnings.
             /// </summary>
             public List<string> warnings = new List<string>();
-
 
             /// <summary>
             /// The dictionary of field errors.

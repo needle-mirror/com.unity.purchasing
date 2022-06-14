@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Access Google Play store specific configurations.
     /// </summary>
-    class GooglePlayConfiguration: IGooglePlayConfiguration, IGooglePlayConfigurationInternal
+    class GooglePlayConfiguration : IGooglePlayConfiguration, IGooglePlayConfigurationInternal
     {
         Action m_InitializationConnectionLister;
         IGooglePlayStoreService m_GooglePlayStoreService;

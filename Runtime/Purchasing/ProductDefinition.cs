@@ -126,8 +126,10 @@ namespace UnityEngine.Purchasing
         /// Gets all payouts attached to this product.
         /// </summary>
         /// <value>The payouts.</value>
-        public IEnumerable<PayoutDefinition> payouts {
-            get {
+        public IEnumerable<PayoutDefinition> payouts
+        {
+            get
+            {
                 return m_Payouts;
             }
         }
@@ -136,8 +138,10 @@ namespace UnityEngine.Purchasing
         /// Gets the first attached payout. This is a shortcut for the case where only one payout is attached to the product.
         /// </summary>
         /// <value>The payout.</value>
-        public PayoutDefinition payout {
-            get {
+        public PayoutDefinition payout
+        {
+            get
+            {
                 return m_Payouts.Count > 0 ? m_Payouts[0] : null;
             }
         }

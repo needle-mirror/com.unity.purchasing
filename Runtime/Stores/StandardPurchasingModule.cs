@@ -42,7 +42,7 @@ namespace UnityEngine.Purchasing
         internal ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper { get; set; }
         // Map Android store enums to their public names.
         // Necessary because store enum names and public names almost, but not quite, match.
-        private static Dictionary<AppStore, string> AndroidStoreNameMap = new Dictionary<AppStore, string> () {
+        private static Dictionary<AppStore, string> AndroidStoreNameMap = new Dictionary<AppStore, string>() {
             { AppStore.AmazonAppStore, AmazonApps.Name },
             { AppStore.GooglePlay, GooglePlay.Name },
             { AppStore.UDP, UDP.Name},
@@ -53,7 +53,7 @@ namespace UnityEngine.Purchasing
         {
             internal string storeName { get; }
             internal IStore instance { get; }
-            internal StoreInstance (string name, IStore instance)
+            internal StoreInstance(string name, IStore instance)
             {
                 this.storeName = name;
                 this.instance = instance;
@@ -103,9 +103,9 @@ namespace UnityEngine.Purchasing
         /// Creates an instance of StandardPurchasingModule or retrieves the existing one.
         /// </summary>
         /// <returns> The existing instance or the one just created. </returns>
-        public static StandardPurchasingModule Instance ()
+        public static StandardPurchasingModule Instance()
         {
-            return Instance (AppStore.NotSpecified);
+            return Instance(AppStore.NotSpecified);
         }
 
         /// <summary>
@@ -113,38 +113,43 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="androidStore"> The type of Android Store with which to create the instance. </param>
         /// <returns> The existing instance or the one just created. </returns>
-        public static StandardPurchasingModule Instance (AppStore androidStore)
+        public static StandardPurchasingModule Instance(AppStore androidStore)
         {
-            if (null == ModuleInstance) {
+            if (null == ModuleInstance)
+            {
                 var logger = UnityEngine.Debug.unityLogger;
-                var gameObject = new GameObject ("IAPUtil");
-                Object.DontDestroyOnLoad (gameObject);
+                var gameObject = new GameObject("IAPUtil");
+                Object.DontDestroyOnLoad(gameObject);
                 gameObject.hideFlags = HideFlags.HideInHierarchy | HideFlags.HideInInspector;
-                var util = gameObject.AddComponent<UnityUtil> ();
+                var util = gameObject.AddComponent<UnityUtil>();
 
                 var textAsset = (Resources.Load("BillingMode") as TextAsset);
                 StoreConfiguration config = null;
-                if (null != textAsset) {
-                    config = StoreConfiguration.Deserialize (textAsset.text);
+                if (null != textAsset)
+                {
+                    config = StoreConfiguration.Deserialize(textAsset.text);
                 }
 
                 // No Android target specified at runtime, use the build time setting.
-                if (androidStore == AppStore.NotSpecified) {
+                if (androidStore == AppStore.NotSpecified)
+                {
                     // Default to Google Play if we don't have a build time store selection.
                     androidStore = AppStore.GooglePlay;
 
-                    if (null != config) {
+                    if (null != config)
+                    {
                         var buildTimeStore = config.androidStore;
-                        if (buildTimeStore != AppStore.NotSpecified) {
+                        if (buildTimeStore != AppStore.NotSpecified)
+                        {
                             androidStore = buildTimeStore;
                         }
                     }
                 }
 
-                ModuleInstance = new StandardPurchasingModule (
+                ModuleInstance = new StandardPurchasingModule(
                     util,
                     logger,
-                    new NativeStoreProvider (),
+                    new NativeStoreProvider(),
                     Application.platform,
                     androidStore,
                     new TelemetryDiagnosticsInstanceWrapper(),
@@ -163,12 +168,12 @@ namespace UnityEngine.Purchasing
             BindExtension<IGooglePlayStoreExtensions>(new FakeGooglePlayStoreExtensions());
 
             BindConfiguration<IAppleConfiguration>(new FakeAppleConfiguation());
-            BindExtension<IAppleExtensions>(new FakeAppleExtensions ());
+            BindExtension<IAppleExtensions>(new FakeAppleExtensions());
 
             BindConfiguration<IAmazonConfiguration>(new FakeAmazonExtensions());
-            BindExtension<IAmazonExtensions>(new FakeAmazonExtensions ());
+            BindExtension<IAmazonExtensions>(new FakeAmazonExtensions());
 
-            BindConfiguration<IMicrosoftConfiguration>(new MicrosoftConfiguration (this));
+            BindConfiguration<IMicrosoftConfiguration>(new MicrosoftConfiguration(this));
             BindExtension<IMicrosoftExtensions>(new FakeMicrosoftExtensions());
 
             BindConfiguration<IAndroidStoreSelection>(this);
@@ -178,7 +183,8 @@ namespace UnityEngine.Purchasing
 
             // Our store implementations are singletons, we must not attempt to instantiate
             // them more than once.
-            if (null == storeInstance) {
+            if (null == storeInstance)
+            {
                 storeInstance = InstantiateStore();
             }
 
@@ -200,35 +206,38 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        private StoreInstance InstantiateStore ()
+        private StoreInstance InstantiateStore()
         {
-            if (useFakeStoreAlways) {
-                return new StoreInstance (FakeStore.Name, InstantiateFakeStore ());
+            if (useFakeStoreAlways)
+            {
+                return new StoreInstance(FakeStore.Name, InstantiateFakeStore());
             }
 
-            switch (m_RuntimePlatform) {
-            case RuntimePlatform.OSXPlayer:
-                m_AppStorePlatform = AppStore.MacAppStore;
-                return new StoreInstance (MacAppStore.Name, InstantiateApple ());
-            case RuntimePlatform.IPhonePlayer:
-            case RuntimePlatform.tvOS:
-                m_AppStorePlatform = AppStore.AppleAppStore;
-                return new StoreInstance (AppleAppStore.Name, InstantiateApple ());
-            case RuntimePlatform.Android:
-                switch (m_AppStorePlatform) {
-                case AppStore.UDP:
-                    return new StoreInstance (AndroidStoreNameMap [m_AppStorePlatform], InstantiateUDP());
-                default:
-                    return new StoreInstance (AndroidStoreNameMap [m_AppStorePlatform], InstantiateAndroid());
-                }
-            case RuntimePlatform.WSAPlayerARM:
-            case RuntimePlatform.WSAPlayerX64:
-            case RuntimePlatform.WSAPlayerX86:
-                m_AppStorePlatform = AppStore.WinRT;
-                return new StoreInstance (WindowsStore.Name, instantiateWindowsStore ());
+            switch (m_RuntimePlatform)
+            {
+                case RuntimePlatform.OSXPlayer:
+                    m_AppStorePlatform = AppStore.MacAppStore;
+                    return new StoreInstance(MacAppStore.Name, InstantiateApple());
+                case RuntimePlatform.IPhonePlayer:
+                case RuntimePlatform.tvOS:
+                    m_AppStorePlatform = AppStore.AppleAppStore;
+                    return new StoreInstance(AppleAppStore.Name, InstantiateApple());
+                case RuntimePlatform.Android:
+                    switch (m_AppStorePlatform)
+                    {
+                        case AppStore.UDP:
+                            return new StoreInstance(AndroidStoreNameMap[m_AppStorePlatform], InstantiateUDP());
+                        default:
+                            return new StoreInstance(AndroidStoreNameMap[m_AppStorePlatform], InstantiateAndroid());
+                    }
+                case RuntimePlatform.WSAPlayerARM:
+                case RuntimePlatform.WSAPlayerX64:
+                case RuntimePlatform.WSAPlayerX86:
+                    m_AppStorePlatform = AppStore.WinRT;
+                    return new StoreInstance(WindowsStore.Name, instantiateWindowsStore());
             }
             m_AppStorePlatform = AppStore.fake;
-            return new StoreInstance (FakeStore.Name, InstantiateFakeStore ());
+            return new StoreInstance(FakeStore.Name, InstantiateFakeStore());
         }
 
         private IStore InstantiateAndroid()
@@ -276,7 +285,7 @@ namespace UnityEngine.Purchasing
                 googlePlayConfiguration,
                 googlePlayStoreExtensions,
                 util);
-            util.AddPauseListener (googlePlayStore.OnPause);
+            util.AddPauseListener(googlePlayStore.OnPause);
             BindGoogleConfiguration(googlePlayConfiguration);
             BindGoogleExtension(googlePlayStoreExtensions);
             return googlePlayStore;
@@ -335,20 +344,20 @@ namespace UnityEngine.Purchasing
         {
             var store = new UDPImpl();
             BindExtension<IUDPExtensions>(store);
-            INativeUDPStore nativeUdpStore = (INativeUDPStore) GetAndroidNativeStore(store);
+            INativeUDPStore nativeUdpStore = (INativeUDPStore)GetAndroidNativeStore(store);
             store.SetNativeStore(nativeUdpStore);
             return store;
         }
 
-        private IStore InstantiateAndroidHelper (JSONStore store)
+        private IStore InstantiateAndroidHelper(JSONStore store)
         {
-            store.SetNativeStore (GetAndroidNativeStore(store));
+            store.SetNativeStore(GetAndroidNativeStore(store));
             return store;
         }
 
         private INativeStore GetAndroidNativeStore(JSONStore store)
         {
-            return m_NativeStoreProvider.GetAndroidStore (store, m_AppStorePlatform, m_Binder, util);
+            return m_NativeStoreProvider.GetAndroidStore(store, m_AppStorePlatform, m_Binder, util);
         }
 
 #if UNITY_PURCHASING_GPBL
@@ -367,49 +376,52 @@ namespace UnityEngine.Purchasing
         }
 #endif
 
-        private IStore InstantiateApple ()
+        private IStore InstantiateApple()
         {
             var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
             var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
             var store = new MetricizedAppleStoreImpl(util, telemetryDiagnostics, telemetryMetrics);
-            var appleBindings = m_NativeStoreProvider.GetStorekit (store);
-            store.SetNativeStore (appleBindings);
-            BindExtension<IAppleExtensions> (store);
+            var appleBindings = m_NativeStoreProvider.GetStorekit(store);
+            store.SetNativeStore(appleBindings);
+            BindExtension<IAppleExtensions>(store);
             return store;
         }
 
         private WinRTStore windowsStore;
 
-        private void UseMockWindowsStore (bool value)
+        private void UseMockWindowsStore(bool value)
         {
-            if (null != windowsStore) {
-                var iap = UnityEngine.Purchasing.Default.Factory.Create (value);
-                windowsStore.SetWindowsIAP (iap);
+            if (null != windowsStore)
+            {
+                var iap = UnityEngine.Purchasing.Default.Factory.Create(value);
+                windowsStore.SetWindowsIAP(iap);
             }
         }
 
-        private IStore instantiateWindowsStore ()
+        private IStore instantiateWindowsStore()
         {
             // Create a non mocked store by default.
-            var iap = UnityEngine.Purchasing.Default.Factory.Create (false);
-            windowsStore = new WinRTStore (iap, util, logger);
+            var iap = UnityEngine.Purchasing.Default.Factory.Create(false);
+            windowsStore = new WinRTStore(iap, util, logger);
             // Microsoft require polling for new purchases on each app foregrounding.
-            util.AddPauseListener (windowsStore.restoreTransactions);
+            util.AddPauseListener(windowsStore.restoreTransactions);
             return windowsStore;
         }
 
-        private IStore InstantiateFakeStore ()
+        private IStore InstantiateFakeStore()
         {
             FakeStore fakeStore = null;
-            if (useFakeStoreUIMode != FakeStoreUIMode.Default) {
+            if (useFakeStoreUIMode != FakeStoreUIMode.Default)
+            {
                 // To access class not available due to UnityEngine.UI conflicts with
                 // unit-testing framework, instantiate via reflection
-                fakeStore = new UIFakeStore ();
+                fakeStore = new UIFakeStore();
                 fakeStore.UIMode = useFakeStoreUIMode;
             }
 
-            if (fakeStore == null) {
-                fakeStore = new FakeStore ();
+            if (fakeStore == null)
+            {
+                fakeStore = new FakeStore();
             }
             return fakeStore;
         }
@@ -423,20 +435,23 @@ namespace UnityEngine.Purchasing
         /// </summary>
         private class MicrosoftConfiguration : IMicrosoftConfiguration
         {
-            public MicrosoftConfiguration (StandardPurchasingModule module)
+            public MicrosoftConfiguration(StandardPurchasingModule module)
             {
                 this.module = module;
             }
             private bool useMock;
             private StandardPurchasingModule module;
 
-            public bool useMockBillingSystem {
-                get {
+            public bool useMockBillingSystem
+            {
+                get
+                {
                     return useMock;
                 }
 
-                set {
-                    module.UseMockWindowsStore (value);
+                set
+                {
+                    module.UseMockWindowsStore(value);
                     useMock = value;
                 }
             }

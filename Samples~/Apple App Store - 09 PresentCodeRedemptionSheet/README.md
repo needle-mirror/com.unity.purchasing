@@ -24,6 +24,6 @@ Using `PresentRedemptionSheet` on a device, including on the Sandbox, will promp
 See the documentation for
 [the Unity IAP extension to present the code redemption sheet](http://docs.unity3d.com/Packages/com.unity.purchasing@4.0/api/UnityEngine.Purchasing.IAppleExtensions.html#UnityEngine_Purchasing_IAppleExtensions_PresentCodeRedemptionSheet). Also see the relevant [Apple API documentation](https://developer.apple.com/documentation/storekit/original_api_for_in-app_purchase/subscriptions_and_offers/implementing_offer_codes_in_your_app) for more context on this feature.
 And see the [iOS & Mac App Stores document](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/UnityIAPiOSMAS.html)
-for setting up an Apple project with Unity IAP. 
+for setting up an Apple project with Unity IAP.
 
 See [this tip for testing offer codes end-to-end](https://developer.apple.com/forums/thread/70426), using the PRODUCTION Apple App Store server.

@@ -32,14 +32,14 @@ On Apple platforms users must enter their password to retrieve previous transact
 /// </summary>
 public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
 {
-	extensions.GetExtension<IAppleExtensions> ().RestoreTransactions (result => {
-		if (result) {
-			// This does not mean anything was restored,
-			// merely that the restoration process succeeded.
-		} else {
-			// Restoration failed.
-		}
-	});
+    extensions.GetExtension<IAppleExtensions> ().RestoreTransactions (result => {
+        if (result) {
+            // This does not mean anything was restored,
+            // merely that the restoration process succeeded.
+        } else {
+            // Restoration failed.
+        }
+    });
 }
 ````
 
@@ -57,22 +57,22 @@ Unity IAP makes this method available as follows:
 /// </summary>
 public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
 {
-	extensions.GetExtension<IAppleExtensions> ().RefreshAppReceipt (receipt => {
-		// This handler is invoked if the request is successful.
-		// Receipt will be the latest app receipt.
-		Console.WriteLine(receipt);
-	},
-	() => {
-		// This handler will be invoked if the request fails,
-		// such as if the network is unavailable or the user
-		// enters the wrong password.
-	});
+    extensions.GetExtension<IAppleExtensions> ().RefreshAppReceipt (receipt => {
+        // This handler is invoked if the request is successful.
+        // Receipt will be the latest app receipt.
+        Console.WriteLine(receipt);
+    },
+    () => {
+        // This handler will be invoked if the request fails,
+        // such as if the network is unavailable or the user
+        // enters the wrong password.
+    });
 }
 ````
 
 ### Ask to Buy
 
-iOS 8 introduced a new parental control feature called [Ask to Buy](https://developer.apple.com/library/ios/technotes/tn2259/_index.html#/apple_ref/doc/uid/DTS40009578-CH1-UPDATE_YOUR_APP_FOR_ASK_TO_BUY). 
+iOS 8 introduced a new parental control feature called [Ask to Buy](https://developer.apple.com/library/ios/technotes/tn2259/_index.html#/apple_ref/doc/uid/DTS40009578-CH1-UPDATE_YOUR_APP_FOR_ASK_TO_BUY).
 
 Ask to Buy purchases defer for parent approval. When this occurs, Unity IAP sends your app a notification as follows:
 
@@ -95,19 +95,19 @@ using UnityEngine;
 using UnityEngine.Purchasing;
 
 public class AppleSimulateAskToBuy : MonoBehaviour {
-	public void SetSimulateAskToBuy(bool shouldSimulateAskToBuy) {
-		if (Application.platform == RuntimePlatform.IPhonePlayer) {
-			IAppleExtensions extensions = IAPButton.IAPButtonStoreManager.Instance.ExtensionProvider.GetExtension<IAppleExtensions>();
-			extensions.simulateAskToBuy = shouldSimulateAskToBuy;
-		}
-	}
+    public void SetSimulateAskToBuy(bool shouldSimulateAskToBuy) {
+        if (Application.platform == RuntimePlatform.IPhonePlayer) {
+            IAppleExtensions extensions = IAPButton.IAPButtonStoreManager.Instance.ExtensionProvider.GetExtension<IAppleExtensions>();
+            extensions.simulateAskToBuy = shouldSimulateAskToBuy;
+        }
+    }
 }
 ```
 
 When the purchase is approved or rejected, your store's normal `ProcessPurchase` or `OnPurchaseFailed` listener methods are invoked.
 
 ### Transaction Receipts
-Sometimes consumable Ask to Buy purchases don't show up in the App Receipt, in which case you cannot validate them using that receipt. However, iOS provides a Transaction Receipt that contains all purchases, including Ask to Buy. Access the most recent Transaction Receipt string for a given `Product` using `IAppleExtensions`. 
+Sometimes consumable Ask to Buy purchases don't show up in the App Receipt, in which case you cannot validate them using that receipt. However, iOS provides a Transaction Receipt that contains all purchases, including Ask to Buy. Access the most recent Transaction Receipt string for a given `Product` using `IAppleExtensions`.
 
 **Note**: Transaction Receipts are not available for Mac builds. Requesting a Transaction Receipt on a Mac build results in an empty string.
 
@@ -156,7 +156,7 @@ public class AskToBuy : MonoBehaviour, IStoreListener
             string transactionReceipt = m_AppleExtensions.GetTransactionReceiptForProduct (e.purchasedProduct);
             Console.WriteLine (transactionReceipt);
             // Send transaction receipt to server for validation
-        }    
+        }
         return PurchaseProcessingResult.Complete;
     }
 
@@ -223,11 +223,11 @@ Example JSON response:
 ```
 
 ## Intercepting Apple promotional purchases
-Apple allows you to promote [in-game purchases](https://developer.apple.com/app-store/promoting-in-app-purchases/#:~:text=inside%20your%20app.-,Overview,approved%20and%20ready%20to%20promote.&text=When%20a%20user%20doesn't,to%20download%20the%20app%20first.) through your app’s product page. Unlike conventional in-app purchases, Apple promotional purchases initiate directly from the App Store on iOS and tvOS. The App Store then launches your app to complete the transaction, or prompts the user to download the app if it isn’t installed. 
+Apple allows you to promote [in-game purchases](https://developer.apple.com/app-store/promoting-in-app-purchases/#:~:text=inside%20your%20app.-,Overview,approved%20and%20ready%20to%20promote.&text=When%20a%20user%20doesn't,to%20download%20the%20app%20first.) through your app’s product page. Unlike conventional in-app purchases, Apple promotional purchases initiate directly from the App Store on iOS and tvOS. The App Store then launches your app to complete the transaction, or prompts the user to download the app if it isn’t installed.
 
 The `IAppleConfiguration` `SetApplePromotionalPurchaseInterceptor` callback method intercepts Apple promotional purchases. Use this callback to present parental gates, send analytics events, or perform other functions before sending the purchase to Apple. The callback uses the `Product` that the user attempted to purchase. You must call `IAppleExtensions.ContinuePromotionalPurchases()` to continue with the promotional purchase. This will initiate any queued-up payments.
 
-If you do not set the callback, promotional purchases go through immediately and call `ProcessPurchase` with the result. 
+If you do not set the callback, promotional purchases go through immediately and call `ProcessPurchase` with the result.
 
 **Note**: Calling these APIs on other platforms has no effect.
 
@@ -249,7 +249,7 @@ public void Awake() {
 public void OnInitialized(IStoreController controller, IExtensionProvider extensions) {
     m_AppleExtensions = extensions.GetExtension<IAppleExtensions>();
     foreach (var item in controller.products.all) {
-        if (item.availableToPurchase) {                
+        if (item.availableToPurchase) {
             // Set all these products to be visible in the user's App Store
             m_AppleExtensions.SetStorePromotionVisibility(item, AppleStorePromotionVisibility.Show);
         }
@@ -258,9 +258,9 @@ public void OnInitialized(IStoreController controller, IExtensionProvider extens
 
 private void OnPromotionalPurchase(Product item) {
     Debug.Log("Attempted promotional purchase: " + item.definition.id);
-    // Promotional purchase has been detected. 
+    // Promotional purchase has been detected.
     // Handle this event by, e.g. presenting a parental gate.
-    // Here, for demonstration purposes only, we will wait five seconds before continuing 
+    // Here, for demonstration purposes only, we will wait five seconds before continuing
     // the purchase.
     StartCoroutine(ContinuePromotionalPurchases());
 }

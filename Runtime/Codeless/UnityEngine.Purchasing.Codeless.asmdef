@@ -1,6 +1,7 @@
 {
     "name": "UnityEngine.Purchasing.Codeless",
     "references": [
+        "Unity.Services.Core",
         "UnityEngine.Purchasing",
         "UnityEngine.Purchasing.Stores"
     ],

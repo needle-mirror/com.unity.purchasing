@@ -6,7 +6,7 @@ using UnityEngine.Purchasing.Interfaces;
 
 namespace UnityEngine.Purchasing
 {
-    class GooglePlayStore: AbstractStore
+    class GooglePlayStore : AbstractStore
     {
         IGooglePlayStoreRetrieveProductsService m_RetrieveProductsService;
         IGooglePlayStorePurchaseService m_StorePurchaseService;

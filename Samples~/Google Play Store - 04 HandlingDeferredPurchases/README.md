@@ -28,6 +28,3 @@ From [Google's documentation](https://developer.android.com/google/play/billing/
 > can then choose a physical store where they will complete the transaction and receive a code through both notification
 > and email. When the user arrives at the physical store, they can redeem the code with the cashier and pay with cash.
 > Google then notifies both you and the user that cash has been received. Your app can then grant entitlement to the user.
-
-
-

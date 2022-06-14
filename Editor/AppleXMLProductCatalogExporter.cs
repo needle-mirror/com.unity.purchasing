@@ -17,47 +17,61 @@ namespace UnityEditor.Purchasing
     {
 
         internal static string kMandatoryExportFolder;
-        internal List<string> kFilesToCopy = new List<string> ();
+        internal List<string> kFilesToCopy = new List<string>();
         private const string kNewLine = "\n";
 
-        public string DisplayName {
-            get {
+        public string DisplayName
+        {
+            get
+            {
                 return "Apple XML Delivery";
             }
         }
 
-        public string DefaultFileName {
-            get {
+        public string DefaultFileName
+        {
+            get
+            {
                 return "metadata";
             }
         }
 
-        public string FileExtension {
-            get {
+        public string FileExtension
+        {
+            get
+            {
                 return "xml";
             }
         }
 
-        public string StoreName {
-            get {
+        public string StoreName
+        {
+            get
+            {
                 return AppleAppStore.Name;
             }
         }
 
-        public string MandatoryExportFolder {
-            get {
+        public string MandatoryExportFolder
+        {
+            get
+            {
                 return kMandatoryExportFolder;
             }
         }
 
-        public List<string> FilesToCopy {
-            get {
+        public List<string> FilesToCopy
+        {
+            get
+            {
                 return kFilesToCopy;
             }
         }
 
-        public bool SaveCompletePackage {
-            get {
+        public bool SaveCompletePackage
+        {
+            get
+            {
                 return true;
             }
         }
@@ -85,8 +99,9 @@ namespace UnityEditor.Purchasing
             XElement inAppPurchases = new XElement(ns + "in_app_purchases");
             softwareMetadata.Add(inAppPurchases);
 
-            foreach (var item in catalog.allProducts) {
-                XElement inAppPurchase = new XElement(ns + "in_app_purchase", 
+            foreach (var item in catalog.allProducts)
+            {
+                XElement inAppPurchase = new XElement(ns + "in_app_purchase",
                     new XElement(ns + "product_id", item.GetStoreID(AppleAppStore.Name) ?? item.id),
                     new XElement(ns + "reference_name", item.id),
                     new XElement(ns + "type", ProductTypeString(item)));
@@ -101,10 +116,12 @@ namespace UnityEditor.Purchasing
                 inAppPurchase.Add(locales);
                 // Variable number of localizations, not every product will specify a localization for every language
                 // so some of the these descriptions may be missing, in which case we just skip it.
-                foreach (var loc in localesToExport) {
+                foreach (var loc in localesToExport)
+                {
                     LocalizedProductDescription desc = item.defaultDescription.googleLocale == loc ? item.defaultDescription : item.GetDescription(loc);
-                    if (desc != null) {
-                        XElement locale = new XElement(ns + "locale", 
+                    if (desc != null)
+                    {
+                        XElement locale = new XElement(ns + "locale",
                             new XAttribute("name", LocaleToAppleString(loc)),
                             new XElement(ns + "title", desc.Title),
                             new XElement(ns + "description", desc.Description));
@@ -116,7 +133,8 @@ namespace UnityEditor.Purchasing
                 inAppPurchase.Add(reviewScreenshot);
                 reviewScreenshot.Add(new XElement(ns + "file_name", Path.GetFileName(item.screenshotPath)));
                 FileInfo fileInfo = new FileInfo(item.screenshotPath);
-                if (fileInfo.Exists) {
+                if (fileInfo.Exists)
+                {
                     reviewScreenshot.Add(new XElement(ns + "size", fileInfo.Length));
                     reviewScreenshot.Add(new XElement(ns + "checksum", GetMD5Hash(fileInfo)));
                 }
@@ -132,14 +150,17 @@ namespace UnityEditor.Purchasing
             var results = new ExporterValidationResults();
 
             // Warn if exporting an empty catalog
-            if (catalog.allProducts.Count == 0) {
+            if (catalog.allProducts.Count == 0)
+            {
                 results.warnings.Add("Catalog is empty");
             }
 
             // Check for duplicate IDs
             var usedIds = new HashSet<string>();
-            foreach (var product in catalog.allProducts) {
-                if (usedIds.Contains(product.id)) {
+            foreach (var product in catalog.allProducts)
+            {
+                if (usedIds.Contains(product.id))
+                {
                     results.errors.Add("More than one product uses the ID \"" + product.id + "\"");
                 }
                 usedIds.Add(product.id);
@@ -147,10 +168,13 @@ namespace UnityEditor.Purchasing
 
             // Check for duplicate store IDs
             var usedStoreIds = new HashSet<string>();
-            foreach (var product in catalog.allProducts) {
+            foreach (var product in catalog.allProducts)
+            {
                 var storeID = product.GetStoreID(AppleAppStore.Name);
-                if (!string.IsNullOrEmpty(storeID)) {
-                    if (usedStoreIds.Contains(storeID)) {
+                if (!string.IsNullOrEmpty(storeID))
+                {
+                    if (usedStoreIds.Contains(storeID))
+                    {
                         results.errors.Add("More than one product uses the Apple store ID \"" + storeID + "\"");
                     }
                     usedIds.Add(product.id);
@@ -160,23 +184,29 @@ namespace UnityEditor.Purchasing
             // Check for duplicate runtime IDs -- this conflict could occur if a product has a base ID that is the
             // same as another product's store-specific ID
             var runtimeIDs = new HashSet<string>();
-            foreach (var product in catalog.allProducts) {
+            foreach (var product in catalog.allProducts)
+            {
                 var runtimeID = product.GetStoreID(AppleAppStore.Name) ?? product.id;
-                if (runtimeIDs.Contains(runtimeID)) {
+                if (runtimeIDs.Contains(runtimeID))
+                {
                     results.errors.Add("More than one product is identified by the ID \"" + runtimeID + "\"");
                 }
                 runtimeIDs.Add(runtimeID);
             }
 
             // Check SKU
-            if (string.IsNullOrEmpty(catalog.appleSKU)) {
+            if (string.IsNullOrEmpty(catalog.appleSKU))
+            {
                 results.fieldErrors["appleSKU"] = "Apple SKU is required. Find this in iTunesConnect.";
-            } else {
+            }
+            else
+            {
                 kMandatoryExportFolder = catalog.appleSKU + ".itmsp";
             }
 
             // Check Team ID
-            if (string.IsNullOrEmpty(catalog.appleTeamID)) {
+            if (string.IsNullOrEmpty(catalog.appleTeamID))
+            {
                 results.fieldErrors["appleTeamID"] = "Apple Team ID is required. Find this on https://developer.apple.com.";
             }
 
@@ -188,24 +218,30 @@ namespace UnityEditor.Purchasing
             var results = new ExporterValidationResults();
 
             // Check for missing IDs
-            if (string.IsNullOrEmpty(item.id)) {
+            if (string.IsNullOrEmpty(item.id))
+            {
                 results.fieldErrors["id"] = "ID is required";
             }
 
             // Check for missing title
-            if (string.IsNullOrEmpty(item.defaultDescription.Title)) {
+            if (string.IsNullOrEmpty(item.defaultDescription.Title))
+            {
                 results.fieldErrors["defaultDescription.Title"] = "Title is required";
             }
 
             // Check for missing description
-            if (string.IsNullOrEmpty(item.defaultDescription.Description)) {
+            if (string.IsNullOrEmpty(item.defaultDescription.Description))
+            {
                 results.fieldErrors["defaultDescription.Description"] = "Description is required";
             }
 
             // Check for screenshot
-            if (string.IsNullOrEmpty(item.screenshotPath)) {
+            if (string.IsNullOrEmpty(item.screenshotPath))
+            {
                 results.fieldErrors["screenshotPath"] = "Screenshot is required";
-            } else {
+            }
+            else
+            {
                 kFilesToCopy.Add(item.screenshotPath);
             }
 
@@ -216,11 +252,13 @@ namespace UnityEditor.Purchasing
         {
             var locs = new HashSet<TranslationLocale>();
 
-            foreach (var item in catalog.allProducts) {
+            foreach (var item in catalog.allProducts)
+            {
                 if (item.defaultDescription.googleLocale.SupportedOnApple())
                     locs.Add(item.defaultDescription.googleLocale);
 
-                foreach (var desc in item.translatedDescriptions) {
+                foreach (var desc in item.translatedDescriptions)
+                {
                     if (desc.googleLocale.SupportedOnApple())
                         locs.Add(desc.googleLocale);
                 }
@@ -231,13 +269,14 @@ namespace UnityEditor.Purchasing
 
         private static string ProductTypeString(ProductCatalogItem item)
         {
-            switch (item.type) {
-            case ProductType.Consumable:
-                return "consumable";
-            case ProductType.NonConsumable:
-                return "non-consumable";
-            case ProductType.Subscription:
-                return "subscription";
+            switch (item.type)
+            {
+                case ProductType.Consumable:
+                    return "consumable";
+                case ProductType.NonConsumable:
+                    return "non-consumable";
+                case ProductType.Subscription:
+                    return "subscription";
             }
 
             return string.Empty;
@@ -245,7 +284,8 @@ namespace UnityEditor.Purchasing
 
         private static string LocaleToAppleString(TranslationLocale loc)
         {
-            switch (loc) {
+            switch (loc)
+            {
                 // Apple uses Hans and Hant, rather than Cn and TW
                 case TranslationLocale.zh_CN:
                     return "zh-Hans";
@@ -290,7 +330,7 @@ namespace UnityEditor.Purchasing
             // and create a string.
             StringBuilder stringBuilder = new StringBuilder();
 
-            // Loop through each byte of the hashed data 
+            // Loop through each byte of the hashed data
             // and format each one as a hexadecimal string.
             for (int i = 0; i < data.Length; i++)
             {

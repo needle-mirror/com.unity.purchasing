@@ -12,26 +12,26 @@ An alternative is to initialise Unity IAP with an initial set of products, then 
 /// </summary>
 public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
 {
-	var additional = new HashSet<ProductDefinition>() {
-		new ProductDefinition("coins.500", ProductType.Consumable),
-		new ProductDefinition("armour", ProductType.NonConsumable) 
-	};
+    var additional = new HashSet<ProductDefinition>() {
+        new ProductDefinition("coins.500", ProductType.Consumable),
+        new ProductDefinition("armour", ProductType.NonConsumable)
+    };
 
-	Action onSuccess = () => {
-		Debug.Log("Fetched successfully!");
-		// The additional products are added to the set of
-		// previously retrieved products and are browseable
-		// and purchasable.
-		foreach (var product in controller.products.all) {
-			Debug.Log(product.definition.id);
-		}
-	};
+    Action onSuccess = () => {
+        Debug.Log("Fetched successfully!");
+        // The additional products are added to the set of
+        // previously retrieved products and are browseable
+        // and purchasable.
+        foreach (var product in controller.products.all) {
+            Debug.Log(product.definition.id);
+        }
+    };
 
-	Action<InitializationFailureReason> onFailure = (InitializationFailureReason i) => {
-		Debug.Log("Fetching failed for the specified reason: " + i);
-	};
+    Action<InitializationFailureReason> onFailure = (InitializationFailureReason i) => {
+        Debug.Log("Fetching failed for the specified reason: " + i);
+    };
 
-	controller.FetchAdditionalProducts(additional, onSuccess, onFailure);
+    controller.FetchAdditionalProducts(additional, onSuccess, onFailure);
 }
 ````
 

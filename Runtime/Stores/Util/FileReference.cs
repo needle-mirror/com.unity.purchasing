@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 using Uniject;
 
-namespace UnityEngine.Purchasing {
+namespace UnityEngine.Purchasing
+{
 
     /// <summary>
     /// File Reference that can be created with a filename.
@@ -11,7 +12,8 @@ namespace UnityEngine.Purchasing {
     /// One use case for this class is to create a file reference to a locally cached store catalog.
     /// </summary>
     ///
-    internal class FileReference {
+    internal class FileReference
+    {
         private string m_FilePath;
         private ILogger m_Logger;
 
@@ -23,7 +25,8 @@ namespace UnityEngine.Purchasing {
         /// <param name="filename">Filename.</param>
         /// <param name="logger">Logger.</param>
         /// <param name="util">Util.</param>
-        internal static FileReference CreateInstance(string filename, ILogger logger, IUtil util) {
+        internal static FileReference CreateInstance(string filename, ILogger logger, IUtil util)
+        {
             try
             {
                 var persistentDataPath = Path.Combine(util.persistentDataPath, "Unity");
@@ -48,7 +51,8 @@ namespace UnityEngine.Purchasing {
         /// </summary>
         /// <param name="filePath">File path.</param>
         /// <param name="logger">Logger.</param>
-        internal FileReference(string filePath, ILogger logger) {
+        internal FileReference(string filePath, ILogger logger)
+        {
             m_FilePath = filePath;
             m_Logger = logger;
         }
@@ -57,10 +61,14 @@ namespace UnityEngine.Purchasing {
         /// Save the specified payload on file.
         /// </summary>
         /// <param name="payload">Payload.</param>
-        internal void Save(string payload) {
-            try {
+        internal void Save(string payload)
+        {
+            try
+            {
                 File.WriteAllText(m_FilePath, payload);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 m_Logger.LogError("Failed persisting content", e);
             }
         }
@@ -69,10 +77,14 @@ namespace UnityEngine.Purchasing {
         /// Load the contents from the file as a string.
         /// </summary>
         /// <returns>String from file</returns>
-        internal string Load() {
-            try {
+        internal string Load()
+        {
+            try
+            {
                 return File.ReadAllText(m_FilePath);
-            } catch {
+            }
+            catch
+            {
                 return null;
             }
         }
@@ -80,10 +92,14 @@ namespace UnityEngine.Purchasing {
         /// <summary>
         /// Deletes the file
         /// </summary>
-        internal void Delete() {
-            try {
+        internal void Delete()
+        {
+            try
+            {
                 File.Delete(m_FilePath);
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 m_Logger.LogWarning("Failed deleting cached content", e);
             }
         }

@@ -31,5 +31,3 @@ From [Google's documentation](https://developer.android.com/google/play/billing/
 >
 > When you increase the price of a subscription, you have at least seven days to notify your existing subscribers about
 > the price change before Google Play can start notifying them.
-
-

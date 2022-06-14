@@ -1,60 +1,67 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Purchasing
 {
     internal class iOSStoreBindings : INativeAppleStore
     {
-        public void SetUnityPurchasingCallback (UnityPurchasingCallback AsyncCallback)
+        public void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
-        public void RestoreTransactions ()
+        public void RestoreTransactions()
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
-        public void RefreshAppReceipt ()
+        public void RefreshAppReceipt()
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
-        public void AddTransactionObserver ()
+        public void AddTransactionObserver()
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
-        public void SetApplicationUsername (string applicationUsername)
+        public void SetApplicationUsername(string applicationUsername)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
-        public void RetrieveProducts (string json)
+        public void RetrieveProducts(string json)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
-        public void Purchase (string productJSON, string developerPayload)
+        public void Purchase(string productJSON, string developerPayload)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
-        public void FinishTransaction (string productJSON, string transactionID)
+        public void FinishTransaction(string productJSON, string transactionID)
         {
-            throw new NotImplementedException ();
+            throw new NotImplementedException();
         }
 
-        public string appReceipt {
-            get {
-                throw new NotImplementedException ();
+        public string appReceipt
+        {
+            get
+            {
+                throw new NotImplementedException();
             }
         }
 
-        public bool canMakePayments {
-            get {
-                throw new NotImplementedException ();
+        public bool canMakePayments
+        {
+            get
+            {
+                throw new NotImplementedException();
             }
         }
 
-        public bool simulateAskToBuy {
-            get {
-                throw new NotImplementedException ();
+        public bool simulateAskToBuy
+        {
+            get
+            {
+                throw new NotImplementedException();
             }
-            set {
-                throw new NotImplementedException ();
+            set
+            {
+                throw new NotImplementedException();
             }
         }
 
@@ -78,17 +85,17 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
-        public string GetTransactionReceiptForProductId (string productId)
+        public string GetTransactionReceiptForProductId(string productId)
         {
             throw new NotImplementedException();
         }
 
-        public void InterceptPromotionalPurchases ()
+        public void InterceptPromotionalPurchases()
         {
             throw new NotImplementedException();
         }
 
-        public void ContinuePromotionalPurchases ()
+        public void ContinuePromotionalPurchases()
         {
             throw new NotImplementedException();
         }

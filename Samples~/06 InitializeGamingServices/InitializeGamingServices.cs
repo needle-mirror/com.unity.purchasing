@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Unity.Services.Core;
 using Unity.Services.Core.Environments;
 using UnityEngine;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,7 +29,8 @@ namespace UnityEngine.Purchasing.Default
             {
                 var xml = XElement.Parse(appReceipt);
                 return from product in xml.Descendants("ProductReceipt")
-                       select new TransactionInfo() {
+                       select new TransactionInfo()
+                       {
                            productId = (string)product.Attribute("ProductId"),
                            transactionId = (string)product.Attribute("Id")
                        };

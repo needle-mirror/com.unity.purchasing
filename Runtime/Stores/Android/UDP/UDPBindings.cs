@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -32,7 +32,7 @@ namespace UnityEngine.Purchasing
             if (m_Bridge != null)
             {
                 var initMethod = UdpIapBridgeInterface.GetInitMethod();
-                initMethod.Invoke(m_Bridge, new object[] {callback});
+                initMethod.Invoke(m_Bridge, new object[] { callback });
             }
             else
             {
@@ -46,7 +46,7 @@ namespace UnityEngine.Purchasing
             if (m_Bridge != null)
             {
                 var purchaseMethod = UdpIapBridgeInterface.GetPurchaseMethod();
-                purchaseMethod.Invoke(m_Bridge, new object[] {productId, callback, developerPayload});
+                purchaseMethod.Invoke(m_Bridge, new object[] { productId, callback, developerPayload });
             }
             else
             {
@@ -75,7 +75,7 @@ namespace UnityEngine.Purchasing
                 {
                     ids.Add(product.storeSpecificId);
                 }
-                retrieveProductsMethod.Invoke(m_Bridge, new object[] {new ReadOnlyCollection<string>(ids), retrieveCallback});
+                retrieveProductsMethod.Invoke(m_Bridge, new object[] { new ReadOnlyCollection<string>(ids), retrieveCallback });
             }
             else
             {
@@ -89,7 +89,7 @@ namespace UnityEngine.Purchasing
             if (m_Bridge != null)
             {
                 var finishTransactionMethod = UdpIapBridgeInterface.GetFinishTransactionMethod();
-                finishTransactionMethod.Invoke(m_Bridge, new object[] {transactionID});
+                finishTransactionMethod.Invoke(m_Bridge, new object[] { transactionID });
             }
             else
             {
@@ -114,7 +114,7 @@ namespace UnityEngine.Purchasing
                         HashSet<ProductDescription> fetchedProducts = new HashSet<ProductDescription>();
 
                         var getProductList = InventoryInterface.GetProductListMethod();
-                        var products = (IEnumerable) getProductList.Invoke(inventory, null);
+                        var products = (IEnumerable)getProductList.Invoke(inventory, null);
                         var productList = products.Cast<object>().ToList();
 
                         foreach (var productInfo in productList)
@@ -126,23 +126,23 @@ namespace UnityEngine.Purchasing
                             var microsProp = ProductInfoInterface.GetPriceAmountMicrosProp();
 
                             ProductMetadata metadata = new ProductMetadata(
-                                (string) priceProp.GetValue(productInfo, null),
-                                (string) titleProp.GetValue(productInfo, null),
-                                (string) descProp.GetValue(productInfo, null),
-                                (string) currencyProp.GetValue(productInfo, null),
-                                Convert.ToDecimal((long) microsProp.GetValue(productInfo, null)) / 1000000);
+                                (string)priceProp.GetValue(productInfo, null),
+                                (string)titleProp.GetValue(productInfo, null),
+                                (string)descProp.GetValue(productInfo, null),
+                                (string)currencyProp.GetValue(productInfo, null),
+                                Convert.ToDecimal((long)microsProp.GetValue(productInfo, null)) / 1000000);
 
 
                             var idProp = ProductInfoInterface.GetProductIdProp();
-                            var productId = (string) idProp.GetValue(productInfo, null);
+                            var productId = (string)idProp.GetValue(productInfo, null);
 
                             ProductDescription desc = new ProductDescription(productId, metadata);
 
                             var hasPurchase = InventoryInterface.HasPurchaseMethod();
-                            if ((bool) hasPurchase.Invoke(inventory, new object[] {productId}))
+                            if ((bool)hasPurchase.Invoke(inventory, new object[] { productId }))
                             {
                                 var getPurchaseInfo = InventoryInterface.GetPurchaseInfoMethod();
-                                object purchase = getPurchaseInfo.Invoke(inventory, new object[] {productId});
+                                object purchase = getPurchaseInfo.Invoke(inventory, new object[] { productId });
 
                                 var dic = StringPropertyToDictionary(purchase);
                                 string transactionId = dic["GameOrderId"];
@@ -180,7 +180,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                parsedPayload = (string) payload;
+                parsedPayload = (string)payload;
             }
 
             m_RetrieveProductsCallbackCache(actualSuccess, parsedPayload);
@@ -216,7 +216,8 @@ namespace UnityEngine.Purchasing
         internal static Dictionary<string, string> StringPropertyToDictionary(object info)
         {
             var dictionary = new Dictionary<string, string>();
-            if (info == null){
+            if (info == null)
+            {
                 return dictionary;
             }
 

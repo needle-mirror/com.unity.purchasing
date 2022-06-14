@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing.Models
         {
             if (billingResult != null)
             {
-                responseCode = (GoogleBillingResponseCode) billingResult.Call<int>("getResponseCode");
+                responseCode = (GoogleBillingResponseCode)billingResult.Call<int>("getResponseCode");
                 debugMessage = billingResult.Call<string>("getDebugMessage");
             }
         }

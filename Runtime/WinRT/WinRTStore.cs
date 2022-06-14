@@ -10,8 +10,10 @@ using Windows.System;
 using Windows.UI.Core;
 
 #pragma warning disable 4014
-namespace UnityEngine.Purchasing.Default {
-    class WinRTStore : IWindowsIAP {
+namespace UnityEngine.Purchasing.Default
+{
+    class WinRTStore : IWindowsIAP
+    {
 
         private IWindowsIAPCallback callback;
         private ICurrentApp currentApp;
@@ -48,8 +50,10 @@ namespace UnityEngine.Purchasing.Default {
             return m_loginDelay;
         }
 
-        public void RetrieveProducts(bool persistent) {
-            RunOnUIThread(() => {
+        public void RetrieveProducts(bool persistent)
+        {
+            RunOnUIThread(() =>
+            {
                 if (LoginDelay() > 0)
                 {
                     PollForProducts(persistent, 0, LoginDelay(), true, false);
@@ -61,9 +65,11 @@ namespace UnityEngine.Purchasing.Default {
             });
         }
 
-        private async void PollForProducts(bool persistent, int delay, int retryCount = 10, bool tryLogin = false, bool loginAttempted = false, bool productsOnly = false) {
+        private async void PollForProducts(bool persistent, int delay, int retryCount = 10, bool tryLogin = false, bool loginAttempted = false, bool productsOnly = false)
+        {
             await Task.Delay(delay);
-            try {
+            try
+            {
                 var result = await DoRetrieveProducts(productsOnly);
                 callback.OnProductListReceived(result);
             }
@@ -75,10 +81,12 @@ namespace UnityEngine.Purchasing.Default {
                 // NB: persistent here is used to distinguish when this is used by restoreTransactions() so we will
                 // keep it intact and supplement for retries on initialization
                 //
-                if (persistent) {
+                if (persistent)
+                {
                     // This seems to indicate the App is not uploaded on
                     // the dev portal, but is undocumented by Microsoft.
-                    if (e.Message.Contains("801900CC")) {
+                    if (e.Message.Contains("801900CC"))
+                    {
                         LogError("Exception loading listing information: {0}", e.Message);
                         callback.OnProductListError("AppNotKnown");
                         // JDRjr: in the main store code this is not being checked correctly
@@ -87,7 +95,7 @@ namespace UnityEngine.Purchasing.Default {
                     else if (e.Message.Contains("80070525"))
                     {
                         LogError("PollForProducts() User not signed in error HResult = 0x{0:X} (delay = {1}, retry = {2})", e.HResult, delay, retryCount);
-                        if((delay == 0)&&(productsOnly == false))
+                        if ((delay == 0) && (productsOnly == false))
                         {
                             // First time failure give products only a try
                             PollForProducts(true, 1000, retryCount, tryLogin, loginAttempted, true);
@@ -99,7 +107,8 @@ namespace UnityEngine.Purchasing.Default {
                             callback.OnProductListError("801900CC because the C# code is broken");
                         }
                     }
-                    else {
+                    else
+                    {
                         // other (no special handling) error codes
                         // Wait up to 5 mins.
                         // JDRjr: this seems like too long...
@@ -145,10 +154,11 @@ namespace UnityEngine.Purchasing.Default {
             } // end of catch()
         }
 
-        private async Task<WinProductDescription[]> DoRetrieveProducts(bool productsOnly) {
+        private async Task<WinProductDescription[]> DoRetrieveProducts(bool productsOnly)
+        {
             ListingInformation result = await currentApp.LoadListingInformationAsync();
 
-            if(productsOnly == false)
+            if (productsOnly == false)
             {
                 // We need a comprehensive list of transaction IDs for owned items.
                 // Microsoft make this difficult by failing to provide transaction IDs
@@ -160,20 +170,26 @@ namespace UnityEngine.Purchasing.Default {
 
                 // Add transaction IDs from our app receipt.
                 string appReceipt = null;
-                try {
+                try
+                {
                     appReceipt = await currentApp.RequestAppReceiptAsync();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     LogError("Unable to retrieve app receipt:{0}", e.Message);
                 }
 
                 var receiptTransactions = XMLUtils.ParseProducts(appReceipt);
-                foreach (var receiptTran in receiptTransactions) {
+                foreach (var receiptTran in receiptTransactions)
+                {
                     transactionMap[receiptTran.productId] = receiptTran.transactionId;
                 }
 
                 // Create fake transaction Ids for any owned items that we can't find transaction IDs for.
-                foreach (var license in currentApp.LicenseInformation.ProductLicenses) {
-                    if (!transactionMap.ContainsKey(license.Key)) {
+                foreach (var license in currentApp.LicenseInformation.ProductLicenses)
+                {
+                    if (!transactionMap.ContainsKey(license.Key))
+                    {
                         transactionMap[license.Key] = license.Key.GetHashCode().ToString();
                     }
                 }
@@ -181,12 +197,12 @@ namespace UnityEngine.Purchasing.Default {
 
                 // Construct our products including receipts and transaction ID where owned
                 var productDescriptions = from listing in result.ProductListings.Values
-                               let priceDecimal = TryParsePrice(listing.FormattedPrice)
-                               let transactionId = transactionMap.ContainsKey(listing.ProductId) ? transactionMap[listing.ProductId] : null
-                               let receipt = transactionId == null ? null : appReceipt
-                               select new WinProductDescription(listing.ProductId,
-                                   listing.FormattedPrice, listing.Name, string.Empty, RegionInfo.CurrentRegion.ISOCurrencySymbol,
-                                   priceDecimal, receipt, transactionId);
+                                          let priceDecimal = TryParsePrice(listing.FormattedPrice)
+                                          let transactionId = transactionMap.ContainsKey(listing.ProductId) ? transactionMap[listing.ProductId] : null
+                                          let receipt = transactionId == null ? null : appReceipt
+                                          select new WinProductDescription(listing.ProductId,
+                                              listing.FormattedPrice, listing.Name, string.Empty, RegionInfo.CurrentRegion.ISOCurrencySymbol,
+                                              priceDecimal, receipt, transactionId);
 
                 // Transaction IDs tracked for finalising transactions
                 transactionIdToProductId = transactionMap.ToDictionary(x => x.Value, x => x.Key);
@@ -203,17 +219,22 @@ namespace UnityEngine.Purchasing.Default {
             }
         }
 
-        private decimal TryParsePrice(string formattedPrice) {
+        private decimal TryParsePrice(string formattedPrice)
+        {
             decimal price = 0;
             decimal.TryParse(formattedPrice, NumberStyles.Currency, CultureInfo.CurrentCulture, out price);
             return price;
         }
 
-        public void Purchase(string productId) {
-            RunOnUIThread(async () => {
-                try {
+        public void Purchase(string productId)
+        {
+            RunOnUIThread(async () =>
+            {
+                try
+                {
                     var result = await currentApp.RequestProductPurchaseAsync(productId);
-                    switch (result.Status) {
+                    switch (result.Status)
+                    {
                         case ProductPurchaseStatus.Succeeded:
                             onPurchaseSucceeded(productId, result.ReceiptXml, result.TransactionId);
                             break;
@@ -224,37 +245,46 @@ namespace UnityEngine.Purchasing.Default {
                             break;
                     }
                 }
-                catch (Exception e) {
+                catch (Exception e)
+                {
                     callback.OnPurchaseFailed(productId, e.Message);
                 }
             });
         }
 
-        private async Task FulfillConsumable(string productId, string transactionId) {
-            try {
+        private async Task FulfillConsumable(string productId, string transactionId)
+        {
+            try
+            {
                 var result = await currentApp.ReportConsumableFulfillmentAsync(productId, Guid.Parse(transactionId));
 
-                if (FulfillmentResult.Succeeded == result) {
-                    lock (transactionIdToProductId) {
+                if (FulfillmentResult.Succeeded == result)
+                {
+                    lock (transactionIdToProductId)
+                    {
                         transactionIdToProductId.Remove(transactionId);
                     }
                 }
                 // It doesn't matter if the consumption succeeds or not.
                 // If it doesn't, it will eventually be retried automatically.
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 LogError("Exception consuming {0} : {1} (non-fatal)", productId, e.Message);
             }
         }
 
-        private void LogError(string message, params object[] formatArgs) {
+        private void LogError(string message, params object[] formatArgs)
+        {
             callback.logError(string.Format("UnityIAPWin8:" + message, formatArgs));
         }
 
-        private void onPurchaseSucceeded(string productId, string receipt, Guid transactionId) {
+        private void onPurchaseSucceeded(string productId, string receipt, Guid transactionId)
+        {
             var tranId = transactionId.ToString();
             // Make a note of which product this transaction pertains to.
-            lock (transactionIdToProductId) {
+            lock (transactionIdToProductId)
+            {
                 transactionIdToProductId[tranId] = productId;
             }
             callback.OnPurchaseSucceeded(productId, receipt, tranId);
@@ -284,7 +314,8 @@ namespace UnityEngine.Purchasing.Default {
 
         private static void RunOnUIThread(Action a)
         {
-            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
+            CoreApplication.MainView.CoreWindow.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
                 a();
             });
         }

@@ -12,6 +12,6 @@ namespace UnityEngine.Purchasing
         public string OkayButtonText;
         public string CancelButtonText;
         public List<string> Options;
-        public Action<bool,int> Callback;
+        public Action<bool, int> Callback;
     }
 }

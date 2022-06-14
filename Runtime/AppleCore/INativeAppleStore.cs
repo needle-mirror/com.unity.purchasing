@@ -1,8 +1,8 @@
-﻿namespace UnityEngine.Purchasing
+namespace UnityEngine.Purchasing
 {
     internal interface INativeAppleStore : INativeStore
     {
-        void SetUnityPurchasingCallback (UnityPurchasingCallback AsyncCallback);
+        void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback);
         void RestoreTransactions();
         void RefreshAppReceipt();
         void AddTransactionObserver();
@@ -14,7 +14,7 @@
         void SetStorePromotionOrder(string json);
         void FetchStorePromotionVisibility(string productId);
         void SetStorePromotionVisibility(string productId, string visibility);
-        string GetTransactionReceiptForProductId (string productId);
+        string GetTransactionReceiptForProductId(string productId);
         void InterceptPromotionalPurchases();
         void ContinuePromotionalPurchases();
         void PresentCodeRedemptionSheet();

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -395,7 +395,7 @@ namespace UnityEngine.Purchasing
         /// <returns> A new instance identical to this object </returns>
         public LocalizedProductDescription Clone()
         {
-            var desc = new LocalizedProductDescription ();
+            var desc = new LocalizedProductDescription();
 
             desc.googleLocale = this.googleLocale;
             desc.Title = this.Title;
@@ -407,11 +407,14 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The title of the product description.
         /// </summary>
-        public string Title {
-            get {
+        public string Title
+        {
+            get
+            {
                 return DecodeNonLatinCharacters(title);
             }
-            set {
+            set
+            {
                 title = EncodeNonLatinCharacters(value);
             }
         }
@@ -419,11 +422,14 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The product description displayed as a string.
         /// </summary>
-        public string Description {
-            get {
+        public string Description
+        {
+            get
+            {
                 return DecodeNonLatinCharacters(description);
             }
-            set {
+            set
+            {
                 description = EncodeNonLatinCharacters(value);
             }
         }
@@ -434,11 +440,15 @@ namespace UnityEngine.Purchasing
                 return s;
 
             var sb = new StringBuilder();
-            foreach (char c in s) {
-                if (c > 127) {
+            foreach (char c in s)
+            {
+                if (c > 127)
+                {
                     string encodedValue = "\\u" + ((int)c).ToString("x4");
                     sb.Append(encodedValue);
-                } else {
+                }
+                else
+                {
                     sb.Append(c);
                 }
             }
@@ -450,7 +460,8 @@ namespace UnityEngine.Purchasing
             if (s == null)
                 return s;
 
-            return Regex.Replace(s, @"\\u(?<Value>[a-zA-Z0-9]{4})", m => {
+            return Regex.Replace(s, @"\\u(?<Value>[a-zA-Z0-9]{4})", m =>
+            {
                 return ((char)int.Parse(m.Groups["Value"].Value, NumberStyles.HexNumber)).ToString();
             });
         }
@@ -494,23 +505,28 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The type of the payout of the product.
         /// </summary>
-        public ProductCatalogPayoutType type {
-            get {
+        public ProductCatalogPayoutType type
+        {
+            get
+            {
                 var retval = ProductCatalogPayoutType.Other;
                 if (Enum.IsDefined(typeof(ProductCatalogPayoutType), t))
-                    retval = (ProductCatalogPayoutType)Enum.Parse (typeof (ProductCatalogPayoutType), t);
+                    retval = (ProductCatalogPayoutType)Enum.Parse(typeof(ProductCatalogPayoutType), t);
                 return retval;
             }
-            set {
-                t = value.ToString ();
+            set
+            {
+                t = value.ToString();
             }
         }
 
         /// <summary>
         /// ProductCatalogPayoutType as a string.
         /// </summary>
-        public string typeString {
-            get {
+        public string typeString
+        {
+            get
+            {
                 return t;
             }
         }
@@ -526,13 +542,16 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The custom name for a subtype for the "Other" payout type.
         /// </summary>
-        public string subtype {
-            get {
+        public string subtype
+        {
+            get
+            {
                 return st;
             }
-            set {
+            set
+            {
                 if (value.Length > MaxSubtypeLength)
-                    throw new ArgumentException (string.Format ("subtype should be no longer than {0} characters", MaxSubtypeLength));
+                    throw new ArgumentException(string.Format("subtype should be no longer than {0} characters", MaxSubtypeLength));
                 st = value;
             }
         }
@@ -543,11 +562,14 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The quantity of payout.
         /// </summary>
-        public double quantity {
-            get {
+        public double quantity
+        {
+            get
+            {
                 return q;
             }
-            set {
+            set
+            {
                 q = value;
             }
         }
@@ -562,13 +584,16 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The raw data of the payout.
         /// </summary>
-        public string data {
-            get {
+        public string data
+        {
+            get
+            {
                 return d;
             }
-            set {
+            set
+            {
                 if (value.Length > MaxDataLength)
-                    throw new ArgumentException (string.Format ("data should be no longer than {0} characters", MaxDataLength));
+                    throw new ArgumentException(string.Format("data should be no longer than {0} characters", MaxDataLength));
                 d = value;
             }
         }
@@ -657,8 +682,10 @@ namespace UnityEngine.Purchasing
         /// Gets the list of payouts for this product.
         /// </summary>
         /// <returns> The list of payouts </returns>
-        public IList<ProductCatalogPayout> Payouts {
-            get {
+        public IList<ProductCatalogPayout> Payouts
+        {
+            get
+            {
                 return payouts;
             }
         }
@@ -669,18 +696,19 @@ namespace UnityEngine.Purchasing
         /// <returns> A new instance of <c>ProductCatalogItem</c> identical to this. </returns>
         public ProductCatalogItem Clone()
         {
-            ProductCatalogItem item = new ProductCatalogItem ();
+            ProductCatalogItem item = new ProductCatalogItem();
 
             item.id = this.id;
             item.type = this.type;
-            item.SetStoreIDs (this.allStoreIDs);
-            item.defaultDescription = this.defaultDescription.Clone ();
+            item.SetStoreIDs(this.allStoreIDs);
+            item.defaultDescription = this.defaultDescription.Clone();
             item.screenshotPath = this.screenshotPath;
             item.applePriceTier = this.applePriceTier;
             item.googlePrice.value = this.googlePrice.value;
             item.pricingTemplateID = this.pricingTemplateID;
-            foreach (var desc in this.descriptions) {
-                item.descriptions.Add (desc.Clone ());
+            foreach (var desc in this.descriptions)
+            {
+                item.descriptions.Add(desc.Clone());
             }
 
             return item;
@@ -713,8 +741,10 @@ namespace UnityEngine.Purchasing
         /// Gets all of the <c>StoreIds</c> associated with this item.
         /// </summary>
         /// <returns> A collection of all store IDs for this item. </returns>
-        public ICollection<StoreID> allStoreIDs {
-            get {
+        public ICollection<StoreID> allStoreIDs
+        {
+            get
+            {
                 return storeIDs;
             }
         }
@@ -723,8 +753,10 @@ namespace UnityEngine.Purchasing
         /// Assigns or modifies a collection of <c>StoreID</c>s associated with this item.
         /// </summary>
         /// <param name="storeIds"> The set of <c>StoreID</c>s to assign or overwrite. </param>
-        public void SetStoreIDs(ICollection<StoreID> storeIds) {
-            foreach (var storeId in storeIds) {
+        public void SetStoreIDs(ICollection<StoreID> storeIds)
+        {
+            foreach (var storeId in storeIds)
+            {
                 storeIDs.RemoveAll((obj) => obj.store == storeId.store);
                 if (!string.IsNullOrEmpty(storeId.id))
                     storeIDs.Add(new StoreID(storeId.store, storeId.id));
@@ -780,7 +812,8 @@ namespace UnityEngine.Purchasing
         /// <returns> Whether or not a new locale is avalable. </returns>
         public bool HasAvailableLocale
         {
-            get {
+            get
+            {
                 return Enum.GetValues(typeof(TranslationLocale)).Length > descriptions.Count + 1; // +1 for the default description
             }
         }
@@ -791,7 +824,8 @@ namespace UnityEngine.Purchasing
         /// <returns> The next avalable locale. </returns>
         public TranslationLocale NextAvailableLocale
         {
-            get {
+            get
+            {
                 foreach (TranslationLocale l in Enum.GetValues(typeof(TranslationLocale)))
                 {
                     if (GetDescription(l) == null && defaultDescription.googleLocale != l)
@@ -810,7 +844,8 @@ namespace UnityEngine.Purchasing
         /// <returns> A collection of all translated descriptions. </returns>
         public ICollection<LocalizedProductDescription> translatedDescriptions
         {
-            get {
+            get
+            {
                 return descriptions;
             }
         }
@@ -840,6 +875,12 @@ namespace UnityEngine.Purchasing
         /// Enables automatic initialization when using Codeless IAP.
         /// </summary>
         public bool enableCodelessAutoInitialization = true;
+
+        /// <summary>
+        /// Enables automatic Unity Gaming Services initialization when using Codeless IAP.
+        /// </summary>
+        public bool enableUnityGamingServicesAutoInitialization;
+
         [SerializeField]
         private List<ProductCatalogItem> products = new List<ProductCatalogItem>();
 
@@ -853,8 +894,9 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public ICollection<ProductCatalogItem> allValidProducts
         {
-            get {
-                return products.Where(x => (!string.IsNullOrEmpty(x.id) && x.id.Trim().Length != 0 )).ToList();
+            get
+            {
+                return products.Where(x => (!string.IsNullOrEmpty(x.id) && x.id.Trim().Length != 0)).ToList();
             }
         }
 

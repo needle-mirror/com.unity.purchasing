@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 
 namespace UnityEngine.Purchasing.Security
 {
-	// See Google's reference docs.
-	// http://developer.android.com/google/play/billing/billing_reference.html
+    // See Google's reference docs.
+    // http://developer.android.com/google/play/billing/billing_reference.html
 
     /// <summary>
     /// The state of the GooglePlay purchase.
     /// </summary>
-	public enum GooglePurchaseState
+    public enum GooglePurchaseState
     {
         /// <summary>
         /// The purchase was completed.
@@ -24,17 +24,17 @@ namespace UnityEngine.Purchasing.Security
         /// The purchase was refunded.
         /// </summary>
         Refunded
-	}
+    }
 
     /// <summary>
     /// A GooglePlay purchase receipt
     /// </summary>
-	public class GooglePlayReceipt : IPurchaseReceipt
-	{
+    public class GooglePlayReceipt : IPurchaseReceipt
+    {
         /// <summary>
         /// The item's product identifier.
         /// </summary>
-		public string productID { get; private set; }
+        public string productID { get; private set; }
 
         /// <summary>
         /// The ID  of the transaction.
@@ -44,27 +44,27 @@ namespace UnityEngine.Purchasing.Security
         /// <summary>
         /// A unique order identifier for the transaction.
         /// </summary>
-		public string orderID { get; private set; }
+        public string orderID { get; private set; }
 
         /// <summary>
         /// The package name of the app.
         /// </summary>
-		public string packageName { get; private set; }
+        public string packageName { get; private set; }
 
         /// <summary>
         /// A token that uniquely identifies a purchase for a given item and user pair.
         /// </summary>
-		public string purchaseToken { get; private set; }
+        public string purchaseToken { get; private set; }
 
         /// <summary>
         /// The time the product was purchased, in milliseconds since the epoch (Jan 1, 1970).
         /// </summary>
-		public DateTime purchaseDate { get; private set; }
+        public DateTime purchaseDate { get; private set; }
 
         /// <summary>
         /// The purchase state of the order.
         /// </summary>
-		public GooglePurchaseState purchaseState { get; private set; }
+        public GooglePurchaseState purchaseState { get; private set; }
 
         /// <summary>
         /// Constructor that initializes the members from the input parameters.
@@ -78,7 +78,7 @@ namespace UnityEngine.Purchasing.Security
         public GooglePlayReceipt(string productID, string orderID, string packageName,
             string purchaseToken, DateTime purchaseTime, GooglePurchaseState purchaseState)
         {
-			throw new NotImplementedException();
-		}
-	}
+            throw new NotImplementedException();
+        }
+    }
 }

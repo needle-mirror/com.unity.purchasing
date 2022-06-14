@@ -17,5 +17,3 @@ private void InstantiateMyStore() {
 ````
 
 The store name must match the name developers use when defining products for your store so Unity IAP uses the correct product identifiers when addressing your store.
-
-

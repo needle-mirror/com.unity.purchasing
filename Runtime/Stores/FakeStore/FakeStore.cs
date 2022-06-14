@@ -55,7 +55,7 @@ namespace UnityEngine.Purchasing
         // INativeStore
         public void RetrieveProducts(string json)
         {
-            var jsonList = (List<object>) MiniJson.JsonDecode (json);
+            var jsonList = (List<object>)MiniJson.JsonDecode(json);
             var productDefinitions = jsonList.DecodeJSON(Name);
             StoreRetrieveProducts(new ReadOnlyCollection<ProductDefinition>(productDefinitions.ToList()));
         }
@@ -70,9 +70,12 @@ namespace UnityEngine.Purchasing
                 {
                     var metadata = new ProductMetadata("$0.01", "Fake title for " + product.id, "Fake description", "USD", 0.01m);
                     ProductCatalog catalog = ProductCatalog.LoadDefaultCatalog();
-                    if (catalog != null) {
-                        foreach (var item in catalog.allProducts) {
-                            if (item.id == product.id) {
+                    if (catalog != null)
+                    {
+                        foreach (var item in catalog.allProducts)
+                        {
+                            if (item.id == product.id)
+                            {
                                 metadata = new ProductMetadata(item.googlePrice.value.ToString(), item.defaultDescription.Title, item.defaultDescription.Description, "USD", item.googlePrice.value);
                             }
                         }
@@ -96,7 +99,7 @@ namespace UnityEngine.Purchasing
 
             // To mimic typical store behavior, only display RetrieveProducts dialog for developers
             if (!(UIMode == FakeStoreUIMode.DeveloperUser &&
-                StartUI<InitializationFailureReason> (productDefinitions, DialogType.RetrieveProducts, handleAllowInitializeOrRetrieveProducts)))
+                StartUI<InitializationFailureReason>(productDefinitions, DialogType.RetrieveProducts, handleAllowInitializeOrRetrieveProducts)))
             {
                 // Default non-UI FakeStore RetrieveProducts behavior is to succeed
                 handleAllowInitializeOrRetrieveProducts(true, InitializationFailureReason.AppNotKnown);
@@ -106,7 +109,7 @@ namespace UnityEngine.Purchasing
         // INativeStore
         public void Purchase(string productJSON, string developerPayload)
         {
-            var dic = (Dictionary<string, object>) MiniJson.JsonDecode (productJSON);
+            var dic = (Dictionary<string, object>)MiniJson.JsonDecode(productJSON);
             object obj;
             string id, storeId, type;
             ProductType itemType;
@@ -117,7 +120,7 @@ namespace UnityEngine.Purchasing
             storeId = obj.ToString();
             dic.TryGetValue("type", out obj);
             type = obj.ToString();
-            if(Enum.IsDefined(typeof(ProductType), type))
+            if (Enum.IsDefined(typeof(ProductType), type))
                 itemType = (ProductType)Enum.Parse(typeof(ProductType), type);
             else
                 itemType = ProductType.Consumable;
@@ -144,7 +147,7 @@ namespace UnityEngine.Purchasing
                     }
                     else
                     {
-                        if (failureReason == (PurchaseFailureReason) Enum.Parse(typeof(PurchaseFailureReason), "Unknown"))
+                        if (failureReason == (PurchaseFailureReason)Enum.Parse(typeof(PurchaseFailureReason), "Unknown"))
                         {
                             failureReason = PurchaseFailureReason.UserCancelled;
                         }
@@ -156,10 +159,10 @@ namespace UnityEngine.Purchasing
                     }
                 };
 
-            if (!(StartUI<PurchaseFailureReason> (product, DialogType.Purchase, handleAllowPurchase)))
+            if (!(StartUI<PurchaseFailureReason>(product, DialogType.Purchase, handleAllowPurchase)))
             {
                 // Default non-UI FakeStore purchase behavior is to succeed
-                handleAllowPurchase (true, (PurchaseFailureReason) Enum.Parse(typeof(PurchaseFailureReason), "Unknown"));
+                handleAllowPurchase(true, (PurchaseFailureReason)Enum.Parse(typeof(PurchaseFailureReason), "Unknown"));
             }
         }
 
@@ -191,7 +194,7 @@ namespace UnityEngine.Purchasing
         /// Implemented by UIFakeStore derived class
         /// </summary>
         /// <returns><c>true</c>, if UI was started, <c>false</c> otherwise.</returns>
-        protected virtual bool StartUI<T>(object model, DialogType dialogType, Action<bool,T> callback)
+        protected virtual bool StartUI<T>(object model, DialogType dialogType, Action<bool, T> callback)
         {
             return false;
         }

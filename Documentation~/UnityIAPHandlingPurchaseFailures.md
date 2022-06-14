@@ -14,4 +14,3 @@ public void OnPurchaseFailed (Product i, PurchaseFailureReason p)
     }
 }
 ````
-

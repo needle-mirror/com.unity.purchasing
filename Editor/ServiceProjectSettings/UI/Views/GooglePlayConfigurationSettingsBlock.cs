@@ -87,7 +87,8 @@ namespace UnityEditor.Purchasing
                 googlePlayExternalLink.AddManipulator(clickable);
             }
 
-            m_ConfigurationBlock.Q<TextField>(k_GooglePlayKeyEntry).RegisterValueChangedCallback(evt => {
+            m_ConfigurationBlock.Q<TextField>(k_GooglePlayKeyEntry).RegisterValueChangedCallback(evt =>
+            {
                 m_GooglePlayDataRef.googlePlayKey = evt.newValue;
             });
         }

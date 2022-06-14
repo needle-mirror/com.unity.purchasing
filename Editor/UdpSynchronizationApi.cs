@@ -218,12 +218,12 @@ namespace UnityEditor.Purchasing
                 return false;
             }
 
-			var udpVersion = BuildConfigInterface.GetVersion();
-			int majorVersion = 0;
-			int.TryParse(udpVersion.Split('.')[0], out majorVersion);
+            var udpVersion = BuildConfigInterface.GetVersion();
+            int majorVersion = 0;
+            int.TryParse(udpVersion.Split('.')[0], out majorVersion);
 
-			return majorVersion >= 2;
-		}
+            return majorVersion >= 2;
+        }
 
         // A very tricky way to deal with the json string, need to be improved
         // en-US and zh-CN will appear in the JSON and Unity JsonUtility cannot

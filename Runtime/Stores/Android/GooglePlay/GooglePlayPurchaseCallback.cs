@@ -3,7 +3,7 @@ using UnityEngine.Purchasing.Interfaces;
 
 namespace UnityEngine.Purchasing
 {
-    class GooglePlayPurchaseCallback: IGooglePurchaseCallback
+    class GooglePlayPurchaseCallback : IGooglePurchaseCallback
     {
         IStoreCallback m_StoreCallback;
         IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;

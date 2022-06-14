@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
 {
     internal class NativeStoreProvider : INativeStoreProvider
     {
-        public INativeStore GetAndroidStore (IUnityCallback callback, AppStore store, IPurchasingBinder binder, IUtil util)
+        public INativeStore GetAndroidStore(IUnityCallback callback, AppStore store, IPurchasingBinder binder, IUtil util)
         {
             INativeStore nativeStore;
             try
@@ -29,18 +29,19 @@ namespace UnityEngine.Purchasing
         private INativeStore GetAndroidStoreHelper(IUnityCallback callback, AppStore store, IPurchasingBinder binder,
             IUtil util)
         {
-            switch (store) {
+            switch (store)
+            {
                 case AppStore.AmazonAppStore:
                     using (var pluginClass = new AndroidJavaClass("com.unity.purchasing.amazon.AmazonPurchasing"))
                     {
                         // Switch Android callbacks to the scripting thread, via ScriptingUnityCallback.
-                        var proxy = new JavaBridge (new ScriptingUnityCallback(callback, util));
-                        var instance = pluginClass.CallStatic<AndroidJavaObject> ("instance", proxy);
+                        var proxy = new JavaBridge(new ScriptingUnityCallback(callback, util));
+                        var instance = pluginClass.CallStatic<AndroidJavaObject>("instance", proxy);
                         // Hook up our amazon specific functionality.
-                        var extensions = new AmazonAppStoreStoreExtensions (instance);
-                        binder.RegisterExtension<IAmazonExtensions> (extensions);
-                        binder.RegisterConfiguration<IAmazonConfiguration> (extensions);
-                        return new AndroidJavaStore (instance);
+                        var extensions = new AmazonAppStoreStoreExtensions(instance);
+                        binder.RegisterExtension<IAmazonExtensions>(extensions);
+                        binder.RegisterConfiguration<IAmazonConfiguration>(extensions);
+                        return new AndroidJavaStore(instance);
                     }
 
                 case AppStore.UDP:
@@ -68,10 +69,11 @@ namespace UnityEngine.Purchasing
         public INativeAppleStore GetStorekit(IUnityCallback callback)
         {
             // Both tvOS and iOS use the same Objective-C linked to the XCode project.
-            if (Application.platform == RuntimePlatform.IPhonePlayer || Application.platform == RuntimePlatform.tvOS) {
-                return new iOSStoreBindings ();
+            if (Application.platform == RuntimePlatform.IPhonePlayer || Application.platform == RuntimePlatform.tvOS)
+            {
+                return new iOSStoreBindings();
             }
-            return new OSXStoreBindings ();
+            return new OSXStoreBindings();
         }
     }
 }

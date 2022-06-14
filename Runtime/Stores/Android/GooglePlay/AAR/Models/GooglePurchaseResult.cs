@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing.Models
 
         internal GooglePurchaseResult(AndroidJavaObject purchaseResult, IGoogleCachedQuerySkuDetailsService cachedQuerySkuDetailsService)
         {
-            m_ResponseCode = (GoogleBillingResponseCode) purchaseResult.Call<int>("getResponseCode");
+            m_ResponseCode = (GoogleBillingResponseCode)purchaseResult.Call<int>("getResponseCode");
             FillPurchases(purchaseResult, cachedQuerySkuDetailsService);
         }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,7 +10,8 @@ namespace UnityEngine.Purchasing
         {
             StringBuilder sb = new StringBuilder();
 
-            foreach (string key in parameters.Keys) {
+            foreach (string key in parameters.Keys)
+            {
                 string val = parameters[key].ToString();
 
                 if (val == null)

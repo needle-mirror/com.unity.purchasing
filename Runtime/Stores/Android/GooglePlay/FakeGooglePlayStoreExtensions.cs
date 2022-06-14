@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
     ///
     /// Access GooglePlay store specific functionality.
     /// </summary>
-    public class FakeGooglePlayStoreExtensions: IGooglePlayStoreExtensions
+    public class FakeGooglePlayStoreExtensions : IGooglePlayStoreExtensions
     {
         /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!

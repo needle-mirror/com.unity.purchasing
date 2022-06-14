@@ -18,7 +18,7 @@ namespace Uniject
         /// WARNING: Reading from this may require special application privileges.
         /// </summary>
         string deviceUniqueIdentifier { get; }
-        string unityVersion { get;  }
+        string unityVersion { get; }
         string userId { get; }
         string gameVersion { get; }
         UInt64 sessionId { get; }

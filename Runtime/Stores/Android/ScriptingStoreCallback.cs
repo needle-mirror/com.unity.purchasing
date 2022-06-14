@@ -1,23 +1,24 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Uniject;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-	/// <summary>
-	/// Wraps an IStoreCallback executing methods on
-	/// the scripting thread.
-	/// </summary>
-	internal class ScriptingStoreCallback : IStoreCallback
-	{
+    /// <summary>
+    /// Wraps an IStoreCallback executing methods on
+    /// the scripting thread.
+    /// </summary>
+    internal class ScriptingStoreCallback : IStoreCallback
+    {
         IStoreCallback m_ForwardTo;
         IUtil m_Util;
 
-		public ScriptingStoreCallback(IStoreCallback forwardTo, IUtil util) {
-			m_ForwardTo = forwardTo;
-			m_Util = util;
-		}
+        public ScriptingStoreCallback(IStoreCallback forwardTo, IUtil util)
+        {
+            m_ForwardTo = forwardTo;
+            m_Util = util;
+        }
 
         public ProductCollection products => m_ForwardTo.products;
 
@@ -31,10 +32,10 @@ namespace UnityEngine.Purchasing
             m_Util.RunOnMainThread(() => m_ForwardTo.OnProductsRetrieved(products));
         }
 
-        public void OnPurchaseSucceeded (string id, string receipt, string transactionID)
-		{
-			m_Util.RunOnMainThread (() => m_ForwardTo.OnPurchaseSucceeded (id, receipt, transactionID));
-		}
+        public void OnPurchaseSucceeded(string id, string receipt, string transactionID)
+        {
+            m_Util.RunOnMainThread(() => m_ForwardTo.OnPurchaseSucceeded(id, receipt, transactionID));
+        }
 
         public void OnAllPurchasesRetrieved(List<Product> purchasedProducts)
         {
@@ -49,4 +50,3 @@ namespace UnityEngine.Purchasing
         public bool useTransactionLog { get; set; }
     }
 }
-

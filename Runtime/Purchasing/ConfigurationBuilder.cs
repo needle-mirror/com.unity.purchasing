@@ -82,11 +82,11 @@ namespace UnityEngine.Purchasing
         /// Whether or not the project will use the catalog stored on the cloud or the one cached locally.
         /// </summary>
         /// <value> True if the project will use the catalog stored on the cloud. </value>
-		public bool useCatalogProvider
-		{
-			get;
-			set;
-		}
+        public bool useCatalogProvider
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// The set of products in the catalog.
@@ -188,7 +188,8 @@ namespace UnityEngine.Purchasing
         /// <returns> The instance of the configuration builder with the new product added. </returns>
         public ConfigurationBuilder AddProducts(IEnumerable<ProductDefinition> products)
         {
-            foreach (var product in products) {
+            foreach (var product in products)
+            {
                 m_Products.Add(product);
             }
 

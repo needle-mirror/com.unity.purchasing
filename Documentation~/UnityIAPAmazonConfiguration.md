@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This guide describes the process of setting up the Amazon Appstore for use with the Unity in-app purchasing (IAP) system. This includes establishing the digital records and relationships that are required to interact with the Unity IAP API, setting up an Amazon developer account, and testing and publishing a Unity IAP application. 
+This guide describes the process of setting up the Amazon Appstore for use with the Unity in-app purchasing (IAP) system. This includes establishing the digital records and relationships that are required to interact with the Unity IAP API, setting up an Amazon developer account, and testing and publishing a Unity IAP application.
 
 As with other platforms, the Amazon store allows for the purchase of virtual goods and managed products. These digital products are identified using a string identifier and an additional type to define durability, with choices including subscription (capable of being subscribed to), consumable (capable of being rebought), and non-consumable (capable of being bought once).
 
@@ -19,15 +19,15 @@ As with other platforms, the Amazon store allows for the purchase of virtual goo
 2. For FireOS devices, the Amazon Appstore should come pre-installed.<br/><br/>**Note**: Though you may freely target FireOS devices, FireOS is not a Unity-supported platform.<br/><br/>
 3. Once you have installed the Amazon Appstore, install the [Amazon App Tester](http://www.amazon.com/Amazon-App-Tester/dp/B00BN3YZM2/).
 
-    ![](images/AmazonConfiguration-AmazonAppTester.png) 
+    ![](images/AmazonConfiguration-AmazonAppTester.png)
 1. Set up the Android SDK
     1. To install and watch the Android debug log, ensure you have the [Android SDK](https://developer.android.com/studio/install.html) installed. Download the relevant command line tools package from the Android SDK install page and extract them to your computer.
     1. Confirm that the SDK recognizes the attached Android device through the command-line adb tool. For example:
-    
+
 ````
 |[11:07:01] user@laptop:/Applications | $ adb devices
 List of devices attached
-00DA0807526300W5	device
+00DA0807526300W5    device
 ````
 
 ### Unity app setup
@@ -48,6 +48,3 @@ It's not necessary to download Amazon's native IAP plug-in when preparing to use
 1. Set up your catalog. Using the product descriptions you prepared earlier, add the items to the Amazon catalog using the Amazon Developer Portal. Navigate to your app's page, and find the __In-App Items section__. Use the __Add a Consumable__, __Add an Entitlement__, or __Add a Subscription__ buttons to set up your catalog.
 
     ![](images/AmazonConfiguration-SetUpCatalog.png)
-
-
-

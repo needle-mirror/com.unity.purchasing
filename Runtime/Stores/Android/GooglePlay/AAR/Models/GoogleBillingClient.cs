@@ -97,7 +97,7 @@ namespace UnityEngine.Purchasing.Models
         }
 
         public void QuerySkuDetailsAsync(List<string> skus, string type,
-            Action<IGoogleBillingResult,  List<AndroidJavaObject>> onSkuDetailsResponseAction)
+            Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction)
         {
             var skuDetailsParamsBuilder = GetSkuDetailsParamClass().CallStatic<AndroidJavaObject>("newBuilder");
             skuDetailsParamsBuilder = skuDetailsParamsBuilder.Call<AndroidJavaObject>("setSkusList", skus.ToJava());
@@ -128,7 +128,7 @@ namespace UnityEngine.Purchasing.Models
 
             if (prorationMode != null)
             {
-                billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setReplaceSkusProrationMode", (int) prorationMode);
+                billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setReplaceSkusProrationMode", (int)prorationMode);
             }
 
             billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("build");

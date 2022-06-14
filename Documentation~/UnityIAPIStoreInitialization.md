@@ -9,4 +9,3 @@ void Initialize(IStoreCallback callback) {
     this.callback = callback;
 }
 ````
-
