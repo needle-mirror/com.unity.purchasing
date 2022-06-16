@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -15,15 +17,18 @@ namespace UnityEngine.Purchasing
         IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
         ISkuDetailsConverter m_SkuDetailsConverter;
         IRetryPolicy m_RetryPolicy;
+        IGoogleProductCallback m_GoogleProductCallback;
 
         internal QuerySkuDetailsService(IGoogleBillingClient billingClient, IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService,
-            ISkuDetailsConverter skuDetailsConverter, IRetryPolicy retryPolicy)
+            ISkuDetailsConverter skuDetailsConverter, IRetryPolicy retryPolicy, IGoogleProductCallback googleProductCallback)
         {
             m_BillingClient = billingClient;
             m_GoogleCachedQuerySkuDetailsService = googleCachedQuerySkuDetailsService;
             m_SkuDetailsConverter = skuDetailsConverter;
             m_RetryPolicy = retryPolicy;
+            m_GoogleProductCallback = googleProductCallback;
         }
+
 
         public void QueryAsyncSku(ProductDefinition product, Action<List<AndroidJavaObject>> onSkuDetailsResponse)
         {
@@ -41,7 +46,14 @@ namespace UnityEngine.Purchasing
 
         public void QueryAsyncSku(ReadOnlyCollection<ProductDefinition> products, Action<List<AndroidJavaObject>> onSkuDetailsResponse)
         {
-            m_RetryPolicy.Invoke(retryAction => QueryAsyncSkuWithRetries(products, onSkuDetailsResponse, retryAction));
+            var retryCount = 0;
+
+            m_RetryPolicy.Invoke(retryAction => QueryAsyncSkuWithRetries(products, onSkuDetailsResponse, retryAction), OnActionRetry);
+
+            void OnActionRetry()
+            {
+                m_GoogleProductCallback.NotifyQueryProductDetailsFailed(retryCount++);
+            }
         }
 
         void QueryAsyncSkuWithRetries(IReadOnlyCollection<ProductDefinition> products, Action<List<AndroidJavaObject>> onSkuDetailsResponse, Action retryQuery)

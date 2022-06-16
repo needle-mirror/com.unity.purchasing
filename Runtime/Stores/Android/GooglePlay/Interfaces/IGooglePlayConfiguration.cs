@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using UnityEngine.Purchasing.Extension;
 
@@ -20,6 +22,12 @@ namespace UnityEngine.Purchasing
         /// <param name="action">Will be called when <typeparamref name="UnityPurchasing.Initialize"/>
         ///     is interrupted by a disconnection from the Google Play Billing service.</param>
         void SetServiceDisconnectAtInitializeListener(Action action);
+
+        /// <summary>
+        /// Set an optional listener for failures when querying product details.
+        /// </summary>
+        /// <param name="action">Will be called with the retry count for each failed attempt to query product details.</param>
+        void SetQueryProductDetailsFailedListener(Action<int> action);
 
         /// <summary>
         /// Set listener for deferred purchasing events.

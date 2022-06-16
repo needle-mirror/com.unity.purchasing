@@ -1,5 +1,9 @@
 # Changelog
 
+## [4.3.0] - 2022-06-16
+### Added
+- GooglePlay - API `IGooglePlayConfiguration.SetQueryProductDetailsFailedListener(Action<int>)` called when Unity IAP fails to query product details. The `Action` will be called on each query product details failure with the retry count. See documentation "Store Guides" > "Google Play" for a sample usage.
+
 ## [4.2.1] - 2022-06-14
 ### Fixed
 - Downgrade `com.unity.services.core` from 1.4.1 to 1.3.1 due to a new bug found in 1.4.1

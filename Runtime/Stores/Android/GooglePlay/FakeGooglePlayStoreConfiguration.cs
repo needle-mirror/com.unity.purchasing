@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace UnityEngine.Purchasing
@@ -14,6 +16,14 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="action">Will never be called because this is a fake.</param>
         public void SetServiceDisconnectAtInitializeListener(Action action) { }
+
+        /// <summary>
+        /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
+        ///
+        /// Set an optional listener for failures when querying product details.
+        /// </summary>
+        /// <param name="action">Will never be called because this is a fake.</param>
+        public void SetQueryProductDetailsFailedListener(Action<int> action) { }
 
         /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!

@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Stores.Util;
@@ -7,9 +9,7 @@ namespace UnityEngine.Purchasing
     class ExponentialRetryPolicy : IRetryPolicy
     {
         int m_BaseRetryDelay;
-
         int m_MaxRetryDelay;
-
         int m_ExponentialFactor;
 
         public ExponentialRetryPolicy(int baseRetryDelay = 1000, int maxRetryDelay = 30 * 1000, int exponentialFactor = 2)
@@ -19,13 +19,14 @@ namespace UnityEngine.Purchasing
             m_ExponentialFactor = exponentialFactor;
         }
 
-        public void Invoke(Action<Action> actionToTry)
+        public void Invoke(Action<Action> actionToTry, Action? onRetryAction)
         {
             var currentRetryDelay = m_BaseRetryDelay;
             actionToTry(Retry);
 
             async void Retry()
             {
+                onRetryAction?.Invoke();
                 await WaitAndRetry();
             }
 

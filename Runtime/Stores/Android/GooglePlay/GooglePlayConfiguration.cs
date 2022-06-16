@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -9,10 +11,11 @@ namespace UnityEngine.Purchasing
     /// </summary>
     class GooglePlayConfiguration : IGooglePlayConfiguration, IGooglePlayConfigurationInternal
     {
-        Action m_InitializationConnectionLister;
+        Action? m_InitializationConnectionLister;
         IGooglePlayStoreService m_GooglePlayStoreService;
-        Action<Product> m_DeferredPurchaseAction;
-        Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
+        Action<Product>? m_DeferredPurchaseAction;
+        Action<Product>? m_DeferredProrationUpgradeDowngradeSubscriptionAction;
+        Action<int>? m_QueryProductDetailsFailedListener;
 
         bool m_FetchPurchasesAtInitialize = true;
 
@@ -39,6 +42,16 @@ namespace UnityEngine.Purchasing
         public void NotifyInitializationConnectionFailed()
         {
             m_InitializationConnectionLister?.Invoke();
+        }
+
+        public void SetQueryProductDetailsFailedListener(Action<int> action)
+        {
+            m_QueryProductDetailsFailedListener = action;
+        }
+
+        public void NotifyQueryProductDetailsFailed(int retryCount)
+        {
+            m_QueryProductDetailsFailedListener?.Invoke(retryCount);
         }
 
         /// <summary>

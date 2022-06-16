@@ -50,3 +50,43 @@ public class GooglePlayInitializationDisconnectListener : IStoreListener
     public void OnPurchaseFailed(Product i, PurchaseFailureReason p) { }
 }
 ```
+
+### Listen for failed query product details
+
+Querying product details from the Google Play Store can fail due to certain circumstances. When this happens, we retry until successful.
+
+For example: a user first installs the app with the Play Store. Then the user launches the app without having Internet access. The Google Play Store will be unavailable because it requires an Internet connection which will result in failing to query product details. Restoring the Internet connection will fix the problem and the app will resume correctly.
+
+The `IGooglePlayConfiguration.SetQueryProductDetailsFailedListener(Action<int>)` API can be used to listen for this scenario. The action has a parameter which contains the retry count. When this Action is triggered, the app may choose to advise the user through a user interface dialog to verify their Internet connection.
+
+Please refer to this usage sample:
+
+```
+using UnityEngine;
+using UnityEngine.Purchasing;
+
+public class QueryProductDetailsFailedListener : IStoreListener
+{
+    public QueryProductDetailsFailedListener()
+    {
+        var builder = ConfigurationBuilder.Instance(StandardPurchasingModule.Instance());
+        builder.Configure<IGooglePlayConfiguration>().SetQueryProductDetailsFailedListener((int retryCount) =>
+        {
+            Debug.Log("Failed to query product details " + retryCount + " times.");
+        });
+        builder.AddProduct("100_gold_coins", ProductType.Consumable);
+        UnityPurchasing.Initialize(this, builder);
+    }
+
+    public void OnInitialized(IStoreController controller, IExtensionProvider extensions) { }
+
+    public void OnInitializeFailed(InitializationFailureReason error) { }
+
+    public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
+    {
+        return PurchaseProcessingResult.Complete;
+    }
+
+    public void OnPurchaseFailed(Product i, PurchaseFailureReason p) { }
+}
+```

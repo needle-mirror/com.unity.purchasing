@@ -3,9 +3,19 @@
   "displayName": "In App Purchasing",
   "unity": "2020.3",
   "_upm": {
-    "changelog": "### Fixed\n- Downgrade `com.unity.services.core` from 1.4.1 to 1.3.1 due to a new bug found in 1.4.1"
+    "gameService": {
+      "groupIndex": 4,
+      "groupName": "Monetize",
+      "configurePath": "Project/Services/In-App Purchasing",
+      "genericDashboardUrl": "https://unity3d.com/unity/features/iap"
+    },
+    "supportedPlatforms": [
+      "Android",
+      "iOS"
+    ],
+    "changelog": "### Added\n- GooglePlay - API `IGooglePlayConfiguration.SetQueryProductDetailsFailedListener(Action<int>)` called when Unity IAP fails to query product details. The `Action` will be called on each query product details failure with the retry count. See documentation \"Store Guides\" > \"Google Play\" for a sample usage."
   },
-  "version": "4.2.1",
+  "version": "4.3.0",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -24,15 +34,15 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.2.1"
+    "com.unity.purchasing.tests": "4.3.0"
   },
   "upmCi": {
-    "footprint": "5d77653888c5b36e3c4caa909124141ea75b1c19"
+    "footprint": "0ce80874c9229d35d310a72c5334ca2ee6617c75"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "258ef39fae29e6ea64d6813cd615b9424e3a9955"
+    "revision": "22afb8218d24e44d7eaa04f57aed2bebe79b82e8"
   },
   "samples": [
     {

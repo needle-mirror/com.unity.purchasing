@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.2.0-pre.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.3.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -257,13 +257,14 @@ namespace UnityEngine.Purchasing
         private IStore InstantiateGoogleStore()
         {
             IGooglePurchaseCallback googlePurchaseCallback = new GooglePlayPurchaseCallback();
+            IGoogleProductCallback googleProductCallback = new GooglePlayProductCallback();
 
-            var googlePlayStoreService = BuildGooglePlayStoreServiceAar(googlePurchaseCallback);
+            var googlePlayStoreService = BuildGooglePlayStoreServiceAar(googlePurchaseCallback, googleProductCallback);
 
             IGooglePlayStorePurchaseService googlePlayStorePurchaseService = new GooglePlayStorePurchaseService(googlePlayStoreService);
             IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService = new GooglePlayStoreFinishTransactionService(googlePlayStoreService);
             IGoogleFetchPurchases googleFetchPurchases = new GoogleFetchPurchases(googlePlayStoreService, googlePlayStoreFinishTransactionService);
-            var googlePlayConfiguration = BuildGooglePlayStoreConfiguration(googlePlayStoreService, googlePurchaseCallback);
+            var googlePlayConfiguration = BuildGooglePlayStoreConfiguration(googlePlayStoreService, googlePurchaseCallback, googleProductCallback);
             var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
             var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
             IGooglePlayStoreRetrieveProductsService googlePlayStoreRetrieveProductsService = new GooglePlayStoreRetrieveProductsService(
@@ -296,10 +297,12 @@ namespace UnityEngine.Purchasing
             BindExtension<IGooglePlayStoreExtensions>(googlePlayStoreExtensions);
         }
 
-        static GooglePlayConfiguration BuildGooglePlayStoreConfiguration(IGooglePlayStoreService googlePlayStoreService, IGooglePurchaseCallback googlePurchaseCallback)
+        static GooglePlayConfiguration BuildGooglePlayStoreConfiguration(IGooglePlayStoreService googlePlayStoreService,
+            IGooglePurchaseCallback googlePurchaseCallback, IGoogleProductCallback googleProductCallback)
         {
-            GooglePlayConfiguration googlePlayConfiguration = new GooglePlayConfiguration(googlePlayStoreService);
+            var googlePlayConfiguration = new GooglePlayConfiguration(googlePlayStoreService);
             googlePurchaseCallback.SetStoreConfiguration(googlePlayConfiguration);
+            googleProductCallback.SetStoreConfiguration(googlePlayConfiguration);
             return googlePlayConfiguration;
         }
 
@@ -308,7 +311,8 @@ namespace UnityEngine.Purchasing
             BindConfiguration<IGooglePlayConfiguration>(googlePlayConfiguration);
         }
 
-        IGooglePlayStoreService BuildGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback)
+        IGooglePlayStoreService BuildGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback,
+            IGoogleProductCallback googleProductCallback)
         {
             var googleCachedQuerySkuDetailsService = new GoogleCachedQuerySkuDetailsService();
             var googleLastKnownProductService = new GoogleLastKnownProductService();
@@ -317,7 +321,7 @@ namespace UnityEngine.Purchasing
             var googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener, util);
             var skuDetailsConverter = new SkuDetailsConverter();
             var retryPolicy = new ExponentialRetryPolicy();
-            var googleQuerySkuDetailsService = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService, skuDetailsConverter, retryPolicy);
+            var googleQuerySkuDetailsService = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService, skuDetailsConverter, retryPolicy, googleProductCallback);
             var purchaseService = new GooglePurchaseService(googleBillingClient, googlePurchaseCallback, googleQuerySkuDetailsService);
             var queryPurchasesService = new GoogleQueryPurchasesService(googleBillingClient, googleCachedQuerySkuDetailsService);
             var finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
