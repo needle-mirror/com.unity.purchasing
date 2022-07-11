@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -9,51 +11,43 @@ namespace UnityEngine.Purchasing
     {
         HashSet<string> m_ProcessedPurchaseToken;
         IGooglePlayStoreService m_GooglePlayStoreService;
-        IStoreCallback m_StoreCallback;
+        IStoreCallback? m_StoreCallback;
+
         internal GooglePlayStoreFinishTransactionService(IGooglePlayStoreService googlePlayStoreService)
         {
             m_ProcessedPurchaseToken = new HashSet<string>();
             m_GooglePlayStoreService = googlePlayStoreService;
         }
 
-        public void SetStoreCallback(IStoreCallback storeCallback)
+        public void SetStoreCallback(IStoreCallback? storeCallback)
         {
             m_StoreCallback = storeCallback;
         }
 
-        public void FinishTransaction(ProductDefinition product, string purchaseToken)
+        public void FinishTransaction(ProductDefinition? product, string? purchaseToken)
         {
-            m_GooglePlayStoreService.FinishTransaction(product, purchaseToken, OnConsume, OnAcknowledge);
+            m_GooglePlayStoreService.FinishTransaction(product, purchaseToken,
+                (billingResult, googlePurchase) => HandleFinishTransaction(product, billingResult, googlePurchase));
         }
 
-        public void OnConsume(ProductDefinition product, GooglePurchase googlePurchase, IGoogleBillingResult billingResult, string purchaseToken)
+        void HandleFinishTransaction(ProductDefinition? product, IGoogleBillingResult billingResult, IGooglePurchase purchase)
         {
-            HandleFinishTransaction(product, googlePurchase, billingResult, purchaseToken);
-        }
-
-        public void OnAcknowledge(ProductDefinition product, GooglePurchase googlePurchase, IGoogleBillingResult billingResult)
-        {
-            HandleFinishTransaction(product, googlePurchase, billingResult, googlePurchase.purchaseToken);
-        }
-
-        public void HandleFinishTransaction(ProductDefinition product, GooglePurchase googlePurchase, IGoogleBillingResult billingResult, string purchaseToken)
-        {
-            if (!m_ProcessedPurchaseToken.Contains(purchaseToken))
+            if (!m_ProcessedPurchaseToken.Contains(purchase.purchaseToken))
             {
                 if (billingResult.responseCode == GoogleBillingResponseCode.Ok)
                 {
-                    m_ProcessedPurchaseToken.Add(purchaseToken);
-                    CallPurchaseSucceededUpdateReceipt(product, googlePurchase, purchaseToken);
+                    m_ProcessedPurchaseToken.Add(purchase.purchaseToken);
+                    CallPurchaseSucceededUpdateReceipt(purchase);
                 }
                 else if (IsResponseCodeInRecoverableState(billingResult))
                 {
-                    FinishTransaction(product, purchaseToken);
+                    FinishTransaction(product, purchase.purchaseToken);
                 }
                 else
                 {
                     m_StoreCallback?.OnPurchaseFailed(
                         new PurchaseFailureDescription(
-                            product.storeSpecificId,
+                            product?.storeSpecificId,
                             PurchaseFailureReason.Unknown,
                             billingResult.debugMessage + " {code: " + billingResult.responseCode + ", M: GPSFTS.HFT}"
                         )
@@ -62,12 +56,12 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void CallPurchaseSucceededUpdateReceipt(ProductDefinition product, GooglePurchase googlePurchase, string purchaseToken)
+        void CallPurchaseSucceededUpdateReceipt(IGooglePurchase googlePurchase)
         {
             m_StoreCallback?.OnPurchaseSucceeded(
-                product.storeSpecificId,
+                googlePurchase.sku,
                 googlePurchase.receipt,
-                purchaseToken
+                googlePurchase.purchaseToken
             );
         }
 
@@ -77,8 +71,8 @@ namespace UnityEngine.Purchasing
             // https://github.com/android/play-billing-samples/issues/337
             // usually works like a charm next acknowledge
             return billingResult.responseCode == GoogleBillingResponseCode.ServiceUnavailable ||
-                billingResult.responseCode == GoogleBillingResponseCode.DeveloperError ||
-                billingResult.responseCode == GoogleBillingResponseCode.FatalError;
+                   billingResult.responseCode == GoogleBillingResponseCode.DeveloperError ||
+                   billingResult.responseCode == GoogleBillingResponseCode.FatalError;
         }
     }
 }

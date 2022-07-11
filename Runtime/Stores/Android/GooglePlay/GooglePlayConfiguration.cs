@@ -3,6 +3,7 @@
 using System;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing
 {
@@ -64,9 +65,9 @@ namespace UnityEngine.Purchasing
             m_DeferredPurchaseAction = action;
         }
 
-        public void NotifyDeferredProrationUpgradeDowngradeSubscription(IStoreCallback storeCallback, string productId)
+        public void NotifyDeferredProrationUpgradeDowngradeSubscription(IStoreCallback? storeCallback, string productId)
         {
-            Product product = storeCallback.FindProductById(productId);
+            var product = storeCallback.FindProductById(productId);
             if (product != null)
             {
                 m_DeferredProrationUpgradeDowngradeSubscriptionAction?.Invoke(product);
@@ -78,9 +79,9 @@ namespace UnityEngine.Purchasing
             return !m_FetchPurchasesAtInitialize;
         }
 
-        public void NotifyDeferredPurchase(IStoreCallback storeCallback, string productId, string receipt, string transactionId)
+        public void NotifyDeferredPurchase(IStoreCallback? storeCallback, IGooglePurchase? purchase, string? receipt, string? transactionId)
         {
-            Product product = storeCallback.FindProductById(productId);
+            var product = storeCallback?.FindProductById(purchase?.sku);
             if (product != null)
             {
                 ProductPurchaseUpdater.UpdateProductReceiptAndTransactionID(product, receipt, transactionId, GooglePlay.Name);
@@ -113,7 +114,7 @@ namespace UnityEngine.Purchasing
         /// For more information please visit <a href="https://developer.android.com/google/play/billing/security">https://developer.android.com/google/play/billing/security</a>
         /// </summary>
         /// <param name="profileId">The obfuscated profile id</param>
-        public void SetObfuscatedProfileId(string profileId)
+        public void SetObfuscatedProfileId(string? profileId)
         {
             m_GooglePlayStoreService.SetObfuscatedProfileId(profileId);
         }

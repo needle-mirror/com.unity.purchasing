@@ -14,8 +14,12 @@ namespace UnityEngine.Purchasing.Models
 
         internal static IEnumerable<IAndroidJavaObjectWrapper> EnumerateAndWrap(this AndroidJavaObject androidJavaList)
         {
-            return androidJavaList.Enumerate<AndroidJavaObject>()
-                .Select(javaObject => javaObject.Wrap());
+            return androidJavaList.Enumerate<AndroidJavaObject>().Wrap();
+        }
+
+        internal static IEnumerable<IAndroidJavaObjectWrapper> Wrap(this IEnumerable<AndroidJavaObject> androidJavaList)
+        {
+            return androidJavaList.Select(javaObject => javaObject.Wrap());
         }
 
         internal static IAndroidJavaObjectWrapper Wrap(this AndroidJavaObject androidJavaObject)

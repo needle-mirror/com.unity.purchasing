@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.4.0] - 2022-07-11
+### Added
+- GooglePlay - Google Play Billing Library version 4.0.0.
+  - The Multi-quantity feature is not yet supported by the IAP package and will come in a future update. **Do not enable `Multi-quantity` in the Google Play Console.**
+  - Add support for
+      the [IMMEDIATE_AND_CHARGE_FULL_PRICE](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode#IMMEDIATE_AND_CHARGE_FULL_PRICE)
+      proration mode. Use `GooglePlayProrationMode.ImmediateAndChargeFullPrice` for easy access.
+
+### Fixed
+- GooglePlay - Fix `IGooglePlayConfiguration.SetDeferredPurchaseListener`
+  and `IGooglePlayConfiguration.SetDeferredProrationUpgradeDowngradeSubscriptionListener` callbacks sometimes not being
+  called from the main thread.
+- GooglePlay - When configuring `IGooglePlayConfiguration.SetQueryProductDetailsFailedListener(Action<int> retryCount)`, the action will be invoked with retryCount starting at 1 instead of 0.
+- GooglePlay - Added a validation when upgrading/downgrading a subscription that calls `IStoreListener.OnPurchaseFailed` with `PurchaseFailureReason.ProductUnavailable` when the old transaction id is empty or null. This can occur when attempting to upgrade/downgrade a subscription that the user doesn't own.
+
 ## [4.3.0] - 2022-06-16
 ### Added
 - GooglePlay - API `IGooglePlayConfiguration.SetQueryProductDetailsFailedListener(Action<int>)` called when Unity IAP fails to query product details. The `Action` will be called on each query product details failure with the retry count. See documentation "Store Guides" > "Google Play" for a sample usage.

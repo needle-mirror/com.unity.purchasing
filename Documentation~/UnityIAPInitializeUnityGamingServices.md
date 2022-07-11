@@ -31,12 +31,12 @@ public class InitializeUnityServices : MonoBehaviour
 }
 ```
 
-### Automatic initialization
+### Automatic initialization for Codeless IAP
 
-Instead, you may enable **Unity Gaming Services** automatic initialization by checking the **Automatically initialize Unity Gaming Services** checkbox at the bottom of the **IAP Catalog** window.
+If you are using the Codeless IAP, you may instead enable **Unity Gaming Services** automatic initialization by checking the **Automatically initialize Unity Gaming Services** checkbox at the bottom of the **IAP Catalog** window.
 This ensures that **Unity Gaming Services** initializes immediately when the application starts.
 ![Enabling auto-initialization for the Unity Gaming Services through the **IAP Catalog** GUI](images/AutoInitializeUGS.png)
-To use this feature **Automatically initialize UnityPurchasing (recommended)** must be enabled.
+To use this feature **Automatically initialize UnityPurchasing (recommended)** must be enabled. If you do not see these checkboxes inside the **IAP Catalog**, it may be because you have not yet added products in the catalog window.
 
 This initializes **Unity Gaming Services** with the default `production` environment.
 This way of initializing **Unity Gaming Services** might not be compatible with all other services as they might require special initialization options.

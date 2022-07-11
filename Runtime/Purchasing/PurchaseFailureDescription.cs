@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace UnityEngine.Purchasing.Extension
@@ -14,7 +16,7 @@ namespace UnityEngine.Purchasing.Extension
         /// <param name="productId"> The id of the product. </param>
         /// <param name="reason"> The reason for the purchase failure </param>
         /// <param name="message"> The message containing details about the failed purchase. </param>
-        public PurchaseFailureDescription(string productId, PurchaseFailureReason reason, string message)
+        public PurchaseFailureDescription(string? productId, PurchaseFailureReason reason, string message)
         {
             this.productId = productId;
             this.reason = reason;
@@ -24,7 +26,7 @@ namespace UnityEngine.Purchasing.Extension
         /// <summary>
         /// The store specific product ID.
         /// </summary>
-        public string productId { get; private set; }
+        public string? productId { get; private set; }
 
         /// <summary>
         /// The reason for the failure.

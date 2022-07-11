@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 
@@ -8,46 +10,36 @@ namespace UnityEngine.Purchasing
     class GoogleQueryPurchasesService : IGoogleQueryPurchasesService
     {
         IGoogleBillingClient m_BillingClient;
-        IGoogleCachedQuerySkuDetailsService m_CachedQuerySkuDetailsService;
+        IGooglePurchaseBuilder m_PurchaseBuilder;
 
-        internal GoogleQueryPurchasesService(IGoogleBillingClient billingClient, IGoogleCachedQuerySkuDetailsService cachedQuerySkuDetailsService)
+        internal GoogleQueryPurchasesService(IGoogleBillingClient billingClient, IGooglePurchaseBuilder purchaseBuilder)
         {
             m_BillingClient = billingClient;
-            m_CachedQuerySkuDetailsService = cachedQuerySkuDetailsService;
+            m_PurchaseBuilder = purchaseBuilder;
         }
 
-        public void QueryPurchases(Action<List<GooglePurchase>> onQueryPurchaseSucceed)
+        public async Task<List<IGooglePurchase>> QueryPurchases()
         {
-            HandleGooglePurchaseResult(QueryPurchasesWithSkuType(GoogleSkuTypeEnum.Sub()), googlePurchasesInSubs =>
-            {
-                HandleGooglePurchaseResult(QueryPurchasesWithSkuType(GoogleSkuTypeEnum.InApp()), googlePurchasesInApps =>
+            var purchaseResults = await Task.WhenAll(QueryPurchasesWithSkuType(GoogleSkuTypeEnum.Sub()), QueryPurchasesWithSkuType(GoogleSkuTypeEnum.InApp()));
+            return purchaseResults.SelectMany(result => result).ToList();
+        }
+
+        Task<IEnumerable<IGooglePurchase>> QueryPurchasesWithSkuType(string skuType)
+        {
+            var taskCompletion = new TaskCompletionSource<IEnumerable<IGooglePurchase>>();
+            m_BillingClient.QueryPurchasesAsync(skuType,
+                (billingResult, purchases) =>
                 {
-                    HandleOnQueryPurchaseReceived(onQueryPurchaseSucceed, googlePurchasesInSubs, googlePurchasesInApps);
+                    var result = IsResultOk(billingResult) ? m_PurchaseBuilder.BuildPurchases(purchases) : Enumerable.Empty<IGooglePurchase>();
+                    taskCompletion.SetResult(result);
                 });
-            });
 
+            return taskCompletion.Task;
         }
 
-        static void HandleOnQueryPurchaseReceived(Action<List<GooglePurchase>> onQueryPurchaseSucceed, List<GooglePurchase> googlePurchasesInSubs, List<GooglePurchase> googlePurchasesInApps)
+        static bool IsResultOk(IGoogleBillingResult result)
         {
-            List<GooglePurchase> queriedPurchase = googlePurchasesInSubs;
-            if (googlePurchasesInApps.Count > 0)
-            {
-                queriedPurchase.AddRange(googlePurchasesInApps);
-            }
-
-            onQueryPurchaseSucceed(queriedPurchase);
-        }
-
-        GooglePurchaseResult QueryPurchasesWithSkuType(string skuType)
-        {
-            AndroidJavaObject javaPurchaseResult = m_BillingClient.QueryPurchase(skuType);
-            return new GooglePurchaseResult(javaPurchaseResult, m_CachedQuerySkuDetailsService);
-        }
-
-        void HandleGooglePurchaseResult(GooglePurchaseResult purchaseResult, Action<List<GooglePurchase>> onPurchaseResult)
-        {
-            onPurchaseResult(purchaseResult.m_ResponseCode == GoogleBillingResponseCode.Ok ? purchaseResult.m_Purchases : new List<GooglePurchase>());
+            return result.responseCode == GoogleBillingResponseCode.Ok;
         }
     }
 }

@@ -1,3 +1,8 @@
+#nullable enable
+
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing.Models
@@ -6,38 +11,35 @@ namespace UnityEngine.Purchasing.Models
     /// This is C# representation of the Java Class Purchase
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase">See more</a>
     /// </summary>
-    class GooglePurchase
+    class GooglePurchase : IGooglePurchase
     {
-        public IAndroidJavaObjectWrapper javaPurchase;
-        public int purchaseState;
-        public string sku;
-        public string orderId;
-        public string receipt;
-        public string signature;
-        public string originalJson;
-        public string purchaseToken;
+        public IAndroidJavaObjectWrapper javaPurchase { get; }
+        public int purchaseState { get; }
+        public List<string> skus { get; }
+        public string orderId { get; }
+        public string receipt { get; }
+        public string signature { get; }
+        public string originalJson { get; }
+        public string purchaseToken { get; }
 
-        internal GooglePurchase() { }
+        public string? sku => skus.FirstOrDefault();
 
-        internal GooglePurchase(IAndroidJavaObjectWrapper purchase, AndroidJavaObject skuDetails)
+        internal GooglePurchase(IAndroidJavaObjectWrapper purchase, IEnumerable<IAndroidJavaObjectWrapper> skuDetails)
         {
-            if (purchase != null)
-            {
-                javaPurchase = purchase;
-                purchaseState = purchase.Call<int>("getPurchaseState");
-                sku = purchase.Call<string>("getSku");
-                orderId = purchase.Call<string>("getOrderId");
-                originalJson = purchase.Call<string>("getOriginalJson");
-                signature = purchase.Call<string>("getSignature");
-                purchaseToken = purchase.Call<string>("getPurchaseToken");
-                string encodedReceipt = GoogleReceiptEncoder.EncodeReceipt(
-                    purchaseToken,
-                    originalJson,
-                    signature,
-                    skuDetails.Call<string>("getOriginalJson")
-                );
-                receipt = encodedReceipt;
-            }
+            javaPurchase = purchase;
+            purchaseState = purchase.Call<int>("getPurchaseState");
+            skus = purchase.Call<AndroidJavaObject>("getSkus").Enumerate<string>().ToList();
+            orderId = purchase.Call<string>("getOrderId");
+            originalJson = purchase.Call<string>("getOriginalJson");
+            signature = purchase.Call<string>("getSignature");
+            purchaseToken = purchase.Call<string>("getPurchaseToken");
+
+            var skuDetailsJson = skuDetails.Select(skuDetail => skuDetail.Call<string>("getOriginalJson")).ToList();
+            receipt = GoogleReceiptEncoder.EncodeReceipt(
+                originalJson,
+                signature,
+                skuDetailsJson
+            );
         }
 
         public virtual bool IsAcknowledged()

@@ -12,22 +12,18 @@ namespace UnityEngine.Purchasing
     {
         const string k_AndroidAcknowledgePurchaseResponseListenerClassName = "com.android.billingclient.api.AcknowledgePurchaseResponseListener";
 
-        Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> m_OnAcknowledgePurchaseResponse;
+        Action<IGoogleBillingResult> m_OnAcknowledgePurchaseResponse;
 
-        ProductDefinition m_Product;
-        GooglePurchase m_Purchase;
-        internal GoogleAcknowledgePurchaseListener(ProductDefinition product, GooglePurchase purchase, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> onAcknowledgePurchaseResponseAction)
+        internal GoogleAcknowledgePurchaseListener(Action<IGoogleBillingResult> onAcknowledgePurchaseResponseAction)
             : base(k_AndroidAcknowledgePurchaseResponseListenerClassName)
         {
-            m_Product = product;
-            m_Purchase = purchase;
             m_OnAcknowledgePurchaseResponse = onAcknowledgePurchaseResponseAction;
         }
 
         [Preserve]
         void onAcknowledgePurchaseResponse(AndroidJavaObject billingResult)
         {
-            m_OnAcknowledgePurchaseResponse(m_Product, m_Purchase, new GoogleBillingResult(billingResult));
+            m_OnAcknowledgePurchaseResponse(new GoogleBillingResult(billingResult));
         }
     }
 }

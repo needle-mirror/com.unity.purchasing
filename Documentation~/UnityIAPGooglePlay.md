@@ -3,7 +3,7 @@
 Consumables
 -----------
 
-Unity IAP uses V3 of Google's Billing API, which features the concept of consumable products and explicit consumption API calls.
+Unity IAP uses V4 of Google's Billing API, which features the concept of consumable products and explicit consumption API calls.
 
 When you create consumable products in the Google Publisher dashboard, set them to be 'Managed' products. Unity IAP will take care of consuming them after your application has confirmed a purchase.
 

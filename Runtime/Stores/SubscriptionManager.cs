@@ -2,6 +2,7 @@ using System;
 using System.Xml;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Security;
 using UnityEngine;
@@ -287,10 +288,9 @@ namespace UnityEngine.Purchasing
         private SubscriptionInfo getGooglePlayStoreSubInfo(string payload)
         {
             var payload_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(payload);
-            var validSkuDetailsKey = payload_wrapper.TryGetValue("skuDetails", out var skuDetailsObject);
+            payload_wrapper.TryGetValue("skuDetails", out var skuDetailsObject);
 
-            string skuDetails = null;
-            if (validSkuDetailsKey) skuDetails = skuDetailsObject as string;
+            var skuDetails = (skuDetailsObject as List<object>)?.Select(obj => obj as string);
 
             var purchaseHistorySupported = false;
 
@@ -351,11 +351,12 @@ namespace UnityEngine.Purchasing
                 }
             }
 
-            return new SubscriptionInfo(skuDetails, isAutoRenewing, purchaseDate, isFreeTrial, hasIntroductoryPrice,
+            var skuDetail = skuDetails.First();
+
+
+            return new SubscriptionInfo(skuDetail, isAutoRenewing, purchaseDate, isFreeTrial, hasIntroductoryPrice,
                 purchaseHistorySupported, updateMetadata);
         }
-
-
     }
 
     /// <summary>

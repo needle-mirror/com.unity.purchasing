@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing.Interfaces
 {
@@ -9,11 +10,12 @@ namespace UnityEngine.Purchasing.Interfaces
         void StartConnection(IBillingClientStateListener billingClientStateListener);
         void EndConnection();
         bool IsReady();
-        AndroidJavaObject QueryPurchase(string skuType);
+        GoogleBillingConnectionState GetConnectionState();
+        void QueryPurchasesAsync(string skuType, Action<IGoogleBillingResult, IEnumerable<IAndroidJavaObjectWrapper>> onQueryPurchasesResponse);
         void QuerySkuDetailsAsync(List<string> skus, string type, Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction);
-        AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldSku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode);
-        void ConsumeAsync(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> onConsume);
-        void AcknowledgePurchase(string purchaseToken, ProductDefinition product, GooglePurchase googlePurchase, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> onAcknowledge);
+        AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode);
+        void ConsumeAsync(string purchaseToken, Action<IGoogleBillingResult> onConsume);
+        void AcknowledgePurchase(string purchaseToken, Action<IGoogleBillingResult> onAcknowledge);
         void SetObfuscationAccountId(string obfuscationAccountId);
         void SetObfuscationProfileId(string obfuscationProfileId);
         void LaunchPriceChangeConfirmationFlow(AndroidJavaObject skuDetails, GooglePriceChangeConfirmationListener listener);

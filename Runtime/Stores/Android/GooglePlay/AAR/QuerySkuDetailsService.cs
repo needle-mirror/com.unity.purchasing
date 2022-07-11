@@ -52,7 +52,7 @@ namespace UnityEngine.Purchasing
 
             void OnActionRetry()
             {
-                m_GoogleProductCallback.NotifyQueryProductDetailsFailed(retryCount++);
+                m_GoogleProductCallback.NotifyQueryProductDetailsFailed(++retryCount);
             }
         }
 

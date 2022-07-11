@@ -1,3 +1,6 @@
+#nullable enable
+
+using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 
@@ -5,8 +8,14 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayPurchaseCallback : IGooglePurchaseCallback
     {
-        IStoreCallback m_StoreCallback;
-        IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
+        IStoreCallback? m_StoreCallback;
+        IGooglePlayConfigurationInternal? m_GooglePlayConfigurationInternal;
+        IUtil m_Util;
+
+        public GooglePlayPurchaseCallback(IUtil util)
+        {
+            m_Util = util;
+        }
 
         public void SetStoreCallback(IStoreCallback storeCallback)
         {
@@ -18,9 +27,9 @@ namespace UnityEngine.Purchasing
             m_GooglePlayConfigurationInternal = configuration;
         }
 
-        public void OnPurchaseSuccessful(string sku, string receipt, string purchaseToken)
+        public void OnPurchaseSuccessful(IGooglePurchase purchase, string receipt, string purchaseToken)
         {
-            m_StoreCallback?.OnPurchaseSucceeded(sku, receipt, purchaseToken);
+            m_StoreCallback?.OnPurchaseSucceeded(purchase.sku, receipt, purchaseToken);
         }
 
         public void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription)
@@ -28,14 +37,19 @@ namespace UnityEngine.Purchasing
             m_StoreCallback?.OnPurchaseFailed(purchaseFailureDescription);
         }
 
-        public void NotifyDeferredPurchase(string sku, string receipt, string purchaseToken)
+        public void NotifyDeferredPurchase(IGooglePurchase purchase, string receipt, string purchaseToken)
         {
-            m_GooglePlayConfigurationInternal?.NotifyDeferredPurchase(m_StoreCallback, sku, receipt, purchaseToken);
+            m_Util.RunOnMainThread(() =>
+                m_GooglePlayConfigurationInternal?.NotifyDeferredPurchase(m_StoreCallback, purchase, receipt,
+                    purchaseToken));
+
         }
 
         public void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku)
         {
-            m_GooglePlayConfigurationInternal?.NotifyDeferredProrationUpgradeDowngradeSubscription(m_StoreCallback, sku);
+            m_Util.RunOnMainThread(() =>
+                m_GooglePlayConfigurationInternal?.NotifyDeferredProrationUpgradeDowngradeSubscription(m_StoreCallback,
+                    sku));
         }
     }
 }

@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 
@@ -9,33 +12,49 @@ namespace UnityEngine.Purchasing
     {
         IGoogleBillingClient m_BillingClient;
         IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
-        internal GoogleFinishTransactionService(IGoogleBillingClient billingClient, IGoogleQueryPurchasesService googleQueryPurchasesService)
+
+        internal GoogleFinishTransactionService(IGoogleBillingClient billingClient,
+            IGoogleQueryPurchasesService googleQueryPurchasesService)
         {
             m_BillingClient = billingClient;
             m_GoogleQueryPurchasesService = googleQueryPurchasesService;
         }
 
-        public void FinishTransaction(ProductDefinition product, string purchaseToken, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult, string> onConsume, Action<ProductDefinition, GooglePurchase, IGoogleBillingResult> onAcknowledge)
+        public async void FinishTransaction(ProductDefinition product, string purchaseToken,
+            Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished)
         {
-            m_GoogleQueryPurchasesService.QueryPurchases(purchases =>
+            try
             {
-                foreach (var purchase in purchases.Where(PurchaseToFinishTransaction(product)))
+                var purchase = await FindPurchase(purchaseToken);
+                if (purchase.IsPurchased())
                 {
-                    if (product.type == ProductType.Consumable)
-                    {
-                        m_BillingClient.ConsumeAsync(purchaseToken, product, purchase, onConsume);
-                    }
-                    else if (!purchase.IsAcknowledged())
-                    {
-                        m_BillingClient.AcknowledgePurchase(purchaseToken, product, purchase, onAcknowledge);
-                    }
+                    FinishTransactionForPurchase(purchase, product, purchaseToken, onTransactionFinished);
                 }
-            });
+            }
+            catch (InvalidOperationException) { }
         }
 
-        static Func<GooglePurchase, bool> PurchaseToFinishTransaction(ProductDefinition product)
+        async Task<IGooglePurchase> FindPurchase(string purchaseToken)
         {
-            return purchase => purchase != null && purchase.sku == product.storeSpecificId && purchase.IsPurchased();
+            var purchases = await m_GoogleQueryPurchasesService.QueryPurchases();
+            var purchaseToFinish =
+                purchases.NonNull().First(purchase => purchase.purchaseToken == purchaseToken);
+
+            return purchaseToFinish;
+        }
+
+        private void FinishTransactionForPurchase(IGooglePurchase purchase, ProductDefinition product,
+            string purchaseToken,
+            Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished)
+        {
+            if (product.type == ProductType.Consumable)
+            {
+                m_BillingClient.ConsumeAsync(purchaseToken, result => onTransactionFinished(result, purchase));
+            }
+            else if (!purchase.IsAcknowledged())
+            {
+                m_BillingClient.AcknowledgePurchase(purchaseToken, result => onTransactionFinished(result, purchase));
+            }
         }
     }
 }

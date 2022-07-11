@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing.Interfaces
 {
@@ -6,9 +8,9 @@ namespace UnityEngine.Purchasing.Interfaces
     {
         void SetStoreCallback(IStoreCallback storeCallback);
         void SetStoreConfiguration(IGooglePlayConfigurationInternal configuration);
-        void OnPurchaseSuccessful(string sku, string receipt, string purchaseToken);
+        void OnPurchaseSuccessful(IGooglePurchase purchase, string receipt, string purchaseToken);
         void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription);
-        void NotifyDeferredPurchase(string sku, string receipt, string purchaseToken);
+        void NotifyDeferredPurchase(IGooglePurchase purchase, string receipt, string purchaseToken);
         void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku);
     }
 }

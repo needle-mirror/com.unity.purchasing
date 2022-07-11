@@ -10,12 +10,11 @@ namespace UnityEngine.Purchasing
     class GoogleFetchPurchases : IGoogleFetchPurchases
     {
         IGooglePlayStoreService m_GooglePlayStoreService;
-        IGooglePlayStoreFinishTransactionService m_TransactionService;
         IStoreCallback m_StoreCallback;
-        internal GoogleFetchPurchases(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService transactionService)
+
+        internal GoogleFetchPurchases(IGooglePlayStoreService googlePlayStoreService)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
-            m_TransactionService = transactionService;
         }
 
         public void SetStoreCallback(IStoreCallback storeCallback)
@@ -37,48 +36,31 @@ namespace UnityEngine.Purchasing
                 });
         }
 
-        List<Product> FillProductsWithPurchases(IEnumerable<GooglePurchase> purchases)
+        List<Product> FillProductsWithPurchases(IEnumerable<IGooglePurchase> purchases)
         {
-            var purchasedProducts = new List<Product>();
-
-            foreach (var purchase in purchases.Where(purchase => purchase != null).ToList())
-            {
-                var product = m_StoreCallback?.FindProductById(purchase.sku);
-                if (product != null)
-                {
-                    var updatedProduct = new Product(product.definition, product.metadata, purchase.receipt)
-                    {
-                        transactionID = purchase.purchaseToken
-                    };
-                    purchasedProducts.Add(updatedProduct);
-                }
-            }
-
-            return purchasedProducts;
+            return purchases.SelectMany(BuildProductsFromPurchase).ToList();
         }
 
-        void OnFetchedPurchase(List<GooglePurchase> purchases)
+        IEnumerable<Product> BuildProductsFromPurchase(IGooglePurchase purchase)
         {
-            if (purchases != null)
-            {
-                var purchasedProducts = FillProductsWithPurchases(purchases);
-                if (purchasedProducts.Count > 0)
-                {
-                    m_StoreCallback?.OnAllPurchasesRetrieved(purchasedProducts);
-                }
-            }
+            var products = purchase?.skus?.Select(sku => m_StoreCallback?.FindProductById(sku)).NonNull();
+            return products?.Select(product => CompleteProductInfoWithPurchase(product, purchase));
         }
 
-        void FinishTransaction(GooglePurchase purchase)
+        static Product CompleteProductInfoWithPurchase(Product product, IGooglePurchase purchase)
         {
-            Product product = m_StoreCallback.FindProductById(purchase.sku);
-            if (product != null)
+            return new Product(product.definition, product.metadata, purchase.receipt)
             {
-                m_TransactionService.FinishTransaction(product.definition, purchase.purchaseToken);
-            }
-            else
+                transactionID = purchase.purchaseToken,
+            };
+        }
+
+        void OnFetchedPurchase(List<IGooglePurchase> purchases)
+        {
+            var purchasedProducts = FillProductsWithPurchases(purchases);
+            if (purchasedProducts.Any())
             {
-                m_StoreCallback.OnPurchaseFailed(new PurchaseFailureDescription(purchase.sku, PurchaseFailureReason.ProductUnavailable, "Product was not found but was purchased"));
+                m_StoreCallback?.OnAllPurchasesRetrieved(purchasedProducts);
             }
         }
     }

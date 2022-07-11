@@ -37,12 +37,8 @@ namespace UnityEngine.Purchasing
         {
             Product product = m_StoreCallback.FindProductById(newSku);
             Product oldProduct = m_StoreCallback.FindProductById(oldSku);
-            if (product != null && product.definition.type == ProductType.Subscription &&
-                oldProduct != null && oldProduct.definition.type == ProductType.Subscription)
-            {
-                m_GooglePlayStoreService.Purchase(product.definition, oldProduct, desiredProrationMode);
-            }
-            else
+            if (product == null || product.definition.type != ProductType.Subscription ||
+                oldProduct == null || oldProduct.definition.type != ProductType.Subscription)
             {
                 m_StoreCallback?.OnPurchaseFailed(
                     new PurchaseFailureDescription(
@@ -50,32 +46,23 @@ namespace UnityEngine.Purchasing
                         PurchaseFailureReason.ProductUnavailable,
                         "Please verify that the products are subscriptions and are not null."));
             }
+            else if (string.IsNullOrEmpty(oldProduct.transactionID))
+            {
+                m_StoreCallback?.OnPurchaseFailed(
+                    new PurchaseFailureDescription(
+                        newSku ?? "",
+                        PurchaseFailureReason.ProductUnavailable,
+                        "Invalid transaction id for old product: " + oldProduct.definition.id));
+            }
+            else
+            {
+                m_GooglePlayStoreService.Purchase(product.definition, oldProduct, desiredProrationMode);
+            }
         }
 
         public virtual void RestoreTransactions(Action<bool> callback)
         {
-            m_GooglePlayStoreService.FetchPurchases(purchase =>
-            {
-                if (purchase != null)
-                {
-                    callback(true);
-                }
-            });
-        }
-
-        public void FinishAdditionalTransaction(string productId, string transactionId)
-        {
-            Product product = m_StoreCallback.FindProductById(productId);
-            if (product != null && transactionId != null)
-            {
-                m_GooglePlayStoreFinishTransactionService.FinishTransaction(product.definition, transactionId);
-            }
-            else
-            {
-                m_StoreCallback?.OnPurchaseFailed(
-                    new PurchaseFailureDescription(productId ?? "", PurchaseFailureReason.ProductUnavailable,
-                        "Please make the product id and transaction id is not null"));
-            }
+            m_GooglePlayStoreService.FetchPurchases(_ => { callback(true); });
         }
 
         public void ConfirmSubscriptionPriceChange(string productId, Action<bool> callback)

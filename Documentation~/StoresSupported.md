@@ -5,7 +5,7 @@ The following is the full list of stores supported by the In-App Purchasing pack
 
 |Store Name|Platform|Version|Website|
 |---|---|---|---|
-|Google Billing|Android|3.0.3|[Google Release Notes](https://developer.android.com/google/play/billing/release-notes)|
+|Google Billing|Android|4.0.0|[Google Release Notes](https://developer.android.com/google/play/billing/release-notes)|
 |Amazon Appstore|Android|2.0.76|[Amazon SDK](https://developer.amazon.com/docs/in-app-purchasing/iap-get-started.html#download-the-iap-sdk)|
 |Samsung|Android|Removed use [UDP](https://unity.com/products/unity-distribution-portal) instead| [UDP](https://unity.com/products/unity-distribution-portal)|
 |Unity Distribution Portal|Android|2.0.0 and higher|[UDP](https://unity.com/products/unity-distribution-portal)|

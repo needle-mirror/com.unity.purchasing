@@ -1,13 +1,11 @@
+#nullable enable
+
 namespace UnityEngine.Purchasing.Interfaces
 {
     interface IGoogleLastKnownProductService
     {
-        string GetLastKnownProductId();
-
-        void SetLastKnownProductId(string lastKnownProductId);
-
-        GooglePlayProrationMode? GetLastKnownProrationMode();
-
-        void SetLastKnownProrationMode(GooglePlayProrationMode? lastKnownProrationMode);
+        string? LastKnownOldProductId { get; set; }
+        string? LastKnownProductId { get; set; }
+        GooglePlayProrationMode? LastKnownProrationMode { get; set; }
     }
 }

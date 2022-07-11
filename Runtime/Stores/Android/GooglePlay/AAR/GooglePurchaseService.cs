@@ -1,3 +1,5 @@
+#nullable enable
+
 using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -18,7 +20,7 @@ namespace UnityEngine.Purchasing
             m_QuerySkuDetailsService = querySkuDetailsService;
         }
 
-        public void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        public void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
             m_QuerySkuDetailsService.QueryAsyncSku(product,
                 skus =>
@@ -27,33 +29,76 @@ namespace UnityEngine.Purchasing
                 });
         }
 
-        void OnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        void OnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
-            if (skus?.Count > 0)
+            if (ValidateQuerySkuDetailsResponseParams(skus, productToBuy, oldProduct))
             {
-                AndroidJavaObject sku = skus[0];
-                VerifyAndWarnIfMoreThanOneSku(skus, sku);
-                AndroidJavaObject billingResult = m_BillingClient.LaunchBillingFlow(sku, oldProduct?.definition?.storeSpecificId, oldProduct?.transactionID, desiredProrationMode);
-                HandleBillingFlowResult(new GoogleBillingResult(billingResult), sku);
-            }
-            else
-            {
-                m_GooglePurchaseCallback.OnPurchaseFailed(
-                    new PurchaseFailureDescription(
-                        productToBuy.id,
-                        PurchaseFailureReason.ProductUnavailable,
-                        "SKU does not exist in the store."
-                    )
-                );
+                LaunchGoogleBillingFlow(skus[0], oldProduct, desiredProrationMode);
             }
         }
 
-        static void VerifyAndWarnIfMoreThanOneSku(List<AndroidJavaObject> skus, AndroidJavaObject sku)
+        bool ValidateQuerySkuDetailsResponseParams(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product? oldProduct)
         {
-            if (skus.Count > 1)
+            if (!ValidateSkus(skus))
             {
-                Debug.LogWarning(GoogleBillingStrings.getWarningMessageMoreThanOneSkuFound(sku.Call<string>("getSku")));
+                PurchaseFailedSkuNotFound(productToBuy);
+                return false;
             }
+
+            if (!ValidateOldProduct(oldProduct))
+            {
+                PurchaseFailedInvalidOldProduct(productToBuy, oldProduct);
+                return false;
+            }
+
+            return true;
+        }
+
+        bool ValidateSkus(List<AndroidJavaObject>? skus)
+        {
+            VerifyAndWarnIfMoreThanOneSku(skus);
+            return skus?.Count > 0;
+        }
+
+        static void VerifyAndWarnIfMoreThanOneSku(List<AndroidJavaObject>? skus)
+        {
+            if (skus?.Count > 1)
+            {
+                Debug.LogWarning(GoogleBillingStrings.getWarningMessageMoreThanOneSkuFound(skus[0].Call<string>("getSku")));
+            }
+        }
+
+        void PurchaseFailedSkuNotFound(ProductDefinition productToBuy)
+        {
+            m_GooglePurchaseCallback.OnPurchaseFailed(
+                new PurchaseFailureDescription(
+                    productToBuy.id,
+                    PurchaseFailureReason.ProductUnavailable,
+                    "SKU does not exist in the store."
+                )
+            );
+        }
+
+        bool ValidateOldProduct(Product? oldProduct)
+        {
+            return oldProduct?.transactionID != "";
+        }
+
+        void PurchaseFailedInvalidOldProduct(ProductDefinition productToBuy, Product? oldProduct)
+        {
+            m_GooglePurchaseCallback.OnPurchaseFailed(
+                new PurchaseFailureDescription(
+                    productToBuy.id,
+                    PurchaseFailureReason.ProductUnavailable,
+                    "Invalid transaction id for old product: " + oldProduct?.definition.id
+                )
+            );
+        }
+
+        void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        {
+            var billingResult = m_BillingClient.LaunchBillingFlow(productToPurchase, oldProduct?.transactionID, desiredProrationMode);
+            HandleBillingFlowResult(new GoogleBillingResult(billingResult), productToPurchase);
         }
 
         void HandleBillingFlowResult(IGoogleBillingResult billingResult, AndroidJavaObject sku)

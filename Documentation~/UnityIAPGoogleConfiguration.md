@@ -56,6 +56,8 @@ Now that you have uploaded our first binary, you can add the IAP products.
 
 ![50goldcoins](images/IAPGoogleImage5.png)
 
+**WARNING:** multi-quantity is not supported yet and should not be enabled.
+
 ### Test IAP
 
 Add your testers to License Testing.
