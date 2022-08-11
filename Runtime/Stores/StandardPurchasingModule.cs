@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.4.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.4.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -274,6 +274,7 @@ namespace UnityEngine.Purchasing
             var googlePlayStoreExtensions = new MetricizedGooglePlayStoreExtensions(
                 googlePlayStoreService,
                 googlePlayStoreFinishTransactionService,
+                logger,
                 telemetryDiagnostics,
                 telemetryMetrics);
 
@@ -330,6 +331,7 @@ namespace UnityEngine.Purchasing
             var finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
             var billingClientStateListener = new BillingClientStateListener();
             var priceChangeService = new GooglePriceChangeService(googleBillingClient, googleQuerySkuDetailsService);
+            var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
             var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
 
             googlePurchaseUpdatedListener.SetGoogleQueryPurchaseService(queryPurchasesService);
@@ -343,7 +345,9 @@ namespace UnityEngine.Purchasing
                 billingClientStateListener,
                 priceChangeService,
                 googleLastKnownProductService,
-                telemetryMetrics
+                telemetryDiagnostics,
+                telemetryMetrics,
+                logger
             );
         }
 

@@ -12,10 +12,9 @@
     "supportedPlatforms": [
       "Android",
       "iOS"
-    ],
-    "changelog": "### Added\n- GooglePlay - Google Play Billing Library version 4.0.0.\n  - The Multi-quantity feature is not yet supported by the IAP package and will come in a future update. **Do not enable `Multi-quantity` in the Google Play Console.**\n  - Add support for\n      the [IMMEDIATE_AND_CHARGE_FULL_PRICE](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode#IMMEDIATE_AND_CHARGE_FULL_PRICE)\n      proration mode. Use `GooglePlayProrationMode.ImmediateAndChargeFullPrice` for easy access.\n\n### Fixed\n- GooglePlay - Fix `IGooglePlayConfiguration.SetDeferredPurchaseListener`\n  and `IGooglePlayConfiguration.SetDeferredProrationUpgradeDowngradeSubscriptionListener` callbacks sometimes not being\n  called from the main thread.\n- GooglePlay - When configuring `IGooglePlayConfiguration.SetQueryProductDetailsFailedListener(Action<int> retryCount)`, the action will be invoked with retryCount starting at 1 instead of 0.\n- GooglePlay - Added a validation when upgrading/downgrading a subscription that calls `IStoreListener.OnPurchaseFailed` with `PurchaseFailureReason.ProductUnavailable` when the old transaction id is empty or null. This can occur when attempting to upgrade/downgrade a subscription that the user doesn't own."
+    ]
   },
-  "version": "4.4.0",
+  "version": "4.4.1",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,15 +33,15 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.4.0"
+    "com.unity.purchasing.tests": "4.4.1"
   },
   "upmCi": {
-    "footprint": "96eed2b3c93a18c9512177b87bbc7c736957dec9"
+    "footprint": "a69c6d1780588a2c6705495db80ad434c9e1f04e"
   },
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "94c5a447a90fc84222a89d4cffe216b3cfba7ef6"
+    "revision": "9dba5d5eda45d5841b3bcb9fadeba1b2ed5ef45b"
   },
   "samples": [
     {

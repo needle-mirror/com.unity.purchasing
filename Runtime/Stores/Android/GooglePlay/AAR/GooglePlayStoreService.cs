@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -19,22 +21,25 @@ namespace UnityEngine.Purchasing
         IBillingClientStateListener m_BillingClientStateListener;
         IQuerySkuDetailsService m_QuerySkuDetailsService;
         Queue<ProductDescriptionQuery> m_ProductsToQuery = new Queue<ProductDescriptionQuery>();
-        Queue<Action<List<IGooglePurchase>>> m_OnPurchaseSucceededQueue = new Queue<Action<List<IGooglePurchase>>>();
+        ConcurrentQueue<Action<List<IGooglePurchase>>> m_OnPurchaseSucceededQueue = new ConcurrentQueue<Action<List<IGooglePurchase>>>();
         IGooglePurchaseService m_GooglePurchaseService;
         IGoogleFinishTransactionService m_GoogleFinishTransactionService;
         IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
         IGooglePriceChangeService m_GooglePriceChangeService;
         IGoogleLastKnownProductService m_GoogleLastKnownProductService;
+        ITelemetryDiagnostics m_TelemetryDiagnostics;
+        ILogger m_Logger;
 
-        internal GooglePlayStoreService(
-            IGoogleBillingClient billingClient,
+        internal GooglePlayStoreService(IGoogleBillingClient billingClient,
             IQuerySkuDetailsService querySkuDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,
             IGoogleQueryPurchasesService queryPurchasesService,
             IBillingClientStateListener billingClientStateListener,
             IGooglePriceChangeService priceChangeService,
-            IGoogleLastKnownProductService lastKnownProductService)
+            IGoogleLastKnownProductService lastKnownProductService,
+            ITelemetryDiagnostics telemetryDiagnostics,
+            ILogger logger)
         {
             m_BillingClient = billingClient;
             m_QuerySkuDetailsService = querySkuDetailsService;
@@ -44,6 +49,8 @@ namespace UnityEngine.Purchasing
             m_GooglePriceChangeService = priceChangeService;
             m_GoogleLastKnownProductService = lastKnownProductService;
             m_BillingClientStateListener = billingClientStateListener;
+            m_TelemetryDiagnostics = telemetryDiagnostics;
+            m_Logger = logger;
 
             InitConnectionWithGooglePlay();
         }
@@ -115,8 +122,7 @@ namespace UnityEngine.Purchasing
                         }
                     default:
                         {
-                            Debug.LogErrorFormat("GooglePlayStoreService state ({0}) unrecognized, cannot process ProductDescriptionQuery",
-                                currentConnectionState);
+                            m_Logger.LogIAPError($"GooglePlayStoreService state ({currentConnectionState}) unrecognized, cannot process ProductDescriptionQuery");
                             stop = true;
                             break;
                         }
@@ -131,9 +137,8 @@ namespace UnityEngine.Purchasing
 
         protected virtual void DequeueFetchPurchases()
         {
-            while (m_OnPurchaseSucceededQueue.Count > 0)
+            while (m_OnPurchaseSucceededQueue.TryDequeue(out var onPurchaseSucceed))
             {
-                var onPurchaseSucceed = m_OnPurchaseSucceededQueue.Dequeue();
                 FetchPurchases(onPurchaseSucceed);
             }
         }
@@ -210,6 +215,24 @@ namespace UnityEngine.Purchasing
 
         public async void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed)
         {
+            try
+            {
+                await TryFetchPurchases(onQueryPurchaseSucceed);
+            }
+            catch (Exception ex)
+            {
+                m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.FetchPurchasesError, ex);
+            }
+        }
+
+        async Task TryFetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed)
+        {
+            if (onQueryPurchaseSucceed == null)
+            {
+                m_Logger.LogIAPWarning("FetchPurchases called with null callback onQueryPurchaseSucceed");
+                return;
+            }
+
             if (m_BillingClient.GetConnectionState() == GoogleBillingConnectionState.Connected)
             {
                 var purchases = await m_GoogleQueryPurchasesService.QueryPurchases();

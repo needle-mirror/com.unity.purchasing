@@ -11,15 +11,18 @@ namespace UnityEngine.Purchasing
     {
         IGooglePlayStoreService m_GooglePlayStoreService;
         IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
+        ILogger m_Logger;
         ITelemetryDiagnostics m_TelemetryDiagnostics;
         IStoreCallback m_StoreCallback;
+
         Action<Product> m_DeferredPurchaseAction;
         Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
 
-        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ITelemetryDiagnostics telemetryDiagnostics)
+        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_GooglePlayStoreFinishTransactionService = googlePlayStoreFinishTransactionService;
+            m_Logger = logger;
             m_TelemetryDiagnostics = telemetryDiagnostics;
         }
 
@@ -62,7 +65,11 @@ namespace UnityEngine.Purchasing
 
         public virtual void RestoreTransactions(Action<bool> callback)
         {
-            m_GooglePlayStoreService.FetchPurchases(_ => { callback(true); });
+            if (callback == null)
+            {
+                m_Logger.LogIAPError("RestoreTransactions called with a null callback. Please provide a callback to avoid null pointer exceptions");
+            }
+            m_GooglePlayStoreService.FetchPurchases(_ => { callback?.Invoke(true); });
         }
 
         public void ConfirmSubscriptionPriceChange(string productId, Action<bool> callback)

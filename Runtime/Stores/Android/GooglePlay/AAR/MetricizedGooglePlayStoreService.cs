@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -10,10 +12,10 @@ namespace UnityEngine.Purchasing
 {
     class MetricizedGooglePlayStoreService : GooglePlayStoreService
     {
+        ITelemetryDiagnostics m_TelemetryDiagnostics;
         ITelemetryMetricsService m_TelemetryMetricsService;
 
-        internal MetricizedGooglePlayStoreService(
-            IGoogleBillingClient billingClient,
+        internal MetricizedGooglePlayStoreService(IGoogleBillingClient billingClient,
             IQuerySkuDetailsService querySkuDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,
@@ -21,10 +23,14 @@ namespace UnityEngine.Purchasing
             IBillingClientStateListener billingClientStateListener,
             IGooglePriceChangeService priceChangeService,
             IGoogleLastKnownProductService lastKnownProductService,
-            ITelemetryMetricsService telemetryMetricsService)
+            ITelemetryDiagnostics telemetryDiagnostics,
+            ITelemetryMetricsService telemetryMetricsService,
+            ILogger logger)
             : base(billingClient, querySkuDetailsService, purchaseService, finishTransactionService,
-                queryPurchasesService, billingClientStateListener, priceChangeService, lastKnownProductService)
+                queryPurchasesService, billingClientStateListener, priceChangeService, lastKnownProductService,
+                telemetryDiagnostics, logger)
         {
+            m_TelemetryDiagnostics = telemetryDiagnostics;
             m_TelemetryMetricsService = telemetryMetricsService;
         }
 

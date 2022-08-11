@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.4.1] - 2022-08-11
+### Fixed
+- GooglePlay - Fixed NullReferenceException and ArgumentException that would rarely occur due to a concurrency issue introduced in Unity IAP 4.2.0
+- Amazon - Set android:export to true to support Android API level 31+
+
 ## [4.4.0] - 2022-07-11
 ### Added
 - GooglePlay - Google Play Billing Library version 4.0.0.

@@ -10,9 +10,9 @@ namespace UnityEngine.Purchasing
 
 
         internal MetricizedGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService,
-            IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService,
+            IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ILogger logger,
             ITelemetryDiagnostics telemetryDiagnostics, ITelemetryMetricsService telemetryMetricsService)
-            : base(googlePlayStoreService, googlePlayStoreFinishTransactionService, telemetryDiagnostics)
+            : base(googlePlayStoreService, googlePlayStoreFinishTransactionService, logger, telemetryDiagnostics)
         {
             m_TelemetryMetricsService = telemetryMetricsService;
         }

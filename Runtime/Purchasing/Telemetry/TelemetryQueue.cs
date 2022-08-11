@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 
 namespace UnityEngine.Purchasing.Telemetry
 {
     class TelemetryQueue<TTelemetryEventParams>
     {
         Action<TTelemetryEventParams> m_SendTelemetryEvent;
-        Queue<TTelemetryEventParams> m_Queue;
+        ConcurrentQueue<TTelemetryEventParams> m_Queue;
         internal const int k_maxQueueSize = 10;
 
         public TelemetryQueue(Action<TTelemetryEventParams> sendTelemetryEvent)
@@ -16,12 +16,12 @@ namespace UnityEngine.Purchasing.Telemetry
 
         internal void QueueEvent(TTelemetryEventParams telemetryEvent)
         {
-            m_Queue ??= new Queue<TTelemetryEventParams>();
+            m_Queue ??= new ConcurrentQueue<TTelemetryEventParams>();
             m_Queue.Enqueue(telemetryEvent);
 
             if (m_Queue.Count > k_maxQueueSize)
             {
-                m_Queue.Dequeue();
+                m_Queue.TryDequeue(out _);
             }
         }
 
@@ -32,11 +32,10 @@ namespace UnityEngine.Purchasing.Telemetry
                 return;
             }
 
-            foreach (var telemetryEvent in m_Queue)
+            while (m_Queue.TryDequeue(out var telemetryEvent))
             {
                 m_SendTelemetryEvent(telemetryEvent);
             }
-            m_Queue.Clear();
         }
     }
 }
