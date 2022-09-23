@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing.Telemetry
 {
     class TelemetryQueue<TTelemetryEventParams>
     {
-        Action<TTelemetryEventParams> m_SendTelemetryEvent;
+        readonly Action<TTelemetryEventParams> m_SendTelemetryEvent;
         ConcurrentQueue<TTelemetryEventParams> m_Queue;
         internal const int k_maxQueueSize = 10;
 

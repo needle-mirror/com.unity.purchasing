@@ -1,6 +1,6 @@
 using System;
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace UnityEngine.Purchasing
 {
@@ -27,27 +27,15 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public PayoutType type
         {
-            get
-            {
-                return m_Type;
-            }
-            private set
-            {
-                m_Type = value;
-            }
+            get => m_Type;
+            private set => m_Type = value;
         }
 
 
         /// <summary>
         /// Type of the payout as a string
         /// </summary>
-        public string typeString
-        {
-            get
-            {
-                return m_Type.ToString();
-            }
-        }
+        public string typeString => m_Type.ToString();
 
 
         /// <summary>
@@ -60,14 +48,14 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public string subtype
         {
-            get
-            {
-                return m_Subtype;
-            }
+            get => m_Subtype;
             private set
             {
                 if (value.Length > MaxSubtypeLength)
+                {
                     throw new ArgumentException(string.Format("subtype cannot be longer than {0}", MaxSubtypeLength));
+                }
+
                 m_Subtype = value;
             }
         }
@@ -77,14 +65,8 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public double quantity
         {
-            get
-            {
-                return m_Quantity;
-            }
-            private set
-            {
-                m_Quantity = value;
-            }
+            get => m_Quantity;
+            private set => m_Quantity = value;
         }
 
         /// <summary>
@@ -97,14 +79,14 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public string data
         {
-            get
-            {
-                return m_Data;
-            }
+            get => m_Data;
             private set
             {
                 if (value.Length > MaxDataLength)
+                {
                     throw new ArgumentException(string.Format("data cannot be longer than {0}", MaxDataLength));
+                }
+
                 m_Data = value;
             }
         }
@@ -135,11 +117,13 @@ namespace UnityEngine.Purchasing
         /// <param name="data"> The payout data. </param>
         public PayoutDefinition(string typeString, string subtype, double quantity, string data)
         {
-            PayoutType t = PayoutType.Other;
+            var t = PayoutType.Other;
             if (Enum.IsDefined(typeof(PayoutType), typeString))
+            {
                 t = (PayoutType)Enum.Parse(typeof(PayoutType), typeString);
+            }
 
-            this.type = t;
+            type = t;
             this.subtype = subtype;
             this.quantity = quantity;
             this.data = data;

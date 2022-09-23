@@ -8,9 +8,10 @@ namespace UnityEngine.Purchasing
     {
         public static AnalyticsTransactionReceipt ToReceiptAndSignature(this UnifiedReceipt receipt)
         {
-            var analyticsReceipt = new AnalyticsTransactionReceipt();
-
-            analyticsReceipt.transactionServer = receipt.ToTransactionServer();
+            var analyticsReceipt = new AnalyticsTransactionReceipt
+            {
+                transactionServer = receipt.ToTransactionServer()
+            };
 
             if (analyticsReceipt.transactionServer == TransactionServer.GOOGLE)
             {
@@ -32,15 +33,26 @@ namespace UnityEngine.Purchasing
         static TransactionServer? ToTransactionServer(this UnifiedReceipt receipt)
         {
             if (receipt.Store == null)
+            {
                 return null;
+            }
 
             var store = receipt.Store.ToLower();
 
-            if (store.Contains("mac") || store.Contains("apple")) return TransactionServer.APPLE;
+            if (store.Contains("mac") || store.Contains("apple"))
+            {
+                return TransactionServer.APPLE;
+            }
 
-            if (store.Contains("google")) return TransactionServer.GOOGLE;
+            if (store.Contains("google"))
+            {
+                return TransactionServer.GOOGLE;
+            }
 
-            if (store.Contains("amazon")) return TransactionServer.AMAZON;
+            if (store.Contains("amazon"))
+            {
+                return TransactionServer.AMAZON;
+            }
 
             return null;
         }

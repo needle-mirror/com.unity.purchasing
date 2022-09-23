@@ -17,12 +17,11 @@ namespace UnityEngine.Purchasing
     class GooglePurchaseUpdatedListener : AndroidJavaProxy, IGooglePurchaseUpdatedListener
     {
         const string k_AndroidPurchaseListenerClassName = "com.android.billingclient.api.PurchasesUpdatedListener";
-
-        IGoogleLastKnownProductService m_LastKnownProductService;
-        IGooglePurchaseCallback m_GooglePurchaseCallback;
-        IGooglePurchaseBuilder m_PurchaseBuilder;
-        IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
-        IGooglePurchaseStateEnumProvider m_GooglePurchaseStateEnumProvider;
+        readonly IGoogleLastKnownProductService m_LastKnownProductService;
+        readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
+        readonly IGooglePurchaseBuilder m_PurchaseBuilder;
+        readonly IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
+        readonly IGooglePurchaseStateEnumProvider m_GooglePurchaseStateEnumProvider;
         IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
 
         internal GooglePurchaseUpdatedListener(IGoogleLastKnownProductService googleLastKnownProductService,

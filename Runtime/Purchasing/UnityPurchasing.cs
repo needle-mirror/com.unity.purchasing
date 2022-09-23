@@ -52,7 +52,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public static void ClearTransactionLog()
         {
-            var log = new TransactionLog(UnityEngine.Debug.unityLogger, Application.persistentDataPath);
+            var log = new TransactionLog(Debug.unityLogger, Application.persistentDataPath);
             log.Clear();
         }
 

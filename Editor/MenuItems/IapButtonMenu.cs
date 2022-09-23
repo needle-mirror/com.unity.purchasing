@@ -33,11 +33,11 @@ namespace UnityEditor.Purchasing
 
         static void CreateUnityIAPButtonInternal()
         {
-            GameObject buttonObject = CreateButtonObject();
+            var buttonObject = CreateButtonObject();
 
             if (buttonObject)
             {
-                IAPButton iapButton = buttonObject.AddComponent<IAPButton>();
+                var iapButton = buttonObject.AddComponent<IAPButton>();
 
                 if (iapButton != null)
                 {

@@ -16,7 +16,10 @@ namespace UnityEditor.Purchasing
             set
             {
                 m_Container = value;
-                if (m_Container != null) m_Container.onGUIHandler = OnGUI;
+                if (m_Container != null)
+                {
+                    m_Container.onGUIHandler = OnGUI;
+                }
             }
         }
 

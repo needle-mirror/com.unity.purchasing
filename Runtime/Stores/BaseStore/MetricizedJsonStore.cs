@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing
 {
     class MetricizedJsonStore : JSONStore
     {
-        ITelemetryMetricsService m_TelemetryMetricsService;
+        readonly ITelemetryMetricsService m_TelemetryMetricsService;
 
         public MetricizedJsonStore(ITelemetryMetricsService telemetryMetricsService)
         {

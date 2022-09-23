@@ -12,8 +12,8 @@ namespace UnityEditor.Purchasing
     /// </summary>
     class SimpleStateMachine<T>
     {
-        HashSet<T> m_Events = new HashSet<T>();
-        Dictionary<string, State> m_StateByName = new Dictionary<string, State>();
+        readonly HashSet<T> m_Events = new HashSet<T>();
+        readonly Dictionary<string, State> m_StateByName = new Dictionary<string, State>();
         bool m_Initialized;
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace UnityEditor.Purchasing
 
         public bool EventExists(T simpleStateMachineEvent)
         {
-            foreach (T knownEvent in m_Events)
+            foreach (var knownEvent in m_Events)
             {
                 if (knownEvent.Equals(simpleStateMachineEvent))
                 {
@@ -164,7 +164,7 @@ namespace UnityEditor.Purchasing
         /// </summary>
         internal class State
         {
-            List<ActionForEvent> m_ActionForEvent = new List<ActionForEvent>();
+            readonly List<ActionForEvent> m_ActionForEvent = new List<ActionForEvent>();
 
             /// <summary>
             /// Access to the state machine. Mostly to GetStateByName when transitioning from one state to another

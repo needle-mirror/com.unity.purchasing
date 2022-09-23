@@ -19,18 +19,16 @@ namespace UnityEditor.Purchasing
 
         const string k_GooglePlayKeyBtnUpdateLabel = "Update";
         const string k_GooglePlayKeyBtnVerifyLabel = "Verify";
-
-        GoogleConfigurationData m_GooglePlayDataRef;
-        GoogleConfigurationWebRequests m_WebRequests;
+        readonly GoogleConfigurationData m_GooglePlayDataRef;
+        readonly GoogleConfigurationWebRequests m_WebRequests;
 
         VisualElement m_ConfigurationBlock;
-
-        GoogleObfuscatorSection m_ObfuscatorSection;
+        readonly GoogleObfuscatorSection m_ObfuscatorSection;
 
         internal GooglePlayConfigurationSettingsBlock()
         {
             m_GooglePlayDataRef = GoogleConfigService.Instance().GoogleConfigData;
-            m_WebRequests = new GoogleConfigurationWebRequests(m_GooglePlayDataRef, this.OnGetGooglePlayKey, this.OnUpdateGooglePlayKey);
+            m_WebRequests = new GoogleConfigurationWebRequests(m_GooglePlayDataRef, OnGetGooglePlayKey, OnUpdateGooglePlayKey);
 
             m_ObfuscatorSection = new GoogleObfuscatorSection(m_GooglePlayDataRef);
         }
@@ -115,14 +113,9 @@ namespace UnityEditor.Purchasing
             var updateGooglePlayKeyBtn = m_ConfigurationBlock.Q<Button>(k_UpdateGooglePlayKeyBtn);
             if (updateGooglePlayKeyBtn != null)
             {
-                if (GetTrackingKeyState() == GooglePlayRevenueTrackingKeyState.Verified)
-                {
-                    updateGooglePlayKeyBtn.text = k_GooglePlayKeyBtnUpdateLabel;
-                }
-                else
-                {
-                    updateGooglePlayKeyBtn.text = k_GooglePlayKeyBtnVerifyLabel;
-                }
+                updateGooglePlayKeyBtn.text = GetTrackingKeyState() == GooglePlayRevenueTrackingKeyState.Verified
+                    ? k_GooglePlayKeyBtnUpdateLabel
+                    : k_GooglePlayKeyBtnVerifyLabel;
             }
         }
 
@@ -136,14 +129,7 @@ namespace UnityEditor.Purchasing
             var verifiedMode = m_ConfigurationBlock.Q(k_VerifiedMode);
             if (verifiedMode != null)
             {
-                if (GetTrackingKeyState() == GooglePlayRevenueTrackingKeyState.Verified)
-                {
-                    verifiedMode.style.display = DisplayStyle.Flex;
-                }
-                else
-                {
-                    verifiedMode.style.display = DisplayStyle.None;
-                }
+                verifiedMode.style.display = GetTrackingKeyState() == GooglePlayRevenueTrackingKeyState.Verified ? DisplayStyle.Flex : (StyleEnum<DisplayStyle>)DisplayStyle.None;
             }
         }
 

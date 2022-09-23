@@ -1,9 +1,10 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
-using UnityEngine.Purchasing.Extension;
 using System.Text;
+using Stores.Util;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
@@ -26,7 +27,7 @@ namespace UnityEngine.Purchasing
                         foreach (var controllerProduct in unity.products.all)
                         {
                             // Ensure owned products are excluded from list (except when consumable)
-                            bool isProductOwned = false;
+                            var isProductOwned = false;
                             if (controllerProduct.definition.type != ProductType.Consumable)
                             {
                                 if (controllerProduct.hasReceipt || !String.IsNullOrEmpty(controllerProduct.transactionID))
@@ -60,6 +61,8 @@ namespace UnityEngine.Purchasing
 
         protected ILogger m_Logger;
 
+        protected JsonProductDescriptionsDeserializer m_ProductDescriptionsDeserializer;
+
         // ITransactionHistoryExtensions stuff
         //
         // Enhanced error information
@@ -73,11 +76,12 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public JSONStore()
         {
+            m_ProductDescriptionsDeserializer = new JsonProductDescriptionsDeserializer();
         }
 
         public void SetNativeStore(INativeStore native)
         {
-            this.m_Store = native;
+            m_Store = native;
         }
 
         void IStoreInternal.SetModule(StandardPurchasingModule module)
@@ -86,20 +90,13 @@ namespace UnityEngine.Purchasing
             {
                 return;
             }
-            this.m_Module = module;
-            if (module.logger != null)
-            {
-                this.m_Logger = module.logger;
-            }
-            else
-            {
-                this.m_Logger = UnityEngine.Debug.unityLogger;
-            }
+            m_Module = module;
+            m_Logger = module.logger ?? Debug.unityLogger;
         }
 
         public override void Initialize(IStoreCallback callback)
         {
-            this.unity = callback;
+            unity = callback;
 
             if (m_Module != null)
             {
@@ -141,12 +138,12 @@ namespace UnityEngine.Purchasing
             m_Store.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
-        public override void Purchase(UnityEngine.Purchasing.ProductDefinition product, string developerPayload)
+        public override void Purchase(ProductDefinition product, string developerPayload)
         {
             m_Store.Purchase(JSONSerializer.SerializeProductDef(product), developerPayload);
         }
 
-        public override void FinishTransaction(UnityEngine.Purchasing.ProductDefinition product, string transactionId)
+        public override void FinishTransaction(ProductDefinition product, string transactionId)
         {
             // Product definitions may be null if a store tells Unity IAP about an unknown product;
             // Unity IAP will not have a corresponding definition but will still finish the transaction.
@@ -163,7 +160,7 @@ namespace UnityEngine.Purchasing
         public virtual void OnProductsRetrieved(string json)
         {
             // NB: AppleStoreImpl overrides this completely and does not call the base.
-            unity.OnProductsRetrieved(JSONSerializer.DeserializeProductDescriptions(json));
+            unity.OnProductsRetrieved(m_ProductDescriptionsDeserializer.DeserializeProductDescriptions(json));
         }
 
         public virtual void OnPurchaseSucceeded(string id, string receipt, string transactionID)
@@ -206,7 +203,7 @@ namespace UnityEngine.Purchasing
             var purchaseFailureDictionary = MiniJson.JsonDecode(json) as Dictionary<string, object>;
             if (purchaseFailureDictionary != null && purchaseFailureDictionary.ContainsKey(k_StoreSpecificErrorCodeKey) && Enum.IsDefined(typeof(StoreSpecificPurchaseErrorCode), (string)purchaseFailureDictionary[k_StoreSpecificErrorCodeKey]))
             {
-                string storeSpecificErrorCodeString = (string)purchaseFailureDictionary[k_StoreSpecificErrorCodeKey];
+                var storeSpecificErrorCodeString = (string)purchaseFailureDictionary[k_StoreSpecificErrorCodeKey];
                 return (StoreSpecificPurchaseErrorCode)Enum.Parse(typeof(StoreSpecificPurchaseErrorCode),
                     storeSpecificErrorCodeString);
             }

@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing
 {
     class GoogleFetchPurchases : IGoogleFetchPurchases
     {
-        IGooglePlayStoreService m_GooglePlayStoreService;
+        readonly IGooglePlayStoreService m_GooglePlayStoreService;
         IStoreCallback m_StoreCallback;
 
         internal GoogleFetchPurchases(IGooglePlayStoreService googlePlayStoreService)

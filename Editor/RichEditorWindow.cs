@@ -17,10 +17,10 @@ namespace UnityEditor.Purchasing
 
         internal void GUILink(string linkText, string url)
         {
-            m_LightLinkIcon = m_LightLinkIcon ?? AssetDatabase.LoadAssetAtPath<Texture>(kLightLinkIconPath);
-            m_DarkLinkIcon = m_DarkLinkIcon ?? AssetDatabase.LoadAssetAtPath<Texture>(kDarkLinkIconPath);
+            m_LightLinkIcon ??= AssetDatabase.LoadAssetAtPath<Texture>(kLightLinkIconPath);
+            m_DarkLinkIcon ??= AssetDatabase.LoadAssetAtPath<Texture>(kDarkLinkIconPath);
 
-            m_LinkStyle = m_LinkStyle ?? new GUIStyle();
+            m_LinkStyle ??= new GUIStyle();
             m_LinkStyle.normal.textColor = EditorGUIUtility.isProSkin ? Color.cyan : Color.blue;
             m_LinkStyle.contentOffset = new Vector2(6, 0); // Indent like other labels
 
@@ -31,14 +31,18 @@ namespace UnityEditor.Purchasing
             var linkRect = GUILayoutUtility.GetLastRect();
 
             if (linkIcon != null)
+            {
                 GUI.Label(new Rect(linkSize.x, linkRect.y, linkRect.height, linkRect.height), linkIcon);
+            }
             else
             {
                 Debug.LogWarning("Cannot get icon: " + kLightLinkIconPath);
             }
 
             if (Event.current.type == EventType.MouseUp && linkRect.Contains(Event.current.mousePosition))
+            {
                 Application.OpenURL(url);
+            }
         }
 
     }

@@ -33,7 +33,10 @@ namespace UnityEngine.Purchasing
         public bool HasRecordOf(string transactionID)
         {
             if (string.IsNullOrEmpty(transactionID) || string.IsNullOrEmpty(persistentDataPath))
+            {
                 return false;
+            }
+
             return Directory.Exists(GetRecordPath(transactionID));
         }
 
@@ -68,15 +71,15 @@ namespace UnityEngine.Purchasing
         /// </summary>
         internal static string ComputeHash(string transactionID)
         {
-            UInt64 hash = 3074457345618258791ul;
-            for (int i = 0; i < transactionID.Length; i++)
+            var hash = 3074457345618258791ul;
+            for (var i = 0; i < transactionID.Length; i++)
             {
                 hash += transactionID[i];
                 hash *= 3074457345618258799ul;
             }
 
-            StringBuilder builder = new StringBuilder(16);
-            foreach (byte b in BitConverter.GetBytes(hash))
+            var builder = new StringBuilder(16);
+            foreach (var b in BitConverter.GetBytes(hash))
             {
                 builder.AppendFormat("{0:X2}", b);
             }

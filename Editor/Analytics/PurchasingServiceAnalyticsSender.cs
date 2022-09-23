@@ -5,7 +5,7 @@ namespace UnityEditor.Purchasing
     [InitializeOnLoad]
     internal static class PurchasingServiceAnalyticsSender
     {
-        static IAnalyticsPackageKeyHolder m_Holder;
+        static readonly IAnalyticsPackageKeyHolder m_Holder;
 
         static PurchasingServiceAnalyticsSender()
         {

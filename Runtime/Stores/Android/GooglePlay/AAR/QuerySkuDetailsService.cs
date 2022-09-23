@@ -13,11 +13,11 @@ namespace UnityEngine.Purchasing
 {
     class QuerySkuDetailsService : IQuerySkuDetailsService
     {
-        IGoogleBillingClient m_BillingClient;
-        IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
-        ISkuDetailsConverter m_SkuDetailsConverter;
-        IRetryPolicy m_RetryPolicy;
-        IGoogleProductCallback m_GoogleProductCallback;
+        readonly IGoogleBillingClient m_BillingClient;
+        readonly IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
+        readonly ISkuDetailsConverter m_SkuDetailsConverter;
+        readonly IRetryPolicy m_RetryPolicy;
+        readonly IGoogleProductCallback m_GoogleProductCallback;
 
         internal QuerySkuDetailsService(IGoogleBillingClient billingClient, IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService,
             ISkuDetailsConverter skuDetailsConverter, IRetryPolicy retryPolicy, IGoogleProductCallback googleProductCallback)

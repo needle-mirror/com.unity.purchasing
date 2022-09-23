@@ -14,9 +14,8 @@ namespace UnityEngine.Purchasing
     class SkuDetailsResponseListener : AndroidJavaProxy
     {
         const string k_AndroidSkuDetailsResponseListenerClassName = "com.android.billingclient.api.SkuDetailsResponseListener";
-
-        Action<IGoogleBillingResult, List<AndroidJavaObject>> m_OnSkuDetailsResponse;
-        IUtil m_Util;
+        readonly Action<IGoogleBillingResult, List<AndroidJavaObject>> m_OnSkuDetailsResponse;
+        readonly IUtil m_Util;
 
         internal SkuDetailsResponseListener(
             Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction, IUtil util)

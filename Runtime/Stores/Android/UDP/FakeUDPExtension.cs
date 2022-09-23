@@ -13,13 +13,13 @@ namespace UnityEngine.Purchasing
         /// <returns>UserInfo, which may be null</returns>
         public object GetUserInfo()
         {
-            Type udpUserInfo = UserInfoInterface.GetClassType();
+            var udpUserInfo = UserInfoInterface.GetClassType();
             if (udpUserInfo == null)
             {
                 return null;
             }
 
-            object userInfo = Activator.CreateInstance(udpUserInfo);
+            var userInfo = Activator.CreateInstance(udpUserInfo);
 
             var channelProp = UserInfoInterface.GetChannelProp();
             channelProp.SetValue(userInfo, "Fake_Channel", null);

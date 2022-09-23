@@ -11,9 +11,11 @@ namespace UnityEditor.Purchasing
         protected BasePurchasingState(string stateName, SimpleStateMachine<bool> stateMachine)
             : base(stateName, stateMachine)
         {
-            m_UIBlocks = new List<IPurchasingSettingsUIBlock>();
-            m_UIBlocks.Add(PlatformsAndStoresServiceSettingsBlock.CreateStateSpecificBlock(IsEnabled()));
-            m_UIBlocks.Add(new AnalyticsWarningSettingsBlock());
+            m_UIBlocks = new List<IPurchasingSettingsUIBlock>
+            {
+                PlatformsAndStoresServiceSettingsBlock.CreateStateSpecificBlock(IsEnabled()),
+                new AnalyticsWarningSettingsBlock()
+            };
         }
 
         internal List<VisualElement> GetStateUI()

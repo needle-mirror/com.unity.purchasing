@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
 {
     class MetricizedAppleStoreImpl : AppleStoreImpl
     {
-        ITelemetryMetricsService m_TelemetryMetricsService;
+        readonly ITelemetryMetricsService m_TelemetryMetricsService;
 
         public MetricizedAppleStoreImpl(IUtil util, ITelemetryDiagnostics telemetryDiagnostics,
             ITelemetryMetricsService telemetryMetricsService) : base(util, telemetryDiagnostics)

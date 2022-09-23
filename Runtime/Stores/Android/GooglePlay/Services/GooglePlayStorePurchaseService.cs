@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStorePurchaseService : IGooglePlayStorePurchaseService
     {
-        IGooglePlayStoreService m_GooglePlayStoreService;
+        readonly IGooglePlayStoreService m_GooglePlayStoreService;
         internal GooglePlayStorePurchaseService(IGooglePlayStoreService googlePlayStoreService)
         {
             m_GooglePlayStoreService = googlePlayStoreService;

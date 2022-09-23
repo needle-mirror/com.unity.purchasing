@@ -10,8 +10,7 @@ namespace UnityEngine.Purchasing
             "or download the <i>06 Initialize Gaming Services</i> sample from <i>Package Manager > In-App Purchasing > Samples</i>.\n" +
             "- If you are using the codeless API, you may want to enable the enable <b>Unity Gaming Services</b> automatic initialization " +
             "by checking the <b>Automatically initialize Unity Gaming Services</b> checkbox at the bottom of the <b>IAP Catalog</b> window";
-
-        ILogger m_Logger;
+        readonly ILogger m_Logger;
 
         public UnityServicesInitializationChecker(ILogger logger)
         {

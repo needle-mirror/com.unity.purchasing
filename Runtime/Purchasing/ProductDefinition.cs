@@ -102,13 +102,17 @@ namespace UnityEngine.Purchasing
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            ProductDefinition p = obj as ProductDefinition;
+            var p = obj as ProductDefinition;
             if (p == null)
+            {
                 return false;
+            }
 
-            return (id == p.id);
+            return id == p.id;
         }
 
         /// <summary>
@@ -120,31 +124,19 @@ namespace UnityEngine.Purchasing
             return id.GetHashCode();
         }
 
-        private List<PayoutDefinition> m_Payouts = new List<PayoutDefinition>();
+        private readonly List<PayoutDefinition> m_Payouts = new List<PayoutDefinition>();
 
         /// <summary>
         /// Gets all payouts attached to this product.
         /// </summary>
         /// <value>The payouts.</value>
-        public IEnumerable<PayoutDefinition> payouts
-        {
-            get
-            {
-                return m_Payouts;
-            }
-        }
+        public IEnumerable<PayoutDefinition> payouts => m_Payouts;
 
         /// <summary>
         /// Gets the first attached payout. This is a shortcut for the case where only one payout is attached to the product.
         /// </summary>
         /// <value>The payout.</value>
-        public PayoutDefinition payout
-        {
-            get
-            {
-                return m_Payouts.Count > 0 ? m_Payouts[0] : null;
-            }
-        }
+        public PayoutDefinition payout => m_Payouts.Count > 0 ? m_Payouts[0] : null;
 
         /// <summary>
         /// Update this product's payouts
@@ -153,7 +145,9 @@ namespace UnityEngine.Purchasing
         internal void SetPayouts(IEnumerable<PayoutDefinition> newPayouts)
         {
             if (newPayouts == null)
+            {
                 return;
+            }
 
             m_Payouts.Clear();
             m_Payouts.AddRange(newPayouts);

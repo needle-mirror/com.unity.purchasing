@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing
     {
         internal static string FormatUnifiedReceipt(string platformReceipt, string transactionId, string storeName)
         {
-            UnifiedReceipt unifiedReceipt = new UnifiedReceipt()
+            var unifiedReceipt = new UnifiedReceipt()
             {
                 Store = storeName,
                 TransactionID = transactionId,

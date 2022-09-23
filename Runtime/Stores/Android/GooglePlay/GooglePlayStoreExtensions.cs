@@ -9,14 +9,13 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreExtensions : IGooglePlayStoreExtensions, IGooglePlayStoreExtensionsInternal
     {
-        IGooglePlayStoreService m_GooglePlayStoreService;
-        IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
-        ILogger m_Logger;
-        ITelemetryDiagnostics m_TelemetryDiagnostics;
+        readonly IGooglePlayStoreService m_GooglePlayStoreService;
+        readonly IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
+        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
+        readonly ILogger m_Logger;
         IStoreCallback m_StoreCallback;
-
-        Action<Product> m_DeferredPurchaseAction;
-        Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
+        readonly Action<Product> m_DeferredPurchaseAction;
+        readonly Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
 
         internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics)
         {
@@ -38,8 +37,8 @@ namespace UnityEngine.Purchasing
 
         public virtual void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode)
         {
-            Product product = m_StoreCallback.FindProductById(newSku);
-            Product oldProduct = m_StoreCallback.FindProductById(oldSku);
+            var product = m_StoreCallback.FindProductById(newSku);
+            var oldProduct = m_StoreCallback.FindProductById(oldSku);
             if (product == null || product.definition.type != ProductType.Subscription ||
                 oldProduct == null || oldProduct.definition.type != ProductType.Subscription)
             {
@@ -74,7 +73,7 @@ namespace UnityEngine.Purchasing
 
         public void ConfirmSubscriptionPriceChange(string productId, Action<bool> callback)
         {
-            Product product = m_StoreCallback.FindProductById(productId);
+            var product = m_StoreCallback.FindProductById(productId);
             if (product != null)
             {
                 m_GooglePlayStoreService.ConfirmSubscriptionPriceChange(product.definition, result =>
@@ -91,26 +90,43 @@ namespace UnityEngine.Purchasing
 
         public bool IsPurchasedProductDeferred(Product product)
         {
+            if (product == null)
+            {
+                m_Logger.LogIAPWarning("IsPurchasedProductDeferred: the product is null.");
+                return false;
+            }
+
             try
             {
-                var unifiedReceipt = MiniJson.JsonDecode(product.receipt) as Dictionary<string, object>;
-                var payloadStr = unifiedReceipt["Payload"] as string;
-
-                var payload = MiniJson.JsonDecode(payloadStr) as Dictionary<string, object>;
-                var jsonStr = payload["json"] as string;
-
-                var jsonDic = MiniJson.JsonDecode(jsonStr) as Dictionary<string, object>;
-                var purchaseState = (long)jsonDic["purchaseState"];
-
-                //PurchaseState codes: https://developer.android.com/reference/com/android/billingclient/api/Purchase.PurchaseState#pending
-                return purchaseState == 2 || purchaseState == 4;
+                return TryIsPurchasedProductDeferred(product);
             }
             catch (Exception ex)
             {
                 m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.ParseReceiptTransactionError, ex);
-                Debug.LogWarning("Cannot parse Google receipt for transaction " + product.transactionID);
+                m_Logger.LogIAPWarning("Cannot parse Google receipt for transaction " + product.transactionID);
                 return false;
             }
+        }
+
+        static bool TryIsPurchasedProductDeferred(Product product)
+        {
+            var purchaseState = GetPurchaseState(product);
+
+            //PurchaseState codes: https://developer.android.com/reference/com/android/billingclient/api/Purchase.PurchaseState#pending
+            return purchaseState == 2 || purchaseState == 4;
+        }
+
+        static long GetPurchaseState(Product product)
+        {
+            var unifiedReceipt = MiniJson.JsonDecode(product.receipt) as Dictionary<string, object>;
+            var payloadStr = unifiedReceipt["Payload"] as string;
+
+            var payload = MiniJson.JsonDecode(payloadStr) as Dictionary<string, object>;
+            var jsonStr = payload["json"] as string;
+
+            var jsonDic = MiniJson.JsonDecode(jsonStr) as Dictionary<string, object>;
+            var purchaseState = (long)jsonDic["purchaseState"];
+            return purchaseState;
         }
     }
 }

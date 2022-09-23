@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     internal class JavaBridge : AndroidJavaProxy, IUnityCallback
     {
-        private IUnityCallback forwardTo;
+        private readonly IUnityCallback forwardTo;
         public JavaBridge(IUnityCallback forwardTo) : base("com.unity.purchasing.common.IUnityCallback")
         {
             this.forwardTo = forwardTo;

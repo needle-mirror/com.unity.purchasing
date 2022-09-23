@@ -10,8 +10,8 @@ namespace UnityEngine.Purchasing
 {
     class GoogleFinishTransactionService : IGoogleFinishTransactionService
     {
-        IGoogleBillingClient m_BillingClient;
-        IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
+        readonly IGoogleBillingClient m_BillingClient;
+        readonly IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
 
         internal GoogleFinishTransactionService(IGoogleBillingClient billingClient,
             IGoogleQueryPurchasesService googleQueryPurchasesService)

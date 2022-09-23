@@ -4,13 +4,11 @@ namespace UnityEditor.Purchasing
 {
     class AppleConfigurationSettingsBlock : IPurchasingSettingsUIBlock
     {
-        VisualElement m_AppleConfigurationBlock;
-
-        AppleObfuscatorSection m_ObfuscatorSection;
+        readonly VisualElement m_AppleConfigurationBlock;
+        readonly AppleObfuscatorSection m_ObfuscatorSection;
         VisualElement m_ConfigurationBlock;
-
-        string m_AppleErrorMessage;
-        string m_GoogleErrorMessage;
+        readonly string m_AppleErrorMessage;
+        readonly string m_GoogleErrorMessage;
 
         internal AppleConfigurationSettingsBlock()
         {

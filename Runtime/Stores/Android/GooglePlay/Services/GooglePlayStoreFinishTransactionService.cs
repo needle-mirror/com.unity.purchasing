@@ -9,8 +9,8 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreFinishTransactionService : IGooglePlayStoreFinishTransactionService
     {
-        HashSet<string> m_ProcessedPurchaseToken;
-        IGooglePlayStoreService m_GooglePlayStoreService;
+        readonly HashSet<string> m_ProcessedPurchaseToken;
+        readonly IGooglePlayStoreService m_GooglePlayStoreService;
         IStoreCallback? m_StoreCallback;
 
         internal GooglePlayStoreFinishTransactionService(IGooglePlayStoreService googlePlayStoreService)

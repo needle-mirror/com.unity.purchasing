@@ -14,8 +14,7 @@ namespace UnityEngine.Purchasing
     {
         const string k_AndroidSkuDetailsResponseListenerClassName =
             "com.android.billingclient.api.PurchasesResponseListener";
-
-        Action<IGoogleBillingResult, IEnumerable<IAndroidJavaObjectWrapper>> m_OnQueryPurchasesResponse;
+        readonly Action<IGoogleBillingResult, IEnumerable<IAndroidJavaObjectWrapper>> m_OnQueryPurchasesResponse;
 
         internal GooglePurchasesResponseListener(
             Action<IGoogleBillingResult, IEnumerable<IAndroidJavaObjectWrapper>> onQueryPurchasesResponse)

@@ -23,6 +23,19 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Copy constructor
+        /// </summary>
+        /// <param name="productMetadata"> The ProductMetadata, as an object. </param>
+        public ProductMetadata(ProductMetadata productMetadata)
+        {
+            localizedPriceString = productMetadata.localizedPriceString;
+            localizedTitle = productMetadata.localizedTitle;
+            localizedDescription = productMetadata.localizedDescription;
+            isoCurrencyCode = productMetadata.isoCurrencyCode;
+            localizedPrice = productMetadata.localizedPrice;
+        }
+
+        /// <summary>
         /// Default constructor
         /// </summary>
         public ProductMetadata()

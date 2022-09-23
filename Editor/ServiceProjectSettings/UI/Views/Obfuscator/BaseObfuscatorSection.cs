@@ -93,7 +93,7 @@ namespace UnityEditor.Purchasing
         {
             var errorSection = m_ObfuscatorBlock.Q(k_ErrorSection);
 
-            errorSection.style.display = (string.IsNullOrEmpty(errorMessage))
+            errorSection.style.display = string.IsNullOrEmpty(errorMessage)
                 ? DisplayStyle.None
                 : DisplayStyle.Flex;
 

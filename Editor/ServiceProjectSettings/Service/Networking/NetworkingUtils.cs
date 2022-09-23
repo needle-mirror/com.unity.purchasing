@@ -20,8 +20,7 @@ namespace UnityEditor.Purchasing
         {
             var container = (Dictionary<string, object>)MiniJson.JsonDecode(rawJson);
 
-            object value;
-            container.TryGetValue(key, out value);
+            container.TryGetValue(key, out var value);
             return value as string;
         }
     }

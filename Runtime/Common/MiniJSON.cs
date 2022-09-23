@@ -143,7 +143,7 @@ namespace UnityEngine.Purchasing
 
                 Dictionary<string, object> ParseObject()
                 {
-                    Dictionary<string, object> table = new Dictionary<string, object>();
+                    var table = new Dictionary<string, object>();
 
                     // ditch opening brace
                     json.Read();
@@ -161,7 +161,7 @@ namespace UnityEngine.Purchasing
                                 return table;
                             default:
                                 // name
-                                string name = ParseString();
+                                var name = ParseString();
                                 if (name == null)
                                 {
                                     return null;
@@ -184,7 +184,7 @@ namespace UnityEngine.Purchasing
 
                 List<object> ParseArray()
                 {
-                    List<object> array = new List<object>();
+                    var array = new List<object>();
 
                     // ditch opening bracket
                     json.Read();
@@ -193,7 +193,7 @@ namespace UnityEngine.Purchasing
                     var parsing = true;
                     while (parsing)
                     {
-                        TOKEN nextToken = NextToken;
+                        var nextToken = NextToken;
 
                         switch (nextToken)
                         {
@@ -205,7 +205,7 @@ namespace UnityEngine.Purchasing
                                 parsing = false;
                                 break;
                             default:
-                                object value = ParseByToken(nextToken);
+                                var value = ParseByToken(nextToken);
 
                                 array.Add(value);
                                 break;
@@ -217,7 +217,7 @@ namespace UnityEngine.Purchasing
 
                 object ParseValue()
                 {
-                    TOKEN nextToken = NextToken;
+                    var nextToken = NextToken;
                     return ParseByToken(nextToken);
                 }
 
@@ -246,19 +246,18 @@ namespace UnityEngine.Purchasing
 
                 string ParseString()
                 {
-                    StringBuilder s = new StringBuilder();
+                    var s = new StringBuilder();
                     char c;
 
                     // ditch opening quote
                     json.Read();
 
-                    bool parsing = true;
+                    var parsing = true;
                     while (parsing)
                     {
 
                         if (json.Peek() == -1)
                         {
-                            parsing = false;
                             break;
                         }
 
@@ -301,7 +300,7 @@ namespace UnityEngine.Purchasing
                                     case 'u':
                                         var hex = new char[4];
 
-                                        for (int i = 0; i < 4; i++)
+                                        for (var i = 0; i < 4; i++)
                                         {
                                             hex[i] = NextChar;
                                         }
@@ -321,17 +320,15 @@ namespace UnityEngine.Purchasing
 
                 object ParseNumber()
                 {
-                    string number = NextWord;
+                    var number = NextWord;
 
                     if (number.IndexOf('.') == -1 && number.IndexOf('e') == -1 && number.IndexOf('E') == -1)
                     {
-                        long parsedInt;
-                        Int64.TryParse(number, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedInt);
+                        Int64.TryParse(number, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedInt);
                         return parsedInt;
                     }
 
-                    double parsedDouble;
-                    Double.TryParse(number, NumberStyles.Any, CultureInfo.InvariantCulture, out parsedDouble);
+                    Double.TryParse(number, NumberStyles.Any, CultureInfo.InvariantCulture, out var parsedDouble);
                     return parsedDouble;
                 }
 
@@ -348,27 +345,15 @@ namespace UnityEngine.Purchasing
                     }
                 }
 
-                char PeekChar
-                {
-                    get
-                    {
-                        return Convert.ToChar(json.Peek());
-                    }
-                }
+                char PeekChar => Convert.ToChar(json.Peek());
 
-                char NextChar
-                {
-                    get
-                    {
-                        return Convert.ToChar(json.Read());
-                    }
-                }
+                char NextChar => Convert.ToChar(json.Read());
 
                 string NextWord
                 {
                     get
                     {
-                        StringBuilder word = new StringBuilder();
+                        var word = new StringBuilder();
 
                         while (!IsWordBreak(PeekChar))
                         {
@@ -455,7 +440,7 @@ namespace UnityEngine.Purchasing
 
             sealed class Serializer
             {
-                StringBuilder builder;
+                readonly StringBuilder builder;
 
                 Serializer()
                 {
@@ -509,11 +494,11 @@ namespace UnityEngine.Purchasing
 
                 void SerializeObject(IDictionary obj)
                 {
-                    bool first = true;
+                    var first = true;
 
                     builder.Append('{');
 
-                    foreach (object e in obj.Keys)
+                    foreach (var e in obj.Keys)
                     {
                         if (!first)
                         {
@@ -535,9 +520,9 @@ namespace UnityEngine.Purchasing
                 {
                     builder.Append('[');
 
-                    bool first = true;
+                    var first = true;
 
-                    foreach (object obj in anArray)
+                    foreach (var obj in anArray)
                     {
                         if (!first)
                         {
@@ -556,7 +541,7 @@ namespace UnityEngine.Purchasing
                 {
                     builder.Append('\"');
 
-                    char[] charArray = str.ToCharArray();
+                    var charArray = str.ToCharArray();
                     foreach (var c in charArray)
                     {
                         switch (c)
@@ -583,7 +568,7 @@ namespace UnityEngine.Purchasing
                                 builder.Append("\\t");
                                 break;
                             default:
-                                int codepoint = Convert.ToInt32(c);
+                                var codepoint = Convert.ToInt32(c);
                                 if ((codepoint >= 32) && (codepoint <= 126))
                                 {
                                     builder.Append(c);
@@ -613,18 +598,18 @@ namespace UnityEngine.Purchasing
                         builder.Append(((float)value).ToString("R", CultureInfo.InvariantCulture));
                     }
                     else if (value is int
-                             || value is uint
-                             || value is long
-                             || value is sbyte
-                             || value is byte
-                             || value is short
-                             || value is ushort
-                             || value is ulong)
+                               || value is uint
+                               || value is long
+                               || value is sbyte
+                               || value is byte
+                               || value is short
+                               || value is ushort
+                               || value is ulong)
                     {
                         builder.Append(value);
                     }
                     else if (value is double
-                             || value is decimal)
+                               || value is decimal)
                     {
                         builder.Append(Convert.ToDouble(value).ToString("R", CultureInfo.InvariantCulture));
                     }
@@ -665,9 +650,11 @@ namespace UnityEngine.Purchasing
             public static T GetEnum<T>(this Dictionary<string, object> dic, string key)
             {
                 if (dic.ContainsKey(key))
+                {
                     return (T)Enum.Parse(typeof(T), dic[key].ToString(), true);
+                }
 
-                return default(T);
+                return default;
             }
 
             /// <summary>
@@ -680,7 +667,9 @@ namespace UnityEngine.Purchasing
             public static string GetString(this Dictionary<string, object> dic, string key, string defaultValue = "")
             {
                 if (dic.ContainsKey(key))
+                {
                     return dic[key].ToString();
+                }
 
                 return defaultValue;
             }
@@ -694,7 +683,9 @@ namespace UnityEngine.Purchasing
             public static long GetLong(this Dictionary<string, object> dic, string key)
             {
                 if (dic.ContainsKey(key))
+                {
                     return long.Parse(dic[key].ToString());
+                }
 
                 return 0;
             }
@@ -709,10 +700,13 @@ namespace UnityEngine.Purchasing
             {
                 if (dic.ContainsKey(key))
                 {
-                    List<string> result = new List<string>();
+                    var result = new List<string>();
                     var objs = (List<object>)dic[key];
                     foreach (var v in objs)
+                    {
                         result.Add(v.ToString());
+                    }
+
                     return result;
                 }
 
@@ -728,7 +722,9 @@ namespace UnityEngine.Purchasing
             public static bool GetBool(this Dictionary<string, object> dic, string key)
             {
                 if (dic.ContainsKey(key))
+                {
                     return bool.Parse(dic[key].ToString());
+                }
 
                 return false;
             }
@@ -743,9 +739,11 @@ namespace UnityEngine.Purchasing
             public static T Get<T>(this Dictionary<string, object> dic, string key)
             {
                 if (dic.ContainsKey(key))
+                {
                     return (T)dic[key];
+                }
 
-                return default(T);
+                return default;
             }
 
             /// <summary>
@@ -777,7 +775,9 @@ namespace UnityEngine.Purchasing
             {
                 var list = new List<object>();
                 foreach (var s in array)
+                {
                     list.Add(s);
+                }
 
                 return MiniJson.JsonEncode(list);
             }

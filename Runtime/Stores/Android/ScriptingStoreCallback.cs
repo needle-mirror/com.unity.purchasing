@@ -11,8 +11,8 @@ namespace UnityEngine.Purchasing
     /// </summary>
     internal class ScriptingStoreCallback : IStoreCallback
     {
-        IStoreCallback m_ForwardTo;
-        IUtil m_Util;
+        readonly IStoreCallback m_ForwardTo;
+        readonly IUtil m_Util;
 
         public ScriptingStoreCallback(IStoreCallback forwardTo, IUtil util)
         {

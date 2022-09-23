@@ -95,7 +95,7 @@ namespace UnityEngine.Purchasing
 
         void Start()
         {
-            Button button = GetComponent<Button>();
+            var button = GetComponent<Button>();
 
             if (buttonType == ButtonType.Purchase)
             {
@@ -198,7 +198,7 @@ namespace UnityEngine.Purchasing
         {
             onPurchaseComplete.Invoke(e.purchasedProduct);
 
-            return (consumePurchase) ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
+            return consumePurchase ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
         }
 
         /// <summary>

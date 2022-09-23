@@ -59,15 +59,15 @@ namespace UnityEngine.Purchasing.Models
             return new AndroidJavaClass(k_AndroidBillingClientClassName);
         }
 
-        AndroidJavaObject m_BillingClient;
+        readonly AndroidJavaObject m_BillingClient;
         string m_ObfuscatedAccountId;
         string m_ObfuscatedProfileId;
-        IUtil m_Util;
+        readonly IUtil m_Util;
 
         internal GoogleBillingClient(IGooglePurchaseUpdatedListener googlePurchaseUpdatedListener, IUtil util)
         {
             m_Util = util;
-            AndroidJavaObject builder = GetBillingClientClass().CallStatic<AndroidJavaObject>("newBuilder", UnityActivity.GetCurrentActivity());
+            var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>("newBuilder", UnityActivity.GetCurrentActivity());
             builder = builder.Call<AndroidJavaObject>("setListener", googlePurchaseUpdatedListener);
             builder = builder.Call<AndroidJavaObject>("enablePendingPurchases");
             m_BillingClient = builder.Call<AndroidJavaObject>("build");
@@ -127,7 +127,7 @@ namespace UnityEngine.Purchasing.Models
 
         AndroidJavaObject MakeBillingFlowParams(AndroidJavaObject sku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode)
         {
-            AndroidJavaObject billingFlowParams = GetBillingFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
+            var billingFlowParams = GetBillingFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
 
             billingFlowParams = SetObfuscatedAccountIdIfNeeded(billingFlowParams);
             billingFlowParams = SetObfuscatedProfileIdIfNeeded(billingFlowParams);
@@ -200,7 +200,7 @@ namespace UnityEngine.Purchasing.Models
 
         AndroidJavaObject MakePriceChangeFlowParams(AndroidJavaObject skuDetails)
         {
-            AndroidJavaObject priceChangeFlowParams = GetPriceChangeFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
+            var priceChangeFlowParams = GetPriceChangeFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
             priceChangeFlowParams = priceChangeFlowParams.Call<AndroidJavaObject>("setSkuDetails", skuDetails);
             priceChangeFlowParams = priceChangeFlowParams.Call<AndroidJavaObject>("build");
             return priceChangeFlowParams;

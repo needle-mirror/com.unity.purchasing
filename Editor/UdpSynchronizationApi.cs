@@ -31,7 +31,7 @@ namespace UnityEditor.Purchasing
 
         private static void CheckUdpBuildConfig()
         {
-            Type udpBuildConfig = BuildConfigInterface.GetClassType();
+            var udpBuildConfig = BuildConfigInterface.GetClassType();
             if (udpBuildConfig == null)
             {
                 Debug.LogError("Cannot Retrieve Build Config Endpoints for UDP. Please make sure the UDP package is installed");
@@ -59,12 +59,14 @@ namespace UnityEditor.Purchasing
         {
             CheckUdpBuildConfig();
 
-            TokenRequest req = new TokenRequest();
-            req.code = authCode;
-            req.client_id = kOAuthClientId;
-            req.client_secret = kOAuthClientSecret;
-            req.grant_type = "authorization_code";
-            req.redirect_uri = BuildConfigInterface.GetIdEndpoint();
+            var req = new TokenRequest
+            {
+                code = authCode,
+                client_id = kOAuthClientId,
+                client_secret = kOAuthClientSecret,
+                grant_type = "authorization_code",
+                redirect_uri = BuildConfigInterface.GetIdEndpoint()
+            };
             return AsyncRequest(kHttpVerbPOST, BuildConfigInterface.GetApiEndpoint(), "/v1/oauth2/token", null, req);
         }
 
@@ -90,7 +92,7 @@ namespace UnityEditor.Purchasing
         {
             CheckUdpBuildConfig();
 
-            string api = "/v1/core/api/projects/" + projectGuid;
+            var api = "/v1/core/api/projects/" + projectGuid;
             return AsyncRequest(kHttpVerbGET, BuildConfigInterface.GetApiEndpoint(), api, accessToken, null);
         }
 
@@ -118,7 +120,7 @@ namespace UnityEditor.Purchasing
         {
             CheckUdpBuildConfig();
 
-            string api = "/v1/store/items";
+            var api = "/v1/store/items";
             iapItem.ownerId = orgId;
             return AsyncRequest(kHttpVerbPOST, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
         }
@@ -145,7 +147,7 @@ namespace UnityEditor.Purchasing
         {
             CheckUdpBuildConfig();
 
-            string api = "/v1/store/items/" + iapItem.id;
+            var api = "/v1/store/items/" + iapItem.id;
             return AsyncRequest(kHttpVerbPUT, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, iapItem);
         }
 
@@ -173,7 +175,7 @@ namespace UnityEditor.Purchasing
         {
             CheckUdpBuildConfig();
 
-            string api = "/v1/store/items/search?ownerId=" + orgId +
+            var api = "/v1/store/items/search?ownerId=" + orgId +
                          "&ownerType=ORGANIZATION&start=0&count=20&type=IAP&masterItemSlug=" + appItemSlug;
             return AsyncRequest(kHttpVerbGET, BuildConfigInterface.GetUdpEndpoint(), api, accessToken, null);
         }
@@ -181,12 +183,12 @@ namespace UnityEditor.Purchasing
         // Return UnityWebRequest instance
         static UnityWebRequest AsyncRequest(string method, string url, string api, string token, object postObject)
         {
-            UnityWebRequest request = new UnityWebRequest(url + api, method);
+            var request = new UnityWebRequest(url + api, method);
 
             if (postObject != null)
             {
-                string postData = HandlePostData(JsonUtility.ToJson(postObject));
-                byte[] postDataBytes = Encoding.UTF8.GetBytes(postData);
+                var postData = HandlePostData(JsonUtility.ToJson(postObject));
+                var postDataBytes = Encoding.UTF8.GetBytes(postData);
 
                 request.uploadHandler = new UploadHandlerRaw(postDataBytes);
             }
@@ -211,7 +213,7 @@ namespace UnityEditor.Purchasing
 
         internal static bool CheckUdpCompatibility()
         {
-            Type udpBuildConfig = BuildConfigInterface.GetClassType();
+            var udpBuildConfig = BuildConfigInterface.GetClassType();
             if (udpBuildConfig == null)
             {
                 Debug.LogError("Cannot Retrieve Build Config Endpoints for UDP. Please make sure the UDP package is installed");
@@ -219,8 +221,7 @@ namespace UnityEditor.Purchasing
             }
 
             var udpVersion = BuildConfigInterface.GetVersion();
-            int majorVersion = 0;
-            int.TryParse(udpVersion.Split('.')[0], out majorVersion);
+            int.TryParse(udpVersion.Split('.')[0], out var majorVersion);
 
             return majorVersion >= 2;
         }
@@ -230,9 +231,9 @@ namespace UnityEditor.Purchasing
         // recognize them to variables. So we change this to a string (remove "-").
         private static string HandlePostData(string oldData)
         {
-            string newData = oldData.Replace("thisShouldBeENHyphenUS", "en-US");
+            var newData = oldData.Replace("thisShouldBeENHyphenUS", "en-US");
             newData = newData.Replace("thisShouldBeZHHyphenCN", "zh-CN");
-            Regex re = new Regex("\"\\w+?\":\"\",");
+            var re = new Regex("\"\\w+?\":\"\",");
             newData = re.Replace(newData, "");
             re = new Regex(",\"\\w+?\":\"\"");
             newData = re.Replace(newData, "");

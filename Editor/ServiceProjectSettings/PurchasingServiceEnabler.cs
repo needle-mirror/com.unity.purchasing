@@ -15,10 +15,7 @@ namespace UnityEditor.Purchasing
         const string k_ServiceFlagName = "purchasing";
         const string k_LegacyEnabledSettingName = "Purchasing";
 
-        protected override string FlagName
-        {
-            get { return k_ServiceFlagName; }
-        }
+        protected override string FlagName => k_ServiceFlagName;
 
         protected override void EnableLocalSettings()
         {
@@ -42,7 +39,7 @@ namespace UnityEditor.Purchasing
                 var setCloudServiceEnabledMethod = playerSettingsType.GetMethod("SetCloudServiceEnabled", BindingFlags.Static | BindingFlags.NonPublic);
                 if (setCloudServiceEnabledMethod != null)
                 {
-                    setCloudServiceEnabledMethod.Invoke(null, new object[] {k_LegacyEnabledSettingName, value});
+                    setCloudServiceEnabledMethod.Invoke(null, new object[] { k_LegacyEnabledSettingName, value });
                 }
             }
         }
@@ -69,7 +66,7 @@ namespace UnityEditor.Purchasing
                 var getCloudServiceEnabledMethod = playerSettingsType.GetMethod("GetCloudServiceEnabled", BindingFlags.Static | BindingFlags.NonPublic);
                 if (getCloudServiceEnabledMethod != null)
                 {
-                    var enabledStateResult = getCloudServiceEnabledMethod.Invoke(null, new object[] {k_LegacyEnabledSettingName});
+                    var enabledStateResult = getCloudServiceEnabledMethod.Invoke(null, new object[] { k_LegacyEnabledSettingName });
                     isEnabled = Convert.ToBoolean(enabledStateResult);
                 }
             }

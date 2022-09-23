@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing.Telemetry
 {
     class TelemetryDiagnostics : ITelemetryDiagnostics
     {
-        ITelemetryDiagnosticsInstanceWrapper m_TelemetryDiagnosticsInstanceWrapper;
+        readonly ITelemetryDiagnosticsInstanceWrapper m_TelemetryDiagnosticsInstanceWrapper;
 
         public TelemetryDiagnostics(ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper)
         {

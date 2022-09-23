@@ -10,14 +10,16 @@ namespace UnityEngine.Purchasing
         internal const BindingFlags k_StaticBindingFlags = BindingFlags.Public | BindingFlags.Static;
         internal const BindingFlags k_PrivateStaticBindingFlags = BindingFlags.NonPublic | BindingFlags.Static;
 
-        static Dictionary<Assembly, Type[]> s_assemblyTypeCache = new Dictionary<Assembly, Type[]>();
-        static Dictionary<string, Type> s_typeCache = new Dictionary<string, Type>();
+        static readonly Dictionary<Assembly, Type[]> s_assemblyTypeCache = new Dictionary<Assembly, Type[]>();
+        static readonly Dictionary<string, Type> s_typeCache = new Dictionary<string, Type>();
         static readonly string[] k_whiteListedAssemblies = { "UnityEngine", "UnityEditor", "UDP", "com.unity" };
 
         internal static Type GetTypeByName(string typeName)
         {
             if (s_typeCache.ContainsKey(typeName))
+            {
                 return s_typeCache[typeName];
+            }
 
             var assemblies = GetAllAssemblies();
 

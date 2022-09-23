@@ -4,8 +4,8 @@ namespace UnityEngine.Purchasing
 {
     class AnalyticsClient : IAnalyticsClient
     {
-        IAnalyticsAdapter m_Analytics;
-        IAnalyticsAdapter m_LegacyAnalytics;
+        readonly IAnalyticsAdapter m_Analytics;
+        readonly IAnalyticsAdapter m_LegacyAnalytics;
 
         public AnalyticsClient(IAnalyticsAdapter analytics, IAnalyticsAdapter legacyAnalytics)
         {

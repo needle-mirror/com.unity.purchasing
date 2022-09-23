@@ -12,8 +12,6 @@ namespace UnityEngine.Purchasing
     {
         private Dictionary<string, Product> m_IdToProduct;
         private Dictionary<string, Product> m_StoreSpecificIdToProduct;
-        private Product[] m_Products;
-        private HashSet<Product> m_ProductSet = new HashSet<Product>();
 
         internal ProductCollection(Product[] products)
         {
@@ -22,27 +20,21 @@ namespace UnityEngine.Purchasing
 
         internal void AddProducts(IEnumerable<Product> products)
         {
-            m_ProductSet.UnionWith(products);
-            m_Products = m_ProductSet.ToArray();
-            m_IdToProduct = m_Products.ToDictionary(x => x.definition.id);
-            m_StoreSpecificIdToProduct = m_Products.ToDictionary(x => x.definition.storeSpecificId);
+            set.UnionWith(products);
+            all = set.ToArray();
+            m_IdToProduct = all.ToDictionary(x => x.definition.id);
+            m_StoreSpecificIdToProduct = all.ToDictionary(x => x.definition.storeSpecificId);
         }
 
         /// <summary>
         /// The hash set of all products
         /// </summary>
-        public HashSet<Product> set
-        {
-            get { return m_ProductSet; }
-        }
+        public HashSet<Product> set { get; } = new HashSet<Product>();
 
         /// <summary>
         /// The array of all products
         /// </summary>
-        public Product[] all
-        {
-            get { return m_Products; }
-        }
+        public Product[] all { get; private set; }
 
         /// <summary>
         /// Gets a product matching an id
@@ -51,8 +43,7 @@ namespace UnityEngine.Purchasing
         /// <returns> The product matching the id, or null if not found </returns>
         public Product WithID(string id)
         {
-            Product result = null;
-            m_IdToProduct.TryGetValue(id, out result);
+            m_IdToProduct.TryGetValue(id, out var result);
             return result;
         }
 

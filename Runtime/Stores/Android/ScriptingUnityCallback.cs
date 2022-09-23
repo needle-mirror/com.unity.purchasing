@@ -9,8 +9,8 @@ namespace UnityEngine.Purchasing
     /// </summary>
     internal class ScriptingUnityCallback : IUnityCallback
     {
-        private IUnityCallback forwardTo;
-        private IUtil util;
+        private readonly IUnityCallback forwardTo;
+        private readonly IUtil util;
 
         public ScriptingUnityCallback(IUnityCallback forwardTo, IUtil util)
         {

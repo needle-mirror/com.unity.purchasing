@@ -1,7 +1,7 @@
-using System.Collections.ObjectModel;
-using System.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace UnityEngine.Purchasing
 {
@@ -18,15 +18,14 @@ namespace UnityEngine.Purchasing
             var result = new List<ProductDefinition>();
             try
             {
-                foreach (object product in productsList)
+                foreach (var product in productsList)
                 {
                     var productDict = (Dictionary<string, object>)product;
-                    object id, storeIDs, typeString;
-                    productDict.TryGetValue("id", out id);
-                    productDict.TryGetValue("store_ids", out storeIDs);
-                    productDict.TryGetValue("type", out typeString);
+                    productDict.TryGetValue("id", out var id);
+                    productDict.TryGetValue("store_ids", out var storeIDs);
+                    productDict.TryGetValue("type", out var typeString);
                     var idHash = storeIDs as Dictionary<string, object>;
-                    string storeSpecificId = (string)id;
+                    var storeSpecificId = (string)id;
                     if (idHash != null)
                     {
                         foreach (var storeInfo in idHash)
@@ -43,9 +42,8 @@ namespace UnityEngine.Purchasing
                     {
                         // Handles scenario where developer creates a single storeSpecificID via ProductDefinition
                         // and through FakeStore within editor adds ProductDefinition to ConfigurationBuilder
-                        object singleStoreSpecificID;
-                        productDict.TryGetValue("storeSpecificId", out singleStoreSpecificID);
-                        string generalStoreSpecificStringID = (string)singleStoreSpecificID;
+                        productDict.TryGetValue("storeSpecificId", out var singleStoreSpecificID);
+                        var generalStoreSpecificStringID = (string)singleStoreSpecificID;
                         if (generalStoreSpecificStringID != null)
                         {
                             storeSpecificId = generalStoreSpecificStringID;

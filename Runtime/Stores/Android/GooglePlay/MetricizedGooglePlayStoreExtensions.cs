@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
 {
     class MetricizedGooglePlayStoreExtensions : GooglePlayStoreExtensions
     {
-        ITelemetryMetricsService m_TelemetryMetricsService;
+        readonly ITelemetryMetricsService m_TelemetryMetricsService;
 
 
         internal MetricizedGooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService,

@@ -10,7 +10,7 @@ namespace UnityEngine.Purchasing
     {
         IStoreCallback? m_StoreCallback;
         IGooglePlayConfigurationInternal? m_GooglePlayConfigurationInternal;
-        IUtil m_Util;
+        readonly IUtil m_Util;
 
         public GooglePlayPurchaseCallback(IUtil util)
         {

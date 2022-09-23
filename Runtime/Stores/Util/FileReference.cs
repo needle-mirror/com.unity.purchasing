@@ -14,8 +14,8 @@ namespace UnityEngine.Purchasing
     ///
     internal class FileReference
     {
-        private string m_FilePath;
-        private ILogger m_Logger;
+        private readonly string m_FilePath;
+        private readonly ILogger m_Logger;
 
         /// <summary>
         /// Creates the instance of FileReference. Method allows dependency injection to ease testing

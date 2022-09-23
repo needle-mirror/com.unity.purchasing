@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing.Security
     /// <summary>
     /// A base exception for IAP Security issues.
     /// </summary>
-    public class IAPSecurityException : System.Exception
+    public class IAPSecurityException : Exception
     {
         /// <summary>
         /// Constructs an instance with no message.

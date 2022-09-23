@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing
 {
     internal class AndroidJavaStore : INativeStore
     {
-        private AndroidJavaObject m_Store;
+        private readonly AndroidJavaObject m_Store;
         protected AndroidJavaObject GetStore()
         {
             return m_Store;
@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing
 
         public AndroidJavaStore(AndroidJavaObject store)
         {
-            this.m_Store = store;
+            m_Store = store;
         }
 
         public void RetrieveProducts(string json)

@@ -117,10 +117,12 @@ namespace UnityEngine.Purchasing
 
         public static Version Parse(string version)
         {
-            Version v = new Version();
-            v.major = MajorVersion(version);
-            v.minor = MinorVersion(version);
-            v.patch = PatchVersion(version);
+            var v = new Version
+            {
+                major = MajorVersion(version),
+                minor = MinorVersion(version),
+                patch = PatchVersion(version)
+            };
             return v;
         }
 
@@ -131,13 +133,15 @@ namespace UnityEngine.Purchasing
         private static int PartialVersion(string version, int index)
         {
             // remove suffix
-            string[] parts = version.Split(new char[] { 'a', 'b', 'f', 'p' });
+            var parts = version.Split(new char[] { 'a', 'b', 'f', 'p' });
             var prefix = parts[0];
 
-            int result = 0;
-            string[] versions = prefix.Split('.');
+            var result = 0;
+            var versions = prefix.Split('.');
             if (versions.Length < index + 1)
+            {
                 return result;
+            }
 
             int.TryParse(versions[index], out result);
             return result;

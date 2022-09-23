@@ -15,9 +15,14 @@ namespace UnityEngine.Purchasing
         public void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
         {
             if (m_FailRefresh)
+            {
                 errorCallback();
+            }
             else
+            {
                 successCallback("A fake refreshed receipt!");
+            }
+
             m_FailRefresh = !m_FailRefresh;
         }
 

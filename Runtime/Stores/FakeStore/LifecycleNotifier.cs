@@ -14,10 +14,7 @@ namespace UnityEngine.Purchasing
 
         void OnDestroy()
         {
-            if (OnDestroyCallback != null)
-            {
-                OnDestroyCallback();
-            }
+            OnDestroyCallback?.Invoke();
         }
     }
 }

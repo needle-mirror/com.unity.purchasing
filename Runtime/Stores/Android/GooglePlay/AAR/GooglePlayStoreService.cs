@@ -16,21 +16,21 @@ namespace UnityEngine.Purchasing
         const int k_MaxConnectionAttempts = 1;
 
         int m_CurrentConnectionAttempts;
+        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClientStateListener m_BillingClientStateListener;
+        readonly IQuerySkuDetailsService m_QuerySkuDetailsService;
+        readonly ConcurrentQueue<ProductDescriptionQuery> m_ProductsToQuery = new ConcurrentQueue<ProductDescriptionQuery>();
+        readonly ConcurrentQueue<Action<List<IGooglePurchase>>> m_OnPurchaseSucceededQueue = new ConcurrentQueue<Action<List<IGooglePurchase>>>();
+        readonly IGooglePurchaseService m_GooglePurchaseService;
+        readonly IGoogleFinishTransactionService m_GoogleFinishTransactionService;
+        readonly IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
+        readonly IGooglePriceChangeService m_GooglePriceChangeService;
+        readonly IGoogleLastKnownProductService m_GoogleLastKnownProductService;
+        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
+        readonly ILogger m_Logger;
 
-        IGoogleBillingClient m_BillingClient;
-        IBillingClientStateListener m_BillingClientStateListener;
-        IQuerySkuDetailsService m_QuerySkuDetailsService;
-        Queue<ProductDescriptionQuery> m_ProductsToQuery = new Queue<ProductDescriptionQuery>();
-        ConcurrentQueue<Action<List<IGooglePurchase>>> m_OnPurchaseSucceededQueue = new ConcurrentQueue<Action<List<IGooglePurchase>>>();
-        IGooglePurchaseService m_GooglePurchaseService;
-        IGoogleFinishTransactionService m_GoogleFinishTransactionService;
-        IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
-        IGooglePriceChangeService m_GooglePriceChangeService;
-        IGoogleLastKnownProductService m_GoogleLastKnownProductService;
-        ITelemetryDiagnostics m_TelemetryDiagnostics;
-        ILogger m_Logger;
-
-        internal GooglePlayStoreService(IGoogleBillingClient billingClient,
+        internal GooglePlayStoreService(
+            IGoogleBillingClient billingClient,
             IQuerySkuDetailsService querySkuDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,
@@ -92,7 +92,7 @@ namespace UnityEngine.Purchasing
 
         protected virtual void DequeueQueryProducts()
         {
-            var productsFailedToDequeue = new Queue<ProductDescriptionQuery>();
+            var productsFailedToDequeue = new ConcurrentQueue<ProductDescriptionQuery>();
             var stop = false;
 
             while (m_ProductsToQuery.Count > 0 && !stop)
@@ -101,31 +101,40 @@ namespace UnityEngine.Purchasing
                 switch (currentConnectionState)
                 {
                     case GoogleBillingConnectionState.Connected:
+                    {
+                        if (m_ProductsToQuery.TryDequeue(out var productDescriptionQuery) &&
+                            productDescriptionQuery != null)
                         {
-                            var productDescriptionQuery = m_ProductsToQuery.Dequeue();
-                            m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products, productDescriptionQuery.onProductsReceived);
-                            break;
+                            m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products,
+                                productDescriptionQuery.onProductsReceived);
                         }
+                        break;
+                    }
                     case GoogleBillingConnectionState.Disconnected:
+                    {
+                        if (m_ProductsToQuery.TryDequeue(out var productDescriptionQuery) &&
+                            productDescriptionQuery != null)
                         {
-                            var productDescriptionQuery = m_ProductsToQuery.Dequeue();
-                            var reason = AreConnectionAttemptsExhausted() ? GoogleRetrieveProductsFailureReason.BillingServiceUnavailable : GoogleRetrieveProductsFailureReason.BillingServiceDisconnected;
+                            var reason = AreConnectionAttemptsExhausted() ?
+                                GoogleRetrieveProductsFailureReason.BillingServiceUnavailable :
+                                GoogleRetrieveProductsFailureReason.BillingServiceDisconnected;
                             productDescriptionQuery.onRetrieveProductsFailed(reason);
 
                             productsFailedToDequeue.Enqueue(productDescriptionQuery);
-                            break;
                         }
+                        break;
+                    }
                     case GoogleBillingConnectionState.Connecting:
-                        {
-                            stop = true;
-                            break;
-                        }
+                    {
+                        stop = true;
+                        break;
+                    }
                     default:
-                        {
-                            m_Logger.LogIAPError($"GooglePlayStoreService state ({currentConnectionState}) unrecognized, cannot process ProductDescriptionQuery");
-                            stop = true;
-                            break;
-                        }
+                    {
+                        m_Logger.LogIAPError($"GooglePlayStoreService state ({currentConnectionState}) unrecognized, cannot process ProductDescriptionQuery");
+                        stop = true;
+                        break;
+                    }
                 }
             }
 

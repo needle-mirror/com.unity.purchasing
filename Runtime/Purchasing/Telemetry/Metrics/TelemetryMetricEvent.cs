@@ -5,9 +5,9 @@ namespace UnityEngine.Purchasing.Telemetry
 {
     class TelemetryMetricEvent : ITelemetryMetricEvent
     {
-        ITelemetryMetricsInstanceWrapper m_TelemetryMetricsInstanceWrapper;
-        TelemetryMetricTypes m_MetricType;
-        string m_MetricName;
+        readonly ITelemetryMetricsInstanceWrapper m_TelemetryMetricsInstanceWrapper;
+        readonly TelemetryMetricTypes m_MetricType;
+        readonly string m_MetricName;
         Stopwatch m_Stopwatch = new Stopwatch();
 
         internal TelemetryMetricEvent(ITelemetryMetricsInstanceWrapper telemetryMetricsInstanceWrapper, TelemetryMetricTypes metricType, string metricName)

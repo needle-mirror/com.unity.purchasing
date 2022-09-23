@@ -6,8 +6,8 @@ namespace UnityEngine.Purchasing
 {
     class GooglePriceChangeService : IGooglePriceChangeService
     {
-        IGoogleBillingClient m_BillingClient;
-        IQuerySkuDetailsService m_QuerySkuDetailsService;
+        readonly IGoogleBillingClient m_BillingClient;
+        readonly IQuerySkuDetailsService m_QuerySkuDetailsService;
 
         internal GooglePriceChangeService(IGoogleBillingClient billingClient, IQuerySkuDetailsService querySkuDetailsService)
         {

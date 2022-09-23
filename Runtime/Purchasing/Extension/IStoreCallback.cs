@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing.Extension
         ProductCollection products { get; }
 
         /// <summary>
-        /// Purhasing unavailable.
+        /// Purchasing unavailable.
         /// </summary>
         /// <param name="reason"> The reason the initialization failed. </param>
         void OnSetupFailed(InitializationFailureReason reason);

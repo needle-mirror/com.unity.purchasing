@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing.Telemetry
     class TelemetryDiagnosticsInstanceWrapper : ITelemetryDiagnosticsInstanceWrapper
     {
         IDiagnostics m_Instance;
-        TelemetryQueue<TelemetryDiagnosticParams> m_Queue;
+        readonly TelemetryQueue<TelemetryDiagnosticParams> m_Queue;
 
         public TelemetryDiagnosticsInstanceWrapper()
         {

@@ -9,9 +9,8 @@ namespace UnityEngine.Purchasing
     {
         const int k_RequiredNumberOfCallbacks = 2;
         int m_NumberReceivedCallbacks;
-
-        Action<ISkuDetailsQueryResponse> m_OnSkuDetailsResponseConsolidated;
-        ISkuDetailsQueryResponse m_Responses = new SkuDetailsQueryResponse();
+        readonly Action<ISkuDetailsQueryResponse> m_OnSkuDetailsResponseConsolidated;
+        readonly ISkuDetailsQueryResponse m_Responses = new SkuDetailsQueryResponse();
 
         internal SkuDetailsResponseConsolidator(Action<ISkuDetailsQueryResponse> onSkuDetailsResponseConsolidated)
         {

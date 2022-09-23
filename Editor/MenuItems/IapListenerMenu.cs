@@ -34,7 +34,7 @@ namespace UnityEditor.Purchasing
 
         static void CreateUnityIAPListenerInternal()
         {
-            GameObject listenerObject = CreateListenerObject();
+            var listenerObject = CreateListenerObject();
 
             if (listenerObject)
             {

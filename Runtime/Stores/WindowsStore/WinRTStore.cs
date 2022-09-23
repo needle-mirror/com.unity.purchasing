@@ -1,13 +1,13 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
-using UnityEngine.Purchasing;
 using Uniject;
 using UnityEngine;
-using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Default;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -18,8 +18,8 @@ namespace UnityEngine.Purchasing
     {
         private IWindowsIAP win8;
         private IStoreCallback callback;
-        private IUtil util;
-        private ILogger logger;
+        private readonly IUtil util;
+        private readonly ILogger logger;
 
         private bool m_CanReceivePurchases = false;
 
@@ -38,12 +38,12 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public void SetWindowsIAP(IWindowsIAP iap)
         {
-            this.win8 = iap;
+            win8 = iap;
         }
 
         public override void Initialize(IStoreCallback biller)
         {
-            this.callback = biller;
+            callback = biller;
         }
 
         public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> productDefs)
@@ -61,7 +61,7 @@ namespace UnityEngine.Purchasing
 
         public override void FinishTransaction(ProductDefinition product, string transactionId)
         {
-            this.win8.FinaliseTransaction(transactionId);
+            win8.FinaliseTransaction(transactionId);
         }
 
         private void init(int delay)
@@ -161,7 +161,7 @@ namespace UnityEngine.Purchasing
             });
         }
 
-        private static int count;
+        private static readonly int count;
         public void OnPurchaseSucceeded(string productId, string receipt, string tranId)
         {
             util.RunOnMainThread(() =>

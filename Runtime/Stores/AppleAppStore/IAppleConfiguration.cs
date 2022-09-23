@@ -1,4 +1,7 @@
+#nullable enable
+
 using System;
+using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -12,7 +15,7 @@ namespace UnityEngine.Purchasing
         /// Read the App Receipt from local storage.
         /// Returns null for iOS less than or equal to 6, may also be null on a reinstalling and require refreshing.
         /// </summary>
-        string appReceipt { get; }
+        string? appReceipt { get; }
 
         /// <summary>
         /// Determine if the user can make payments; [SKPaymentQueue canMakePayments].
@@ -32,5 +35,11 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="callback"></param>
         void SetApplePromotionalPurchaseInterceptorCallback(Action<Product> callback);
+
+        /// <summary>
+        /// Called when entitlements are revoked from Apple.
+        /// </summary>
+        /// <param name="callback">Action will be called with the products that were revoked.</param>
+        void SetEntitlementsRevokedListener(Action<List<Product>> callback);
     }
 }

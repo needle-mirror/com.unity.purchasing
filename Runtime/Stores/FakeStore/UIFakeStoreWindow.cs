@@ -19,8 +19,7 @@ namespace UnityEngine.Purchasing
         bool m_DropdownEnabled;
 
         bool m_DoDropdown;
-
-        UIFakeStoreDropdown m_Dropdown = new UIFakeStoreDropdown();
+        readonly UIFakeStoreDropdown m_Dropdown = new UIFakeStoreDropdown();
 
         Vector2 scrollPosition = new Vector2();
 
@@ -35,16 +34,16 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                GUI.Window(0, windowRect, this.DoMainGUI, "Fake Store");
+                GUI.Window(0, windowRect, DoMainGUI, "Fake Store");
             }
         }
 
         Rect CreateCenteredWindowRect()
         {
-            float windowWidth = Screen.width * k_MenuScreenRatio;
-            float windowHeight = Screen.height * k_MenuScreenRatio;
-            float centeredX = (Screen.width - windowWidth) / 2f;
-            float centeredY = (Screen.height - windowHeight) / 2f;
+            var windowWidth = Screen.width * k_MenuScreenRatio;
+            var windowHeight = Screen.height * k_MenuScreenRatio;
+            var centeredX = (Screen.width - windowWidth) / 2f;
+            var centeredY = (Screen.height - windowHeight) / 2f;
 
             return new Rect(centeredX, centeredY, windowWidth, windowHeight);
         }
@@ -105,7 +104,7 @@ namespace UnityEngine.Purchasing
         internal void ConfigureDropdownOptions(List<string> options)
         {
             m_Dropdown.SetOptions(options);
-            m_Dropdown.SetSelectionAction(this.OnDropdown);
+            m_Dropdown.SetSelectionAction(OnDropdown);
 
             if (options.Count > 0)
             {
@@ -124,10 +123,10 @@ namespace UnityEngine.Purchasing
         {
             m_OnOk = onOk;
 
-            m_CancelEnabled = (onCancel != null);
+            m_CancelEnabled = onCancel != null;
             m_OnCancel = onCancel;
 
-            m_DropdownEnabled = (onDropdown != null);
+            m_DropdownEnabled = onDropdown != null;
             m_OnDropdown = onDropdown;
         }
     }

@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing
 {
     class GoogleCachedQuerySkuDetailsService : IGoogleCachedQuerySkuDetailsService
     {
-        Dictionary<string, AndroidJavaObject> m_CachedQueriedSkus = new Dictionary<string, AndroidJavaObject>();
+        readonly Dictionary<string, AndroidJavaObject> m_CachedQueriedSkus = new Dictionary<string, AndroidJavaObject>();
 
         public IEnumerable<AndroidJavaObject> GetCachedQueriedSkus()
         {

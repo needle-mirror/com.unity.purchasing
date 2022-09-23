@@ -16,14 +16,12 @@ namespace UnityEditor.Purchasing
         const string k_AuthHeaderValueFormat = "Basic {0}";
         const string k_ContentHeaderName = "Content-Type";
         const string k_ContentHeaderValue = "application/json;charset=UTF-8";
-
-        IWebRequestInternal m_WebRequest = new CloudProjectWebRequest();
+        readonly IWebRequestInternal m_WebRequest = new CloudProjectWebRequest();
 
         UnityWebRequest m_GetGoogleKeyRequest;
-        GoogleConfigurationData m_PurchasingRemoteDataRef;
-
-        Action<string> m_GetGooglePlayKeyCallback;
-        Action<GooglePlayRevenueTrackingKeyState> m_SetGooglePlayKeyCallback;
+        readonly GoogleConfigurationData m_PurchasingRemoteDataRef;
+        readonly Action<string> m_GetGooglePlayKeyCallback;
+        readonly Action<GooglePlayRevenueTrackingKeyState> m_SetGooglePlayKeyCallback;
 
         internal GoogleConfigurationWebRequests(GoogleConfigurationData remoteData, Action<string> onGetGooglePlayKey, Action<GooglePlayRevenueTrackingKeyState> onSetGooglePlayKey)
         {
@@ -90,7 +88,7 @@ namespace UnityEditor.Purchasing
 
         void FetchGooglePlayKeyFromRequest()
         {
-            string googlePlayKey = "";
+            var googlePlayKey = "";
             if (IsGoogleKeyRequestResultSuccess())
             {
                 try
@@ -166,21 +164,11 @@ namespace UnityEditor.Purchasing
 
         void HandleCompletedSubmitResponse(UnityWebRequest completedRequest)
         {
-            GooglePlayRevenueTrackingKeyState keyState;
-
-            if (completedRequest.IsResultTransferSuccess())
-            {
-                keyState = GooglePlayRevenueTrackingKeyState.Verified;
-            }
-            else if (completedRequest.IsResultProtocolError())
-            {
-                keyState = InterpretKeyStateFromProtocolError(completedRequest.responseCode);
-            }
-            else
-            {
-                keyState = GooglePlayRevenueTrackingKeyState.InvalidFormat;
-            }
-
+            var keyState = completedRequest.IsResultTransferSuccess()
+                ? GooglePlayRevenueTrackingKeyState.Verified
+                : completedRequest.IsResultProtocolError()
+                    ? InterpretKeyStateFromProtocolError(completedRequest.responseCode)
+                    : GooglePlayRevenueTrackingKeyState.InvalidFormat;
             m_SetGooglePlayKeyCallback(keyState);
         }
 

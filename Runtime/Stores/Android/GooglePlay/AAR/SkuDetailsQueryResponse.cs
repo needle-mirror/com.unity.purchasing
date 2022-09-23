@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
 {
     class SkuDetailsQueryResponse : ISkuDetailsQueryResponse
     {
-        List<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)> m_Responses = new List<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)>();
+        readonly List<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)> m_Responses = new List<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)>();
 
         public void AddResponse(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> skuDetails)
         {

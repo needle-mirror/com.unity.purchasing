@@ -12,8 +12,7 @@ namespace UnityEditor.Purchasing
 
         const string k_Title = "In-App Purchases";
         const string k_Description = "Simplify cross platform In-App Purchasing";
-
-        PurchasingGameService m_Service;
+        readonly PurchasingGameService m_Service;
         bool m_CallbacksInitialized;
 
         SimpleStateMachine<bool> m_StateMachine;
@@ -82,7 +81,7 @@ namespace UnityEditor.Purchasing
             var clonedContainer = SettingsUIUtils.CloneUIFromTemplate(UIResourceUtils.purchasingServicesRootUxmlPath);
             rootVisualElement.Add(clonedContainer);
 
-            var uiState = (BasePurchasingState) m_StateMachine.currentState;
+            var uiState = (BasePurchasingState)m_StateMachine.currentState;
 
             foreach (var uiStateElement in uiState.GetStateUI())
             {

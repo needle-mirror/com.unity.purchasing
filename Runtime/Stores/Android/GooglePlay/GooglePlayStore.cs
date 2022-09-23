@@ -7,14 +7,14 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStore : AbstractStore
     {
-        IGooglePlayStoreRetrieveProductsService m_RetrieveProductsService;
-        IGooglePlayStorePurchaseService m_StorePurchaseService;
-        IGoogleFetchPurchases m_FetchPurchases;
-        IGooglePlayStoreFinishTransactionService m_FinishTransactionService;
-        IGooglePurchaseCallback m_GooglePurchaseCallback;
-        IGooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensions;
-        IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
-        IUtil m_Util;
+        readonly IGooglePlayStoreRetrieveProductsService m_RetrieveProductsService;
+        readonly IGooglePlayStorePurchaseService m_StorePurchaseService;
+        readonly IGoogleFetchPurchases m_FetchPurchases;
+        readonly IGooglePlayStoreFinishTransactionService m_FinishTransactionService;
+        readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
+        readonly IGooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensions;
+        readonly IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
+        readonly IUtil m_Util;
 
         public GooglePlayStore(IGooglePlayStoreRetrieveProductsService retrieveProductsService,
             IGooglePlayStorePurchaseService storePurchaseService,

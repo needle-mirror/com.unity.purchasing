@@ -1,7 +1,7 @@
 using System;
-using UnityEngine.Purchasing.Extension;
 using System.Collections.Generic;
 using System.Reflection;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
 
         public static string SerializeProductDefs(IEnumerable<ProductDefinition> products)
         {
-            List<object> result = new List<object>();
+            var result = new List<object>();
             foreach (var product in products)
             {
                 result.Add(EncodeProductDef(product));
@@ -44,30 +44,12 @@ namespace UnityEngine.Purchasing
 
         public static string SerializeProductDescs(IEnumerable<ProductDescription> products)
         {
-            List<object> result = new List<object>();
+            var result = new List<object>();
             foreach (var product in products)
             {
                 result.Add(EncodeProductDesc(product));
             }
             return MiniJson.JsonEncode(result);
-        }
-
-        public static List<ProductDescription> DeserializeProductDescriptions(string json)
-        {
-            var objects = (List<object>)MiniJson.JsonDecode(json);
-            var result = new List<ProductDescription>();
-            foreach (Dictionary<string, object> obj in objects)
-            {
-                var metadata = DeserializeMetadata((Dictionary<string, object>)obj["metadata"]);
-                var product = new ProductDescription(
-                    (string)obj["storeSpecificId"],
-                    metadata,
-                    obj.TryGetString("receipt"),
-                    obj.TryGetString("transactionId"),
-                    ProductType.NonConsumable);
-                result.Add(product);
-            }
-            return result;
         }
 
         public static Dictionary<string, string> DeserializeSubscriptionDescriptions(string json)
@@ -191,32 +173,6 @@ namespace UnityEngine.Purchasing
             return new PurchaseFailureDescription("Unknown ProductID", reason, dic.TryGetString("message"));
         }
 
-        private static ProductMetadata DeserializeMetadata(Dictionary<string, object> data)
-        {
-            // We are seeing an occasional exception when converting a string to a decimal here. It may be related to
-            // a mono bug with certain cultures' number formatters: https://bugzilla.xamarin.com/show_bug.cgi?id=4814
-            //
-            // It's not a great idea to set the price to 0 when this happens, but it's probably better than throwing
-            // an exception. The best solution is to pass a number for localizedPrice when possible, to avoid any string
-            // parsing issues.
-            decimal localizedPrice = 0.0m;
-            try
-            {
-                localizedPrice = Convert.ToDecimal(data["localizedPrice"]);
-            }
-            catch
-            {
-                localizedPrice = 0.0m;
-            }
-
-            return new ProductMetadata(
-                data.TryGetString("localizedPriceString"),
-                data.TryGetString("localizedTitle"),
-                data.TryGetString("localizedDescription"),
-                data.TryGetString("isoCurrencyCode"),
-                localizedPrice);
-        }
-
         private static Dictionary<string, object> EncodeProductDef(ProductDefinition product)
         {
             var prod = new Dictionary<string, object>
@@ -224,7 +180,7 @@ namespace UnityEngine.Purchasing
                 {"id", product.id}, {"storeSpecificId", product.storeSpecificId}, {"type", product.type.ToString()}
             };
 
-            bool enabled = true;
+            var enabled = true;
             var enabledProp = typeof(ProductDefinition).GetProperty("enabled");
             if (enabledProp != null)
             {
@@ -244,10 +200,10 @@ namespace UnityEngine.Purchasing
             if (payoutsProp != null)
             {
                 var payoutsObject = payoutsProp.GetValue(product, null);
-                Array payouts = payoutsObject as Array;
+                var payouts = payoutsObject as Array;
                 if (payouts != null)
                 {
-                    foreach (object payout in payouts)
+                    foreach (var payout in payouts)
                     {
                         var payoutDict = new Dictionary<string, object>();
                         var payoutType = payout.GetType();
@@ -269,8 +225,8 @@ namespace UnityEngine.Purchasing
             var prod = new Dictionary<string, object> { { "storeSpecificId", product.storeSpecificId } };
 
             // ProductDescription.type field available in Unity 5.4+. Access by reflection here.
-            Type pdClassType = typeof(ProductDescription);
-            FieldInfo pdClassFieldType = pdClassType.GetField("type");
+            var pdClassType = typeof(ProductDescription);
+            var pdClassFieldType = pdClassType.GetField("type");
             if (pdClassFieldType != null)
             {
                 var typeValue = pdClassFieldType.GetValue(product);

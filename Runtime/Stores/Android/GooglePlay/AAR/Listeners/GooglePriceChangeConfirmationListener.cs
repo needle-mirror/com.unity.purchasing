@@ -11,8 +11,7 @@ namespace UnityEngine.Purchasing
     class GooglePriceChangeConfirmationListener : AndroidJavaProxy
     {
         const string k_AndroidPriceChangeConfirmationListenerClassName = "com.android.billingclient.api.PriceChangeConfirmationListener";
-
-        Action<IGoogleBillingResult> m_OnPriceChangeConfirmationResult;
+        readonly Action<IGoogleBillingResult> m_OnPriceChangeConfirmationResult;
 
         internal GooglePriceChangeConfirmationListener(Action<IGoogleBillingResult> onPriceChangeConfirmationResult)
             : base(k_AndroidPriceChangeConfirmationListenerClassName)

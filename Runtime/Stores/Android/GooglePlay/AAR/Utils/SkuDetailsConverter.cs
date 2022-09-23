@@ -27,20 +27,20 @@ namespace UnityEngine.Purchasing.Utils
         /// <returns>`ProductDescription` representation of a SkuDetails</returns>
         internal static ProductDescription BuildProductDescription(IAndroidJavaObjectWrapper skuDetails)
         {
-            string sku = skuDetails.Call<string>("getSku");
-            string price = skuDetails.Call<string>("getPrice");
-            decimal priceAmount = Convert.ToDecimal(skuDetails.Call<long>("getPriceAmountMicros") > 0 ? skuDetails.Call<long>("getPriceAmountMicros") / 1000000.0 : 0);
-            string title = skuDetails.Call<string>("getTitle");
-            string description = skuDetails.Call<string>("getDescription");
-            string priceCurrencyCode = skuDetails.Call<string>("getPriceCurrencyCode");
-            string originalJson = skuDetails.Call<string>("getOriginalJson");
-            string subscriptionPeriod = skuDetails.Call<string>("getSubscriptionPeriod");
-            string freeTrialPeriod = skuDetails.Call<string>("getFreeTrialPeriod");
-            string introductoryPrice = skuDetails.Call<string>("getIntroductoryPrice");
-            string introductoryPricePeriod = skuDetails.Call<string>("getIntroductoryPricePeriod");
-            int introductoryPriceCycles = skuDetails.Call<int>("getIntroductoryPriceCycles");
+            var sku = skuDetails.Call<string>("getSku");
+            var price = skuDetails.Call<string>("getPrice");
+            var priceAmount = Convert.ToDecimal(skuDetails.Call<long>("getPriceAmountMicros") > 0 ? skuDetails.Call<long>("getPriceAmountMicros") / 1000000.0 : 0);
+            var title = skuDetails.Call<string>("getTitle");
+            var description = skuDetails.Call<string>("getDescription");
+            var priceCurrencyCode = skuDetails.Call<string>("getPriceCurrencyCode");
+            var originalJson = skuDetails.Call<string>("getOriginalJson");
+            var subscriptionPeriod = skuDetails.Call<string>("getSubscriptionPeriod");
+            var freeTrialPeriod = skuDetails.Call<string>("getFreeTrialPeriod");
+            var introductoryPrice = skuDetails.Call<string>("getIntroductoryPrice");
+            var introductoryPricePeriod = skuDetails.Call<string>("getIntroductoryPricePeriod");
+            var introductoryPriceCycles = skuDetails.Call<int>("getIntroductoryPriceCycles");
 
-            GoogleProductMetadata productMetadata = new GoogleProductMetadata(
+            var productMetadata = new GoogleProductMetadata(
                 price,
                 title,
                 description,
@@ -55,7 +55,7 @@ namespace UnityEngine.Purchasing.Utils
                 introductoryPriceCycles = introductoryPriceCycles
             };
 
-            ProductDescription product = new ProductDescription(
+            var product = new ProductDescription(
                 sku,
                 productMetadata,
                 "",

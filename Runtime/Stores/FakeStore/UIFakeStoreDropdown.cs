@@ -17,8 +17,8 @@ namespace UnityEngine.Purchasing
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUI.skin.horizontalScrollbar,
                     GUI.skin.verticalScrollbar, GUI.skin.box);
 
-                int optionsCount = m_Options.Count;
-                for (int index = 0; index < optionsCount; index++)
+                var optionsCount = m_Options.Count;
+                for (var index = 0; index < optionsCount; index++)
                 {
                     if (GUILayout.Button(m_Options[index]))
                     {

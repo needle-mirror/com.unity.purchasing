@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing
 {
     class LegacyAnalyticsAdapter : IAnalyticsAdapter
     {
-        ILegacyUnityAnalytics m_LegacyAnalytics;
+        readonly ILegacyUnityAnalytics m_LegacyAnalytics;
 
         public LegacyAnalyticsAdapter(ILegacyUnityAnalytics legacyAnalytics)
         {

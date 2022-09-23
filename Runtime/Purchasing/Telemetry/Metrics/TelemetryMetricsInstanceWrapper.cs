@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing.Telemetry
     class TelemetryMetricsInstanceWrapper : ITelemetryMetricsInstanceWrapper
     {
         IMetrics m_Instance;
-        TelemetryQueue<TelemetryMetricParams> m_Queue;
+        readonly TelemetryQueue<TelemetryMetricParams> m_Queue;
 
         public TelemetryMetricsInstanceWrapper()
         {

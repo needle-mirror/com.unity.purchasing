@@ -476,6 +476,15 @@ int delayInSeconds = 2;
     [self UnitySendMessage: @"onTransactionsRestoredFail" payload: error.localizedDescription];
 }
 
+// Called when an entitlement was revoked.
+- (void)paymentQueue:(SKPaymentQueue *)queue didRevokeEntitlementsForProductIdentifiers:(NSArray *)productIdentifiers
+{
+    UnityPurchasingLog(@"didRevokeEntitlementsForProductIdentifiers");
+    NSString* productIdsJSON = [UnityPurchasing serializeProductIdList: productIdentifiers];
+
+    [self UnitySendMessage: @"onEntitlementsRevoked" payload: productIdsJSON];
+}
+
 - (void)handleTransaction:(SKPaymentTransaction *)transaction
 {
     if (transaction.payment.productIdentifier == nil)
@@ -575,7 +584,7 @@ int delayInSeconds = 2;
             {
                 UnityPurchasingLog(@"Fetched %lu store-promotion ordered products", (unsigned long)[storePromotionOrder count]);
 
-                NSString *productIdsJSON = [UnityPurchasing serializeProductIdList: storePromotionOrder];
+                NSString *productIdsJSON = [UnityPurchasing serializeSKProductIdList: storePromotionOrder];
 
                 [self UnitySendMessage: @"onFetchStorePromotionOrderSucceeded" payload: productIdsJSON];
             }
@@ -783,6 +792,13 @@ int delayInSeconds = 2;
             }
         }
 
+#if __IPHONE_OS_VERSION_MAX_ALLOWED >= 140000 || __MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+        if (@available(iOS 14, macOS 11.0,*))
+        {
+            [product isFamilyShareable] ? [metadata setObject: @"true" forKey: @"isFamilyShareable"] : [metadata setObject: @"false" forKey: @"isFamilyShareable"];
+        }
+#endif
+
 #if __IPHONE_OS_VERSION_MAX_ALLOWED >= 110000 || __TV_OS_VERSION_MAX_ALLOWED >= 110000 || __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
         if ((@available(iOS 11_2, macOS 10_13_2, tvOS 11_2, *)) && (nil != [product introductoryPrice]))
         {
@@ -919,7 +935,7 @@ int delayInSeconds = 2;
     return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 }
 
-+ (NSString*)serializeProductIdList:(NSArray<SKProduct *> *)products
++ (NSString*)serializeSKProductIdList:(NSArray<SKProduct *> *)products
 {
     NSMutableArray *productIds = [NSMutableArray arrayWithCapacity: products.count];
     for (SKProduct *product in products)
@@ -927,7 +943,12 @@ int delayInSeconds = 2;
         [productIds addObject: product.productIdentifier];
     }
 
-    NSData *data = [NSJSONSerialization dataWithJSONObject: productIds options: 0 error: nil];
+    return [UnityPurchasing serializeProductIdList: products];
+}
+
++ (NSString*)serializeProductIdList:(NSArray*)products
+{
+    NSData *data = [NSJSONSerialization dataWithJSONObject: products options: 0 error: nil];
     return [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 }
 

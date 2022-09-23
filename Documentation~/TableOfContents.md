@@ -47,6 +47,7 @@
         * [Extensions and Configuration](UnityIAPiOSMAS.md)
         * [Purchase Receipt](AppleReceipt.md)
         * [Testing](AppleTesting.md)
+        * [Family Sharing](UnityIAPAppleFamilySharing.md)
     * Microsoft Store (UWP)
         * [How to Set Up](UnityIAPWindowsConfiguration.md)
         * [Purchase Receipt](MicrosoftReceipt.md)

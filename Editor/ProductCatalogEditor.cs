@@ -1,6 +1,6 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor.Connect;
@@ -16,7 +16,7 @@ namespace UnityEditor.Purchasing
     {
         private const bool kValidateDebugLog = false;
 
-        private static string[] kStoreKeys =
+        private static readonly string[] kStoreKeys =
         {
             AppleAppStore.Name,
             GooglePlay.Name,
@@ -37,16 +37,15 @@ namespace UnityEditor.Purchasing
         [MenuItem(ProductCatalogEditorMenuPath, false, 200)]
         public static void ShowWindow()
         {
-            EditorWindow.GetWindow(typeof(ProductCatalogEditor));
+            GetWindow(typeof(ProductCatalogEditor));
 
             GenericEditorMenuItemClickEventSenderHelpers.SendIapMenuOpenCatalogEvent();
             GameServicesEventSenderHelpers.SendTopMenuIapCatalogEvent();
         }
 
-        private static GUIContent windowTitle = new GUIContent("IAP Catalog");
-        private static List<ProductCatalogItemEditor> productEditors = new List<ProductCatalogItemEditor>();
-        private static List<ProductCatalogItemEditor> toRemove = new List<ProductCatalogItemEditor>();
-        private ProductCatalog catalog;
+        private static readonly GUIContent windowTitle = new GUIContent("IAP Catalog");
+        private static readonly List<ProductCatalogItemEditor> productEditors = new List<ProductCatalogItemEditor>();
+        private static readonly List<ProductCatalogItemEditor> toRemove = new List<ProductCatalogItemEditor>();
         private Rect exportButtonRect;
         private ExporterValidationResults validation;
 
@@ -65,7 +64,7 @@ namespace UnityEditor.Purchasing
         private static TokenInfo kTokenInfo = new TokenInfo();
         private static string kOrgId;
         private static object kAppStoreSettings; //UDP AppStoreSettings via Reflection
-        private static IDictionary<string, IapItem> kIapItems = new Dictionary<string, IapItem>();
+        private static readonly IDictionary<string, IapItem> kIapItems = new Dictionary<string, IapItem>();
         private static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
         private static string kUdpErrorMsg = "";
 
@@ -80,7 +79,7 @@ namespace UnityEditor.Purchasing
         {
             try
             {
-                FileInfo file = new FileInfo(ProductCatalog.kCatalogPath);
+                var file = new FileInfo(ProductCatalog.kCatalogPath);
 
                 // This will create the new product catalog file location, if it already exists,
                 // this will not do anything.
@@ -112,7 +111,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Property which gets the <c>ProductCatalog</c> instance which is being edited.
         /// </summary>
-        public ProductCatalog Catalog => catalog;
+        public ProductCatalog Catalog { get; private set; }
 
         /// <summary>
         /// Sets the results of the validation of catalog items upon export.
@@ -126,7 +125,7 @@ namespace UnityEditor.Purchasing
 
             if (productEditors.Count == itemResults.Count)
             {
-                for (int i = 0; i < productEditors.Count; ++i)
+                for (var i = 0; i < productEditors.Count; ++i)
                 {
                     productEditors[i].SetValidationResults(itemResults[i]);
                 }
@@ -135,8 +134,8 @@ namespace UnityEditor.Purchasing
 
         void Awake()
         {
-            catalog = ProductCatalog.LoadDefaultCatalog();
-            if (catalog.allProducts.Count == 0)
+            Catalog = ProductCatalog.LoadDefaultCatalog();
+            if (Catalog.allProducts.Count == 0)
             {
                 AddNewProduct(); // Start the catalog with one item
             }
@@ -147,7 +146,7 @@ namespace UnityEditor.Purchasing
             titleContent = windowTitle;
 
             productEditors.Clear();
-            foreach (var product in catalog.allProducts)
+            foreach (var product in Catalog.allProducts)
             {
                 productEditors.Add(new ProductCatalogItemEditor(product));
             }
@@ -196,7 +195,7 @@ namespace UnityEditor.Purchasing
         private void Save()
         {
             dirty = false;
-            File.WriteAllText(ProductCatalog.kCatalogPath, ProductCatalog.Serialize(catalog));
+            File.WriteAllText(ProductCatalog.kCatalogPath, ProductCatalog.Serialize(Catalog));
 
             AssetDatabase.ImportAsset(ProductCatalog.kCatalogPath);
         }
@@ -231,10 +230,10 @@ namespace UnityEditor.Purchasing
             EditorGUILayout.EndScrollView();
 
             EditorGUILayout.BeginVertical();
-            float defaultLabelWidth = EditorGUIUtility.labelWidth;
+            var defaultLabelWidth = EditorGUIUtility.labelWidth;
             EditorGUIUtility.labelWidth = 315;
 
-            bool catalogHasProducts = !catalog.IsEmpty();
+            var catalogHasProducts = !Catalog.IsEmpty();
             if (catalogHasProducts)
             {
                 ShowAndProcessCodelessAutoInitToggleGuis();
@@ -247,8 +246,8 @@ namespace UnityEditor.Purchasing
 
             EditorGUILayout.LabelField("Catalog Export");
 
-            catalog.appleSKU = ShowEditTextFieldGuiAndGetValue("appleSKU", "Apple SKU:", catalog.appleSKU);
-            catalog.appleTeamID = ShowEditTextFieldGuiAndGetValue("appleTeamID", "Apple Team ID:", catalog.appleTeamID);
+            Catalog.appleSKU = ShowEditTextFieldGuiAndGetValue("appleSKU", "Apple SKU:", Catalog.appleSKU);
+            Catalog.appleTeamID = ShowEditTextFieldGuiAndGetValue("appleTeamID", "Apple Team ID:", Catalog.appleTeamID);
 
             if (EditorGUI.EndChangeCheck())
             {
@@ -273,7 +272,7 @@ namespace UnityEditor.Purchasing
                 productEditors.RemoveAll(x => toRemove.Contains(x));
                 foreach (var editor in toRemove)
                 {
-                    catalog.Remove(editor.Item);
+                    Catalog.Remove(editor.Item);
                 }
 
                 toRemove.Clear();
@@ -286,7 +285,7 @@ namespace UnityEditor.Purchasing
             EditorGUILayout.Space();
 
             ShowAndProcessIapAutoInitToggleGui();
-            if (catalog.enableCodelessAutoInitialization)
+            if (Catalog.enableCodelessAutoInitialization)
             {
                 ShowAndProcessUgsAutoInitToggleGui();
             }
@@ -299,16 +298,16 @@ namespace UnityEditor.Purchasing
             var newValue = EditorGUILayout.Toggle(
                 new GUIContent("Automatically initialize UnityPurchasing (recommended)",
                     "Automatically start Unity IAP if there are any products defined in this catalog. Uncheck this if you plan to initialize Unity IAP manually in your code."),
-                catalog.enableCodelessAutoInitialization);
+                Catalog.enableCodelessAutoInitialization);
 
             UpdateIapAutoInitValue(newValue);
         }
 
         private void UpdateIapAutoInitValue(bool newValue)
         {
-            if (newValue != catalog.enableCodelessAutoInitialization)
+            if (newValue != Catalog.enableCodelessAutoInitialization)
             {
-                catalog.enableCodelessAutoInitialization = newValue;
+                Catalog.enableCodelessAutoInitialization = newValue;
 
                 GenericEditorClickCheckboxEventSenderHelpers.SendCatalogAutoInitToggleEvent(newValue);
             }
@@ -321,16 +320,16 @@ namespace UnityEditor.Purchasing
                     "This initializes Unity Gaming Services with the default `production` environment.\n" +
                     "This way of initializing Unity Gaming Services might not be compatible with all other services as they might require special initialization options.\n" +
                     "If the use of initialization options is needed, Unity Gaming Services should be initialized with the coded API."),
-                catalog.enableUnityGamingServicesAutoInitialization);
+                Catalog.enableUnityGamingServicesAutoInitialization);
 
             UpdateUgsAutoInitValue(newValue);
         }
 
         private void UpdateUgsAutoInitValue(bool newValue)
         {
-            if (newValue != catalog.enableUnityGamingServicesAutoInitialization)
+            if (newValue != Catalog.enableUnityGamingServicesAutoInitialization)
             {
-                catalog.enableUnityGamingServicesAutoInitialization = newValue;
+                Catalog.enableUnityGamingServicesAutoInitialization = newValue;
 
                 GenericEditorClickCheckboxEventSenderHelpers.SendCatalogUgsAutoInitToggleEvent(newValue);
             }
@@ -382,19 +381,22 @@ namespace UnityEditor.Purchasing
                 }
             }
 
-            if (invalidIdsExist) return;
+            if (invalidIdsExist)
+            {
+                return;
+            }
 
             var newEditor = new ProductCatalogItemEditor();
             newEditor.SetShouldBeMarked(false);
             productEditors.Add(newEditor);
-            catalog.Add(newEditor.Item);
+            Catalog.Add(newEditor.Item);
         }
 
         private void CheckForDuplicateIDs()
         {
             var ids = new HashSet<string>();
             var duplicates = new HashSet<string>();
-            foreach (var product in catalog.allProducts)
+            foreach (var product in Catalog.allProducts)
             {
                 if (!string.IsNullOrEmpty(product.id) && ids.Contains(product.id))
                 {
@@ -464,7 +466,7 @@ namespace UnityEditor.Purchasing
         /// <returns>Whether or not the export was succesful. Always returns false if eraseExport is true.</returns>
         public static bool Export(string storeName, string folder, bool eraseExport)
         {
-            var editor = ScriptableObject.CreateInstance(typeof(ProductCatalogEditor)) as ProductCatalogEditor;
+            var editor = CreateInstance(typeof(ProductCatalogEditor)) as ProductCatalogEditor;
             return new ProductCatalogExportWindow(editor).Export(storeName, folder, eraseExport);
         }
 
@@ -511,7 +513,7 @@ namespace UnityEditor.Purchasing
 
                         var newRequest =
                             UdpSynchronizationApi.CreateGetOrgIdRequest(kTokenInfo.access_token, Application.cloudProjectId);
-                        ReqStruct newReqStruct = new ReqStruct { request = newRequest, resp = new OrgIdResponse() };
+                        var newReqStruct = new ReqStruct { request = newRequest, resp = new OrgIdResponse() };
 
                         requestQueue.Enqueue(newReqStruct);
                     }
@@ -575,18 +577,9 @@ namespace UnityEditor.Purchasing
             try
             {
                 var response = JsonUtility.FromJson<ErrorResponse>(downloadedRawJson);
-                if (response?.message != null && response.details != null && response.details.Length != 0)
-                {
-                    kUdpErrorMsg = string.Format("{0} : {1}", response.details[0].field, response.message);
-                }
-                else if (response?.message != null)
-                {
-                    kUdpErrorMsg = response.message;
-                }
-                else
-                {
-                    kUdpErrorMsg = $"Unknown Error, Please try again. Error code: {responseCode}";
-                }
+                kUdpErrorMsg = response?.message != null && response.details != null && response.details.Length != 0
+                    ? string.Format("{0} : {1}", response.details[0].field, response.message)
+                    : response?.message != null ? response.message : $"Unknown Error, Please try again. Error code: {responseCode}";
             }
             catch (ArgumentException)
             {
@@ -600,7 +593,7 @@ namespace UnityEditor.Purchasing
         void PrepareDeveloperInfo()
         {
             // Get Client ID
-            Type udpAppStoreSettings = AppStoreSettingsInterface.GetClassType();
+            var udpAppStoreSettings = AppStoreSettingsInterface.GetClassType();
             if (udpAppStoreSettings != null)
             {
                 var assetPathProp = AppStoreSettingsInterface.GetAssetPathField();
@@ -640,14 +633,14 @@ namespace UnityEditor.Purchasing
         {
             var authCodePropertyInfo = response.GetType().GetProperty("AuthCode");
             var exceptionPropertyInfo = response.GetType().GetProperty("Exception");
-            string authCode = (string)authCodePropertyInfo.GetValue(response, null);
-            Exception exception = (Exception)exceptionPropertyInfo.GetValue(response, null);
+            var authCode = (string)authCodePropertyInfo.GetValue(response, null);
+            var exception = (Exception)exceptionPropertyInfo.GetValue(response, null);
 
             if (authCode != null)
             {
                 var request = UdpSynchronizationApi.CreateGetAccessTokenRequest(authCode);
-                TokenInfo tokenInfoResp = new TokenInfo();
-                ReqStruct reqStruct = new ReqStruct { request = request, resp = tokenInfoResp };
+                var tokenInfoResp = new TokenInfo();
+                var reqStruct = new ReqStruct { request = request, resp = tokenInfoResp };
                 requestQueue.Enqueue(reqStruct);
             }
             else
@@ -673,7 +666,7 @@ namespace UnityEditor.Purchasing
 
             private ExporterValidationResults validation;
 
-            private bool editorSupportsPayouts = false;
+            private readonly bool editorSupportsPayouts = false;
 
             private bool advancedVisible = true;
             private bool descriptionVisible = true;
@@ -697,17 +690,17 @@ namespace UnityEditor.Purchasing
             /// </summary>
             public string udpSyncErrorMsg = "";
 
-            private List<LocalizedProductDescription> descriptionsToRemove = new List<LocalizedProductDescription>();
-            private List<ProductCatalogPayout> payoutsToRemove = new List<ProductCatalogPayout>();
+            private readonly List<LocalizedProductDescription> descriptionsToRemove = new List<LocalizedProductDescription>();
+            private readonly List<ProductCatalogPayout> payoutsToRemove = new List<ProductCatalogPayout>();
 
             /// <summary>
             /// Default constructor. Creates a new <c>ProductCatalogItem</c> to edit.
             /// </summary>
             public ProductCatalogItemEditor()
             {
-                this.Item = new ProductCatalogItem();
+                Item = new ProductCatalogItem();
 
-                editorSupportsPayouts = (null != typeof(ProductDefinition).GetProperty("payouts"));
+                editorSupportsPayouts = null != typeof(ProductDefinition).GetProperty("payouts");
             }
 
             /// <summary>
@@ -716,8 +709,8 @@ namespace UnityEditor.Purchasing
             /// <param name="description"> The description of the item being created. </param>
             public ProductCatalogItemEditor(ProductCatalogItem description)
             {
-                this.Item = description;
-                editorSupportsPayouts = (null != typeof(ProductDefinition).GetProperty("payouts"));
+                Item = description;
+                editorSupportsPayouts = null != typeof(ProductDefinition).GetProperty("payouts");
             }
 
             /// <summary>
@@ -725,10 +718,10 @@ namespace UnityEditor.Purchasing
             /// </summary>
             public void OnGUI()
             {
-                GUIStyle s = new GUIStyle(EditorStyles.foldout);
+                var s = new GUIStyle(EditorStyles.foldout);
                 var box = EditorGUILayout.BeginVertical();
 
-                Rect rect = new Rect(box.xMax - EditorGUIUtility.singleLineHeight - 2, box.yMin, EditorGUIUtility.singleLineHeight + 2, EditorGUIUtility.singleLineHeight);
+                var rect = new Rect(box.xMax - EditorGUIUtility.singleLineHeight - 2, box.yMin, EditorGUIUtility.singleLineHeight + 2, EditorGUIUtility.singleLineHeight);
                 if (GUI.Button(rect, "x") && EditorUtility.DisplayDialog("Delete Product?", "Are you sure you want to delete this product?", "Delete", "Do Not Delete"))
                 {
                     toRemove.Add(this);
@@ -823,7 +816,7 @@ namespace UnityEditor.Purchasing
                         {
                             EditorGUI.indentLevel++;
 
-                            int payoutIndex = 1;
+                            var payoutIndex = 1;
                             foreach (var payout in Item.Payouts)
                             {
                                 var payoutBox = EditorGUILayout.BeginVertical();
@@ -871,7 +864,7 @@ namespace UnityEditor.Purchasing
                     if (storeIDsVisible)
                     {
                         EditorGUI.indentLevel++;
-                        foreach (string storeKey in kStoreKeys)
+                        foreach (var storeKey in kStoreKeys)
                         {
                             var newStoreID = ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue("storeID." + storeKey, storeKey, Item.GetStoreID(storeKey));
                             Item.SetStoreID(storeKey, newStoreID);
@@ -952,25 +945,19 @@ namespace UnityEditor.Purchasing
                                     ? string.Empty
                                     : Item.udpPrice.value.ToString());
 
-                            decimal priceDecimal;
-                            if (decimal.TryParse(priceStr, out priceDecimal))
-                            {
-                                Item.udpPrice.value = priceDecimal;
-                            }
-                            else
-                            {
-                                Item.udpPrice.value = 0;
-                            }
+                            Item.udpPrice.value = decimal.TryParse(priceStr, out var priceDecimal) ? priceDecimal : 0;
 
                             EndErrorBlock(validation, "udpPrice");
 
                             if (GUILayout.Button("Sync to UDP"))
                             {
                                 udpSyncErrorMsg = "";
-                                IapItem iapItem = new IapItem();
-                                iapItem.consumable = Item.type == ProductType.Consumable;
-                                iapItem.slug = Item.GetStoreID(UDP.Name) ?? Item.id;
-                                iapItem.name = Item.defaultDescription.Title;
+                                var iapItem = new IapItem
+                                {
+                                    consumable = Item.type == ProductType.Consumable,
+                                    slug = Item.GetStoreID(UDP.Name) ?? Item.id,
+                                    name = Item.defaultDescription.Title
+                                };
                                 iapItem.properties.description = Item.defaultDescription.Description;
                                 iapItem.priceSets.PurchaseFee.priceMap.DEFAULT.Add(new PriceDetail
                                 {
@@ -1100,15 +1087,7 @@ namespace UnityEditor.Purchasing
                 BeginErrorBlock(validation, fieldName);
                 var priceStr = ShowEditTextFieldGuiAndGetValue(fieldName, "Price:", Item.googlePrice == null || Item.googlePrice.value == 0 ? string.Empty : Item.googlePrice.value.ToString());
 
-                decimal priceDecimal;
-                if (decimal.TryParse(priceStr, out priceDecimal))
-                {
-                    Item.googlePrice.value = priceDecimal;
-                }
-                else
-                {
-                    Item.googlePrice.value = 0;
-                }
+                Item.googlePrice.value = decimal.TryParse(priceStr, out var priceDecimal) ? priceDecimal : 0;
 
                 Item.pricingTemplateID = ShowEditTextFieldGuiAndGetValue("googlePriceTemplate", "Pricing Template:", Item.pricingTemplateID);
                 EndErrorBlock(validation, fieldName);
@@ -1139,7 +1118,7 @@ namespace UnityEditor.Purchasing
                     EditorGUIUtility.singleLineHeight);
                 if (GUI.Button(screenshotButtonRect, new GUIContent("Select a screenshot", "Required for Apple XML Delivery.")))
                 {
-                    string selectedPath = EditorUtility.OpenFilePanel("Select a screenshot", "", "");
+                    var selectedPath = EditorUtility.OpenFilePanel("Select a screenshot", "", "");
                     if (selectedPath != null)
                     {
                         Item.screenshotPath = selectedPath;
@@ -1213,12 +1192,12 @@ namespace UnityEditor.Purchasing
                 description.Description = ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue(fieldValidationPrefix + ".Description", "Description:", description.Description);
 
                 var removeButtonRect = new Rect(box.xMax - removeButtonWidth, box.yMin, removeButtonWidth, EditorGUIUtility.singleLineHeight);
-                var remove = (showRemoveButton
+                var remove = showRemoveButton
                     && GUI.Button(removeButtonRect, "x")
                     && EditorUtility.DisplayDialog("Delete Translation?",
                         "Are you sure you want to delete this translation?",
                         "Delete",
-                        "Do Not Delete"));
+                        "Do Not Delete");
                 EditorGUILayout.EndVertical();
                 return remove;
             }
@@ -1273,8 +1252,16 @@ namespace UnityEditor.Purchasing
 
             private static string TruncateString(string s, int len)
             {
-                if (string.IsNullOrEmpty(s)) return s;
-                if (len < 0) return string.Empty;
+                if (string.IsNullOrEmpty(s))
+                {
+                    return s;
+                }
+
+                if (len < 0)
+                {
+                    return string.Empty;
+                }
+
                 return s.Substring(0, Math.Min(s.Length, len));
             }
         }
@@ -1289,8 +1276,8 @@ namespace UnityEditor.Purchasing
             /// </summary>
             public const float kWidth = 200f;
 
-            private ProductCatalogEditor editor;
-            private List<IProductCatalogExporter> exporters = new List<IProductCatalogExporter>();
+            private readonly ProductCatalogEditor editor;
+            private readonly List<IProductCatalogExporter> exporters = new List<IProductCatalogExporter>();
 
             /// <summary>
             /// Constructor taking an instance of <c>ProductCatalogEditor</c> to export contents from.
@@ -1342,7 +1329,7 @@ namespace UnityEditor.Purchasing
             private bool Validate(IProductCatalogExporter exporter, out ExporterValidationResults catalogValidation,
                 out List<ExporterValidationResults> itemValidation, bool debug = false)
             {
-                bool valid = true;
+                var valid = true;
                 catalogValidation = exporter.Validate(editor.Catalog);
                 valid = valid && catalogValidation.Valid;
                 itemValidation = new List<ExporterValidationResults>();
@@ -1356,27 +1343,34 @@ namespace UnityEditor.Purchasing
 
                 if (debug)
                 {
-                    Action<string, ExporterValidationResults> DebugResults =
-                        (string name, ExporterValidationResults r) =>
+                    void DebugResults(string name, ExporterValidationResults r)
+                    {
+                        if (!r.Valid || r.warnings.Count != 0)
                         {
-                            if (!r.Valid || r.warnings.Count != 0) Debug.LogWarning(name + ", Valid = " + r.Valid);
-                            foreach (var m in r.errors)
-                            {
-                                Debug.LogWarning("errors " + m);
-                            }
+                            Debug.LogWarning(name + ", Valid = " + r.Valid);
+                        }
 
-                            foreach (var m in r.fieldErrors)
-                            {
-                                Debug.LogWarning("fieldErrors " + m);
-                            }
+                        foreach (var m in r.errors)
+                        {
+                            Debug.LogWarning("errors " + m);
+                        }
 
-                            foreach (var m in r.warnings)
-                            {
-                                Debug.LogWarning("warnings " + m);
-                            }
-                        };
+                        foreach (var m in r.fieldErrors)
+                        {
+                            Debug.LogWarning("fieldErrors " + m);
+                        }
 
-                    if (!valid) Debug.LogWarning("Product Catalog Export Overall Result: valid " + valid);
+                        foreach (var m in r.warnings)
+                        {
+                            Debug.LogWarning("warnings " + m);
+                        }
+                    }
+
+                    if (!valid)
+                    {
+                        Debug.LogWarning("Product Catalog Export Overall Result: valid " + valid);
+                    }
+
                     DebugResults("CatalogValidation", catalogValidation);
                     foreach (var r in itemValidation)
                     {
@@ -1389,10 +1383,8 @@ namespace UnityEditor.Purchasing
 
             private void Export(IProductCatalogExporter exporter)
             {
-                ExporterValidationResults catalogValidation;
-                List<ExporterValidationResults> itemValidation;
 
-                var valid = Validate(exporter, out catalogValidation, out itemValidation, kValidateDebugLog);
+                var valid = Validate(exporter, out var catalogValidation, out var itemValidation, kValidateDebugLog);
                 editor.SetCatalogValidationResults(catalogValidation, itemValidation);
 
                 if (valid)
@@ -1471,8 +1463,8 @@ namespace UnityEditor.Purchasing
                 {
                     foreach (var fileToCopy in exporter.FilesToCopy)
                     {
-                        string targetPath = Path.Combine(Path.GetDirectoryName(path), Path.GetFileName(fileToCopy));
-                        FileInfo fileInfo = new FileInfo(fileToCopy);
+                        var targetPath = Path.Combine(Path.GetDirectoryName(path), Path.GetFileName(fileToCopy));
+                        var fileInfo = new FileInfo(fileToCopy);
                         fileInfo.CopyTo(targetPath, true);
                     }
                 }
@@ -1490,7 +1482,7 @@ namespace UnityEditor.Purchasing
             {
                 var catalog = editor.Catalog; // This may be normalized before export
 
-                IProductCatalogExporter exporter = exporters.Single(e => e.StoreName == storeName);
+                var exporter = exporters.Single(e => e.StoreName == storeName);
                 if (exporter == null)
                 {
                     Debug.LogErrorFormat("Unable to export {0} Product Catalog. Export is unsupported for this store.",
@@ -1512,9 +1504,7 @@ namespace UnityEditor.Purchasing
                     return false;
                 }
 
-                ExporterValidationResults catalogValidation;
-                List<ExporterValidationResults> itemValidation;
-                var valid = Validate(exporter, out catalogValidation, out itemValidation, kValidateDebugLog);
+                var valid = Validate(exporter, out var catalogValidation, out var itemValidation, kValidateDebugLog);
 
                 if (!valid)
                 {
@@ -1524,7 +1514,7 @@ namespace UnityEditor.Purchasing
                     catalog = exporter.NormalizeToType(catalog);
                 }
 
-                bool wrote = false;
+                var wrote = false;
 
                 if (!string.IsNullOrEmpty(path))
                 {
@@ -1554,10 +1544,7 @@ namespace UnityEditor.Purchasing
             /// <summary>
             /// Property that checks if the export results are valid.
             /// </summary>
-            public bool Valid
-            {
-                get { return (errors.Count == 0 && fieldErrors.Count == 0); }
-            }
+            public bool Valid => errors.Count == 0 && fieldErrors.Count == 0;
 
             /// <summary>
             /// The list of errors.

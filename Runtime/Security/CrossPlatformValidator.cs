@@ -177,46 +177,46 @@ namespace UnityEngine.Purchasing.Security
                 switch (store)
                 {
                     case "GooglePlay":
+                    {
+                        if (null == google)
                         {
-                            if (null == google)
-                            {
-                                throw new MissingStoreSecretException(
-                                    "Cannot validate a Google Play receipt without a Google Play public key.");
-                            }
-                            var details = (Dictionary<string, object>)MiniJson.JsonDecode(payload);
-                            var json = (string)details["json"];
-                            var sig = (string)details["signature"];
-                            var result = google.Validate(json, sig);
-
-                            // [IAP-1696] Check googleBundleId if packageName is present inside the signed receipt.
-                            // packageName can be missing when the GPB v1 getPurchaseHistory API is used to fetch.
-                            if (!string.IsNullOrEmpty(result.packageName) &&
-                                !googleBundleId.Equals(result.packageName))
-                            {
-                                throw new InvalidBundleIdException();
-                            }
-
-                            return new IPurchaseReceipt[] { result };
+                            throw new MissingStoreSecretException(
+                                "Cannot validate a Google Play receipt without a Google Play public key.");
                         }
+                        var details = (Dictionary<string, object>)MiniJson.JsonDecode(payload);
+                        var json = (string)details["json"];
+                        var sig = (string)details["signature"];
+                        var result = google.Validate(json, sig);
+
+                        // [IAP-1696] Check googleBundleId if packageName is present inside the signed receipt.
+                        // packageName can be missing when the GPB v1 getPurchaseHistory API is used to fetch.
+                        if (!string.IsNullOrEmpty(result.packageName) &&
+                            !googleBundleId.Equals(result.packageName))
+                        {
+                            throw new InvalidBundleIdException();
+                        }
+
+                        return new IPurchaseReceipt[] { result };
+                    }
                     case "AppleAppStore":
                     case "MacAppStore":
+                    {
+                        if (null == apple)
                         {
-                            if (null == apple)
-                            {
-                                throw new MissingStoreSecretException(
-                                    "Cannot validate an Apple receipt without supplying an Apple root certificate");
-                            }
-                            var r = apple.Validate(Convert.FromBase64String(payload));
-                            if (!appleBundleId.Equals(r.bundleID))
-                            {
-                                throw new InvalidBundleIdException();
-                            }
-                            return r.inAppPurchaseReceipts.ToArray();
+                            throw new MissingStoreSecretException(
+                                "Cannot validate an Apple receipt without supplying an Apple root certificate");
                         }
+                        var r = apple.Validate(Convert.FromBase64String(payload));
+                        if (!appleBundleId.Equals(r.bundleID))
+                        {
+                            throw new InvalidBundleIdException();
+                        }
+                        return r.inAppPurchaseReceipts.ToArray();
+                    }
                     default:
-                        {
-                            throw new StoreNotSupportedException("Store not supported: " + store);
-                        }
+                    {
+                        throw new StoreNotSupportedException("Store not supported: " + store);
+                    }
                 }
             }
             catch (IAPSecurityException ex)

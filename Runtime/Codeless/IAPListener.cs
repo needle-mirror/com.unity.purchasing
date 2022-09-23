@@ -1,7 +1,7 @@
+using System.Collections.Generic;
+using System.IO;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using System.IO;
-using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
 {
@@ -56,7 +56,10 @@ namespace UnityEngine.Purchasing
         void OnEnable()
         {
             if (dontDestroyOnLoad)
+            {
                 DontDestroyOnLoad(gameObject);
+            }
+
             CodelessIAPStoreListener.Instance.AddListener(this);
         }
 
@@ -74,7 +77,7 @@ namespace UnityEngine.Purchasing
         {
             onPurchaseComplete.Invoke(e.purchasedProduct);
 
-            return (consumePurchase) ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
+            return consumePurchase ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
         }
 
         /// <summary>

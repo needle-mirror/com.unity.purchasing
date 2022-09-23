@@ -42,7 +42,7 @@ namespace UnityEditor.Purchasing
 
         private static void BuildWorkaroundClass()
         {
-            string templateText = LoadTemplateText();
+            var templateText = LoadTemplateText();
 
             if (templateText != null)
             {
@@ -52,14 +52,14 @@ namespace UnityEditor.Purchasing
 
         private static string LoadTemplateText()
         {
-            string templateGUID = FindTemplateGUID(k_WorkaroundFileName);
+            var templateGUID = FindTemplateGUID(k_WorkaroundFileName);
             string templateText = null;
 
             if (templateGUID != null)
             {
-                string templateAbsolutePath = Path.Combine(System.IO.Path.GetDirectoryName(Application.dataPath), AssetDatabase.GUIDToAssetPath(templateGUID));
+                var templateAbsolutePath = Path.Combine(Path.GetDirectoryName(Application.dataPath), AssetDatabase.GUIDToAssetPath(templateGUID));
 
-                templateText = System.IO.File.ReadAllText(templateAbsolutePath);
+                templateText = File.ReadAllText(templateAbsolutePath);
             }
             else
             {
@@ -71,7 +71,7 @@ namespace UnityEditor.Purchasing
 
         private static string FindTemplateGUID(string templateFilename)
         {
-            string[] assetGUIDs = AssetDatabase.FindAssets(k_WorkaroundFileName);
+            var assetGUIDs = AssetDatabase.FindAssets(k_WorkaroundFileName);
             return (assetGUIDs.Length > 0) ? assetGUIDs[0] : null;
         }
 

@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
 {
     internal class SimpleCatalogProvider : ICatalogProvider
     {
-        private Action<Action<HashSet<ProductDefinition>>> m_Func;
+        private readonly Action<Action<HashSet<ProductDefinition>>> m_Func;
 
         internal SimpleCatalogProvider(Action<Action<HashSet<ProductDefinition>>> func)
         {
@@ -15,10 +15,7 @@ namespace UnityEngine.Purchasing
 
         public void FetchProducts(Action<HashSet<ProductDefinition>> callback)
         {
-            if (m_Func != null)
-            {
-                m_Func(callback);
-            }
+            m_Func?.Invoke(callback);
         }
     }
 }

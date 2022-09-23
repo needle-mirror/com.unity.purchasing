@@ -9,10 +9,10 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreRetrieveProductsService : IGooglePlayStoreRetrieveProductsService
     {
-        IGooglePlayStoreService m_GooglePlayStoreService;
-        IGoogleFetchPurchases m_GoogleFetchPurchases;
+        readonly IGooglePlayStoreService m_GooglePlayStoreService;
+        readonly IGoogleFetchPurchases m_GoogleFetchPurchases;
         IStoreCallback m_StoreCallback;
-        IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
+        readonly IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
         bool m_HasInitiallyRetrievedProducts;
 
         internal GooglePlayStoreRetrieveProductsService(IGooglePlayStoreService googlePlayStoreService, IGoogleFetchPurchases googleFetchPurchases, IGooglePlayConfigurationInternal googlePlayConfigurationInternal)

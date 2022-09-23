@@ -33,7 +33,8 @@ namespace UnityEngine.Purchasing
 #if UNITY_2017_2_OR_NEWER
 
                 var payoutDefinitions = new List<PayoutDefinition>();
-                foreach (var payout in product.Payouts) {
+                foreach (var payout in product.Payouts)
+                {
                     payoutDefinitions.Add(new PayoutDefinition(payout.typeString, payout.subtype, payout.quantity, payout.data));
                 }
                 builder.AddProduct(product.id, product.type, ids, payoutDefinitions.ToArray());

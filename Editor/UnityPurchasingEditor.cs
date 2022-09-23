@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
-using UnityEngine.Purchasing;
 using UnityEditor.Callbacks;
 using UnityEditor.Connect;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
+using UnityEngine;
+using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
@@ -95,7 +95,7 @@ namespace UnityEditor.Purchasing
         {
             try
             {
-                FileInfo file = new FileInfo(ModePath);
+                var file = new FileInfo(ModePath);
                 // This will create the new billing file location, if it already exists, this will not do anything.
                 file.Directory.Create();
 
@@ -123,12 +123,12 @@ namespace UnityEditor.Purchasing
         }
 
         // Notice: Multiple files per target supported. While Key must be unique, Value can be duplicated!
-        private static Dictionary<string, AppStore> StoreSpecificFiles = new Dictionary<string, AppStore>()
+        private static readonly Dictionary<string, AppStore> StoreSpecificFiles = new Dictionary<string, AppStore>()
         {
             {"billing-4.0.0.aar", AppStore.GooglePlay},
             {"AmazonAppStore.aar", AppStore.AmazonAppStore}
         };
-        private static Dictionary<string, AppStore> UdpSpecificFiles = new Dictionary<string, AppStore>() {
+        private static readonly Dictionary<string, AppStore> UdpSpecificFiles = new Dictionary<string, AppStore>() {
             { "udp.aar", AppStore.UDP},
             { "udpsandbox.aar", AppStore.UDP},
             { "utils.aar", AppStore.UDP}
@@ -239,8 +239,8 @@ namespace UnityEditor.Purchasing
                 // Otherwise this file must be needed on the target.
                 enabled |= mapping.Value == target;
 
-                string path = string.Format("{0}/{1}", BinPath, mapping.Key);
-                PluginImporter importer = ((PluginImporter)PluginImporter.GetAtPath(path));
+                var path = string.Format("{0}/{1}", BinPath, mapping.Key);
+                var importer = (PluginImporter)AssetImporter.GetAtPath(path);
 
                 if (importer != null)
                 {
@@ -250,11 +250,11 @@ namespace UnityEditor.Purchasing
                 {
                     // Search for any occurrence of this file
                     // Only fail if more than one found
-                    string[] paths = FindPaths(mapping.Key);
+                    var paths = FindPaths(mapping.Key);
 
                     if (paths.Length == 1)
                     {
-                        importer = ((PluginImporter)PluginImporter.GetAtPath(paths[0]));
+                        importer = (PluginImporter)AssetImporter.GetAtPath(paths[0]);
                         importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
                     }
                 }
@@ -274,7 +274,7 @@ namespace UnityEditor.Purchasing
                     enabled |= mapping.Value == target;
 
                     var path = $"{UdpBinPath}/{mapping.Key}";
-                    PluginImporter importer = ((PluginImporter)PluginImporter.GetAtPath(path));
+                    var importer = (PluginImporter)AssetImporter.GetAtPath(path);
 
                     if (importer != null)
                     {
@@ -284,11 +284,11 @@ namespace UnityEditor.Purchasing
                     {
                         // Search for any occurrence of this file
                         // Only fail if more than one found
-                        string[] paths = FindPaths(mapping.Key);
+                        var paths = FindPaths(mapping.Key);
 
                         if (paths.Length == 1)
                         {
-                            importer = ((PluginImporter)PluginImporter.GetAtPath(paths[0]));
+                            importer = (PluginImporter)AssetImporter.GetAtPath(paths[0]);
                             importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
                         }
                     }
@@ -304,14 +304,14 @@ namespace UnityEditor.Purchasing
         /// <returns>Relative paths matching <paramref name="filename"/></returns>
         public static string[] FindPaths(string filename)
         {
-            List<string> paths = new List<string>();
+            var paths = new List<string>();
 
-            string[] guids = AssetDatabase.FindAssets(Path.GetFileNameWithoutExtension(filename));
+            var guids = AssetDatabase.FindAssets(Path.GetFileNameWithoutExtension(filename));
 
-            foreach (string guid in guids)
+            foreach (var guid in guids)
             {
-                string path = AssetDatabase.GUIDToAssetPath(guid);
-                string foundFilename = Path.GetFileName(path);
+                var path = AssetDatabase.GUIDToAssetPath(guid);
+                var foundFilename = Path.GetFileName(path);
 
                 if (filename == foundFilename)
                 {
@@ -341,7 +341,7 @@ namespace UnityEditor.Purchasing
         }
 
         // Run me to configure the project's set of Android stores before build
-        [PostProcessSceneAttribute(0)]
+        [PostProcessScene(0)]
         internal static void OnPostProcessScene()
         {
             if (File.Exists(ModePath))

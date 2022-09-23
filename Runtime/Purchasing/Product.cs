@@ -56,10 +56,7 @@ namespace UnityEngine.Purchasing
         /// Owned Non Consumables and Subscriptions should always have receipts.
         /// Consumable's receipts are not persisted between App restarts.
         /// </summary>
-        public bool hasReceipt
-        {
-            get { return !string.IsNullOrEmpty(receipt); }
-        }
+        public bool hasReceipt => !string.IsNullOrEmpty(receipt);
 
         /// <summary>
         /// The purchase receipt for this product, if owned.
@@ -77,13 +74,17 @@ namespace UnityEngine.Purchasing
         public override bool Equals(object obj)
         {
             if (obj == null)
+            {
                 return false;
+            }
 
-            Product p = obj as Product;
+            var p = obj as Product;
             if (p == null)
+            {
                 return false;
+            }
 
-            return (definition.Equals(p.definition));
+            return definition.Equals(p.definition);
         }
 
         /// <summary>

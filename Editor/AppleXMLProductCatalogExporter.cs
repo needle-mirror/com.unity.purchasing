@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Xml.Linq;
 using UnityEngine.Purchasing;
 using ExporterValidationResults = UnityEditor.Purchasing.ProductCatalogEditor.ExporterValidationResults;
@@ -20,61 +20,19 @@ namespace UnityEditor.Purchasing
         internal List<string> kFilesToCopy = new List<string>();
         private const string kNewLine = "\n";
 
-        public string DisplayName
-        {
-            get
-            {
-                return "Apple XML Delivery";
-            }
-        }
+        public string DisplayName => "Apple XML Delivery";
 
-        public string DefaultFileName
-        {
-            get
-            {
-                return "metadata";
-            }
-        }
+        public string DefaultFileName => "metadata";
 
-        public string FileExtension
-        {
-            get
-            {
-                return "xml";
-            }
-        }
+        public string FileExtension => "xml";
 
-        public string StoreName
-        {
-            get
-            {
-                return AppleAppStore.Name;
-            }
-        }
+        public string StoreName => AppleAppStore.Name;
 
-        public string MandatoryExportFolder
-        {
-            get
-            {
-                return kMandatoryExportFolder;
-            }
-        }
+        public string MandatoryExportFolder => kMandatoryExportFolder;
 
-        public List<string> FilesToCopy
-        {
-            get
-            {
-                return kFilesToCopy;
-            }
-        }
+        public List<string> FilesToCopy => kFilesToCopy;
 
-        public bool SaveCompletePackage
-        {
-            get
-            {
-                return true;
-            }
-        }
+        public bool SaveCompletePackage => true;
 
         public string Export(ProductCatalog catalog)
         {
@@ -83,45 +41,45 @@ namespace UnityEditor.Purchasing
             // throughout this method, so this is converted to a list and then
             // wrapped in a ReadOnlyCollection to prevent mutation.
             var localesToExport = new ReadOnlyCollection<TranslationLocale>(new List<TranslationLocale>(GetLocalesToExport(catalog)));
-            XDeclaration declaration = new XDeclaration("1.0", "utf-8", "yes");
-            XDocument document = new XDocument();
+            var declaration = new XDeclaration("1.0", "utf-8", "yes");
+            var document = new XDocument();
             XNamespace ns = "http://apple.com/itunes/importer";
-            XElement package = new XElement(ns + "package",
+            var package = new XElement(ns + "package",
                 new XAttribute("version", "software5.7"));
             document.Add(package);
             package.Add(new XElement(ns + "provider", catalog.appleTeamID));
             package.Add(new XElement(ns + "team_id", catalog.appleTeamID));
-            XElement software = new XElement(ns + "software");
+            var software = new XElement(ns + "software");
             package.Add(software);
             software.Add(new XElement(ns + "vendor_id", catalog.appleSKU));
-            XElement softwareMetadata = new XElement(ns + "software_metadata");
+            var softwareMetadata = new XElement(ns + "software_metadata");
             software.Add(softwareMetadata);
-            XElement inAppPurchases = new XElement(ns + "in_app_purchases");
+            var inAppPurchases = new XElement(ns + "in_app_purchases");
             softwareMetadata.Add(inAppPurchases);
 
             foreach (var item in catalog.allProducts)
             {
-                XElement inAppPurchase = new XElement(ns + "in_app_purchase",
+                var inAppPurchase = new XElement(ns + "in_app_purchase",
                     new XElement(ns + "product_id", item.GetStoreID(AppleAppStore.Name) ?? item.id),
                     new XElement(ns + "reference_name", item.id),
                     new XElement(ns + "type", ProductTypeString(item)));
-                XElement products = new XElement(ns + "products");
+                var products = new XElement(ns + "products");
                 inAppPurchase.Add(products);
-                XElement product = new XElement(ns + "product",
+                var product = new XElement(ns + "product",
                     new XElement(ns + "cleared_for_sale", true),
                     new XElement(ns + "wholesale_price_tier", item.applePriceTier));
                 products.Add(product);
 
-                XElement locales = new XElement(ns + "locales");
+                var locales = new XElement(ns + "locales");
                 inAppPurchase.Add(locales);
                 // Variable number of localizations, not every product will specify a localization for every language
                 // so some of the these descriptions may be missing, in which case we just skip it.
                 foreach (var loc in localesToExport)
                 {
-                    LocalizedProductDescription desc = item.defaultDescription.googleLocale == loc ? item.defaultDescription : item.GetDescription(loc);
+                    var desc = item.defaultDescription.googleLocale == loc ? item.defaultDescription : item.GetDescription(loc);
                     if (desc != null)
                     {
-                        XElement locale = new XElement(ns + "locale",
+                        var locale = new XElement(ns + "locale",
                             new XAttribute("name", LocaleToAppleString(loc)),
                             new XElement(ns + "title", desc.Title),
                             new XElement(ns + "description", desc.Description));
@@ -129,10 +87,10 @@ namespace UnityEditor.Purchasing
                     }
                 }
 
-                XElement reviewScreenshot = new XElement(ns + "review_screenshot");
+                var reviewScreenshot = new XElement(ns + "review_screenshot");
                 inAppPurchase.Add(reviewScreenshot);
                 reviewScreenshot.Add(new XElement(ns + "file_name", Path.GetFileName(item.screenshotPath)));
-                FileInfo fileInfo = new FileInfo(item.screenshotPath);
+                var fileInfo = new FileInfo(item.screenshotPath);
                 if (fileInfo.Exists)
                 {
                     reviewScreenshot.Add(new XElement(ns + "size", fileInfo.Length));
@@ -255,12 +213,16 @@ namespace UnityEditor.Purchasing
             foreach (var item in catalog.allProducts)
             {
                 if (item.defaultDescription.googleLocale.SupportedOnApple())
+                {
                     locs.Add(item.defaultDescription.googleLocale);
+                }
 
                 foreach (var desc in item.translatedDescriptions)
                 {
                     if (desc.googleLocale.SupportedOnApple())
+                    {
                         locs.Add(desc.googleLocale);
+                    }
                 }
             }
 
@@ -321,18 +283,18 @@ namespace UnityEditor.Purchasing
 
         public static string GetMD5Hash(FileInfo fileInfo)
         {
-            MD5 md5 = MD5.Create();
-            FileStream fileStream = fileInfo.OpenRead();
+            var md5 = MD5.Create();
+            var fileStream = fileInfo.OpenRead();
             // Convert the input string to a byte array and compute the hash.
-            byte[] data = md5.ComputeHash(fileStream);
+            var data = md5.ComputeHash(fileStream);
 
             // Create a new StringBuilder to collect the bytes
             // and create a string.
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
 
             // Loop through each byte of the hashed data
             // and format each one as a hexadecimal string.
-            for (int i = 0; i < data.Length; i++)
+            for (var i = 0; i < data.Length; i++)
             {
                 stringBuilder.Append(data[i].ToString("x2"));
             }

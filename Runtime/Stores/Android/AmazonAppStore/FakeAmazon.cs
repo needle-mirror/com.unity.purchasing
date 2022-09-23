@@ -38,9 +38,6 @@ namespace UnityEngine.Purchasing
         ///
         /// Gets the current Amazon user ID (for other Amazon services).
         /// </summary>
-        public string amazonUserId
-        {
-            get { return "fakeid"; }
-        }
+        public string amazonUserId => "fakeid";
     }
 }

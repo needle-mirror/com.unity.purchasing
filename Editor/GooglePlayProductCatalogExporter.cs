@@ -1,6 +1,6 @@
-using System.Text;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using System.Text;
 using UnityEngine.Purchasing;
 using ExporterValidationResults = UnityEditor.Purchasing.ProductCatalogEditor.ExporterValidationResults;
 
@@ -11,61 +11,19 @@ namespace UnityEditor.Purchasing
     /// </summary>
     internal class GooglePlayProductCatalogExporter : ProductCatalogEditor.IProductCatalogExporter
     {
-        public string DisplayName
-        {
-            get
-            {
-                return "Google Play CSV";
-            }
-        }
+        public string DisplayName => "Google Play CSV";
 
-        public string DefaultFileName
-        {
-            get
-            {
-                return "GooglePlayProductCatalog";
-            }
-        }
+        public string DefaultFileName => "GooglePlayProductCatalog";
 
-        public string FileExtension
-        {
-            get
-            {
-                return "csv";
-            }
-        }
+        public string FileExtension => "csv";
 
-        public string StoreName
-        {
-            get
-            {
-                return GooglePlay.Name;
-            }
-        }
+        public string StoreName => GooglePlay.Name;
 
-        public string MandatoryExportFolder
-        {
-            get
-            {
-                return null;
-            }
-        }
+        public string MandatoryExportFolder => null;
 
-        public List<string> FilesToCopy
-        {
-            get
-            {
-                return null;
-            }
-        }
+        public List<string> FilesToCopy => null;
 
-        public bool SaveCompletePackage
-        {
-            get
-            {
-                return false;
-            }
-        }
+        public bool SaveCompletePackage => false;
 
         public string Export(ProductCatalog catalog)
         {
@@ -86,14 +44,9 @@ namespace UnityEditor.Purchasing
 
             foreach (var product in catalog.allProducts)
             {
-                if (string.IsNullOrEmpty(product.GetStoreID(GooglePlay.Name)))
-                {
-                    values[0] = CSVEscape(product.id);
-                }
-                else
-                {
-                    values[0] = CSVEscape(product.GetStoreID(GooglePlay.Name));
-                }
+                values[0] = string.IsNullOrEmpty(product.GetStoreID(GooglePlay.Name))
+                    ? CSVEscape(product.id)
+                    : CSVEscape(product.GetStoreID(GooglePlay.Name));
 
                 values[1] = "published";
                 values[2] = ProductTypeString(product.type);
@@ -190,11 +143,11 @@ namespace UnityEditor.Purchasing
 
             // A product ID must start with a lowercase letter or a number and must be composed
             // of only lowercase letters (a-z), numbers (0-9), underscores (_), and periods (.)
-            string actualID = item.GetStoreID(GooglePlay.Name) ?? item.id;
-            string field = (actualID == item.GetStoreID(GooglePlay.Name)) ? "storeID." + GooglePlay.Name : "id";
+            var actualID = item.GetStoreID(GooglePlay.Name) ?? item.id;
+            var field = (actualID == item.GetStoreID(GooglePlay.Name)) ? "storeID." + GooglePlay.Name : "id";
             if (Char.IsNumber(actualID[0]) || (Char.IsLower(actualID[0]) && Char.IsLetter(actualID[0])))
             {
-                foreach (char c in actualID)
+                foreach (var c in actualID)
                 {
                     if (c != '_' && c != '.' && !Char.IsNumber(c) && !(Char.IsLetter(c) && Char.IsLower(c)))
                     {
@@ -267,12 +220,14 @@ namespace UnityEditor.Purchasing
         private const string kBackslash = "\\";
         private const string kQuote = "\"";
         private const string kEscapedQuote = "\"\"";
-        private static char[] kCSVCharactersToQuote = { ',', '"', '\n' };
+        private static readonly char[] kCSVCharactersToQuote = { ',', '"', '\n' };
 
         private static string CSVEscape(string s)
         {
             if (s == null)
+            {
                 return s;
+            }
 
             if (s.Contains(kQuote))
             {
@@ -290,7 +245,9 @@ namespace UnityEditor.Purchasing
         private static string SSVEscape(string s)
         {
             if (s == null)
+            {
                 return s;
+            }
 
             s.Replace(kBackslash, kBackslash + kBackslash);
             s.Replace(kSemicolon, kBackslash + kSemicolon);
@@ -304,11 +261,12 @@ namespace UnityEditor.Purchasing
 
         private static string PackTitlesAndDescriptions(ProductCatalogItem product)
         {
-            var values = new List<string>();
-
-            values.Add(product.defaultDescription.googleLocale.ToString());
-            values.Add(SSVEscape(product.defaultDescription.Title));
-            values.Add(SSVEscape(product.defaultDescription.Description));
+            var values = new List<string>
+            {
+                product.defaultDescription.googleLocale.ToString(),
+                SSVEscape(product.defaultDescription.Title),
+                SSVEscape(product.defaultDescription.Description)
+            };
 
             foreach (var desc in product.translatedDescriptions)
             {

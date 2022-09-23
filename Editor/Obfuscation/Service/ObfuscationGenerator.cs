@@ -85,12 +85,12 @@ namespace UnityEditor.Purchasing
         static string WriteObfuscatedAppleClassAsAsset(string certPath, string classIncompleteErr, string classPrefix)
         {
             string appleError = null;
-            int key = 0;
-            int[] order = new int[0];
-            byte[] tangled = new byte[0];
+            var key = 0;
+            var order = new int[0];
+            var tangled = new byte[0];
             try
             {
-                byte[] bytes = File.ReadAllBytes(certPath);
+                var bytes = File.ReadAllBytes(certPath);
                 order = new int[bytes.Length / 20 + 1];
 
                 // TODO: Integrate with upgraded Tangle!
@@ -111,9 +111,9 @@ namespace UnityEditor.Purchasing
         static string WriteObfuscatedGooglePlayClassAsAsset(string googlePlayPublicKey)
         {
             string googleError = null;
-            int key = 0;
-            int[] order = new int[0];
-            byte[] tangled = new byte[0];
+            var key = 0;
+            var order = new int[0];
+            var tangled = new byte[0];
             try
             {
                 var bytes = Convert.FromBase64String(googlePlayPublicKey);
@@ -155,7 +155,7 @@ namespace UnityEditor.Purchasing
 
         static void WriteObfuscatedClassAsAsset(string classnamePrefix, int key, int[] order, byte[] data, bool populated)
         {
-            Dictionary<string, string> substitutionDictionary = new Dictionary<string, string>()
+            var substitutionDictionary = new Dictionary<string, string>()
             {
                 {"{NAME}", classnamePrefix.ToString()},
                 {"{KEY}", key.ToString()},
@@ -164,12 +164,11 @@ namespace UnityEditor.Purchasing
                 {"{POPULATED}", populated.ToString().ToLowerInvariant()} // Defaults to XML-friendly values
             };
 
-            string templateRelativePath = null;
-            string templateText = LoadTemplateText(out templateRelativePath);
+            var templateText = LoadTemplateText(out var templateRelativePath);
 
             if (templateText != null)
             {
-                string outfileText = templateText;
+                var outfileText = templateText;
 
                 // Apply the parameters to the template
                 foreach (var pair in substitutionDictionary)
@@ -188,7 +187,7 @@ namespace UnityEditor.Purchasing
         /// <param name="templateRelativePath">Relative Assets/ path to template file.</param>
         static string LoadTemplateText(out string templateRelativePath)
         {
-            string[] assetGUIDs =
+            var assetGUIDs =
                 AssetDatabase.FindAssets(m_GeneratedCredentialsTemplateFilenameNoExtension);
             string templateGUID = null;
             templateRelativePath = null;
@@ -209,7 +208,7 @@ namespace UnityEditor.Purchasing
             {
                 templateRelativePath = AssetDatabase.GUIDToAssetPath(templateGUID);
 
-                string templateAbsolutePath =
+                var templateAbsolutePath =
                     Path.GetDirectoryName(Application.dataPath)
                     + Path.DirectorySeparatorChar
                     + templateRelativePath;

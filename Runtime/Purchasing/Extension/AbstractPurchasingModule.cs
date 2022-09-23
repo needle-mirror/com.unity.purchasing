@@ -20,7 +20,7 @@ namespace UnityEngine.Purchasing.Extension
         /// <param name="binder"> The object binding the purchasing with store implementations </param>
         public void Configure(IPurchasingBinder binder)
         {
-            this.m_Binder = binder;
+            m_Binder = binder;
             Configure();
         }
 

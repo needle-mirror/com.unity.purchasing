@@ -8,8 +8,8 @@ namespace UnityEngine.Purchasing.Utils
 {
     class GooglePurchaseBuilder : IGooglePurchaseBuilder
     {
-        IGoogleCachedQuerySkuDetailsService m_CachedQuerySkuDetailsService;
-        ILogger m_Logger;
+        readonly IGoogleCachedQuerySkuDetailsService m_CachedQuerySkuDetailsService;
+        readonly ILogger m_Logger;
 
         public GooglePurchaseBuilder(IGoogleCachedQuerySkuDetailsService cachedQuerySkuDetailsService, ILogger logger)
         {

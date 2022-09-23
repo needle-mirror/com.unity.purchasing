@@ -1,6 +1,6 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using Uniject;
 using UnityEngine;
@@ -14,14 +14,14 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class AmazonAppStoreStoreExtensions : IAmazonExtensions, IAmazonConfiguration
     {
-        private AndroidJavaObject android;
+        private readonly AndroidJavaObject android;
         /// <summary>
         /// Build the AmazonAppStoreExtensions with the instance of the AmazonAppStore java object
         /// </summary>
         /// <param name="a">AmazonAppStore java object</param>
         public AmazonAppStoreStoreExtensions(AndroidJavaObject a)
         {
-            this.android = a;
+            android = a;
         }
 
         /// <summary>
@@ -48,12 +48,6 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Gets the current Amazon user ID (for other Amazon services).
         /// </summary>
-        public string amazonUserId
-        {
-            get
-            {
-                return android.Call<string>("getAmazonUserId");
-            }
-        }
+        public string amazonUserId => android.Call<string>("getAmazonUserId");
     }
 }

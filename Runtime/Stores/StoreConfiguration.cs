@@ -21,17 +21,16 @@ namespace UnityEngine.Purchasing
             return MiniJson.JsonEncode(dic);
         }
 
-        /// <exception cref="System.ArgumentException">Thrown when parsing fails</exception>
+        /// <exception cref="ArgumentException">Thrown when parsing fails</exception>
         public static StoreConfiguration Deserialize(string json)
         {
             var dic = (Dictionary<string, object>)MiniJson.JsonDecode(json);
 
             AppStore store;
             var key = (string)dic["androidStore"];
-            if (!Enum.IsDefined(typeof(AppStore), key))
-                store = AppStore.GooglePlay;
-            else
-                store = (AppStore)Enum.Parse(typeof(AppStore), (string)dic["androidStore"], true);
+            store = !Enum.IsDefined(typeof(AppStore), key)
+                ? AppStore.GooglePlay
+                : (AppStore)Enum.Parse(typeof(AppStore), (string)dic["androidStore"], true);
 
             return new StoreConfiguration(store);
         }

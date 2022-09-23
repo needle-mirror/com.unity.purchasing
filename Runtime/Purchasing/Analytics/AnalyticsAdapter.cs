@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing
 {
     class AnalyticsAdapter : IAnalyticsAdapter
     {
-        IAnalyticsService m_Analytics;
+        readonly IAnalyticsService m_Analytics;
 
         public AnalyticsAdapter(IAnalyticsService analytics)
         {

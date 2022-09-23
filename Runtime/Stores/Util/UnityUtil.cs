@@ -9,10 +9,10 @@ namespace UnityEngine.Purchasing.Extension
     [AddComponentMenu("")]
     internal class UnityUtil : MonoBehaviour, IUtil
     {
-        private static List<Action> s_Callbacks = new List<Action>();
+        private static readonly List<Action> s_Callbacks = new List<Action>();
         private static volatile bool s_CallbacksPending;
 
-        private static List<RuntimePlatform> s_PcControlledPlatforms = new List<RuntimePlatform>
+        private static readonly List<RuntimePlatform> s_PcControlledPlatforms = new List<RuntimePlatform>
         {
             RuntimePlatform.LinuxPlayer,
             RuntimePlatform.OSXEditor,
@@ -23,112 +23,60 @@ namespace UnityEngine.Purchasing.Extension
 
         public T[] GetAnyComponentsOfType<T>() where T : class
         {
-            GameObject[] objects = (GameObject[])FindObjectsOfType(typeof(GameObject));
-            List<T> result = new List<T>();
-            foreach (GameObject o in objects)
+            var objects = (GameObject[])FindObjectsOfType(typeof(GameObject));
+            var result = new List<T>();
+            foreach (var o in objects)
             {
-                foreach (MonoBehaviour mono in o.GetComponents<MonoBehaviour>())
+                foreach (var mono in o.GetComponents<MonoBehaviour>())
                 {
                     if (mono is T)
+                    {
                         result.Add(mono as T);
+                    }
                 }
             }
 
             return result.ToArray();
         }
 
-        public DateTime currentTime
-        {
-            get { return DateTime.Now; }
-        }
+        public DateTime currentTime => DateTime.Now;
 
-        public string persistentDataPath
-        {
-            get { return Application.persistentDataPath; }
-        }
+        public string persistentDataPath => Application.persistentDataPath;
 
         /// <summary>
         /// WARNING: Reading from this may require special application privileges.
         /// </summary>
-        public string deviceUniqueIdentifier
-        {
-            get { return SystemInfo.deviceUniqueIdentifier; }
-        }
+        public string deviceUniqueIdentifier => SystemInfo.deviceUniqueIdentifier;
 
-        public string unityVersion
-        {
-            get { return Application.unityVersion; }
-        }
+        public string unityVersion => Application.unityVersion;
 
-        public string cloudProjectId
-        {
-            get { return Application.cloudProjectId; }
-        }
+        public string cloudProjectId => Application.cloudProjectId;
 
-        public string userId
-        {
-            get { return PlayerPrefs.GetString("unity.cloud_userid", String.Empty); }
-        }
+        public string userId => PlayerPrefs.GetString("unity.cloud_userid", String.Empty);
 
-        public string gameVersion
-        {
-            get { return Application.version; }
-        }
+        public string gameVersion => Application.version;
 
-        public UInt64 sessionId
-        {
-            get { return UInt64.Parse(PlayerPrefs.GetString("unity.player_sessionid", "0")); }
-        }
+        public UInt64 sessionId => UInt64.Parse(PlayerPrefs.GetString("unity.player_sessionid", "0"));
 
-        public RuntimePlatform platform
-        {
-            get { return Application.platform; }
-        }
+        public RuntimePlatform platform => Application.platform;
 
-        public bool isEditor
-        {
-            get { return Application.isEditor; }
-        }
+        public bool isEditor => Application.isEditor;
 
-        public string deviceModel
-        {
-            get { return SystemInfo.deviceModel; }
-        }
+        public string deviceModel => SystemInfo.deviceModel;
 
-        public string deviceName
-        {
-            get { return SystemInfo.deviceName; }
-        }
+        public string deviceName => SystemInfo.deviceName;
 
-        public DeviceType deviceType
-        {
-            get { return SystemInfo.deviceType; }
-        }
+        public DeviceType deviceType => SystemInfo.deviceType;
 
-        public string operatingSystem
-        {
-            get { return SystemInfo.operatingSystem; }
-        }
+        public string operatingSystem => SystemInfo.operatingSystem;
 
-        public int screenWidth
-        {
-            get { return Screen.width; }
-        }
+        public int screenWidth => Screen.width;
 
-        public int screenHeight
-        {
-            get { return Screen.height; }
-        }
+        public int screenHeight => Screen.height;
 
-        public float screenDpi
-        {
-            get { return Screen.dpi; }
-        }
+        public float screenDpi => Screen.dpi;
 
-        public string screenOrientation
-        {
-            get { return Screen.orientation.ToString(); }
-        }
+        public string screenOrientation => Screen.orientation.ToString();
 
         object IUtil.InitiateCoroutine(IEnumerator start)
         {
@@ -183,14 +131,18 @@ namespace UnityEngine.Purchasing.Extension
         private void Update()
         {
             if (!s_CallbacksPending)
+            {
                 return;
+            }
             // We copy our actions to another array to avoid
             // locking the queue whilst we process them.
             Action[] copy;
             lock (s_Callbacks)
             {
                 if (s_Callbacks.Count == 0)
+                {
                     return;
+                }
 
                 copy = new Action[s_Callbacks.Count];
                 s_Callbacks.CopyTo(copy);
@@ -199,10 +151,12 @@ namespace UnityEngine.Purchasing.Extension
             }
 
             foreach (var action in copy)
+            {
                 action();
+            }
         }
 
-        private List<Action<bool>> pauseListeners = new List<Action<bool>>();
+        private readonly List<Action<bool>> pauseListeners = new List<Action<bool>>();
         public void AddPauseListener(Action<bool> runnable)
         {
             pauseListeners.Add(runnable);

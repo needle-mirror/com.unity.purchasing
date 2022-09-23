@@ -1,5 +1,4 @@
-using System;
-using JetBrains.Annotations;
+#nullable enable
 
 namespace UnityEngine.Purchasing
 {
@@ -13,17 +12,9 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="productMetadata">Product Metadata</param>
         /// <returns>Google Product Metadata</returns>
-        [CanBeNull]
-        public static GoogleProductMetadata GetGoogleProductMetadata(this ProductMetadata productMetadata)
+        public static GoogleProductMetadata? GetGoogleProductMetadata(this ProductMetadata productMetadata)
         {
-            try
-            {
-                return (GoogleProductMetadata)productMetadata;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
+            return productMetadata as GoogleProductMetadata;
         }
     }
 }

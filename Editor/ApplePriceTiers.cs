@@ -29,7 +29,9 @@ namespace UnityEditor.Purchasing
         internal static double ActualDollarsForAppleTier(int tier)
         {
             if (RoundedDollars[tier] == 0)
+            {
                 return 0;
+            }
 
             return RoundedDollars[tier] - 0.01;
         }
@@ -90,7 +92,7 @@ namespace UnityEditor.Purchasing
 
         private static string CreateApplePriceTierString(int tier, int roundedDollars)
         {
-            return string.Format("Tier {0} - USD {1:0.00}", tier, (float)roundedDollars - 0.01f);
+            return string.Format("Tier {0} - USD {1:0.00}", tier, roundedDollars - 0.01f);
         }
     }
 }

@@ -10,8 +10,8 @@ namespace UnityEngine.Purchasing
     /// </summary>
     internal class PurchasingFactory : IPurchasingBinder, IExtensionProvider
     {
-        private Dictionary<Type, IStoreConfiguration> m_ConfigMap = new Dictionary<Type, IStoreConfiguration>();
-        private Dictionary<Type, IStoreExtension> m_ExtensionMap = new Dictionary<Type, IStoreExtension>();
+        private readonly Dictionary<Type, IStoreConfiguration> m_ConfigMap = new Dictionary<Type, IStoreConfiguration>();
+        private readonly Dictionary<Type, IStoreExtension> m_ExtensionMap = new Dictionary<Type, IStoreExtension>();
         private IStore m_Store;
         private ICatalogProvider m_CatalogProvider;
 
@@ -19,7 +19,9 @@ namespace UnityEngine.Purchasing
         {
             first.Configure(this);
             foreach (var module in remainingModules)
+            {
                 module.Configure(this);
+            }
         }
 
         public string storeName { get; private set; }
@@ -29,11 +31,14 @@ namespace UnityEngine.Purchasing
             get
             {
                 if (m_Store != null)
+                {
                     return m_Store;
+                }
+
                 throw new InvalidOperationException("No impl available!");
             }
 
-            set { m_Store = value; }
+            set => m_Store = value;
         }
 
         public void RegisterStore(string name, IStore s)
@@ -66,11 +71,15 @@ namespace UnityEngine.Purchasing
         public T GetConfig<T>() where T : IStoreConfiguration
         {
             if (service is T)
+            {
                 return (T)service;
+            }
 
             var type = typeof(T);
             if (m_ConfigMap.ContainsKey(type))
+            {
                 return (T)m_ConfigMap[type];
+            }
 
             throw new ArgumentException("No binding for config type " + type);
         }

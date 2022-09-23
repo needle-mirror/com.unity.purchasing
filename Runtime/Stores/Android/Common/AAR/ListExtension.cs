@@ -11,8 +11,8 @@ namespace UnityEngine.Purchasing
 
         static AndroidJavaObject ToJavaArray(List<string> values)
         {
-            AndroidJavaObject list = new AndroidJavaObject("java.util.ArrayList");
-            foreach (string value in values)
+            var list = new AndroidJavaObject("java.util.ArrayList");
+            foreach (var value in values)
             {
                 list.Call<bool>("add", value);
             }

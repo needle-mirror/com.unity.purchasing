@@ -56,12 +56,12 @@ namespace UnityEditor.Purchasing
 
         internal static bool CheckPreviousObfuscationFilesExist()
         {
-            return (Directory.Exists(TangleFileConsts.k_PrevOutputPath) && (Directory.GetFiles(TangleFileConsts.k_PrevOutputPath).Length > 0));
+            return Directory.Exists(TangleFileConsts.k_PrevOutputPath) && (Directory.GetFiles(TangleFileConsts.k_PrevOutputPath).Length > 0);
         }
 
         internal static bool CheckBadObfuscationFilesExist()
         {
-            return (Directory.Exists(TangleFileConsts.k_BadOutputPath) && (Directory.GetFiles(TangleFileConsts.k_BadOutputPath).Length > 0));
+            return Directory.Exists(TangleFileConsts.k_BadOutputPath) && (Directory.GetFiles(TangleFileConsts.k_BadOutputPath).Length > 0);
         }
     }
 }

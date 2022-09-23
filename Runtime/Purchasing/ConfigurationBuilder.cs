@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class IDs : IEnumerable<KeyValuePair<string, string>>
     {
-        private Dictionary<string, string> m_Dic = new Dictionary<string, string>();
+        private readonly Dictionary<string, string> m_Dic = new Dictionary<string, string>();
 
         /// <summary>
         /// Returns an enumerator that iterates through the collection.
@@ -33,7 +33,9 @@ namespace UnityEngine.Purchasing
         public void Add(string id, params string[] stores)
         {
             foreach (var store in stores)
+            {
                 m_Dic[store] = id;
+            }
         }
 
         /// <summary>
@@ -44,13 +46,18 @@ namespace UnityEngine.Purchasing
         public void Add(string id, params object[] stores)
         {
             foreach (var store in stores)
+            {
                 m_Dic[store.ToString()] = id;
+            }
         }
 
         internal string SpecificIDForStore(string store, string defaultValue)
         {
             if (m_Dic.ContainsKey(store))
+            {
                 return m_Dic[store];
+            }
+
             return defaultValue;
         }
 
@@ -70,12 +77,9 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class ConfigurationBuilder
     {
-        private PurchasingFactory m_Factory;
-        private HashSet<ProductDefinition> m_Products = new HashSet<ProductDefinition>();
-
         internal ConfigurationBuilder(PurchasingFactory factory)
         {
-            m_Factory = factory;
+            this.factory = factory;
         }
 
         /// <summary>
@@ -91,15 +95,9 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The set of products in the catalog.
         /// </summary>
-        public HashSet<ProductDefinition> products
-        {
-            get { return m_Products; }
-        }
+        public HashSet<ProductDefinition> products { get; } = new HashSet<ProductDefinition>();
 
-        internal PurchasingFactory factory
-        {
-            get { return m_Factory; }
-        }
+        internal PurchasingFactory factory { get; }
 
         /// <summary>
         /// Configure the store as specified by the template parameter.
@@ -108,7 +106,7 @@ namespace UnityEngine.Purchasing
         /// <returns> The store configuration as an object. </returns>
         public T Configure<T>() where T : IStoreConfiguration
         {
-            return m_Factory.GetConfig<T>();
+            return factory.GetConfig<T>();
         }
 
         /// <summary>
@@ -119,7 +117,7 @@ namespace UnityEngine.Purchasing
         /// <returns> The instance of the configuration builder as specified. </returns>
         public static ConfigurationBuilder Instance(IPurchasingModule first, params IPurchasingModule[] rest)
         {
-            PurchasingFactory factory = new PurchasingFactory(first, rest);
+            var factory = new PurchasingFactory(first, rest);
             return new ConfigurationBuilder(factory);
         }
 
@@ -172,10 +170,13 @@ namespace UnityEngine.Purchasing
             var specificId = id;
             // Extract our store specific ID if present, according to the current store.
             if (storeIDs != null)
+            {
                 specificId = storeIDs.SpecificIDForStore(factory.storeName, id);
+            }
+
             var product = new ProductDefinition(id, specificId, type);
             product.SetPayouts(payouts);
-            m_Products.Add(product);
+            products.Add(product);
 
             return this;
         }
@@ -190,7 +191,7 @@ namespace UnityEngine.Purchasing
         {
             foreach (var product in products)
             {
-                m_Products.Add(product);
+                this.products.Add(product);
             }
 
             return this;

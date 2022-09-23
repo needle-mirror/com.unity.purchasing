@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing.Telemetry
 {
     class TelemetryMetricsService : ITelemetryMetricsService
     {
-        ITelemetryMetricsInstanceWrapper m_TelemetryMetricsInstanceWrapper;
+        readonly ITelemetryMetricsInstanceWrapper m_TelemetryMetricsInstanceWrapper;
 
         public TelemetryMetricsService(ITelemetryMetricsInstanceWrapper telemetryMetricsInstanceWrapper)
         {

@@ -4,7 +4,7 @@ namespace UnityEditor.Purchasing
 {
     class GoogleObfuscatorSection : AbstractObfuscatorSection
     {
-        GoogleConfigurationData m_GoogleConfigDataRef;
+        readonly GoogleConfigurationData m_GoogleConfigDataRef;
 
         internal GoogleObfuscatorSection(GoogleConfigurationData googleData)
             : base()

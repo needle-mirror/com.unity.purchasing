@@ -37,32 +37,14 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
-        public string appReceipt
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public string appReceipt => throw new NotImplementedException();
 
-        public bool canMakePayments
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-        }
+        public bool canMakePayments => throw new NotImplementedException();
 
         public bool simulateAskToBuy
         {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
+            set => throw new NotImplementedException();
         }
 
         public void FetchStorePromotionOrder()

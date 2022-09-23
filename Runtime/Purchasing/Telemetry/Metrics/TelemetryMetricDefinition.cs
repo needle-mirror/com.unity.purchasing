@@ -12,6 +12,9 @@ namespace UnityEngine.Purchasing.Telemetry
             MetricType = metricType;
         }
 
-        public static implicit operator TelemetryMetricDefinition(string name) => new TelemetryMetricDefinition(name);
+        public static implicit operator TelemetryMetricDefinition(string name)
+        {
+            return new TelemetryMetricDefinition(name);
+        }
     }
 }

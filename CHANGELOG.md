@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.5.0] - 2022-09-23
+### Added
+- Apple - Add support for [Family Sharing](https://developer.apple.com/app-store/subscriptions/#family-sharing).
+  - API `IAppleConfiguration.SetEntitlementsRevokedListener(Action<List<Product>>` called when entitlement to a products are revoked. The `Action` will be called with the list of revoked products. See documentation "Store Guides" > "iOS & Mac App Stores" for a sample usage.
+  - API - Product metadata is now available in `AppleProductMetadata` from `ProductMetadata.GetAppleProductMetadata()` via `IStoreController.products`.
+  - API `AppleProductMetadata.isFamilyShareable` indicated if the product is family shareable.
+  - `Apple App Store - 11 Family Sharing` sample that showcases how to use Unity IAP to manage family shared purchases.
+
+### Fixed
+- GooglePlay - Processing out-of-app purchases such as Promo codes no longer requires the app to be restarted. The
+  purchase will be processed the next time the app is foregrounded. Technical limitation: In the case of promo codes, if
+  the app is opened while the code is redeemed, you might receive an additional call
+  to `IStoreListener.OnPurchaseFailed` with `PurchaseFailureReason.Unknown`. This can be safely ignored.
+- GooglePlay - Fixed a `NullReferenceException` that would rarely occur when retrieving products due to a concurrency issue introduced in Unity IAP 4.2.0
+
 ## [4.4.1] - 2022-08-11
 ### Fixed
 - GooglePlay - Fixed NullReferenceException and ArgumentException that would rarely occur due to a concurrency issue introduced in Unity IAP 4.2.0

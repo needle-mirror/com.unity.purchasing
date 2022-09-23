@@ -48,7 +48,7 @@ namespace UnityEditor.Purchasing
 
         static void AddStoreKitFramework(PBXProject proj, string projPath)
         {
-            foreach (var targetGuid in new [] {proj.GetUnityMainTargetGuid(), proj.GetUnityFrameworkTargetGuid()})
+            foreach (var targetGuid in new[] { proj.GetUnityMainTargetGuid(), proj.GetUnityFrameworkTargetGuid() })
             {
                 proj.AddFrameworkToProject(targetGuid, k_StorekitFramework, false);
                 System.IO.File.WriteAllText(projPath, proj.WriteToString());

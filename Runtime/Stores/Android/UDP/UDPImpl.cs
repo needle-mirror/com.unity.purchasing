@@ -41,7 +41,7 @@ namespace UnityEngine.Purchasing
 
         public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
         {
-            Action<bool, string> retrieveCallback = (success, json) =>
+            void retrieveCallback(bool success, string json)
             {
                 if (success && !string.IsNullOrEmpty(json))
                 {
@@ -51,7 +51,7 @@ namespace UnityEngine.Purchasing
                 {
                     m_Logger.LogIAPWarning("RetrieveProducts failed: " + json);
                 }
-            };
+            }
 
             if (!m_Initialized)
             {
@@ -68,7 +68,7 @@ namespace UnityEngine.Purchasing
                             var dic = message.HashtableFromJson();
                             if (dic.ContainsKey("Channel"))
                             {
-                                Type udpUserInfo = UserInfoInterface.GetClassType();
+                                var udpUserInfo = UserInfoInterface.GetClassType();
                                 if (udpUserInfo != null)
                                 {
                                     m_UserInfo = Activator.CreateInstance(udpUserInfo);
@@ -134,7 +134,7 @@ namespace UnityEngine.Purchasing
                         return;
                     }
 
-                    PurchaseFailureReason reason = (PurchaseFailureReason)Enum.Parse(typeof(PurchaseFailureReason),
+                    var reason = (PurchaseFailureReason)Enum.Parse(typeof(PurchaseFailureReason),
                         k_Unknown);
 
                     var reasonString = reason.ToString();
@@ -196,12 +196,12 @@ namespace UnityEngine.Purchasing
 
         public void RegisterPurchaseDeferredListener(Action<Product> callback)
         {
-            this.m_DeferredCallback = callback;
+            m_DeferredCallback = callback;
         }
 
         public void EnableDebugLog(bool enable)
         {
-            Type storeServiceInfo = StoreServiceInterface.GetClassType();
+            var storeServiceInfo = StoreServiceInterface.GetClassType();
             if (storeServiceInfo != null)
             {
                 var enableDebugLogging = StoreServiceInterface.GetEnableDebugLoggingMethod();
@@ -224,7 +224,9 @@ namespace UnityEngine.Purchasing
             foreach (var property in properties)
             {
                 if (property.PropertyType == typeof(string))
-                    property.SetValue(info, (string)dic.GetString(property.Name), null);
+                {
+                    property.SetValue(info, dic.GetString(property.Name), null);
+                }
             }
         }
 

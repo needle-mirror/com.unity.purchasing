@@ -9,9 +9,9 @@ namespace UnityEngine.Purchasing
 {
     class GooglePurchaseService : IGooglePurchaseService
     {
-        IGoogleBillingClient m_BillingClient;
-        IGooglePurchaseCallback m_GooglePurchaseCallback;
-        IQuerySkuDetailsService m_QuerySkuDetailsService;
+        readonly IGoogleBillingClient m_BillingClient;
+        readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
+        readonly IQuerySkuDetailsService m_QuerySkuDetailsService;
 
         internal GooglePurchaseService(IGoogleBillingClient billingClient, IGooglePurchaseCallback googlePurchaseCallback, IQuerySkuDetailsService querySkuDetailsService)
         {

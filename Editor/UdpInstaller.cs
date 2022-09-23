@@ -102,7 +102,7 @@ namespace UnityEditor.Purchasing
         void GoToInstaller()
         {
 #if UNITY_2019_3_OR_NEWER
-            PackageManager.UI.Window.Open(k_UdpPackageName);
+            Window.Open(k_UdpPackageName);
 #else
             AssetStore.Open(k_UdpAssetStoreIdentifier);
 #endif

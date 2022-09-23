@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing
     class GooglePlayConfiguration : IGooglePlayConfiguration, IGooglePlayConfigurationInternal
     {
         Action? m_InitializationConnectionLister;
-        IGooglePlayStoreService m_GooglePlayStoreService;
+        readonly IGooglePlayStoreService m_GooglePlayStoreService;
         Action<Product>? m_DeferredPurchaseAction;
         Action<Product>? m_DeferredProrationUpgradeDowngradeSubscriptionAction;
         Action<int>? m_QueryProductDetailsFailedListener;

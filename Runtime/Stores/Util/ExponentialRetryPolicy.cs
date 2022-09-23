@@ -8,9 +8,9 @@ namespace UnityEngine.Purchasing
 {
     class ExponentialRetryPolicy : IRetryPolicy
     {
-        int m_BaseRetryDelay;
-        int m_MaxRetryDelay;
-        int m_ExponentialFactor;
+        readonly int m_BaseRetryDelay;
+        readonly int m_MaxRetryDelay;
+        readonly int m_ExponentialFactor;
 
         public ExponentialRetryPolicy(int baseRetryDelay = 1000, int maxRetryDelay = 30 * 1000, int exponentialFactor = 2)
         {

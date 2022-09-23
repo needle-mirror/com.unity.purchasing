@@ -1,6 +1,6 @@
 using System;
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UnityEditor.Purchasing
 {
@@ -23,10 +23,10 @@ namespace UnityEditor.Purchasing
         /// <returns>The obfucated public key</returns>
         public static byte[] Obfuscate(byte[] data, int[] order, out int rkey)
         {
-            var rnd = new System.Random();
-            int key = rnd.Next(2, 255);
-            byte[] res = new byte[data.Length];
-            int slices = data.Length / 20 + 1;
+            var rnd = new Random();
+            var key = rnd.Next(2, 255);
+            var res = new byte[data.Length];
+            var slices = data.Length / 20 + 1;
 
             if (order == null || order.Length < slices)
             {
@@ -34,11 +34,11 @@ namespace UnityEditor.Purchasing
             }
 
             Array.Copy(data, res, data.Length);
-            for (int i = 0; i < slices - 1; i++)
+            for (var i = 0; i < slices - 1; i++)
             {
-                int j = rnd.Next(i, slices - 1);
+                var j = rnd.Next(i, slices - 1);
                 order[i] = j;
-                int sliceSize = 20; // prob should be configurable
+                var sliceSize = 20; // prob should be configurable
                 var tmp = res.Skip(i * 20).Take(sliceSize).ToArray(); // tmp = res[i*20 .. slice]
                 Array.Copy(res, j * 20, res, i * 20, sliceSize);      // res[i] = res[j*20 .. slice]
                 Array.Copy(tmp, 0, res, j * 20, sliceSize);           // res[j] = tmp
@@ -46,7 +46,7 @@ namespace UnityEditor.Purchasing
             order[slices - 1] = slices - 1;
 
             rkey = key;
-            return res.Select<byte, byte>(x => (byte)(x ^ key)).ToArray();
+            return res.Select(x => (byte)(x ^ key)).ToArray();
         }
     }
 }

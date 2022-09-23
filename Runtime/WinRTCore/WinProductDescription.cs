@@ -72,10 +72,10 @@ namespace UnityEngine.Purchasing.Default
             this.price = price;
             this.title = title;
             this.description = description;
-            this.ISOCurrencyCode = isoCode;
-            this.priceDecimal = priceD;
+            ISOCurrencyCode = isoCode;
+            priceDecimal = priceD;
             this.receipt = receipt;
-            this.transactionID = transactionId;
+            transactionID = transactionId;
             this.consumable = consumable;
         }
     }

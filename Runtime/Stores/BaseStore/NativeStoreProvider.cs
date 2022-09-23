@@ -1,6 +1,6 @@
 using System;
-using UnityEngine.Purchasing.Extension;
 using Uniject;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -45,22 +45,22 @@ namespace UnityEngine.Purchasing
                     }
 
                 case AppStore.UDP:
+                {
+                    var udpIapBridge = UdpIapBridgeInterface.GetClassType();
+                    if (udpIapBridge != null)
                     {
-                        Type udpIapBridge = UdpIapBridgeInterface.GetClassType();
-                        if (udpIapBridge != null)
-                        {
-                            UDPImpl udpImpl = new UDPImpl();
-                            UDPBindings udpBindings = new UDPBindings();
-                            udpImpl.SetNativeStore(udpBindings);
-                            binder.RegisterExtension<IUDPExtensions>(udpImpl);
-                            return udpBindings;
-                        }
-                        else
-                        {
-                            Debug.LogError("Cannot set Android target to UDP. Make sure you have installed UDP in your project");
-                            throw new NotImplementedException();
-                        }
+                        var udpImpl = new UDPImpl();
+                        var udpBindings = new UDPBindings();
+                        udpImpl.SetNativeStore(udpBindings);
+                        binder.RegisterExtension<IUDPExtensions>(udpImpl);
+                        return udpBindings;
                     }
+                    else
+                    {
+                        Debug.LogError("Cannot set Android target to UDP. Make sure you have installed UDP in your project");
+                        throw new NotImplementedException();
+                    }
+                }
             }
 
             throw new NotImplementedException();

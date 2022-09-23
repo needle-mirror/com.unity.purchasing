@@ -13,8 +13,8 @@ namespace UnityEngine.Purchasing
     public class CodelessIAPStoreListener : IStoreListener
     {
         private static CodelessIAPStoreListener instance;
-        private List<IAPButton> activeButtons = new List<IAPButton>();
-        private List<IAPListener> activeListeners = new List<IAPListener>();
+        private readonly List<IAPButton> activeButtons = new List<IAPButton>();
+        private readonly List<IAPListener> activeListeners = new List<IAPListener>();
         private static bool unityPurchasingInitialized;
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace UnityEngine.Purchasing
         [RuntimeInitializeOnLoadMethod]
         static void InitializeCodelessPurchasingOnLoad()
         {
-            ProductCatalog catalog = ProductCatalog.LoadDefaultCatalog();
+            var catalog = ProductCatalog.LoadDefaultCatalog();
             if (catalog.enableCodelessAutoInitialization && !catalog.IsEmpty() && instance == null)
             {
                 CreateCodelessIAPStoreListenerInstance();
@@ -55,10 +55,10 @@ namespace UnityEngine.Purchasing
 
         private static void InitializePurchasing()
         {
-            StandardPurchasingModule module = StandardPurchasingModule.Instance();
+            var module = StandardPurchasingModule.Instance();
             module.useFakeStoreUIMode = FakeStoreUIMode.StandardUser;
 
-            ConfigurationBuilder builder = ConfigurationBuilder.Instance(module);
+            var builder = ConfigurationBuilder.Instance(module);
 
             IAPConfigurationHelper.PopulateConfigurationBuilder(ref builder, instance.catalog);
             instance.m_Builder = builder;
@@ -143,10 +143,7 @@ namespace UnityEngine.Purchasing
         /// initialization.
         /// </summary>
         /// <see cref="StoreController"/>
-        public IStoreController StoreController
-        {
-            get { return controller; }
-        }
+        public IStoreController StoreController => controller;
 
         /// <summary>
         /// Inspect my <typeparamref name="ProductCatalog"/> for a product identifier.
@@ -238,7 +235,7 @@ namespace UnityEngine.Purchasing
                 {
                     if (button.productId == productID)
                     {
-                        button.OnPurchaseFailed(null, Purchasing.PurchaseFailureReason.PurchasingUnavailable);
+                        button.OnPurchaseFailed(null, PurchaseFailureReason.PurchasingUnavailable);
                     }
                 }
                 return;
@@ -288,10 +285,10 @@ namespace UnityEngine.Purchasing
             PurchaseProcessingResult result;
 
             // if any receiver consumed this purchase we return the status
-            bool consumePurchase = false;
-            bool resultProcessed = false;
+            var consumePurchase = false;
+            var resultProcessed = false;
 
-            foreach (IAPButton button in activeButtons)
+            foreach (var button in activeButtons)
             {
                 if (button.productId == e.purchasedProduct.definition.id)
                 {
@@ -307,7 +304,7 @@ namespace UnityEngine.Purchasing
                 }
             }
 
-            foreach (IAPListener listener in activeListeners)
+            foreach (var listener in activeListeners)
             {
                 result = listener.ProcessPurchase(e);
 
@@ -330,7 +327,7 @@ namespace UnityEngine.Purchasing
 
             }
 
-            return (consumePurchase) ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
+            return consumePurchase ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
         }
 
         /// <summary>
@@ -343,9 +340,9 @@ namespace UnityEngine.Purchasing
         /// <param name="reason">Why the purchase failed</param>
         public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
         {
-            bool resultProcessed = false;
+            var resultProcessed = false;
 
-            foreach (IAPButton button in activeButtons)
+            foreach (var button in activeButtons)
             {
                 if (button.productId == product.definition.id)
                 {
@@ -355,7 +352,7 @@ namespace UnityEngine.Purchasing
                 }
             }
 
-            foreach (IAPListener listener in activeListeners)
+            foreach (var listener in activeListeners)
             {
                 listener.OnPurchaseFailed(product, reason);
 

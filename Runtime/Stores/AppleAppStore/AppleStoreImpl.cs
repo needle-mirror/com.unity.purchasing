@@ -1,11 +1,13 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AOT;
 using Uniject;
 using UnityEngine.Purchasing.Extension;
-using UnityEngine.Purchasing.Security;
-using AOT;
 using UnityEngine.Purchasing.MiniJSON;
+using UnityEngine.Purchasing.Security;
 using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
@@ -13,56 +15,44 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// App Store implementation of <see cref="IStore"/>.
     /// </summary>
-    internal class AppleStoreImpl : JSONStore, IAppleExtensions, IAppleConfiguration
+    class AppleStoreImpl : JSONStore, IAppleExtensions, IAppleConfiguration
     {
-        private Action<Product> m_DeferredCallback;
-        private Action m_RefreshReceiptError;
-        private Action<string> m_RefreshReceiptSuccess;
-        private Action<bool> m_RestoreCallback;
-        Action m_FetchStorePromotionOrderError;
-        Action<List<Product>> m_FetchStorePromotionOrderSuccess;
-        private Action<Product> m_PromotionalPurchaseCallback;
-        Action m_FetchStorePromotionVisibilityError;
-        Action<string, AppleStorePromotionVisibility> m_FetchStorePromotionVisibilitySuccess;
-        private INativeAppleStore m_Native;
-        ITelemetryDiagnostics m_TelemetryDiagnostics;
+        Action<Product>? m_DeferredCallback;
+        Action<List<Product>>? m_RevokedCallback;
+        Action? m_RefreshReceiptError;
+        Action<string>? m_RefreshReceiptSuccess;
+        Action<bool>? m_RestoreCallback;
+        Action? m_FetchStorePromotionOrderError;
+        Action<List<Product>>? m_FetchStorePromotionOrderSuccess;
+        Action<Product>? m_PromotionalPurchaseCallback;
+        Action? m_FetchStorePromotionVisibilityError;
+        Action<string, AppleStorePromotionVisibility>? m_FetchStorePromotionVisibilitySuccess;
+        INativeAppleStore? m_Native;
+        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
-        private static IUtil util;
-        private static AppleStoreImpl instance;
+        static IUtil? s_Util;
+        static AppleStoreImpl? s_Instance;
 
+        string? m_ProductsJson;
 
-        private string products_json;
-
-
-        public AppleStoreImpl(IUtil util, ITelemetryDiagnostics telemetryDiagnostics)
+        protected AppleStoreImpl(IUtil util, ITelemetryDiagnostics telemetryDiagnostics)
         {
-            AppleStoreImpl.util = util;
-            instance = this;
+            s_Util = util;
+            s_Instance = this;
             m_TelemetryDiagnostics = telemetryDiagnostics;
+            m_ProductDescriptionsDeserializer = new AppleJsonProductDescriptionsDeserializer();
         }
 
         public void SetNativeStore(INativeAppleStore apple)
         {
             base.SetNativeStore(apple);
-            this.m_Native = apple;
+            m_Native = apple;
             apple.SetUnityPurchasingCallback(MessageCallback);
         }
 
-        public string appReceipt
-        {
-            get
-            {
-                return m_Native.appReceipt;
-            }
-        }
+        public string? appReceipt => m_Native?.appReceipt;
 
-        public bool canMakePayments
-        {
-            get
-            {
-                return m_Native.canMakePayments;
-            }
-        }
+        public bool canMakePayments => m_Native is { canMakePayments: true };
 
         public void SetApplePromotionalPurchaseInterceptorCallback(Action<Product> callback)
         {
@@ -71,13 +61,13 @@ namespace UnityEngine.Purchasing
 
         public bool simulateAskToBuy
         {
-            get
-            {
-                return m_Native.simulateAskToBuy;
-            }
+            get => m_Native is { simulateAskToBuy: true };
             set
             {
-                m_Native.simulateAskToBuy = value;
+                if (m_Native != null)
+                {
+                    m_Native.simulateAskToBuy = value;
+                }
             }
         }
 
@@ -86,7 +76,7 @@ namespace UnityEngine.Purchasing
             m_FetchStorePromotionOrderError = errorCallback;
             m_FetchStorePromotionOrderSuccess = successCallback;
 
-            m_Native.FetchStorePromotionOrder();
+            m_Native?.FetchStorePromotionOrder();
         }
 
         public virtual void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
@@ -94,7 +84,7 @@ namespace UnityEngine.Purchasing
             m_FetchStorePromotionVisibilityError = errorCallback;
             m_FetchStorePromotionVisibilitySuccess = successCallback;
 
-            m_Native.FetchStorePromotionVisibility(product.definition.id);
+            m_Native?.FetchStorePromotionVisibility(product.definition.id);
         }
 
         public virtual void SetStorePromotionOrder(List<Product> products)
@@ -105,10 +95,12 @@ namespace UnityEngine.Purchasing
             foreach (var p in products)
             {
                 if (p != null && !string.IsNullOrEmpty(p.definition.storeSpecificId))
+                {
                     productIds.Add(p.definition.storeSpecificId);
+                }
             }
             var dict = new Dictionary<string, object> { { "products", productIds } };
-            m_Native.SetStorePromotionOrder(MiniJson.JsonEncode(dict));
+            m_Native?.SetStorePromotionOrder(MiniJson.JsonEncode(dict));
         }
 
         public void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visibility)
@@ -119,17 +111,17 @@ namespace UnityEngine.Purchasing
                 m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.InvalidProductError, ex);
                 throw ex;
             }
-            m_Native.SetStorePromotionVisibility(product.definition.storeSpecificId, visibility.ToString());
+            m_Native?.SetStorePromotionVisibility(product.definition.storeSpecificId, visibility.ToString());
         }
 
-        public string GetTransactionReceiptForProduct(Product product)
+        public string? GetTransactionReceiptForProduct(Product product)
         {
-            return m_Native.GetTransactionReceiptForProductId(product.definition.storeSpecificId);
+            return m_Native?.GetTransactionReceiptForProductId(product.definition.storeSpecificId);
         }
 
         public void SetApplicationUsername(string applicationUsername)
         {
-            m_Native.SetApplicationUsername(applicationUsername);
+            m_Native?.SetApplicationUsername(applicationUsername);
         }
 
         public override void OnProductsRetrieved(string json)
@@ -137,73 +129,16 @@ namespace UnityEngine.Purchasing
             // base.OnProductsRetrieved (json); // Don't call this, because we want to enrich the products first
 
             // get product list
-            var productDescriptions = JSONSerializer.DeserializeProductDescriptions(json);
-            List<ProductDescription> finalProductDescriptions = null;
+            var productDescriptions = m_ProductDescriptionsDeserializer.DeserializeProductDescriptions(json);
+            List<ProductDescription>? finalProductDescriptions = null;
 
-            this.products_json = json;
+            m_ProductsJson = json;
 
             // parse app receipt
-            if (m_Native != null)
+            var appleReceipt = GetAppleReceiptFromBase64String(appReceipt);
+            if (HasInAppPurchaseReceipts(appleReceipt))
             {
-                var base64AppReceipt = m_Native.appReceipt;
-                if (!string.IsNullOrEmpty(base64AppReceipt))
-                {
-                    AppleReceipt appleReceipt = getAppleReceiptFromBase64String(base64AppReceipt);
-                    if (appleReceipt != null
-                        && appleReceipt.inAppPurchaseReceipts != null
-                        && appleReceipt.inAppPurchaseReceipts.Length > 0)
-                    {
-                        // Enrich the product descriptions with parsed receipt data
-                        finalProductDescriptions = new List<ProductDescription>();
-                        foreach (var productDescription in productDescriptions)
-                        {
-                            // JDRjr this Find may not be sufficient for subsciptions (or even multiple non-consumables?)
-                            var foundReceipts = Array.FindAll(appleReceipt.inAppPurchaseReceipts, (r) => r.productID == productDescription.storeSpecificId);
-                            if (foundReceipts == null || foundReceipts.Length == 0)
-                            {
-                                finalProductDescriptions.Add(productDescription);
-                            }
-                            else
-                            {
-                                Array.Sort(foundReceipts, (b, a) => (a.purchaseDate.CompareTo(b.purchaseDate)));
-                                var mostRecentReceipt = foundReceipts[0];
-                                var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
-                                if (productType == AppleStoreProductType.AutoRenewingSubscription)
-                                {
-                                    // if the product is auto-renewing subscription, filter the expired products
-                                    if (new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True)
-                                    {
-                                        finalProductDescriptions.Add(productDescription);
-                                    }
-                                    else
-                                    {
-                                        finalProductDescriptions.Add(
-                                                new ProductDescription(
-                                                    productDescription.storeSpecificId,
-                                                    productDescription.metadata,
-                                                    base64AppReceipt,
-                                                    mostRecentReceipt.transactionID));
-                                    }
-                                }
-                                else if (productType == AppleStoreProductType.Consumable)
-                                {
-                                    finalProductDescriptions.Add(productDescription);
-                                }
-                                else
-                                {
-                                    finalProductDescriptions.Add(
-                                            new ProductDescription(
-                                                productDescription.storeSpecificId,
-                                                productDescription.metadata,
-                                                base64AppReceipt,
-                                                mostRecentReceipt.transactionID));
-                                }
-                            }
-                        }
-                    }
-                }
-
-
+                finalProductDescriptions = EnrichProductDescriptions(productDescriptions, appleReceipt!);
             }
 
             // Pass along the enriched product descriptions
@@ -212,24 +147,100 @@ namespace UnityEngine.Purchasing
             // If there is a promotional purchase callback, tell the store to intercept those purchases.
             if (m_PromotionalPurchaseCallback != null)
             {
-                m_Native.InterceptPromotionalPurchases();
+                m_Native?.InterceptPromotionalPurchases();
             }
 
             // Indicate we are ready to start receiving payments.
-            m_Native.AddTransactionObserver();
+            m_Native?.AddTransactionObserver();
+        }
+
+        bool HasInAppPurchaseReceipts(AppleReceipt? appleReceipt)
+        {
+            return appleReceipt != null && appleReceipt.inAppPurchaseReceipts?.Length > 0;
+        }
+
+        List<ProductDescription> EnrichProductDescriptions(List<ProductDescription> productDescriptions, AppleReceipt appleReceipt)
+        {
+            // Enrich the product descriptions with parsed receipt data
+            var finalProductDescriptions = new List<ProductDescription>();
+            foreach (var productDescription in productDescriptions)
+            {
+                // JDRjr this Find may not be sufficient for subscriptions (or even multiple non-consumables?)
+                var mostRecentReceipt = FindMostRecentReceipt(appleReceipt, productDescription.storeSpecificId);
+                if (mostRecentReceipt == null)
+                {
+                    finalProductDescriptions.Add(productDescription);
+                }
+                else
+                {
+                    var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
+                    if (productType == AppleStoreProductType.AutoRenewingSubscription)
+                    {
+                        // if the product is auto-renewing subscription, filter the expired products
+                        if (new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True)
+                        {
+                            finalProductDescriptions.Add(productDescription);
+                        }
+                        else
+                        {
+                            finalProductDescriptions.Add(
+                                new ProductDescription(
+                                    productDescription.storeSpecificId,
+                                    productDescription.metadata,
+                                    appReceipt,
+                                    mostRecentReceipt.transactionID));
+                        }
+                    }
+                    else if (productType == AppleStoreProductType.Consumable)
+                    {
+                        finalProductDescriptions.Add(productDescription);
+                    }
+                    else
+                    {
+                        finalProductDescriptions.Add(
+                            new ProductDescription(
+                                productDescription.storeSpecificId,
+                                productDescription.metadata,
+                                appReceipt,
+                                mostRecentReceipt.transactionID));
+                    }
+                }
+            }
+
+            return finalProductDescriptions;
+        }
+
+        static AppleInAppPurchaseReceipt? FindMostRecentReceipt(AppleReceipt appleReceipt, string productId)
+        {
+            var foundReceipts = Array.FindAll(appleReceipt.inAppPurchaseReceipts, (r) => r.productID == productId);
+            Array.Sort(foundReceipts, (b, a) => a.purchaseDate.CompareTo(b.purchaseDate));
+            return FirstNonCancelledReceipt(foundReceipts);
+        }
+
+        static AppleInAppPurchaseReceipt? FirstNonCancelledReceipt(AppleInAppPurchaseReceipt[] foundReceipts)
+        {
+            foreach (var receipt in foundReceipts)
+            {
+                if (receipt.cancellationDate == DateTime.MinValue)
+                {
+                    return receipt;
+                }
+            }
+
+            return null;
         }
 
         public virtual void RestoreTransactions(Action<bool> callback)
         {
             m_RestoreCallback = callback;
-            m_Native.RestoreTransactions();
+            m_Native?.RestoreTransactions();
         }
 
         public virtual void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
         {
             m_RefreshReceiptSuccess = successCallback;
             m_RefreshReceiptError = errorCallback;
-            m_Native.RefreshAppReceipt();
+            m_Native?.RefreshAppReceipt();
         }
 
         public void RegisterPurchaseDeferredListener(Action<Product> callback)
@@ -237,24 +248,29 @@ namespace UnityEngine.Purchasing
             m_DeferredCallback = callback;
         }
 
+        public void SetEntitlementsRevokedListener(Action<List<Product>> callback)
+        {
+            m_RevokedCallback = callback;
+        }
+
         public virtual void ContinuePromotionalPurchases()
         {
-            m_Native.ContinuePromotionalPurchases();
+            m_Native?.ContinuePromotionalPurchases();
         }
 
         public Dictionary<string, string> GetIntroductoryPriceDictionary()
         {
-            return JSONSerializer.DeserializeSubscriptionDescriptions(this.products_json);
+            return JSONSerializer.DeserializeSubscriptionDescriptions(m_ProductsJson);
         }
 
         public Dictionary<string, string> GetProductDetails()
         {
-            return JSONSerializer.DeserializeProductDetails(this.products_json);
+            return JSONSerializer.DeserializeProductDetails(m_ProductsJson);
         }
 
         public virtual void PresentCodeRedemptionSheet()
         {
-            m_Native.PresentCodeRedemptionSheet();
+            m_Native?.PresentCodeRedemptionSheet();
         }
 
         public void OnPurchaseDeferred(string productId)
@@ -263,7 +279,9 @@ namespace UnityEngine.Purchasing
             {
                 var product = unity.products.WithStoreSpecificID(productId);
                 if (null != product)
+                {
                     m_DeferredCallback(product);
+                }
             }
         }
 
@@ -281,29 +299,65 @@ namespace UnityEngine.Purchasing
 
         public void OnTransactionsRestoredSuccess()
         {
-            if (null != m_RestoreCallback)
-                m_RestoreCallback(true);
+            m_RestoreCallback?.Invoke(true);
         }
 
         public void OnTransactionsRestoredFail(string error)
         {
-            if (null != m_RestoreCallback)
-                m_RestoreCallback(false);
+            m_RestoreCallback?.Invoke(false);
         }
 
         public void OnAppReceiptRetrieved(string receipt)
         {
-            if (receipt != null)
-            {
-                if (null != m_RefreshReceiptSuccess)
-                    m_RefreshReceiptSuccess(receipt);
-            }
+            m_RefreshReceiptSuccess?.Invoke(receipt);
         }
 
         public void OnAppReceiptRefreshedFailed()
         {
-            if (null != m_RefreshReceiptError)
-                m_RefreshReceiptError();
+            m_RefreshReceiptError?.Invoke();
+        }
+
+        void OnEntitlementsRevoked(string productIds)
+        {
+            var revokedProducts = new List<Product>();
+            var appleReceipt = GetAppleReceiptFromBase64String(appReceipt);
+            var productIdList = productIds.ArrayListFromJson();
+
+            foreach (string productId in productIdList)
+            {
+                var product = unity.products.WithStoreSpecificID(productId);
+                if (null == product)
+                {
+                    continue;
+                }
+
+                RevokeEntitlement(appleReceipt, productId, revokedProducts, product);
+            }
+
+            m_RevokedCallback?.Invoke(revokedProducts);
+        }
+
+        void RevokeEntitlement(AppleReceipt? appleReceipt, string productId, List<Product> revokedProducts, Product product)
+        {
+            if (HasInAppPurchaseReceipts(appleReceipt) && RestoreActiveEntitlement(appleReceipt!, productId))
+            {
+                return;
+            }
+
+            revokedProducts.Add(product);
+            PurchasingManager.OnEntitlementRevoked(product);
+        }
+
+        bool RestoreActiveEntitlement(AppleReceipt appleReceipt, string productId)
+        {
+            var receipt = FindMostRecentReceipt(appleReceipt, productId);
+            if (receipt != null)
+            {
+                unity.OnPurchaseSucceeded(productId, appReceipt, receipt.transactionID);
+                return true;
+            }
+
+            return false;
         }
 
         public void OnFetchStorePromotionOrderSucceeded(string productIds)
@@ -339,7 +393,10 @@ namespace UnityEngine.Purchasing
                 var productId = resultDictionary?["productId"];
                 var storePromotionVisibility = resultDictionary?["visibility"];
                 Enum.TryParse(storePromotionVisibility, out AppleStorePromotionVisibility visibility);
-                m_FetchStorePromotionVisibilitySuccess(productId, visibility);
+                if (productId != null)
+                {
+                    m_FetchStorePromotionVisibilitySuccess(productId, visibility);
+                }
             }
         }
 
@@ -351,13 +408,13 @@ namespace UnityEngine.Purchasing
         [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
         private static void MessageCallback(string subject, string payload, string receipt, string transactionId)
         {
-            util.RunOnMainThread(() =>
+            s_Util?.RunOnMainThread(() =>
             {
-                instance.ProcessMessage(subject, payload, receipt, transactionId);
+                s_Instance?.ProcessMessage(subject, payload, receipt, transactionId);
             });
         }
 
-        private void ProcessMessage(string subject, string payload, string receipt, string transactionId)
+        void ProcessMessage(string subject, string payload, string receipt, string transactionId)
         {
             switch (subject)
             {
@@ -403,12 +460,15 @@ namespace UnityEngine.Purchasing
                 case "onAppReceiptRefreshFailed":
                     OnAppReceiptRefreshedFailed();
                     break;
+                case "onEntitlementsRevoked":
+                    OnEntitlementsRevoked(payload);
+                    break;
             }
         }
 
         public override void OnPurchaseSucceeded(string id, string receipt, string transactionId)
         {
-            if (isValidPurchaseState(getAppleReceiptFromBase64String(receipt), id))
+            if (IsValidPurchaseState(GetAppleReceiptFromBase64String(receipt), id))
             {
                 base.OnPurchaseSucceeded(id, receipt, transactionId);
             }
@@ -418,9 +478,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        internal AppleReceipt getAppleReceiptFromBase64String(string receipt)
+        AppleReceipt? GetAppleReceiptFromBase64String(string? receipt)
         {
-            AppleReceipt appleReceipt = null;
+            AppleReceipt? appleReceipt = null;
             if (!string.IsNullOrEmpty(receipt))
             {
                 var parser = new AppleReceiptParser();
@@ -436,18 +496,14 @@ namespace UnityEngine.Purchasing
             return appleReceipt;
         }
 
-        internal bool isValidPurchaseState(AppleReceipt appleReceipt, string id)
+        bool IsValidPurchaseState(AppleReceipt? appleReceipt, string productId)
         {
             var isValid = true;
-            if (appleReceipt != null
-                    && appleReceipt.inAppPurchaseReceipts != null
-                    && appleReceipt.inAppPurchaseReceipts.Length > 0)
+            if (HasInAppPurchaseReceipts(appleReceipt))
             {
-                var foundReceipts = Array.FindAll(appleReceipt.inAppPurchaseReceipts, (r) => r.productID == id);
-                if (foundReceipts != null && foundReceipts.Length > 0)
+                var mostRecentReceipt = FindMostRecentReceipt(appleReceipt!, productId);
+                if (mostRecentReceipt != null)
                 {
-                    Array.Sort(foundReceipts, (b, a) => (a.purchaseDate.CompareTo(b.purchaseDate)));
-                    var mostRecentReceipt = foundReceipts[0];
                     var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
                     if (productType == AppleStoreProductType.AutoRenewingSubscription)
                     {
@@ -461,6 +517,5 @@ namespace UnityEngine.Purchasing
             }
             return isValid;
         }
-
     }
 }

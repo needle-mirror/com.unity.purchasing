@@ -1,9 +1,8 @@
 using System;
 using System.Collections;
-using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
-
 using Uniject;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -30,7 +29,7 @@ namespace UnityEngine.Purchasing
         GameObject m_EventSystem; // Dynamically created. Auto-null'd by UI system.
 
 #pragma warning disable 0414
-        IUtil m_Util;
+        readonly IUtil m_Util;
 #pragma warning restore 0414
 
         public UIFakeStore()
@@ -55,19 +54,21 @@ namespace UnityEngine.Purchasing
         /// <typeparam name="T">The 1st type parameter.</typeparam>
         protected override bool StartUI<T>(object model, DialogType dialogType, Action<bool, T> callback)
         {
-            List<string> options = new List<string>();
-            // Add a default option for "Success"
-            options.Add(SuccessString);
+            var options = new List<string>
+            {
+                // Add a default option for "Success"
+                SuccessString
+            };
 
             foreach (T code in Enum.GetValues(typeof(T)))
             {
                 options.Add(code.ToString());
             }
 
-            Action<bool, int> callbackWrapper = new Action<bool, int>((bool result, int codeValue) =>
+            var callbackWrapper = new Action<bool, int>((bool result, int codeValue) =>
             {
                 // TRICKY: Would prefer to use .NET 4+'s dynamic keyword over double-casting to what I know is an enum type.
-                T value = (T)(object)codeValue;
+                var value = (T)(object)codeValue;
                 callback(result, value);
             });
 
@@ -112,12 +113,14 @@ namespace UnityEngine.Purchasing
             }
 
             // Wrap this dialog request for later use
-            DialogRequest dr = new DialogRequest();
-            dr.QueryText = queryText;
-            dr.OkayButtonText = okayButtonText;
-            dr.CancelButtonText = cancelButtonText;
-            dr.Options = options;
-            dr.Callback = callback;
+            var dr = new DialogRequest
+            {
+                QueryText = queryText,
+                OkayButtonText = okayButtonText,
+                CancelButtonText = cancelButtonText,
+                Options = options,
+                Callback = callback
+            };
 
             m_CurrentDialog = dr;
 
@@ -155,7 +158,7 @@ namespace UnityEngine.Purchasing
 
         private void AddLifeCycleNotifierAndSetDestroyCallback(GameObject gameObject)
         {
-            LifecycleNotifier notifier = gameObject.AddComponent<LifecycleNotifier>() as LifecycleNotifier;
+            var notifier = gameObject.AddComponent<LifecycleNotifier>();
             notifier.OnDestroyCallback = () =>
             {
                 m_CurrentDialog = null;
@@ -172,8 +175,8 @@ namespace UnityEngine.Purchasing
 
         private void ConfigureDialogWindow(UIFakeStoreWindow dialogWindow)
         {
-            bool doCancel = (UIMode != FakeStoreUIMode.DeveloperUser);
-            bool doDropDown = (UIMode != FakeStoreUIMode.StandardUser);
+            var doCancel = UIMode != FakeStoreUIMode.DeveloperUser;
+            var doDropDown = UIMode != FakeStoreUIMode.StandardUser;
 
             dialogWindow.ConfigureMainDialogText(m_CurrentDialog.QueryText, m_CurrentDialog.OkayButtonText, m_CurrentDialog.CancelButtonText);
 
@@ -192,15 +195,15 @@ namespace UnityEngine.Purchasing
 
             if (assignCancelCallback)
             {
-                cancelAction = this.CancelButtonClicked;
+                cancelAction = CancelButtonClicked;
             }
 
             if (assignDropDownCallback)
             {
-                dropdownAction = this.DropdownValueChanged;
+                dropdownAction = DropdownValueChanged;
             }
 
-            dialogWindow.AssignCallbacks(this.OkayButtonClicked, cancelAction, dropdownAction);
+            dialogWindow.AssignCallbacks(OkayButtonClicked, cancelAction, dropdownAction);
         }
 
         private void CreateEventSystem(Transform rootTransform)
@@ -217,7 +220,7 @@ namespace UnityEngine.Purchasing
 
         private string CreateRetrieveProductsQuestion(ReadOnlyCollection<ProductDefinition> definitions)
         {
-            string title = "Do you want to initialize purchasing for products {";
+            var title = "Do you want to initialize purchasing for products {";
             title += string.Join(", ", definitions.Take(RetrieveProductsDescriptionCount).Select(pid => pid.id).ToArray());
             if (definitions.Count > RetrieveProductsDescriptionCount)
             {
@@ -235,7 +238,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         private void OkayButtonClicked()
         {
-            bool result = false;
+            var result = false;
 
             // Return false if the user chose something other than Success, and is in Development mode.
             // True if the "Success" option was chosen, or if this is non-Development mode.
@@ -245,7 +248,7 @@ namespace UnityEngine.Purchasing
                 result = true;
             }
 
-            int codeValue = Math.Max(0, m_LastSelectedDropdownIndex - 1); // Pop SuccessString
+            var codeValue = Math.Max(0, m_LastSelectedDropdownIndex - 1); // Pop SuccessString
 
             m_CurrentDialog.Callback(result, codeValue);
             CloseDialog();
@@ -256,7 +259,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         private void CancelButtonClicked()
         {
-            int codeValue = Math.Max(0, m_LastSelectedDropdownIndex - 1); // Pop SuccessString
+            var codeValue = Math.Max(0, m_LastSelectedDropdownIndex - 1); // Pop SuccessString
 
             // ASSUME: This is FakeStoreUIMode.StandardUser
             m_CurrentDialog.Callback(false, codeValue);
@@ -274,7 +277,7 @@ namespace UnityEngine.Purchasing
 
             if (m_UIFakeStoreWindowObject != null)
             {
-                GameObject.Destroy(m_UIFakeStoreWindowObject);
+                Object.Destroy(m_UIFakeStoreWindowObject);
             }
         }
 

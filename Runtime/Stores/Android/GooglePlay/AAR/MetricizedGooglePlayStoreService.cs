@@ -12,10 +12,11 @@ namespace UnityEngine.Purchasing
 {
     class MetricizedGooglePlayStoreService : GooglePlayStoreService
     {
-        ITelemetryDiagnostics m_TelemetryDiagnostics;
-        ITelemetryMetricsService m_TelemetryMetricsService;
+        readonly ITelemetryMetricsService m_TelemetryMetricsService;
+        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
-        internal MetricizedGooglePlayStoreService(IGoogleBillingClient billingClient,
+        internal MetricizedGooglePlayStoreService(
+            IGoogleBillingClient billingClient,
             IQuerySkuDetailsService querySkuDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,
