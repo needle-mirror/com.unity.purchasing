@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.5.1] - 2022-10-13
+### Fixed
+- GooglePlay - Fixed deferred purchases being processed when the app is foregrounded. Issue introduced in Unity IAP 4.5.0.
+- GooglePlay - Fixed a `NullReferenceException` in `DequeueQueryProducts` happening when launching the app. Issue introduced in Unity IAP 4.2.0.
+- Analytics - Fixed a `NullReferenceException` when reporting failed transactions of purchase unavailable products. Issue introduced in Unity IAP 4.2.0.
+- Analytics - Legacy Analytics will no longer report events in custom UGS environments, which would cause misreported live sales figures. Issue introduced in Unity IAP 4.2.0.
+
 ## [4.5.0] - 2022-09-23
 ### Added
 - Apple - Add support for [Family Sharing](https://developer.apple.com/app-store/subscriptions/#family-sharing).
@@ -27,6 +34,7 @@
   - Add support for
       the [IMMEDIATE_AND_CHARGE_FULL_PRICE](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode#IMMEDIATE_AND_CHARGE_FULL_PRICE)
       proration mode. Use `GooglePlayProrationMode.ImmediateAndChargeFullPrice` for easy access.
+  - The `"skuDetails"` in the receipt json is now an array of the old structure, not just one object. It will only have one element in most cases, so if this is being parsed in your app, treat it like an array and get the first element by default.
 
 ### Fixed
 - GooglePlay - Fix `IGooglePlayConfiguration.SetDeferredPurchaseListener`

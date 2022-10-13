@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Services.Analytics;
 
@@ -6,10 +7,12 @@ namespace UnityEngine.Purchasing
     class AnalyticsAdapter : IAnalyticsAdapter
     {
         readonly IAnalyticsService m_Analytics;
+        readonly ILogger m_Logger;
 
-        public AnalyticsAdapter(IAnalyticsService analytics)
+        public AnalyticsAdapter(IAnalyticsService analytics, ILogger logger)
         {
             m_Analytics = analytics;
+            m_Logger = logger;
         }
 
         public void SendTransactionEvent(Product product)
@@ -77,18 +80,43 @@ namespace UnityEngine.Purchasing
         {
             return new Unity.Services.Analytics.Product
             {
-                RealCurrency = new RealCurrency
-                {
-                    RealCurrencyType = product.metadata.isoCurrencyCode,
-                    RealCurrencyAmount = ExtractRealCurrencyAmount(product)
-                }
+                RealCurrency = CreateRealCurrencyFromProduct(product)
             };
+        }
+
+        RealCurrency CreateRealCurrencyFromProduct(Product product)
+        {
+            return new RealCurrency
+            {
+                RealCurrencyType = product.metadata.isoCurrencyCode,
+                RealCurrencyAmount = CheckCurrencyCodeAndExtractRealCurrencyAmount(product)
+            };
+        }
+
+        long CheckCurrencyCodeAndExtractRealCurrencyAmount(Product product)
+        {
+            if (product.metadata.isoCurrencyCode != null)
+            {
+                return ExtractRealCurrencyAmount(product);
+            }
+            else
+            {
+                m_Logger.LogIAPWarning($"The isoCurrencyCode for product ID {product.definition.id} is null. Were you trying to purchase an unavailable product? The price will be recorded as 0.");
+                return 0;
+            }
         }
 
         long ExtractRealCurrencyAmount(Product product)
         {
-            return m_Analytics.ConvertCurrencyToMinorUnits(product.metadata.isoCurrencyCode,
-                (double)product.metadata.localizedPrice);
+            try
+            {
+                return m_Analytics.ConvertCurrencyToMinorUnits(product.metadata.isoCurrencyCode, (double)product.metadata.localizedPrice);
+            }
+            catch (Exception)
+            {
+                m_Logger.LogIAPWarning($"Could not convert real currency amount payable for product ID {product.definition.id}. The price will be recorded as 0.");
+                return 0;
+            }
         }
     }
 }

@@ -20,5 +20,6 @@ namespace UnityEngine.Purchasing.Interfaces
         bool IsAcknowledged();
 
         bool IsPurchased();
+        bool IsPending();
     }
 }

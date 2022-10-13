@@ -19,22 +19,23 @@ namespace UnityEngine.Purchasing
         {
             var logger = Debug.unityLogger;
             var unityServicesInitializationChecker = new UnityServicesInitializationChecker(logger);
+            var legacyAnalyticsWrapper = new LegacyAnalyticsWrapper(GenerateLegacyUnityAnalytics(), new EmptyAnalyticsAdapter());
 
             Initialize(listener, builder, logger, Application.persistentDataPath,
-                GenerateUnityAnalytics(), GenerateLegacyUnityAnalytics(), builder.factory.GetCatalogProvider(),
+                GenerateUnityAnalytics(logger), legacyAnalyticsWrapper, builder.factory.GetCatalogProvider(),
                 unityServicesInitializationChecker);
         }
 
-        private static IAnalyticsAdapter GenerateUnityAnalytics()
+        private static IAnalyticsAdapter GenerateUnityAnalytics(ILogger logger)
         {
 #if DISABLE_RUNTIME_IAP_ANALYTICS
             return new EmptyAnalyticsAdapter();
 #else
-            return new AnalyticsAdapter(AnalyticsService.Instance);
+            return new AnalyticsAdapter(AnalyticsService.Instance, logger);
 #endif
         }
 
-        private static IAnalyticsAdapter GenerateLegacyUnityAnalytics()
+        static IAnalyticsAdapter GenerateLegacyUnityAnalytics()
         {
 #if DISABLE_RUNTIME_IAP_ANALYTICS || !ENABLE_CLOUD_SERVICES_ANALYTICS
             return new EmptyAnalyticsAdapter();
@@ -60,7 +61,7 @@ namespace UnityEngine.Purchasing
         /// Created for integration testing.
         /// </summary>
         internal static void Initialize(IStoreListener listener, ConfigurationBuilder builder,
-            ILogger logger, string persistentDatapath, IAnalyticsAdapter analytics, IAnalyticsAdapter legacyAnalytics,
+            ILogger logger, string persistentDatapath, IAnalyticsAdapter ugsAnalytics, IAnalyticsAdapter legacyAnalytics,
             ICatalogProvider catalog, IUnityServicesInitializationChecker unityServicesInitializationChecker)
         {
             unityServicesInitializationChecker.CheckAndLogWarning();
@@ -68,7 +69,8 @@ namespace UnityEngine.Purchasing
             var transactionLog = new TransactionLog(logger, persistentDatapath);
             var manager = new PurchasingManager(transactionLog, logger, builder.factory.service,
                 builder.factory.storeName, unityServicesInitializationChecker);
-            var analyticsClient = new AnalyticsClient(analytics, legacyAnalytics);
+
+            var analyticsClient = new AnalyticsClient(ugsAnalytics, legacyAnalytics);
 
             // Proxy the PurchasingManager's callback interface to forward Transactions to Analytics.
             var proxy = new StoreListenerProxy(listener, analyticsClient, builder.factory);

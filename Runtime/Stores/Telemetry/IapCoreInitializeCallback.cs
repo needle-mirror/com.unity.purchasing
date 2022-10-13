@@ -1,4 +1,7 @@
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Internal;
 using Unity.Services.Core.Telemetry.Internal;
 using UnityEngine.Purchasing.Telemetry;
@@ -19,6 +22,8 @@ namespace UnityEngine.Purchasing.Registration
 
         public Task Initialize(CoreRegistry registry)
         {
+            CacheInitializedEnvironment(registry);
+
             var metricsInstanceWrapper = StandardPurchasingModule.Instance().telemetryMetricsInstanceWrapper;
             var diagnosticsInstanceWrapper = StandardPurchasingModule.Instance().telemetryDiagnosticsInstanceWrapper;
 
@@ -31,7 +36,25 @@ namespace UnityEngine.Purchasing.Registration
             return Task.CompletedTask;
         }
 
-        private static void InitializeTelemetryComponents(ITelemetryMetricsInstanceWrapper metricsInstanceWrapper,
+        void CacheInitializedEnvironment(CoreRegistry registry)
+        {
+            var currentEnvironment = GetCurrentEnvironment(registry);
+            CoreServicesEnvironmentSubject.Instance().UpdateCurrentEnvironment(currentEnvironment);
+        }
+
+        string GetCurrentEnvironment(CoreRegistry registry)
+        {
+            try
+            {
+                return registry.GetServiceComponent<IEnvironments>().Current;
+            }
+            catch (KeyNotFoundException exception)
+            {
+                return null;
+            }
+        }
+
+        static void InitializeTelemetryComponents(ITelemetryMetricsInstanceWrapper metricsInstanceWrapper,
             ITelemetryDiagnosticsInstanceWrapper diagnosticsInstanceWrapper)
         {
             var diagnosticsFactory = CoreRegistry.Instance.GetServiceComponent<IDiagnosticsFactory>();

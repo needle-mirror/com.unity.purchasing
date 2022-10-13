@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
-using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing
 {
@@ -11,10 +11,12 @@ namespace UnityEngine.Purchasing
     {
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
         IStoreCallback m_StoreCallback;
+        IUtil m_Util;
 
-        internal GoogleFetchPurchases(IGooglePlayStoreService googlePlayStoreService)
+        internal GoogleFetchPurchases(IGooglePlayStoreService googlePlayStoreService, IUtil util)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
+            m_Util = util;
         }
 
         public void SetStoreCallback(IStoreCallback storeCallback)
@@ -57,10 +59,55 @@ namespace UnityEngine.Purchasing
 
         void OnFetchedPurchase(List<IGooglePurchase> purchases)
         {
-            var purchasedProducts = FillProductsWithPurchases(purchases);
-            if (purchasedProducts.Any())
+            var purchasedPurchases = purchases.Where(PurchaseIsPurchased()).ToList();
+            var purchasedProducts = FillProductsWithPurchases(purchasedPurchases);
+            if (!purchasedProducts.Any())
             {
-                m_StoreCallback?.OnAllPurchasesRetrieved(purchasedProducts);
+                return;
+            }
+
+            m_StoreCallback?.OnAllPurchasesRetrieved(purchasedProducts);
+
+            var deferredPurchases = purchases.Where(PurchaseIsPending()).ToList();
+
+            // OnAllPurchasesRetrieved is run on the main thread. In order to have UpdateDeferredProducts happen after
+            // it, it needs to also be run on the main thread.
+            m_Util.RunOnMainThread(() => UpdateDeferredProductsByPurchases(deferredPurchases));
+        }
+
+        static Func<IGooglePurchase, bool> PurchaseIsPurchased()
+        {
+            return purchase => purchase.IsPurchased();
+        }
+
+        static Func<IGooglePurchase, bool> PurchaseIsPending()
+        {
+            return purchase => purchase.IsPending();
+        }
+
+        void UpdateDeferredProductsByPurchases(List<IGooglePurchase> deferredPurchases)
+        {
+            foreach (var deferredPurchase in deferredPurchases)
+            {
+                UpdateDeferredProductsByPurchase(deferredPurchase);
+            }
+        }
+
+        void UpdateDeferredProductsByPurchase(IGooglePurchase deferredPurchase)
+        {
+            foreach (var sku in deferredPurchase.skus)
+            {
+                UpdateDeferredProduct(deferredPurchase, sku);
+            }
+        }
+
+        void UpdateDeferredProduct(IGooglePurchase deferredPurchase, string sku)
+        {
+            var product = m_StoreCallback?.FindProductById(sku);
+            if (product != null)
+            {
+                product.receipt = deferredPurchase.receipt;
+                product.transactionID = deferredPurchase.purchaseToken;
             }
         }
     }

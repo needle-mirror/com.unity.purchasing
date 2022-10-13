@@ -51,11 +51,9 @@ namespace UnityEngine.Purchasing
             m_BillingClientStateListener = billingClientStateListener;
             m_TelemetryDiagnostics = telemetryDiagnostics;
             m_Logger = logger;
-
-            InitConnectionWithGooglePlay();
         }
 
-        void InitConnectionWithGooglePlay()
+        internal void InitConnectionWithGooglePlay()
         {
             m_BillingClientStateListener.RegisterOnConnected(OnConnected);
             m_BillingClientStateListener.RegisterOnDisconnected(OnDisconnected);

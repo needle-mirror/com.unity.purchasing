@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.5.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.5.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -253,11 +253,11 @@ namespace UnityEngine.Purchasing
             IGooglePurchaseCallback googlePurchaseCallback = new GooglePlayPurchaseCallback(util);
             IGoogleProductCallback googleProductCallback = new GooglePlayProductCallback();
 
-            var googlePlayStoreService = BuildGooglePlayStoreServiceAar(googlePurchaseCallback, googleProductCallback);
+            var googlePlayStoreService = BuildAndInitGooglePlayStoreServiceAar(googlePurchaseCallback, googleProductCallback);
 
             IGooglePlayStorePurchaseService googlePlayStorePurchaseService = new GooglePlayStorePurchaseService(googlePlayStoreService);
             IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService = new GooglePlayStoreFinishTransactionService(googlePlayStoreService);
-            IGoogleFetchPurchases googleFetchPurchases = new GoogleFetchPurchases(googlePlayStoreService);
+            IGoogleFetchPurchases googleFetchPurchases = new GoogleFetchPurchases(googlePlayStoreService, util);
             var googlePlayConfiguration = BuildGooglePlayStoreConfiguration(googlePlayStoreService, googlePurchaseCallback, googleProductCallback);
             var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
             var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
@@ -306,7 +306,7 @@ namespace UnityEngine.Purchasing
             BindConfiguration<IGooglePlayConfiguration>(googlePlayConfiguration);
         }
 
-        IGooglePlayStoreService BuildGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback,
+        IGooglePlayStoreService BuildAndInitGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback,
             IGoogleProductCallback googleProductCallback)
         {
             var googleCachedQuerySkuDetailsService = new GoogleCachedQuerySkuDetailsService();
@@ -330,7 +330,7 @@ namespace UnityEngine.Purchasing
 
             googlePurchaseUpdatedListener.SetGoogleQueryPurchaseService(queryPurchasesService);
 
-            return new MetricizedGooglePlayStoreService(
+            var googlePlayStoreService = new MetricizedGooglePlayStoreService(
                 googleBillingClient,
                 googleQuerySkuDetailsService,
                 purchaseService,
@@ -343,6 +343,10 @@ namespace UnityEngine.Purchasing
                 telemetryMetrics,
                 logger
             );
+
+            googlePlayStoreService.InitConnectionWithGooglePlay();
+
+            return googlePlayStoreService;
         }
 
         private IStore InstantiateUDP()

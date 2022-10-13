@@ -51,5 +51,10 @@ namespace UnityEngine.Purchasing.Models
         {
             return javaPurchase != null && purchaseState == GooglePurchaseStateEnum.Purchased();
         }
+
+        public virtual bool IsPending()
+        {
+            return javaPurchase != null && purchaseState == GooglePurchaseStateEnum.Pending();
+        }
     }
 }
