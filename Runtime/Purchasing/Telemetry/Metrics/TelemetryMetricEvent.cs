@@ -27,12 +27,12 @@ namespace UnityEngine.Purchasing.Telemetry
                 }
                 else
                 {
-                    throw new Exception("Metric was already started.");
+                    throw new IapTelemetryException("Metric was already started.");
                 }
             }
             else
             {
-                throw new Exception("Metric was already sent.");
+                throw new IapTelemetryException("Metric was already sent.");
             }
         }
 
@@ -45,7 +45,7 @@ namespace UnityEngine.Purchasing.Telemetry
             }
             else
             {
-                throw new Exception("Metric was already sent.");
+                throw new IapTelemetryException("Metric was already sent.");
             }
         }
     }

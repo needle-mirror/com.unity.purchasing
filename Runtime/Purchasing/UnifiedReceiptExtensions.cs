@@ -25,8 +25,6 @@ namespace UnityEngine.Purchasing
                 analyticsReceipt.transactionReceipt = receipt.Payload;
             }
 
-            analyticsReceipt.transactionReceipt = EscapeEmbeddedQuotationMarks(analyticsReceipt.transactionReceipt);
-
             return analyticsReceipt;
         }
 
@@ -55,11 +53,6 @@ namespace UnityEngine.Purchasing
             }
 
             return null;
-        }
-
-        static string EscapeEmbeddedQuotationMarks(string receipt)
-        {
-            return receipt?.Replace("\"", "\\\"");
         }
     }
 }

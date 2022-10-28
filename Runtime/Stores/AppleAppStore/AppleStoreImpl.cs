@@ -33,6 +33,10 @@ namespace UnityEngine.Purchasing
         static IUtil? s_Util;
         static AppleStoreImpl? s_Instance;
 
+        string? m_CachedAppReceipt;
+        double? m_CachedAppReceiptModificationDate;
+
+
         string? m_ProductsJson;
 
         protected AppleStoreImpl(IUtil util, ITelemetryDiagnostics telemetryDiagnostics)
@@ -50,7 +54,22 @@ namespace UnityEngine.Purchasing
             apple.SetUnityPurchasingCallback(MessageCallback);
         }
 
-        public string? appReceipt => m_Native?.appReceipt;
+        public string? appReceipt
+        {
+            get
+            {
+                var receiptModificationDate = appReceiptModificationDate;
+                if (!m_CachedAppReceiptModificationDate.Equals(receiptModificationDate))
+                {
+                    m_CachedAppReceiptModificationDate = m_Native?.appReceiptModificationDate;
+                    m_CachedAppReceipt = m_Native?.appReceipt;
+                }
+
+                return m_CachedAppReceipt;
+            }
+        }
+
+        double? appReceiptModificationDate => m_Native?.appReceiptModificationDate;
 
         public bool canMakePayments => m_Native is { canMakePayments: true };
 
@@ -416,6 +435,11 @@ namespace UnityEngine.Purchasing
 
         void ProcessMessage(string subject, string payload, string receipt, string transactionId)
         {
+            if (string.IsNullOrEmpty(receipt))
+            {
+                receipt = appReceipt ?? "";
+            }
+
             switch (subject)
             {
                 case "OnSetupFailed":

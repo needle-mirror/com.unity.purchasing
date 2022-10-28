@@ -1,6 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEditor.Callbacks;
 using UnityEditor.Connect;
 using UnityEditor.PackageManager;
@@ -10,30 +12,30 @@ using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
-
     /// <summary>
     /// Editor tools to set build-time configurations for app stores.
     /// </summary>
     [InitializeOnLoad]
     public static class UnityPurchasingEditor
     {
-        private const string PurchasingPackageName = "com.unity.purchasing";
-        private const string UdpPackageName = "com.unity.purchasing.udp";
+        const string PurchasingPackageName = "com.unity.purchasing";
+        const string UdpPackageName = "com.unity.purchasing.udp";
+        const string k_UdpErrorText = "In order to use UDP functionality, you must install or update the Unity Distribution Portal Package. Please configure your project's packages before running UDP-related editor commands in batch mode.";
 
-        private const string ModePath = "Assets/Resources/BillingMode.json";
-        private const string prevModePath = "Assets/Plugins/UnityPurchasing/Resources/BillingMode.json";
-        private static ListRequest m_ListRequestOfPackage;
-        private static bool m_UmpPackageInstalled;
-        private const string BinPath = "Packages/com.unity.purchasing/Plugins/UnityPurchasing/Android";
-        private const string AssetStoreUdpBinPath = "Assets/Plugins/UDP/Android";
-        private static readonly string PackManUdpBinPath = $"Packages/{UdpPackageName}/Android";
+        const string ModePath = "Assets/Resources/BillingMode.json";
+        const string prevModePath = "Assets/Plugins/UnityPurchasing/Resources/BillingMode.json";
+        static ListRequest m_ListRequestOfPackage;
+        static bool m_UmpPackageInstalled;
+        const string BinPath = "Packages/com.unity.purchasing/Plugins/UnityPurchasing/Android";
+        const string AssetStoreUdpBinPath = "Assets/Plugins/UDP/Android";
+        static readonly string PackManUdpBinPath = $"Packages/{UdpPackageName}/Android";
 
-        private static StoreConfiguration config;
-        private static readonly AppStore defaultAppStore = AppStore.GooglePlay;
+        static StoreConfiguration config;
+        static readonly AppStore defaultAppStore = AppStore.GooglePlay;
         internal delegate void AndroidTargetChange(AppStore store);
         internal static AndroidTargetChange OnAndroidTargetChange;
 
-        private static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
+        static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
         internal const string MenuItemRoot = "Services/" + PurchasingDisplayName;
         internal const string PurchasingDisplayName = "In-App Purchasing";
 
@@ -51,7 +53,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private static void ListingCurrentPackageProgress()
+        static void ListingCurrentPackageProgress()
         {
             if (m_ListRequestOfPackage.IsCompleted)
             {
@@ -59,13 +61,9 @@ namespace UnityEditor.Purchasing
                 EditorApplication.update -= ListingCurrentPackageProgress;
                 if (m_ListRequestOfPackage.Status == StatusCode.Success)
                 {
-                    foreach (var package in m_ListRequestOfPackage.Result)
-                    {
-                        if (package.name.Equals(UdpPackageName))
-                        {
-                            m_UmpPackageInstalled = true;
-                        }
-                    }
+                    var udpPackage = m_ListRequestOfPackage.Result.FirstOrDefault(package => package.name == UdpPackageName);
+
+                    m_UmpPackageInstalled = udpPackage != null;
                 }
                 else if (m_ListRequestOfPackage.Status >= StatusCode.Failure)
                 {
@@ -80,10 +78,48 @@ namespace UnityEditor.Purchasing
         }
 
         [InitializeOnLoadMethod]
-        private static void CheckUdpUmpPackageInstalled()
+        static void CheckUdpUmpPackageInstalled()
         {
+            if (IsInBatchMode())
+            {
+                CheckUdpUmpPackageInstalledViaManifest();
+            }
+            else
+            {
+                CheckUdpUmpPackageInstalledViaPackageManager();
+            }
+        }
+
+        static bool IsInBatchMode()
+        {
+            return UnityEditorInternal.InternalEditorUtility.inBatchMode;
+        }
+
+        static void CheckUdpUmpPackageInstalledViaPackageManager()
+        {
+            if (IsInBatchMode())
+            {
+                Debug.unityLogger.LogIAPError("CheckUdpUmpPackageInstalledViaPackageManager will always fail in Batch Mode. Call CheckUdpUmpPackageInstalledViaManifest instead");
+            }
+
             m_ListRequestOfPackage = Client.List();
             EditorApplication.update += ListingCurrentPackageProgress;
+        }
+
+        static void CheckUdpUmpPackageInstalledViaManifest()
+        {
+            if (!IsInBatchMode())
+            {
+                Debug.unityLogger.LogIAPWarning("When not running in batch mode, it's more reliable to check the presence of UDP via CheckUdpUmpPackageInstalledViaPackageManager, in case the manifest file is out of date.");
+            }
+
+            m_UmpPackageInstalled = false;
+
+            if (File.Exists("Packages/manifest.json"))
+            {
+                var jsonText = File.ReadAllText("Packages/manifest.json");
+                m_UmpPackageInstalled = jsonText.Contains(UdpPackageName);
+            }
         }
 
         /// <summary>
@@ -123,12 +159,13 @@ namespace UnityEditor.Purchasing
         }
 
         // Notice: Multiple files per target supported. While Key must be unique, Value can be duplicated!
-        private static readonly Dictionary<string, AppStore> StoreSpecificFiles = new Dictionary<string, AppStore>()
+        static readonly Dictionary<string, AppStore> StoreSpecificFiles = new Dictionary<string, AppStore>()
         {
             {"billing-4.0.0.aar", AppStore.GooglePlay},
             {"AmazonAppStore.aar", AppStore.AmazonAppStore}
         };
-        private static readonly Dictionary<string, AppStore> UdpSpecificFiles = new Dictionary<string, AppStore>() {
+
+        static readonly Dictionary<string, AppStore> UdpSpecificFiles = new Dictionary<string, AppStore>() {
             { "udp.aar", AppStore.UDP},
             { "udpsandbox.aar", AppStore.UDP},
             { "utils.aar", AppStore.UDP}
@@ -211,7 +248,15 @@ namespace UnityEditor.Purchasing
             {
                 if (!s_udpAvailable || (!IsUdpUmpPackageInstalled() && !IsUdpAssetStorePackageInstalled()) || !UdpSynchronizationApi.CheckUdpCompatibility())
                 {
-                    UdpInstaller.PromptUdpInstallation();
+                    if (IsInBatchMode())
+                    {
+                        Debug.unityLogger.LogIAPError(k_UdpErrorText);
+                    }
+                    else
+                    {
+                        UdpInstaller.PromptUdpInstallation();
+                    }
+
                     return ConfiguredAppStore();
                 }
             }

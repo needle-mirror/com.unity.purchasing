@@ -48,7 +48,7 @@ namespace UnityEngine.Purchasing.Registration
             {
                 return registry.GetServiceComponent<IEnvironments>().Current;
             }
-            catch (KeyNotFoundException exception)
+            catch (KeyNotFoundException)
             {
                 return null;
             }

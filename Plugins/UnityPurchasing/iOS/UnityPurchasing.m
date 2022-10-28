@@ -85,6 +85,23 @@ int delayInSeconds = 2;
     return @"";
 }
 
+- (NSDate*)getAppReceiptModificationDate
+{
+    NSBundle* bundle = [NSBundle mainBundle];
+    if ([bundle respondsToSelector: @selector(appStoreReceiptURL)])
+    {
+        NSURL *receiptURL = [bundle appStoreReceiptURL];
+        if ([[NSFileManager defaultManager] fileExistsAtPath: [receiptURL path]])
+        {
+            NSDate *modDate = [[[NSFileManager defaultManager] attributesOfItemAtPath: [receiptURL path] error: nil] fileModificationDate];
+            return modDate;
+        }
+    }
+
+    UnityPurchasingLog(@"No App Receipt found");
+    return nil;
+}
+
 - (NSString*)getTransactionReceiptForProductId:(NSString *)productId
 {
     NSString *result = transactionReceipts[productId];
@@ -130,7 +147,7 @@ int delayInSeconds = 2;
 - (NSString*)selectReceipt:(SKPaymentTransaction*)transaction
 {
 #if MAC_APPSTORE
-    return [self getAppReceipt];
+    return @"";
 #else
     if ([self isiOS6OrEarlier])
     {
@@ -145,7 +162,7 @@ int delayInSeconds = 2;
     }
     else
     {
-        return [self getAppReceipt];
+        return @"";
     }
 #endif
 }
@@ -395,7 +412,7 @@ int delayInSeconds = 2;
     NSString* productJSON = [UnityPurchasing serializeProductMetadata: response.products];
 
     // Send the app receipt as a separate parameter to avoid JSON parsing a large string.
-    [self UnitySendMessage: @"OnProductsRetrieved" payload: productJSON receipt: [self selectReceipt: nil]];
+    [self UnitySendMessage: @"OnProductsRetrieved" payload: productJSON];
 }
 
 #pragma mark -
@@ -1082,8 +1099,16 @@ void unityPurchasingRefreshAppReceipt()
 
 char* getUnityPurchasingAppReceipt()
 {
-    NSString* receipt = [UnityPurchasing_getInstance() getAppReceipt];
-    return UnityPurchasingMakeHeapAllocatedStringCopy(receipt);
+    @autoreleasepool {
+        NSString* receipt = [UnityPurchasing_getInstance() getAppReceipt];
+        return UnityPurchasingMakeHeapAllocatedStringCopy(receipt);
+    }
+}
+
+double getUnityPurchasingAppReceiptModificationDate()
+{
+    NSDate* receiptModificationDate = [UnityPurchasing_getInstance() getAppReceiptModificationDate];
+    return receiptModificationDate.timeIntervalSince1970;
 }
 
 char* getUnityPurchasingTransactionReceiptForProductId(const char *productId)

@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -12,6 +13,8 @@ namespace UnityEngine.Purchasing
         readonly HashSet<string> m_ProcessedPurchaseToken;
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
         IStoreCallback? m_StoreCallback;
+        int m_RetryCount = 0;
+        const int k_MaxRetryAttempts = 5;
 
         internal GooglePlayStoreFinishTransactionService(IGooglePlayStoreService googlePlayStoreService)
         {
@@ -36,11 +39,13 @@ namespace UnityEngine.Purchasing
             {
                 if (billingResult.responseCode == GoogleBillingResponseCode.Ok)
                 {
+                    m_RetryCount = 0;
                     m_ProcessedPurchaseToken.Add(purchase.purchaseToken);
                     CallPurchaseSucceededUpdateReceipt(purchase);
                 }
-                else if (IsResponseCodeInRecoverableState(billingResult))
+                else if (m_RetryCount <= k_MaxRetryAttempts && IsResponseCodeInRecoverableState(billingResult))
                 {
+                    ++m_RetryCount;
                     FinishTransaction(product, purchase.purchaseToken);
                 }
                 else

@@ -16,13 +16,30 @@ namespace UnityEngine.Purchasing.Telemetry
         {
             var handle = CreateAndStartMetricEvent(metricDefinition);
             timedAction();
-            handle.StopAndSendMetric();
+
+            try
+            {
+                handle.StopAndSendMetric();
+            }
+            catch (IapTelemetryException exception)
+            {
+                Debug.unityLogger.LogIAPError($"An exception occured while sending a metric: {exception.Message}");
+            }
         }
 
         public ITelemetryMetricEvent CreateAndStartMetricEvent(TelemetryMetricDefinition metricDefinition)
         {
             ITelemetryMetricEvent metricEvent = new TelemetryMetricEvent(m_TelemetryMetricsInstanceWrapper, metricDefinition.MetricType, metricDefinition.MetricName);
-            metricEvent.StartMetric();
+
+            try
+            {
+                metricEvent.StartMetric();
+            }
+            catch (IapTelemetryException exception)
+            {
+                Debug.unityLogger.LogIAPError($"An exception occured while starting a metric: {exception.Message}");
+            }
+
             return metricEvent;
         }
     }

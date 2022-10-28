@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.5.2] - 2022-10-28
+### Fixed
+- Removed unused exception variable causing a compiler warning CS0168.
+- Telemetry - Calls to telemetry reporting were occasionally tripping a `NullReferenceException`, `IndexOutOfRangeException` or `KeyNotFoundException`,  for some users. These exceptions are now caught safely and logged. These failures are also mitigated by moving all Telemetry calls to the main thread. Issue noticed in IAP 4.4.1, but may be older.
+- Apple - Optimized memory usage when processing transactions to prevent out of memory crash when processing transactions on launch.
+- Batch Mode - Calls to `UnityPurchasingEditor.TargetAndroidStore` to select UDP will now successfully check UDP package installation and log an error instead of throwing a blocking popup when executed as part of a Batch Mode command.
+- Analytics - Removed escape characters for receipt JSON which was causing parsing issues in the backend.
+- GooglePlay - Fixed a bug causing a crash when retrying to finish a transaction while disconnected
+
 ## [4.5.1] - 2022-10-13
 ### Fixed
 - GooglePlay - Fixed deferred purchases being processed when the app is foregrounded. Issue introduced in Unity IAP 4.5.0.

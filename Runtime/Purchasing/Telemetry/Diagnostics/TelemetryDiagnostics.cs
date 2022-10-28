@@ -13,7 +13,14 @@ namespace UnityEngine.Purchasing.Telemetry
 
         public void SendDiagnostic(string diagnosticName, Exception e)
         {
-            m_TelemetryDiagnosticsInstanceWrapper.SendDiagnostic(diagnosticName, e.ToString());
+            try
+            {
+                m_TelemetryDiagnosticsInstanceWrapper.SendDiagnostic(diagnosticName, e.ToString());
+            }
+            catch (IapTelemetryException exception)
+            {
+                Debug.unityLogger.LogIAPError($"An exception occured while sending a diagnostic: {exception.Message}");
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ namespace UnityEngine.Purchasing
         void AddTransactionObserver();
         void SetApplicationUsername(string applicationUsername);
         string appReceipt { get; }
+        double appReceiptModificationDate { get; }
         bool canMakePayments { get; }
         bool simulateAskToBuy { get; set; }
         void FetchStorePromotionOrder();

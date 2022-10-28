@@ -33,6 +33,9 @@ namespace UnityEngine.Purchasing
         private static extern string getUnityPurchasingAppReceipt();
 
         [DllImport("__Internal")]
+        private static extern double getUnityPurchasingAppReceiptModificationDate();
+
+        [DllImport("__Internal")]
         private static extern string getUnityPurchasingTransactionReceiptForProductId(string productId);
 
         [DllImport("__Internal")]
@@ -75,6 +78,14 @@ namespace UnityEngine.Purchasing
             get
             {
                 return getUnityPurchasingAppReceipt();
+            }
+        }
+
+        public double appReceiptModificationDate
+        {
+            get
+            {
+                return getUnityPurchasingAppReceiptModificationDate();
             }
         }
 

@@ -38,6 +38,7 @@ namespace UnityEngine.Purchasing
         }
 
         public string appReceipt => throw new NotImplementedException();
+        public double appReceiptModificationDate => throw new NotImplementedException();
 
         public bool canMakePayments => throw new NotImplementedException();
 

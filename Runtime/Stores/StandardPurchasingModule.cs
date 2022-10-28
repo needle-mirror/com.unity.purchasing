@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.5.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.5.2"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -146,8 +146,8 @@ namespace UnityEngine.Purchasing
                     new NativeStoreProvider(),
                     Application.platform,
                     androidStore,
-                    new TelemetryDiagnosticsInstanceWrapper(),
-                    new TelemetryMetricsInstanceWrapper());
+                    new TelemetryDiagnosticsInstanceWrapper(logger, util),
+                    new TelemetryMetricsInstanceWrapper(logger, util));
             }
 
             return ModuleInstance;
