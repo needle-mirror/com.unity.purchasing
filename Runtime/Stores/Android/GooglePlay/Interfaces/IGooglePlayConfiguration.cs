@@ -68,5 +68,16 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="enable"></param>
         void SetFetchPurchasesAtInitialize(bool enable);
+
+        /// <summary>
+        /// Set behavior when fetching deferred purchases. Use before calling <typeparamref name="UnityPurchasing.Initialize"/>.
+        ///
+        /// Exclude to prevent deferred purchases from being fetched and processed by <typeparamref name="IStoreListener.ProcessPurchase"/> at initialization.
+        /// When false, deferred purchases need to be handled in <typeparamref name="IStoreListener.ProcessPurchase"/> to prevent granting unpaid purchases.
+        ///
+        /// Default is <c>true</c>.
+        /// </summary>
+        /// <param name="exclude"></param>
+        void SetFetchPurchasesExcludeDeferred(bool exclude);
     }
 }

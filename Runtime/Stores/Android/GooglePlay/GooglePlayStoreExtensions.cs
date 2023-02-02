@@ -1,8 +1,11 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Security;
 using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
@@ -62,13 +65,23 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public virtual void RestoreTransactions(Action<bool> callback)
+        [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
+        public virtual void RestoreTransactions(Action<bool>? callback)
         {
             if (callback == null)
             {
                 m_Logger.LogIAPError("RestoreTransactions called with a null callback. Please provide a callback to avoid null pointer exceptions");
             }
             m_GooglePlayStoreService.FetchPurchases(_ => { callback?.Invoke(true); });
+        }
+
+        public virtual void RestoreTransactions(Action<bool, string?>? callback)
+        {
+            if (callback == null)
+            {
+                m_Logger.LogIAPError("RestoreTransactions called with a null callback. Please provide a callback to avoid null pointer exceptions");
+            }
+            m_GooglePlayStoreService.FetchPurchases(_ => { callback?.Invoke(true, null); });
         }
 
         public void ConfirmSubscriptionPriceChange(string productId, Action<bool> callback)
@@ -108,15 +121,15 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        static bool TryIsPurchasedProductDeferred(Product product)
+        bool TryIsPurchasedProductDeferred(Product product)
         {
             var purchaseState = GetPurchaseState(product);
 
-            //PurchaseState codes: https://developer.android.com/reference/com/android/billingclient/api/Purchase.PurchaseState#pending
-            return purchaseState == 2 || purchaseState == 4;
+            //PurchaseState codes: https://developers.google.com/android-publisher/api-ref/rest/v3/purchases.products
+            return purchaseState == GooglePurchaseState.Refunded || purchaseState == GooglePurchaseState.Deferred;
         }
 
-        static long GetPurchaseState(Product product)
+        public GooglePurchaseState GetPurchaseState(Product product)
         {
             var unifiedReceipt = MiniJson.JsonDecode(product.receipt) as Dictionary<string, object>;
             var payloadStr = unifiedReceipt["Payload"] as string;
@@ -126,7 +139,7 @@ namespace UnityEngine.Purchasing
 
             var jsonDic = MiniJson.JsonDecode(jsonStr) as Dictionary<string, object>;
             var purchaseState = (long)jsonDic["purchaseState"];
-            return purchaseState;
+            return (GooglePurchaseState)purchaseState;
         }
     }
 }

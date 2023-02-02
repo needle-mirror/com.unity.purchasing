@@ -27,7 +27,15 @@ namespace UnityEngine.Purchasing
 
         bool IsUninitialized()
         {
-            return UnityServices.State == ServicesInitializationState.Uninitialized;
+            try
+            {
+                return UnityServices.State == ServicesInitializationState.Uninitialized;
+            }
+            catch (ServicesInitializationException exception)
+            {
+                m_Logger.LogIAPWarning($"Exception while getting UnityServices.State: {exception.Message}");
+                return false;
+            }
         }
 
         void LogWarning()

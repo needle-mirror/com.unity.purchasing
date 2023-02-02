@@ -19,6 +19,7 @@ namespace UnityEngine.Purchasing
         Action<int>? m_QueryProductDetailsFailedListener;
 
         bool m_FetchPurchasesAtInitialize = true;
+        bool m_FetchPurchasesExcludeDeferred = true;
 
         public GooglePlayConfiguration(IGooglePlayStoreService googlePlayStoreService)
         {
@@ -79,6 +80,11 @@ namespace UnityEngine.Purchasing
             return !m_FetchPurchasesAtInitialize;
         }
 
+        public bool DoesRetrievePurchasesExcludeDeferred()
+        {
+            return m_FetchPurchasesExcludeDeferred;
+        }
+
         public void NotifyDeferredPurchase(IStoreCallback? storeCallback, IGooglePurchase? purchase, string? receipt, string? transactionId)
         {
             var product = storeCallback?.FindProductById(purchase?.sku);
@@ -122,6 +128,11 @@ namespace UnityEngine.Purchasing
         public void SetFetchPurchasesAtInitialize(bool enable)
         {
             m_FetchPurchasesAtInitialize = enable;
+        }
+
+        public void SetFetchPurchasesExcludeDeferred(bool exclude)
+        {
+            m_FetchPurchasesExcludeDeferred = exclude;
         }
     }
 }

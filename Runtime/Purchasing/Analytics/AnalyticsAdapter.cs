@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
             return new TransactionParameters
             {
                 ProductID = product.definition.storeSpecificId,
-                TransactionName = product.metadata.localizedTitle,
+                TransactionName = GetTransactionName(product),
                 TransactionID = unifiedReceipt.TransactionID,
                 TransactionType = TransactionType.PURCHASE,
                 TransactionReceipt = analyticsReceipt.transactionReceipt,
@@ -52,12 +52,19 @@ namespace UnityEngine.Purchasing
             return new TransactionFailedParameters
             {
                 ProductID = product.definition.storeSpecificId,
-                TransactionName = product.metadata.localizedTitle,
+                TransactionName = GetTransactionName(product),
                 TransactionType = TransactionType.PURCHASE,
                 ProductsReceived = GenerateItemReceivedForPurchase(product),
                 ProductsSpent = GenerateRealCurrencySpentOnPurchase(product),
                 FailureReason = reason.ToString()
             };
+        }
+
+        static string GetTransactionName(Product product)
+        {
+            return string.IsNullOrEmpty(product.metadata.localizedTitle) ?
+                product.definition.storeSpecificId :
+                product.metadata.localizedTitle;
         }
 
         Unity.Services.Analytics.Product GenerateItemReceivedForPurchase(Product product)

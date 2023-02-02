@@ -1,3 +1,5 @@
+#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.Core;
@@ -89,7 +91,6 @@ namespace UnityEngine.Purchasing
             return extensions.GetExtension<T>();
         }
 
-
         private CodelessIAPStoreListener()
         {
             catalog = ProductCatalog.LoadDefaultCatalog();
@@ -108,6 +109,7 @@ namespace UnityEngine.Purchasing
                 {
                     CreateCodelessIAPStoreListenerInstance();
                 }
+
                 return instance;
             }
         }
@@ -135,7 +137,7 @@ namespace UnityEngine.Purchasing
         private static bool ShouldAutoInitUgs()
         {
             return instance.catalog.enableCodelessAutoInitialization &&
-                   instance.catalog.enableUnityGamingServicesAutoInitialization;
+                instance.catalog.enableUnityGamingServicesAutoInitialization;
         }
 
         /// <summary>
@@ -161,6 +163,7 @@ namespace UnityEngine.Purchasing
                     return true;
                 }
             }
+
             return false;
         }
 
@@ -176,6 +179,7 @@ namespace UnityEngine.Purchasing
             {
                 return controller.products.WithID(productID);
             }
+
             Debug.LogError("CodelessIAPStoreListener attempted to get unknown product " + productID);
             return null;
         }
@@ -238,6 +242,7 @@ namespace UnityEngine.Purchasing
                         button.OnPurchaseFailed(null, PurchaseFailureReason.PurchasingUnavailable);
                     }
                 }
+
                 return;
             }
 
@@ -266,10 +271,29 @@ namespace UnityEngine.Purchasing
         /// Implementation of <typeparamref name="UnityEngine.Purchasing.IStoreListener.OnInitializeFailed"/> which
         /// logs the failure reason.
         /// </summary>
-        /// <param name="error">Reported in the app log</param>
+        /// <param name="error">Reported in the app log. </param>
+        [Obsolete("OnInitializeFailed(InitializationFailureReason error) is deprecated, please use OnInitializeFailed(InitializationFailureReason error, string message) instead.")]
         public void OnInitializeFailed(InitializationFailureReason error)
         {
-            Debug.LogError(string.Format("Purchasing failed to initialize. Reason: {0}", error.ToString()));
+            OnInitializeFailed(error, null);
+        }
+
+        /// <summary>
+        /// Implementation of <typeparamref name="UnityEngine.Purchasing.IStoreListener.OnInitializeFailed"/> which
+        /// logs the failure reason.
+        /// </summary>
+        /// <param name="error">Reported in the app log. </param>
+        /// <param name="message"> More information on the failure reason. </param>
+        public void OnInitializeFailed(InitializationFailureReason error, string? message)
+        {
+            var errorMessage = $"Purchasing failed to initialize. Reason: {error.ToString()}.";
+
+            if (message != null)
+            {
+                errorMessage += $" More details: {message}";
+            }
+
+            Debug.LogError(errorMessage);
         }
 
         /// <summary>
@@ -296,7 +320,6 @@ namespace UnityEngine.Purchasing
 
                     if (result == PurchaseProcessingResult.Complete)
                     {
-
                         consumePurchase = true;
                     }
 
@@ -310,7 +333,6 @@ namespace UnityEngine.Purchasing
 
                 if (result == PurchaseProcessingResult.Complete)
                 {
-
                     consumePurchase = true;
                 }
 
@@ -320,11 +342,9 @@ namespace UnityEngine.Purchasing
             // we expect at least one receiver to get this message
             if (!resultProcessed)
             {
-
                 Debug.LogError("Purchase not correctly processed for product \"" +
-                                 e.purchasedProduct.definition.id +
-                                 "\". Add an active IAPButton to process this purchase, or add an IAPListener to receive any unhandled purchase events.");
-
+                    e.purchasedProduct.definition.id +
+                    "\". Add an active IAPButton to process this purchase, or add an IAPListener to receive any unhandled purchase events.");
             }
 
             return consumePurchase ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
@@ -362,9 +382,8 @@ namespace UnityEngine.Purchasing
             // we expect at least one receiver to get this message
             if (!resultProcessed)
             {
-
                 Debug.LogError("Failed purchase not correctly handled for product \"" + product.definition.id +
-                                  "\". Add an active IAPButton to handle this failure, or add an IAPListener to receive any unhandled purchase failures.");
+                    "\". Add an active IAPButton to handle this failure, or add an IAPListener to receive any unhandled purchase failures.");
             }
         }
     }

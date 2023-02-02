@@ -53,9 +53,16 @@ namespace Samples.Purchasing.Core.BuyingConsumables
             m_StoreController = controller;
         }
 
-        public void OnInitializeFailed(InitializationFailureReason error)
+        public void OnInitializeFailed(InitializationFailureReason error, string? message = null)
         {
-            Debug.Log($"In-App Purchasing initialize failed: {error}");
+            var errorMessage = $"Purchasing failed to initialize. Reason: {error}.";
+
+            if (message != null)
+            {
+                errorMessage += $" More details: {message}";
+            }
+
+            Debug.Log(errorMessage);
         }
 
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)

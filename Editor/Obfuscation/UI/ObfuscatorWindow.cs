@@ -1,3 +1,4 @@
+using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine;
 using static UnityEditor.Purchasing.UnityPurchasingEditor;
 
@@ -43,7 +44,6 @@ namespace UnityEditor.Purchasing
             "4. To ensure correct revenue data, enter your key in the Analytics dashboard.";
 
         private const string kLabelDashboardLink = "\tOpen Analytics Dashboard";
-        private const string kDashboardURL = "https://analytics.cloud.unity3d.com/projects/<cloud_id>/edit/";
 
         private GUIStyle m_ErrorStyle;
         private string m_GoogleError;
@@ -115,11 +115,12 @@ namespace UnityEditor.Purchasing
 
             GUILayout.Label(kDashboardInstructions);
 
-#if UNITY_2018_1_OR_NEWER
-            GUILink(kLabelDashboardLink, kDashboardURL.Replace("<cloud_id>", CloudProjectSettings.projectId));
-#else
-            GUILink(kLabelDashboardLink, kDashboardURL.Replace("<cloud_id>", PlayerSettings.cloudProjectId));
-#endif
+            GUILink(kLabelDashboardLink, GetFormattedDashboardUrl());
+        }
+
+        static string GetFormattedDashboardUrl()
+        {
+            return $"https://dashboard.unity3d.com/organizations/{OrganizationProvider.Organization.Key}/projects/{CloudProjectSettings.projectId}/analytics/v2/dashboards/revenue";
         }
 
         void ObfuscateSecrets(bool includeGoogle)

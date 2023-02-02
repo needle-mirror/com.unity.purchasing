@@ -1,8 +1,11 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Uniject;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
@@ -16,23 +19,38 @@ namespace UnityEngine.Purchasing
         const string k_AndroidSkuDetailsResponseListenerClassName = "com.android.billingclient.api.SkuDetailsResponseListener";
         readonly Action<IGoogleBillingResult, List<AndroidJavaObject>> m_OnSkuDetailsResponse;
         readonly IUtil m_Util;
+        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
         internal SkuDetailsResponseListener(
-            Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction, IUtil util)
+            Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction, IUtil util,
+            ITelemetryDiagnostics telemetryDiagnostics)
             : base(k_AndroidSkuDetailsResponseListenerClassName)
         {
             m_OnSkuDetailsResponse = onSkuDetailsResponseAction;
             m_Util = util;
+            m_TelemetryDiagnostics = telemetryDiagnostics;
         }
 
         [Preserve]
-        void onSkuDetailsResponse(AndroidJavaObject billingResult, AndroidJavaObject skuDetails)
+        internal void onSkuDetailsResponse(AndroidJavaObject billingResult, AndroidJavaObject? skuDetails)
         {
-            m_Util.RunOnMainThread(() =>
+            if (skuDetails == null)
             {
-                var skuDetailsList = skuDetails.Enumerate<AndroidJavaObject>().ToList();
-                m_OnSkuDetailsResponse(new GoogleBillingResult(billingResult), skuDetailsList);
-            });
+                return;
+            }
+
+            try
+            {
+                m_Util.RunOnMainThread(() =>
+                {
+                    var skuDetailsList = skuDetails.Enumerate<AndroidJavaObject>().ToList();
+                    m_OnSkuDetailsResponse(new GoogleBillingResult(billingResult), skuDetailsList);
+                });
+            }
+            catch (Exception ex)
+            {
+                m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.SkuDetailsResponseError, ex);
+            }
         }
     }
 }

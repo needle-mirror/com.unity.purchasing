@@ -21,7 +21,8 @@ namespace UnityEngine.Purchasing
         Action<List<Product>>? m_RevokedCallback;
         Action? m_RefreshReceiptError;
         Action<string>? m_RefreshReceiptSuccess;
-        Action<bool>? m_RestoreCallback;
+        Action<bool>? m_ObsoleteRestoreCallback;
+        Action<bool, string?>? m_RestoreCallback;
         Action? m_FetchStorePromotionOrderError;
         Action<List<Product>>? m_FetchStorePromotionOrderSuccess;
         Action<Product>? m_PromotionalPurchaseCallback;
@@ -133,9 +134,9 @@ namespace UnityEngine.Purchasing
             m_Native?.SetStorePromotionVisibility(product.definition.storeSpecificId, visibility.ToString());
         }
 
-        public string? GetTransactionReceiptForProduct(Product product)
+        public string GetTransactionReceiptForProduct(Product product)
         {
-            return m_Native?.GetTransactionReceiptForProductId(product.definition.storeSpecificId);
+            return m_Native?.GetTransactionReceiptForProductId(product.definition.storeSpecificId) ?? string.Empty;
         }
 
         public void SetApplicationUsername(string applicationUsername)
@@ -208,6 +209,10 @@ namespace UnityEngine.Purchasing
                                     productDescription.metadata,
                                     appReceipt,
                                     mostRecentReceipt.transactionID));
+
+                            UpdateAppleProductFields(productDescription.storeSpecificId,
+                                mostRecentReceipt.originalTransactionIdentifier,
+                                false);
                         }
                     }
                     else if (productType == AppleStoreProductType.Consumable)
@@ -222,6 +227,10 @@ namespace UnityEngine.Purchasing
                                 productDescription.metadata,
                                 appReceipt,
                                 mostRecentReceipt.transactionID));
+
+                        UpdateAppleProductFields(productDescription.storeSpecificId,
+                            mostRecentReceipt.originalTransactionIdentifier,
+                            false);
                     }
                 }
             }
@@ -249,7 +258,14 @@ namespace UnityEngine.Purchasing
             return null;
         }
 
-        public virtual void RestoreTransactions(Action<bool> callback)
+        [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
+        public virtual void RestoreTransactions(Action<bool>? callback)
+        {
+            m_ObsoleteRestoreCallback = callback;
+            m_Native?.RestoreTransactions();
+        }
+
+        public virtual void RestoreTransactions(Action<bool, string?>? callback)
         {
             m_RestoreCallback = callback;
             m_Native?.RestoreTransactions();
@@ -318,12 +334,14 @@ namespace UnityEngine.Purchasing
 
         public void OnTransactionsRestoredSuccess()
         {
-            m_RestoreCallback?.Invoke(true);
+            m_ObsoleteRestoreCallback?.Invoke(true);
+            m_RestoreCallback?.Invoke(true, null);
         }
 
         public void OnTransactionsRestoredFail(string error)
         {
-            m_RestoreCallback?.Invoke(false);
+            m_ObsoleteRestoreCallback?.Invoke(false);
+            m_RestoreCallback?.Invoke(false, error);
         }
 
         public void OnAppReceiptRetrieved(string receipt)
@@ -372,6 +390,7 @@ namespace UnityEngine.Purchasing
             var receipt = FindMostRecentReceipt(appleReceipt, productId);
             if (receipt != null)
             {
+                UpdateAppleProductFields(productId, receipt.originalTransactionIdentifier, true);
                 unity.OnPurchaseSucceeded(productId, appReceipt, receipt.transactionID);
                 return true;
             }
@@ -425,15 +444,15 @@ namespace UnityEngine.Purchasing
         }
 
         [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
-        private static void MessageCallback(string subject, string payload, string receipt, string transactionId)
+        private static void MessageCallback(string subject, string payload, string receipt, string transactionId, string originalTransactionId)
         {
             s_Util?.RunOnMainThread(() =>
             {
-                s_Instance?.ProcessMessage(subject, payload, receipt, transactionId);
+                s_Instance?.ProcessMessage(subject, payload, receipt, transactionId, originalTransactionId);
             });
         }
 
-        void ProcessMessage(string subject, string payload, string receipt, string transactionId)
+        void ProcessMessage(string subject, string payload, string receipt, string transactionId, string originalTransactionId)
         {
             if (string.IsNullOrEmpty(receipt))
             {
@@ -449,7 +468,7 @@ namespace UnityEngine.Purchasing
                     OnProductsRetrieved(payload);
                     break;
                 case "OnPurchaseSucceeded":
-                    OnPurchaseSucceeded(payload, receipt, transactionId);
+                    OnPurchaseSucceeded(payload, receipt, transactionId, originalTransactionId);
                     break;
                 case "OnPurchaseFailed":
                     OnPurchaseFailed(payload);
@@ -490,10 +509,15 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public override void OnPurchaseSucceeded(string id, string receipt, string transactionId)
+        public void OnPurchaseSucceeded(string id, string receipt, string transactionId, string originalTransactionId)
         {
-            if (IsValidPurchaseState(GetAppleReceiptFromBase64String(receipt), id))
+            var appleReceipt = GetAppleReceiptFromBase64String(receipt);
+            var mostRecentReceipt = FindMostRecentReceipt(appleReceipt!, id);
+
+            if (IsValidPurchaseState(mostRecentReceipt, id))
             {
+                var isRestored = IsRestored(id, mostRecentReceipt, transactionId, originalTransactionId);
+                UpdateAppleProductFields(id, originalTransactionId, isRestored);
                 base.OnPurchaseSucceeded(id, receipt, transactionId);
             }
             else
@@ -520,26 +544,76 @@ namespace UnityEngine.Purchasing
             return appleReceipt;
         }
 
-        bool IsValidPurchaseState(AppleReceipt? appleReceipt, string productId)
+        static bool IsValidPurchaseState(AppleInAppPurchaseReceipt? mostRecentReceipt, string productId)
         {
             var isValid = true;
-            if (HasInAppPurchaseReceipts(appleReceipt))
+            if (mostRecentReceipt != null)
             {
-                var mostRecentReceipt = FindMostRecentReceipt(appleReceipt!, productId);
-                if (mostRecentReceipt != null)
+                var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
+                if (productType == AppleStoreProductType.AutoRenewingSubscription)
                 {
-                    var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
-                    if (productType == AppleStoreProductType.AutoRenewingSubscription)
+                    // if the product is auto-renewing subscription, check if this transaction is expired
+                    if (new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True)
                     {
-                        // if the product is auto-renewing subscription, check if this transaction is expired
-                        if (new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True)
-                        {
-                            isValid = false;
-                        }
+                        isValid = false;
                     }
                 }
             }
             return isValid;
+        }
+        bool IsRestored(string productId, AppleInAppPurchaseReceipt? productReceipt, string transactionId, string originalTransactionId)
+        {
+            bool isRestored;
+
+            var currentProduct = unity.products.WithStoreSpecificID(productId);
+            if (currentProduct == null)
+            {
+                isRestored = false;
+            }
+            else if (currentProduct.definition.type == ProductType.Subscription)
+            {
+                isRestored = IsSubscriptionRestored(productReceipt, currentProduct);
+            }
+            else
+            {
+                isRestored = IsNonSubscriptionRestored(transactionId, originalTransactionId);
+            }
+
+            return isRestored;
+        }
+
+        static bool IsSubscriptionRestored(AppleInAppPurchaseReceipt? productReceipt, Product previousProduct)
+        {
+            var isRestored = false;
+            if (previousProduct.hasReceipt)
+            {
+                var subscriptionExpirationDate = productReceipt?.subscriptionExpirationDate;
+                var subscriptionManager = new SubscriptionManager(previousProduct, null);
+                var previousSubscriptionInfo = subscriptionManager.getSubscriptionInfo();
+                if (previousSubscriptionInfo != null &&
+                    previousSubscriptionInfo.isCancelled() == Result.False &&
+                    previousSubscriptionInfo.getExpireDate() >= subscriptionExpirationDate)
+                {
+                    isRestored = true;
+                }
+            }
+
+            return isRestored;
+        }
+
+        static bool IsNonSubscriptionRestored(string transactionId, string? originalTransactionId)
+        {
+            return originalTransactionId != null && originalTransactionId != transactionId;
+        }
+
+        void UpdateAppleProductFields(string id, string originalTransactionId, bool isRestored)
+        {
+            var product = unity.products.WithStoreSpecificID(id);
+            if (product != null)
+            {
+                product.appleProductIsRestored = isRestored;
+                product.appleOriginalTransactionID = originalTransactionId;
+            }
         }
     }
 }

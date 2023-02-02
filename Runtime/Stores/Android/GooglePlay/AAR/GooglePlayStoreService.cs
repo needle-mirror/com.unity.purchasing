@@ -84,11 +84,11 @@ namespace UnityEngine.Purchasing
         {
             m_CurrentConnectionAttempts = 0;
 
-            DequeueQueryProducts();
+            DequeueQueryProducts(GoogleBillingResponseCode.Ok);
             DequeueFetchPurchases();
         }
 
-        protected virtual void DequeueQueryProducts()
+        protected virtual void DequeueQueryProducts(GoogleBillingResponseCode googleBillingResponseCode)
         {
             var productsFailedToDequeue = new ConcurrentQueue<ProductDescriptionQuery>();
             var stop = false;
@@ -106,6 +106,7 @@ namespace UnityEngine.Purchasing
                             m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products,
                                 productDescriptionQuery.onProductsReceived);
                         }
+
                         break;
                     }
                     case GoogleBillingConnectionState.Disconnected:
@@ -113,13 +114,12 @@ namespace UnityEngine.Purchasing
                         if (m_ProductsToQuery.TryDequeue(out var productDescriptionQuery) &&
                             productDescriptionQuery != null)
                         {
-                            var reason = AreConnectionAttemptsExhausted() ?
-                                GoogleRetrieveProductsFailureReason.BillingServiceUnavailable :
-                                GoogleRetrieveProductsFailureReason.BillingServiceDisconnected;
-                            productDescriptionQuery.onRetrieveProductsFailed(reason);
+                            var reason = AreConnectionAttemptsExhausted() ? GoogleRetrieveProductsFailureReason.BillingServiceUnavailable : GoogleRetrieveProductsFailureReason.BillingServiceDisconnected;
+                            productDescriptionQuery.onRetrieveProductsFailed(reason, googleBillingResponseCode);
 
                             productsFailedToDequeue.Enqueue(productDescriptionQuery);
                         }
+
                         break;
                     }
                     case GoogleBillingConnectionState.Connecting:
@@ -144,19 +144,26 @@ namespace UnityEngine.Purchasing
 
         protected virtual void DequeueFetchPurchases()
         {
+            var purchasesFailedToDequeue = new ConcurrentQueue<Action<List<IGooglePurchase>>>();
+
             while (m_OnPurchaseSucceededQueue.TryDequeue(out var onPurchaseSucceed))
+            {
+                purchasesFailedToDequeue.Enqueue(onPurchaseSucceed);
+            }
+
+            while (purchasesFailedToDequeue.TryDequeue(out var onPurchaseSucceed))
             {
                 FetchPurchases(onPurchaseSucceed);
             }
         }
 
-        void OnDisconnected()
+        void OnDisconnected(GoogleBillingResponseCode googleBillingResponseCode)
         {
-            DequeueQueryProducts();
-            AttemptReconnection();
+            DequeueQueryProducts(googleBillingResponseCode);
+            AttemptReconnection(googleBillingResponseCode);
         }
 
-        void AttemptReconnection()
+        void AttemptReconnection(GoogleBillingResponseCode googleBillingResponseCode)
         {
             if (!AreConnectionAttemptsExhausted())
             {
@@ -164,7 +171,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                OnReconnectionFailure();
+                OnReconnectionFailure(googleBillingResponseCode);
             }
         }
 
@@ -173,12 +180,12 @@ namespace UnityEngine.Purchasing
             return m_CurrentConnectionAttempts >= k_MaxConnectionAttempts;
         }
 
-        void OnReconnectionFailure()
+        void OnReconnectionFailure(GoogleBillingResponseCode googleBillingResponseCode)
         {
-            DequeueQueryProducts();
+            DequeueQueryProducts(googleBillingResponseCode);
         }
 
-        public virtual void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
+        public virtual void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
         {
             var currentConnectionState = m_BillingClient.GetConnectionState();
             if (currentConnectionState == GoogleBillingConnectionState.Connected)
@@ -191,12 +198,19 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void HandleRetrieveProductsNotConnected(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
+        void HandleRetrieveProductsNotConnected(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
         {
             if (m_BillingClient.GetConnectionState() == GoogleBillingConnectionState.Disconnected)
             {
-                var reason = AreConnectionAttemptsExhausted() ? GoogleRetrieveProductsFailureReason.BillingServiceUnavailable : GoogleRetrieveProductsFailureReason.BillingServiceDisconnected;
-                onRetrieveProductsFailed(reason);
+                if (AreConnectionAttemptsExhausted())
+                {
+                    onRetrieveProductsFailed(GoogleRetrieveProductsFailureReason.BillingServiceUnavailable, GoogleBillingResponseCode.ServiceUnavailable);
+                }
+                else
+                {
+                    onRetrieveProductsFailed(GoogleRetrieveProductsFailureReason.BillingServiceDisconnected, GoogleBillingResponseCode.ServiceDisconnected);
+                }
+
             }
 
             m_ProductsToQuery.Enqueue(new ProductDescriptionQuery(products, onProductsReceived, onRetrieveProductsFailed));

@@ -12,7 +12,7 @@ namespace UnityEditor.Purchasing
     [CanEditMultipleObjects]
     public class IAPButtonEditor : Editor
     {
-        private static readonly string[] excludedFields = new string[] { "m_Script" };
+        private static readonly string[] excludedFields = new string[] { "m_Script", "onTransactionsRestored" };
         private static readonly string[] restoreButtonExcludedFields = new string[] { "m_Script", "consumePurchase", "onPurchaseComplete", "onPurchaseFailed", "titleText", "descriptionText", "priceText" };
         private const string kNoProduct = "<None>";
 

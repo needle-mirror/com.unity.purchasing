@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,7 +19,8 @@ namespace UnityEngine.Purchasing
         private readonly string m_StoreName;
         private readonly IUnityServicesInitializationChecker m_UnityServicesInitializationChecker;
         private Action m_AdditionalProductsCallback;
-        private Action<InitializationFailureReason> m_AdditionalProductsFailCallback;
+        private Action<InitializationFailureReason>? m_AdditionalProductsFailCallback;
+        private Action<InitializationFailureReason, string?>? m_AdditionalProductsDetailedFailCallback;
 
         private readonly HashSet<string> purchasesProcessedInSession = new HashSet<string>();
 
@@ -119,6 +121,7 @@ namespace UnityEngine.Purchasing
                 var definition = new ProductDefinition(id, ProductType.NonConsumable);
                 product = new Product(definition, new ProductMetadata());
             }
+
             UpdateProductReceiptAndTransactionID(product, receipt, transactionId);
             ProcessPurchaseIfNew(product);
         }
@@ -177,15 +180,22 @@ namespace UnityEngine.Purchasing
             product.transactionID = null;
         }
 
+        [Obsolete]
         public void OnSetupFailed(InitializationFailureReason reason)
+        {
+            OnSetupFailed(reason, null);
+        }
+
+        public void OnSetupFailed(InitializationFailureReason reason, string? message)
         {
             if (initialized)
             {
                 m_AdditionalProductsFailCallback?.Invoke(reason);
+                m_AdditionalProductsDetailedFailCallback?.Invoke(reason, message);
             }
             else
             {
-                m_Listener.OnInitializeFailed(reason);
+                m_Listener.OnInitializeFailed(reason, message);
             }
         }
 
@@ -217,10 +227,11 @@ namespace UnityEngine.Purchasing
                 if (null == matchedProduct)
                 {
                     var definition = new ProductDefinition(product.storeSpecificId,
-                            product.storeSpecificId, product.type);
+                        product.storeSpecificId, product.type);
                     matchedProduct = new Product(definition, product.metadata);
                     unknownProducts.Add(matchedProduct);
                 }
+
                 matchedProduct.availableToPurchase = true;
                 matchedProduct.metadata = product.metadata;
                 matchedProduct.transactionID = product.transactionId;
@@ -258,11 +269,20 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        [Obsolete]
         public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback,
             Action<InitializationFailureReason> failCallback)
         {
             m_AdditionalProductsCallback = successCallback;
             m_AdditionalProductsFailCallback = failCallback;
+            products.AddProducts(additionalProducts.Select(x => new Product(x, new ProductMetadata())));
+            m_Store.RetrieveProducts(new ReadOnlyCollection<ProductDefinition>(additionalProducts.ToList()));
+        }
+
+        public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason, string?> failCallback)
+        {
+            m_AdditionalProductsCallback = successCallback;
+            m_AdditionalProductsDetailedFailCallback = failCallback;
             products.AddProducts(additionalProducts.Select(x => new Product(x, new ProductMetadata())));
             m_Store.RetrieveProducts(new ReadOnlyCollection<ProductDefinition>(additionalProducts.ToList()));
         }
@@ -283,6 +303,7 @@ namespace UnityEngine.Purchasing
             purchasesProcessedInSession.Add(product.transactionID);
 
             var p = new PurchaseEventArgs(product);
+
             // Applications may elect to delay confirmations of purchases,
             // such as when persisting purchase state asynchronously.
             if (PurchaseProcessingResult.Complete == m_Listener.ProcessPurchase(p))
@@ -297,6 +318,7 @@ namespace UnityEngine.Purchasing
         }
 
         private bool initialized;
+
         private void CheckForInitialization()
         {
             if (!initialized)

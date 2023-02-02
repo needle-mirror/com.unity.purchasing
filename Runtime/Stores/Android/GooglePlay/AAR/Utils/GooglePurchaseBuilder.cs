@@ -40,8 +40,9 @@ namespace UnityEngine.Purchasing.Utils
             }
             catch (InvalidOperationException)
             {
-                var transactionId = purchase.Call<string>("getPurchaseToken");
-                throw new ArgumentException($"Unable to process purchase with transaction id: {transactionId} because the product details associated with the purchased products were not found.");
+                var orderId = purchase.Call<string>("getOrderId");
+                var purchaseToken = purchase.Call<string>("getPurchaseToken");
+                throw new ArgumentException($"Unable to process purchase with order id: {orderId} and purchase token: {purchaseToken} because the product details associated with the purchased products were not found.");
             }
         }
 

@@ -93,34 +93,48 @@ namespace UnityEngine.Purchasing
         {
             if (!purchases.Any())
             {
-                if (billingResult.responseCode == GoogleBillingResponseCode.ItemAlreadyOwned)
-                {
-                    m_GooglePurchaseCallback.OnPurchaseFailed(
-                        new PurchaseFailureDescription(
-                            m_LastKnownProductService.LastKnownProductId,
-                            PurchaseFailureReason.DuplicateTransaction,
-                            billingResult.debugMessage
-                        )
-                    );
-                }
-                else if (billingResult.responseCode == GoogleBillingResponseCode.UserCanceled)
-                {
-                    HandleUserCancelledPurchaseFailure(billingResult);
-                }
-                else
-                {
-                    m_GooglePurchaseCallback.OnPurchaseFailed(
-                        new PurchaseFailureDescription(
-                            m_LastKnownProductService.LastKnownProductId,
-                            PurchaseFailureReason.Unknown,
-                            billingResult.debugMessage + " {M: GPUL.HEC} - Response Code = " + billingResult.responseCode
-                        )
-                    );
-                }
+                HandleErrorGoogleBillingResult(billingResult);
             }
             else
             {
                 ApplyOnPurchases(purchases, billingResult, OnPurchaseFailed);
+            }
+        }
+
+        void HandleErrorGoogleBillingResult(IGoogleBillingResult billingResult)
+        {
+            switch (billingResult.responseCode)
+            {
+                case GoogleBillingResponseCode.ItemAlreadyOwned:
+                    m_GooglePurchaseCallback.OnPurchaseFailed(
+                        new PurchaseFailureDescription(
+                            m_LastKnownProductService.LastKnownProductId,
+                            PurchaseFailureReason.DuplicateTransaction,
+                            billingResult.debugMessage + " - Google BillingResponseCode = " + billingResult.responseCode
+                        )
+                    );
+                    break;
+                case GoogleBillingResponseCode.BillingUnavailable:
+                    m_GooglePurchaseCallback.OnPurchaseFailed(
+                        new PurchaseFailureDescription(
+                            m_LastKnownProductService.LastKnownProductId,
+                            PurchaseFailureReason.PurchasingUnavailable,
+                            billingResult.debugMessage + " - Google BillingResponseCode = " + billingResult.responseCode
+                        )
+                    );
+                    break;
+                case GoogleBillingResponseCode.UserCanceled:
+                    HandleUserCancelledPurchaseFailure(billingResult);
+                    break;
+                default:
+                    m_GooglePurchaseCallback.OnPurchaseFailed(
+                        new PurchaseFailureDescription(
+                            m_LastKnownProductService.LastKnownProductId,
+                            PurchaseFailureReason.Unknown,
+                            billingResult.debugMessage + " {M: GPUL.HEC} - Google BillingResponseCode = " + billingResult.responseCode
+                        )
+                    );
+                    break;
             }
         }
 

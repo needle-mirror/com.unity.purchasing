@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 
@@ -8,9 +10,9 @@ namespace UnityEngine.Purchasing
     ///
     /// Refresh receipt calls alternate between success and failure.
     /// </summary>
-    internal class FakeAppleExtensions : IAppleExtensions
+    class FakeAppleExtensions : IAppleExtensions
     {
-        private bool m_FailRefresh;
+        bool m_FailRefresh;
 
         public void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
         {
@@ -26,9 +28,15 @@ namespace UnityEngine.Purchasing
             m_FailRefresh = !m_FailRefresh;
         }
 
-        public void RestoreTransactions(Action<bool> callback)
+        [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
+        public void RestoreTransactions(Action<bool>? callback)
         {
-            callback(true);
+            callback?.Invoke(true);
+        }
+
+        public void RestoreTransactions(Action<bool, string?>? callback)
+        {
+            callback?.Invoke(true, null);
         }
 
         public void RegisterPurchaseDeferredListener(Action<Product> callback)

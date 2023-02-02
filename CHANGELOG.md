@@ -1,5 +1,36 @@
 # Changelog
 
+## [4.6.0] - 2023-02-02
+### Added
+- Added a new restore transaction callback `RestoreTransactions(Action<bool, string> callback)` to obtain the error string when RestoreTransactions is not successful (`IAppleExtensions` and `IGooglePlayStoreExtensions`).
+- Added a new initialize failed callback `IStoreListener.OnInitializeFailed(InitializationFailureReason, string)` to obtain the error string when OnInitializeFailed is invoked.
+- Added a new setup failed callback `IStoreCallback.OnSetupFailed(InitializationFailureReason, string)` to obtain the error string when OnSetupFailed is invoked.
+- Added a new FetchAdditionalProducts. The failCallback contains an error string. `IStoreController.FetchAdditionalProducts(HashSet<ProductDefinition>, Action, Action<InitializationFailureReason, string>)`
+- Apple - `Product.appleOriginalTransactionId` : Returns the original transaction ID. This field is only available when the purchase was made in the active session.
+- Apple - `Product.appleProductIsRestored` : Indicates whether the product has been restored.
+- GooglePlay - `IGooglePlayConfiguration.SetFetchPurchasesExcludeDeferred(bool exclude)` has been added to revert to the previous behaviour. This is not recommended and should only be used if `Deferred` purchases are handled in your `IStoreListener.ProcessPurchase`.
+- GooglePlay - `IGooglePlayStoreExtensions.GetPurchaseState(Product product)` has been added to obtain the `GooglePurchaseState` of a product.
+- GooglePlay - Added missing values to `GoogleBillingResponseCode` in order to output it in `PurchaseFailureDescription`'s message when available.
+- Codeless - Added to the [IAP Button](https://docs.unity3d.com/Packages/com.unity.purchasing@4.6/manual/IAPButton.html) the option to add a script for the On Transactions Restored: `void OnTransactionsRestored(bool success, string? error)`
+
+### Changed
+- Upgraded `com.unity.services.core` from 1.3.1 to 1.5.2
+- Upgraded `com.unity.services.analytics` from 4.0.1 to 4.2.0
+- The old OnInitializeFailed `OnInitializeFailed(InitializationFailureReason error)` was marked `Obsolete`
+- The old OnSetupFailed `OnSetupFailed(InitializationFailureReason reason)` was marked `Obsolete`
+- The old FetchAdditionalProducts `FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason> failCallback)` was marked `Obsolete`
+- The old restore transaction callback `RestoreTransactions(Action<bool> callback)` was marked `Obsolete` (`IAppleExtensions` and `IGooglePlayStoreExtensions`).
+- Apple - Transactions received from Apple that are invalid (where the product is not entitled) will no longer output the `Finishing transaction` log. This only affects transactions that never reached the `ProcessPurchase`.
+- GooglePlay - The enum `GooglePurchaseState` now recognizes `4` as `Deferred`.
+
+### Fixed
+- Analytics - A ServicesInitializationException introduced in Analytics 4.3.0 is now handled properly.
+- Analytics - Fixed an issue where transactions events were invalidated when there was no localization data for a product.
+- GooglePlay - Fixed a `NullReferenceException` when querying sku details while the BillingClient is not ready.
+- GooglePlay - Fixed [Application Not Responding (ANR)](https://developer.android.com/topic/performance/vitals/anr) when foregrounding the application while disconnected from the Google Play Store.
+- GooglePlay - Limited the occurence of `PurchasingUnavailable` errors when retrieving products while in a disconnected state to once per connection.
+- GooglePlay - `Deferred` purchases are, by default, no longer sent to `IStoreListener.ProcessPurchase` when fetching purchases. This avoids the possibility of granting products that were not paid for. These purchases will only be processed once they become `Purchased`. This can be reverted with `IGooglePlayConfiguration.SetFetchPurchasesExcludeDeferred(bool exclude)` to not exclude them, but `Deferred` purchases will need to be handled in `IStoreListener.ProcessPurchase`.
+
 ## [4.5.2] - 2022-10-28
 ### Fixed
 - Removed unused exception variable causing a compiler warning CS0168.

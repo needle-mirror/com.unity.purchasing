@@ -1,3 +1,4 @@
+#nullable enable
 using UnityEngine.Events;
 using UnityEngine.UI;
 
@@ -30,6 +31,14 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Type of event fired after a restore transactions was completed.
+        /// </summary>
+        [System.Serializable]
+        public class OnTransactionsRestoredEvent : UnityEvent<bool, string?>
+        {
+        };
+
+        /// <summary>
         /// Type of event fired after a successful purchase of a product.
         /// </summary>
         [System.Serializable]
@@ -49,7 +58,7 @@ namespace UnityEngine.Purchasing
         /// Which product identifier to represent. Note this is not a store-specific identifier.
         /// </summary>
         [HideInInspector]
-        public string productId;
+        public string? productId;
 
         /// <summary>
         /// The type of this button, can be either a purchase or a restore button.
@@ -64,34 +73,40 @@ namespace UnityEngine.Purchasing
         public bool consumePurchase = true;
 
         /// <summary>
+        /// Event fired after a restore transactions.
+        /// </summary>
+        [Tooltip("Event fired after a restore transactions.")]
+        public OnTransactionsRestoredEvent? onTransactionsRestored;
+
+        /// <summary>
         /// Event fired after a successful purchase of this product.
         /// </summary>
         [Tooltip("Event fired after a successful purchase of this product.")]
-        public OnPurchaseCompletedEvent onPurchaseComplete;
+        public OnPurchaseCompletedEvent? onPurchaseComplete;
 
         /// <summary>
         /// Event fired after a failed purchase of this product.
         /// </summary>
         [Tooltip("Event fired after a failed purchase of this product.")]
-        public OnPurchaseFailedEvent onPurchaseFailed;
+        public OnPurchaseFailedEvent? onPurchaseFailed;
 
         /// <summary>
         /// Displays the localized title from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized title from the app store.")]
-        public Text titleText;
+        public Text? titleText;
 
         /// <summary>
         /// Displays the localized description from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized description from the app store.")]
-        public Text descriptionText;
+        public Text? descriptionText;
 
         /// <summary>
         /// Displays the localized price from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized price from the app store.")]
-        public Text priceText;
+        public Text? priceText;
 
         void Start()
         {
@@ -183,11 +198,15 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnTransactionsRestored(bool success)
+        /// <summary>
+        /// Invoked on transactions restored.
+        /// </summary>
+        /// <param name="success">Indicates if the restore transaction was successful.</param>
+        /// <param name="error">When unsuccessful, the error message.</param>
+        void OnTransactionsRestored(bool success, string? error)
         {
-            //TODO: Add an invocation hook here for developers.
+            onTransactionsRestored?.Invoke(success, error);
         }
-
 
         /// <summary>
         /// Invoke to process a successful purchase of the product associated with this button.
@@ -196,7 +215,7 @@ namespace UnityEngine.Purchasing
         /// <returns>The result of the successful purchase</returns>
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
         {
-            onPurchaseComplete.Invoke(e.purchasedProduct);
+            onPurchaseComplete?.Invoke(e.purchasedProduct);
 
             return consumePurchase ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
         }
@@ -208,7 +227,7 @@ namespace UnityEngine.Purchasing
         /// <param name="reason">Information to help developers recover from this failure</param>
         public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
         {
-            onPurchaseFailed.Invoke(product, reason);
+            onPurchaseFailed?.Invoke(product, reason);
         }
 
         internal void UpdateText()

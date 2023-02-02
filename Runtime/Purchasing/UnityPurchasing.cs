@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Services.Analytics;
+using Unity.Services.Core;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -31,7 +32,14 @@ namespace UnityEngine.Purchasing
 #if DISABLE_RUNTIME_IAP_ANALYTICS
             return new EmptyAnalyticsAdapter();
 #else
-            return new AnalyticsAdapter(AnalyticsService.Instance, logger);
+            try
+            {
+                return new AnalyticsAdapter(AnalyticsService.Instance, logger);
+            }
+            catch (ServicesInitializationException)
+            {
+                return new EmptyAnalyticsAdapter();
+            }
 #endif
         }
 

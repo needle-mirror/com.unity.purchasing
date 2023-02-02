@@ -47,7 +47,7 @@ namespace Samples.Purchasing.AppleAppStore.RestoringTransactions
             m_AppleExtensions.RestoreTransactions(OnRestore);
         }
 
-        void OnRestore(bool success)
+        void OnRestore(bool success, string error)
         {
             var restoreMessage = "";
             if (success)
@@ -59,7 +59,7 @@ namespace Samples.Purchasing.AppleAppStore.RestoringTransactions
             else
             {
                 // Restoration failed.
-                restoreMessage = "Restore Failed";
+                restoreMessage = $"Restore Failed with error: {error}";
             }
 
             Debug.Log(restoreMessage);

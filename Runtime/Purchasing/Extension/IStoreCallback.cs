@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 
@@ -17,7 +18,15 @@ namespace UnityEngine.Purchasing.Extension
         /// Purchasing unavailable.
         /// </summary>
         /// <param name="reason"> The reason the initialization failed. </param>
+        [Obsolete]
         void OnSetupFailed(InitializationFailureReason reason);
+
+        /// <summary>
+        /// Purchasing unavailable.
+        /// </summary>
+        /// <param name="reason"> The reason the initialization failed. </param>
+        /// <param name="message"> More information on the failure reason. </param>
+        void OnSetupFailed(InitializationFailureReason reason, string? message);
 
         /// <summary>
         /// Complete setup by providing a list of available products,

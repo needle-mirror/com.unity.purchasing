@@ -66,9 +66,16 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
 
                     fetchAdditionalProductsButton.interactable = false;
                 },
-                reason =>
+                (reason, message) =>
                 {
-                    Debug.Log($"Fetching additional products failed: {reason.ToString()}");
+                    var errorMessage = $"Fetching additional products failed: {reason.ToString()}.";
+
+                    if (message != null)
+                    {
+                        errorMessage += $" More details: {message}";
+                    }
+
+                    Debug.LogError(errorMessage);
                 });
         }
 

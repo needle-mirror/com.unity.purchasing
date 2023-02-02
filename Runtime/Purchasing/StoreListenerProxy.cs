@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+#nullable enable
 
 namespace UnityEngine.Purchasing
 {
@@ -23,9 +23,9 @@ namespace UnityEngine.Purchasing
             m_ForwardTo.OnInitialized(controller, m_Extensions);
         }
 
-        public void OnInitializeFailed(InitializationFailureReason error)
+        public void OnInitializeFailed(InitializationFailureReason error, string? message)
         {
-            m_ForwardTo.OnInitializeFailed(error);
+            m_ForwardTo.OnInitializeFailed(error, message);
         }
 
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)

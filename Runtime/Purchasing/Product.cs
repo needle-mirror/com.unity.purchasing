@@ -53,6 +53,18 @@ namespace UnityEngine.Purchasing
         public string transactionID { get; internal set; }
 
         /// <summary>
+        /// A unique identifier for this Apple product's original transaction.
+        ///
+        /// This will only be set when the Apple product was purchased during this session.
+        /// </summary>
+        public string appleOriginalTransactionID { get; internal set; }
+
+        /// <summary>
+        /// Indicates if this Apple product is restored.
+        /// </summary>
+        public bool appleProductIsRestored { get; internal set; }
+
+        /// <summary>
         /// Owned Non Consumables and Subscriptions should always have receipts.
         /// Consumable's receipts are not persisted between App restarts.
         /// </summary>

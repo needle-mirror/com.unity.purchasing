@@ -162,7 +162,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public void RestoreTransactions(Action<bool> callback)
+        public void RestoreTransactions(Action<bool, string> callback)
         {
             restoreCalled = true;
             foreach (var product in m_PurchasedProducts)
@@ -170,7 +170,7 @@ namespace UnityEngine.Purchasing
                 m_Biller.OnPurchaseSucceeded(product, /*lang=json,strict*/ "{ \"this\" : \"is a fake receipt\" }", "1");
             }
 
-            callback(true);
+            callback?.Invoke(true, null);
         }
 
 

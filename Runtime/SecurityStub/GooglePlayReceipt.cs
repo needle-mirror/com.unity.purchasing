@@ -13,17 +13,22 @@ namespace UnityEngine.Purchasing.Security
         /// <summary>
         /// The purchase was completed.
         /// </summary>
-        Purchased,
+        Purchased = 0,
 
         /// <summary>
         /// The purchase was cancelled.
         /// </summary>
-        Cancelled,
+        Cancelled = 1,
 
         /// <summary>
         /// The purchase was refunded.
         /// </summary>
-        Refunded
+        Refunded = 2,
+
+        /// <summary>
+        /// The purchase was deferred.
+        /// </summary>
+        Deferred = 4
     }
 
     /// <summary>

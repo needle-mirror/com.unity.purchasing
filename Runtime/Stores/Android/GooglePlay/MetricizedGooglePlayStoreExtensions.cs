@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Telemetry;
@@ -25,7 +27,14 @@ namespace UnityEngine.Purchasing
                 TelemetryMetricDefinitions.upgradeDowngradeSubscriptionName);
         }
 
-        public override void RestoreTransactions(Action<bool> callback)
+        [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
+        public override void RestoreTransactions(Action<bool>? callback)
+        {
+            m_TelemetryMetricsService.ExecuteTimedAction(
+                () => base.RestoreTransactions(callback), TelemetryMetricDefinitions.restoreTransactionName);
+        }
+
+        public override void RestoreTransactions(Action<bool, string?>? callback)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.RestoreTransactions(callback), TelemetryMetricDefinitions.restoreTransactionName);

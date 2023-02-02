@@ -29,5 +29,5 @@ namespace UnityEngine.Purchasing
         void FinishTransaction(string productJSON, string transactionID);
     }
 
-    internal delegate void UnityPurchasingCallback(string subject, string payload, string receipt, string transactionId);
+    internal delegate void UnityPurchasingCallback(string subject, string payload, string receipt, string transactionId, string originalTransactionId);
 }

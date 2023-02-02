@@ -35,10 +35,10 @@ namespace UnityEngine.Purchasing
             m_TelemetryMetricsService = telemetryMetricsService;
         }
 
-        protected override void DequeueQueryProducts()
+        protected override void DequeueQueryProducts(GoogleBillingResponseCode googleBillingResponseCode)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                base.DequeueQueryProducts,
+                () => base.DequeueQueryProducts(googleBillingResponseCode),
                 TelemetryMetricDefinitions.dequeueQueryProductsTimeName);
         }
 
@@ -51,7 +51,7 @@ namespace UnityEngine.Purchasing
 
         public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products,
             Action<List<ProductDescription>> onProductsReceived,
-            Action<GoogleRetrieveProductsFailureReason> onRetrieveProductsFailed)
+            Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.RetrieveProducts(products, onProductsReceived, onRetrieveProductsFailed),

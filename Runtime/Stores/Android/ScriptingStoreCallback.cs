@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using Uniject;
@@ -22,9 +23,15 @@ namespace UnityEngine.Purchasing
 
         public ProductCollection products => m_ForwardTo.products;
 
+        [Obsolete]
         public void OnSetupFailed(InitializationFailureReason reason)
         {
-            m_Util.RunOnMainThread(() => m_ForwardTo.OnSetupFailed(reason));
+            m_Util.RunOnMainThread(() => m_ForwardTo.OnSetupFailed(reason, null));
+        }
+
+        public void OnSetupFailed(InitializationFailureReason reason, string? message)
+        {
+            m_Util.RunOnMainThread(() => m_ForwardTo.OnSetupFailed(reason, message));
         }
 
         public void OnProductsRetrieved(List<ProductDescription> products)

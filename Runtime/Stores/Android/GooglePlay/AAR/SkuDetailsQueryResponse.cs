@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Purchasing.Interfaces;
@@ -6,7 +7,7 @@ namespace UnityEngine.Purchasing
 {
     class SkuDetailsQueryResponse : ISkuDetailsQueryResponse
     {
-        readonly List<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)> m_Responses = new List<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)>();
+        readonly ConcurrentBag<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)> m_Responses = new ConcurrentBag<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)>();
 
         public void AddResponse(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> skuDetails)
         {

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Uniject;
 using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing.Models
@@ -63,10 +64,13 @@ namespace UnityEngine.Purchasing.Models
         string m_ObfuscatedAccountId;
         string m_ObfuscatedProfileId;
         readonly IUtil m_Util;
+        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
-        internal GoogleBillingClient(IGooglePurchaseUpdatedListener googlePurchaseUpdatedListener, IUtil util)
+        internal GoogleBillingClient(IGooglePurchaseUpdatedListener googlePurchaseUpdatedListener, IUtil util,
+            ITelemetryDiagnostics telemetryDiagnostics)
         {
             m_Util = util;
+            m_TelemetryDiagnostics = telemetryDiagnostics;
             var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>("newBuilder", UnityActivity.GetCurrentActivity());
             builder = builder.Call<AndroidJavaObject>("setListener", googlePurchaseUpdatedListener);
             builder = builder.Call<AndroidJavaObject>("enablePendingPurchases");
@@ -116,7 +120,7 @@ namespace UnityEngine.Purchasing.Models
             skuDetailsParamsBuilder = skuDetailsParamsBuilder.Call<AndroidJavaObject>("setSkusList", skus.ToJava());
             skuDetailsParamsBuilder = skuDetailsParamsBuilder.Call<AndroidJavaObject>("setType", type);
             var skuDetailsParams = skuDetailsParamsBuilder.Call<AndroidJavaObject>("build");
-            var listener = new SkuDetailsResponseListener(onSkuDetailsResponseAction, m_Util);
+            var listener = new SkuDetailsResponseListener(onSkuDetailsResponseAction, m_Util, m_TelemetryDiagnostics);
             m_BillingClient.Call("querySkuDetailsAsync", skuDetailsParams, listener);
         }
 

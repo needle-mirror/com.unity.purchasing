@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 
 namespace UnityEngine.Purchasing
@@ -10,7 +11,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Purchasing failed to initialise for a non recoverable reason.
         /// </summary>
-        void OnInitializeFailed(InitializationFailureReason error);
+        void OnInitializeFailed(InitializationFailureReason error, string? message = null);
 
         /// <summary>
         /// A purchase succeeded.

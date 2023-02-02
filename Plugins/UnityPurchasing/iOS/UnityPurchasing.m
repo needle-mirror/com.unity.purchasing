@@ -114,17 +114,17 @@ int delayInSeconds = 2;
 
 - (void)UnitySendMessage:(NSString*)subject payload:(NSString*)payload
 {
-    messageCallback(subject.UTF8String, payload.UTF8String, @"".UTF8String, @"".UTF8String);
+    messageCallback(subject.UTF8String, payload.UTF8String, @"".UTF8String, @"".UTF8String, @"".UTF8String);
 }
 
 - (void)UnitySendMessage:(NSString*)subject payload:(NSString*)payload receipt:(NSString*)receipt
 {
-    messageCallback(subject.UTF8String, payload.UTF8String, receipt.UTF8String, @"".UTF8String);
+    messageCallback(subject.UTF8String, payload.UTF8String, receipt.UTF8String, @"".UTF8String, @"".UTF8String);
 }
 
-- (void)UnitySendMessage:(NSString*)subject payload:(NSString*)payload receipt:(NSString*)receipt transactionId:(NSString*)transactionId
+- (void)UnitySendMessage:(NSString*)subject payload:(NSString*)payload receipt:(NSString*)receipt transactionId:(NSString*)transactionId originalTransactionId:(NSString*)originalTransactionId
 {
-    messageCallback(subject.UTF8String, payload.UTF8String, receipt.UTF8String, transactionId.UTF8String);
+    messageCallback(subject.UTF8String, payload.UTF8String, receipt.UTF8String, transactionId.UTF8String, originalTransactionId.UTF8String);
 }
 
 - (void)setCallback:(UnityPurchasingCallback)callback
@@ -197,6 +197,7 @@ int delayInSeconds = 2;
 - (void)onTransactionSucceeded:(SKPaymentTransaction*)transaction
 {
     NSString* transactionId = transaction.transactionIdentifier;
+    NSString* originalTransactionId = transaction.originalTransaction.transactionIdentifier;
 
     // This should never happen according to Apple's docs, but it does!
     if (nil == transactionId)
@@ -221,16 +222,19 @@ int delayInSeconds = 2;
         [pendingTransactions setObject: transaction forKey: transactionId];
     }
 
-    [self UnitySendMessage: @"OnPurchaseSucceeded" payload: transaction.payment.productIdentifier receipt: [self selectReceipt: transaction] transactionId: transactionId];
+    [self UnitySendMessage: @"OnPurchaseSucceeded" payload: transaction.payment.productIdentifier receipt: [self selectReceipt: transaction] transactionId: transactionId originalTransactionId: originalTransactionId];
 }
 
-// Called back by managed code when the tranaction has been logged.
-- (void)finishTransaction:(NSString *)transactionIdentifier
+// Called back by managed code when the transaction has been logged.
+- (void)finishTransaction:(NSString *)transactionIdentifier hasProduct:(Boolean)hasProduct
 {
     SKPaymentTransaction* transaction = [pendingTransactions objectForKey: transactionIdentifier];
     if (nil != transaction)
     {
-        UnityPurchasingLog(@"Finishing transaction %@", transactionIdentifier);
+        if (hasProduct)
+        {
+            UnityPurchasingLog(@"Finishing transaction %@", transactionIdentifier);
+        }
         [[SKPaymentQueue defaultQueue] finishTransaction: transaction]; // If this fails (user not logged into the store?), transaction is already removed from pendingTransactions, so future calls to finishTransaction will not retry
         [pendingTransactions removeObjectForKey: transactionIdentifier];
         [finishedTransactions addObject: transactionIdentifier];
@@ -1075,8 +1079,9 @@ void unityPurchasingFinishTransaction(const char* productJSON, const char* trans
 {
     if (transactionId == NULL)
         return;
+    Boolean hasProduct = productJSON != NULL;
     NSString* tranId = [NSString stringWithUTF8String: transactionId];
-    [UnityPurchasing_getInstance() finishTransaction: tranId];
+    [UnityPurchasing_getInstance() finishTransaction: tranId hasProduct: hasProduct];
 }
 
 void unityPurchasingRestoreTransactions()

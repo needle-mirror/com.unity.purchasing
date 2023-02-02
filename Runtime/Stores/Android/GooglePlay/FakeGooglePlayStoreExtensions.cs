@@ -1,5 +1,8 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
+using UnityEngine.Purchasing.Security;
 
 namespace UnityEngine.Purchasing
 {
@@ -51,7 +54,17 @@ namespace UnityEngine.Purchasing
         /// using all the different support sku types.
         /// </summary>
         /// <param name="callback">Will be called as often as many purchases the queryPurchases finds. (the IStoreCallback will be called as well)</param>
-        public void RestoreTransactions(Action<bool> callback) { }
+        [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
+        public void RestoreTransactions(Action<bool>? callback) { }
+
+        /// <summary>
+        /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
+        ///
+        /// Async call to the google store to <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingClient#querypurchases">`queryPurchases`</a>
+        /// using all the different support sku types.
+        /// </summary>
+        /// <param name="callback">Will be called as often as many purchases the queryPurchases finds. (the IStoreCallback will be called as well)</param>
+        public void RestoreTransactions(Action<bool, string?>? callback) { }
 
         /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
@@ -73,6 +86,18 @@ namespace UnityEngine.Purchasing
         public bool IsPurchasedProductDeferred(Product product)
         {
             return false;
+        }
+
+        /// <summary>
+        /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
+        ///
+        /// Determines the purchase state of a product in the Google Play Store based on its receipt.
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <returns>Returns the purchase state when successful, otherwise an exception is thrown.</returns>
+        public GooglePurchaseState GetPurchaseState(Product product)
+        {
+            throw new NotImplementedException();
         }
     }
 }

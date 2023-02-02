@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 
@@ -40,14 +41,25 @@ namespace UnityEngine.Purchasing
         /// <param name="productId"> The id of the product to be purchased. </param>
         void InitiatePurchase(string productId);
 
+
         /// <summary>
         /// Fetch additional products from the controlled store.
         /// </summary>
         /// <param name="additionalProducts"> The set of product definitions to be fetched. </param>
         /// <param name="successCallback"> The event triggered on a successful fetch. </param>
         /// <param name="failCallback"> The event triggered on a failed fetch. </param>
+        [Obsolete]
         void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback,
             Action<InitializationFailureReason> failCallback);
+
+        /// <summary>
+        /// Fetch additional products from the controlled store.
+        /// </summary>
+        /// <param name="additionalProducts"> The set of product definitions to be fetched. </param>
+        /// <param name="successCallback"> The event triggered on a successful fetch. </param>
+        /// <param name="failCallback"> The event triggered on a failed fetch. Contains the FailureReason and an optional error message. </param>
+        void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback,
+            Action<InitializationFailureReason, string?> failCallback);
 
         /// <summary>
         /// Where an Application returned ProcessingResult.Pending
