@@ -84,7 +84,7 @@ namespace UnityEngine.Purchasing
                     else
                     {
                         m_LastInitError = message;
-                        unity.OnSetupFailed(InitializationFailureReason.AppNotKnown);
+                        unity.OnSetupFailed(InitializationFailureReason.AppNotKnown, null);
                     }
                 });
             }

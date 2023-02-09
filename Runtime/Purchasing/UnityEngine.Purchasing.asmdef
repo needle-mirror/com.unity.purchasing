@@ -1,19 +1,25 @@
 {
-    "name": "UnityEngine.Purchasing",
-    "references": [
-        "Purchasing.Common",
-        "Unity.Services.Core",
-        "Unity.Services.Core.Environments",
-        "Unity.Services.Core.Internal",
-        "Unity.Services.Analytics"
-    ],
-    "includePlatforms": [],
-    "excludePlatforms": [],
-    "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
-    "autoReferenced": true,
-    "defineConstraints": [],
-    "versionDefines": [],
-    "noEngineReferences": false
+  "name": "UnityEngine.Purchasing",
+  "references": [
+    "Purchasing.Common",
+    "Unity.Services.Core",
+    "Unity.Services.Core.Environments",
+    "Unity.Services.Core.Internal",
+    "Unity.Services.Analytics"
+  ],
+  "includePlatforms": [],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [
+    {
+      "name": "com.unity.services.analytics",
+      "expression": "4.0.0",
+      "define": "IAP_ANALYTICS_SERVICE_ENABLED"
+    }
+  ],
+  "noEngineReferences": false
 }

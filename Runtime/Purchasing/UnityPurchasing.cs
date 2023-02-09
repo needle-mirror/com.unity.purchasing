@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+#if IAP_ANALYTICS_SERVICE_ENABLED
 using Unity.Services.Analytics;
 using Unity.Services.Core;
+#endif
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -29,7 +31,7 @@ namespace UnityEngine.Purchasing
 
         private static IAnalyticsAdapter GenerateUnityAnalytics(ILogger logger)
         {
-#if DISABLE_RUNTIME_IAP_ANALYTICS
+#if DISABLE_RUNTIME_IAP_ANALYTICS || !IAP_ANALYTICS_SERVICE_ENABLED
             return new EmptyAnalyticsAdapter();
 #else
             try
@@ -45,7 +47,7 @@ namespace UnityEngine.Purchasing
 
         static IAnalyticsAdapter GenerateLegacyUnityAnalytics()
         {
-#if DISABLE_RUNTIME_IAP_ANALYTICS || !ENABLE_CLOUD_SERVICES_ANALYTICS
+#if DISABLE_RUNTIME_IAP_ANALYTICS || !ENABLE_CLOUD_SERVICES_ANALYTICS || !IAP_ANALYTICS_SERVICE_ENABLED
             return new EmptyAnalyticsAdapter();
 #else
             return new LegacyAnalyticsAdapter(new LegacyUnityAnalytics());
@@ -83,9 +85,9 @@ namespace UnityEngine.Purchasing
             // Proxy the PurchasingManager's callback interface to forward Transactions to Analytics.
             var proxy = new StoreListenerProxy(listener, analyticsClient, builder.factory);
             FetchAndMergeProducts(builder.useCatalogProvider, builder.products, catalog, response =>
-                {
-                    manager.Initialize(proxy, response);
-                });
+            {
+                manager.Initialize(proxy, response);
+            });
         }
 
         internal static void FetchAndMergeProducts(bool useCatalog,

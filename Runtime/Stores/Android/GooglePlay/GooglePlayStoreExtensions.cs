@@ -16,9 +16,9 @@ namespace UnityEngine.Purchasing
         readonly IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
         readonly ILogger m_Logger;
-        IStoreCallback m_StoreCallback;
-        readonly Action<Product> m_DeferredPurchaseAction;
-        readonly Action<Product> m_DeferredProrationUpgradeDowngradeSubscriptionAction;
+        IStoreCallback? m_StoreCallback;
+        readonly Action<Product>? m_DeferredPurchaseAction;
+        readonly Action<Product>? m_DeferredProrationUpgradeDowngradeSubscriptionAction;
 
         internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics)
         {
@@ -132,13 +132,13 @@ namespace UnityEngine.Purchasing
         public GooglePurchaseState GetPurchaseState(Product product)
         {
             var unifiedReceipt = MiniJson.JsonDecode(product.receipt) as Dictionary<string, object>;
-            var payloadStr = unifiedReceipt["Payload"] as string;
+            var payloadStr = unifiedReceipt!["Payload"] as string;
 
             var payload = MiniJson.JsonDecode(payloadStr) as Dictionary<string, object>;
-            var jsonStr = payload["json"] as string;
+            var jsonStr = payload!["json"] as string;
 
             var jsonDic = MiniJson.JsonDecode(jsonStr) as Dictionary<string, object>;
-            var purchaseState = (long)jsonDic["purchaseState"];
+            var purchaseState = (long)jsonDic!["purchaseState"];
             return (GooglePurchaseState)purchaseState;
         }
     }

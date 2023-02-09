@@ -92,7 +92,7 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    m_Biller.OnSetupFailed(failureReason);
+                    m_Biller.OnSetupFailed(failureReason, null);
                 }
             }
 

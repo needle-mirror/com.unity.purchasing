@@ -13,12 +13,12 @@ namespace UnityEngine.Purchasing
     internal class PurchasingManager : IStoreCallback, IStoreController
     {
         private readonly IStore m_Store;
-        private IInternalStoreListener m_Listener;
+        private IInternalStoreListener? m_Listener;
         private readonly ILogger m_Logger;
         private readonly TransactionLog m_TransactionLog;
         private readonly string m_StoreName;
         private readonly IUnityServicesInitializationChecker m_UnityServicesInitializationChecker;
-        private Action m_AdditionalProductsCallback;
+        private Action? m_AdditionalProductsCallback;
         private Action<InitializationFailureReason>? m_AdditionalProductsFailCallback;
         private Action<InitializationFailureReason, string?>? m_AdditionalProductsDetailedFailCallback;
 
@@ -44,12 +44,12 @@ namespace UnityEngine.Purchasing
             InitiatePurchase(product, string.Empty);
         }
 
-        public void InitiatePurchase(string productId)
+        public void InitiatePurchase(string? productId)
         {
             InitiatePurchase(productId, string.Empty);
         }
 
-        public void InitiatePurchase(Product product, string developerPayload)
+        public void InitiatePurchase(Product? product, string developerPayload)
         {
             m_UnityServicesInitializationChecker.CheckAndLogWarning();
 
@@ -61,14 +61,14 @@ namespace UnityEngine.Purchasing
 
             if (!product.availableToPurchase)
             {
-                m_Listener.OnPurchaseFailed(product, PurchaseFailureReason.ProductUnavailable);
+                m_Listener?.OnPurchaseFailed(product, PurchaseFailureReason.ProductUnavailable);
                 return;
             }
 
             m_Store.Purchase(product.definition, developerPayload);
         }
 
-        public void InitiatePurchase(string purchasableId, string developerPayload)
+        public void InitiatePurchase(string? purchasableId, string developerPayload)
         {
             var product = products.WithID(purchasableId);
             if (null == product)
@@ -105,12 +105,12 @@ namespace UnityEngine.Purchasing
             m_Store.FinishTransaction(product.definition, product.transactionID);
         }
 
-        public ProductCollection products { get; private set; }
+        public ProductCollection products { get; private set; } = null!;
 
         /// <summary>
         /// Called by our IStore when a purchase succeeds.
         /// </summary>
-        public void OnPurchaseSucceeded(string id, string receipt, string transactionId)
+        public void OnPurchaseSucceeded(string id, string? receipt, string transactionId)
         {
             var product = products.WithStoreSpecificID(id);
             if (null == product)
@@ -126,7 +126,7 @@ namespace UnityEngine.Purchasing
             ProcessPurchaseIfNew(product);
         }
 
-        void UpdateProductReceiptAndTransactionID(Product product, string receipt, string transactionId)
+        void UpdateProductReceiptAndTransactionID(Product product, string? receipt, string transactionId)
         {
             if (product != null)
             {
@@ -195,7 +195,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                m_Listener.OnInitializeFailed(reason, message);
+                m_Listener?.OnInitializeFailed(reason, message);
             }
         }
 
@@ -211,7 +211,7 @@ namespace UnityEngine.Purchasing
                 }
 
                 m_Logger.LogFormat(LogType.Warning, "onPurchaseFailedEvent({0})", "productId:" + product.definition.id + " message:" + description.message);
-                m_Listener.OnPurchaseFailed(product, description.reason);
+                m_Listener?.OnPurchaseFailed(product, description.reason);
             }
         }
 
@@ -253,7 +253,7 @@ namespace UnityEngine.Purchasing
             ProcessPurchaseOnStart();
         }
 
-        string CreateUnifiedReceipt(string rawReceipt, string transactionId)
+        string CreateUnifiedReceipt(string? rawReceipt, string transactionId)
         {
             return UnifiedReceiptFormatter.FormatUnifiedReceipt(rawReceipt, transactionId, m_StoreName);
         }
@@ -306,7 +306,7 @@ namespace UnityEngine.Purchasing
 
             // Applications may elect to delay confirmations of purchases,
             // such as when persisting purchase state asynchronously.
-            if (PurchaseProcessingResult.Complete == m_Listener.ProcessPurchase(p))
+            if (m_Listener?.ProcessPurchase(p) == PurchaseProcessingResult.Complete)
             {
                 ConfirmPendingPurchase(product);
             }
@@ -323,18 +323,18 @@ namespace UnityEngine.Purchasing
         {
             if (!initialized)
             {
+                initialized = true;
+
                 var hasAvailableProductsToPurchase = HasAvailableProductsToPurchase();
 
                 if (hasAvailableProductsToPurchase)
                 {
-                    m_Listener.OnInitialized(this);
+                    m_Listener?.OnInitialized(this);
                 }
                 else
                 {
-                    OnSetupFailed(InitializationFailureReason.NoProductsAvailable);
+                    m_Listener?.OnInitializeFailed(InitializationFailureReason.NoProductsAvailable);
                 }
-
-                initialized = true;
             }
             else
             {

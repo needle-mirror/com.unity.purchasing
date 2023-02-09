@@ -154,7 +154,7 @@ namespace UnityEngine.Purchasing
         public void OnSetupFailed(string reason)
         {
             var r = (InitializationFailureReason)Enum.Parse(typeof(InitializationFailureReason), reason, true);
-            unity.OnSetupFailed(r);
+            unity.OnSetupFailed(r, null);
         }
 
         public virtual void OnProductsRetrieved(string json)

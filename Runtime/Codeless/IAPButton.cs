@@ -50,7 +50,7 @@ namespace UnityEngine.Purchasing
         /// Type of event fired after a failed purchase of a product.
         /// </summary>
         [System.Serializable]
-        public class OnPurchaseFailedEvent : UnityEvent<Product, PurchaseFailureReason>
+        public class OnPurchaseFailedEvent : UnityEvent<Product?, PurchaseFailureReason>
         {
         };
 
@@ -123,8 +123,7 @@ namespace UnityEngine.Purchasing
                 {
                     Debug.LogError("IAPButton productId is empty");
                 }
-
-                if (!CodelessIAPStoreListener.Instance.HasProductInCatalog(productId))
+                else if (!CodelessIAPStoreListener.Instance.HasProductInCatalog(productId!))
                 {
                     Debug.LogWarning("The product catalog has no product with the ID \"" + productId + "\"");
                 }
@@ -225,7 +224,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
         /// <param name="reason">Information to help developers recover from this failure</param>
-        public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
+        public void OnPurchaseFailed(Product? product, PurchaseFailureReason reason)
         {
             onPurchaseFailed?.Invoke(product, reason);
         }

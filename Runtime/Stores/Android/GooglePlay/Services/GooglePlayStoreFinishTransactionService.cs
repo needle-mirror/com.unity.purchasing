@@ -64,7 +64,7 @@ namespace UnityEngine.Purchasing
         void CallPurchaseSucceededUpdateReceipt(IGooglePurchase googlePurchase)
         {
             m_StoreCallback?.OnPurchaseSucceeded(
-                googlePurchase.sku,
+                googlePurchase.sku ?? string.Empty,
                 googlePurchase.receipt,
                 googlePurchase.purchaseToken
             );

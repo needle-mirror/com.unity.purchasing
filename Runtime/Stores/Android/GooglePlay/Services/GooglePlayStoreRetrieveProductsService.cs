@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
     {
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
         readonly IGoogleFetchPurchases m_GoogleFetchPurchases;
-        IStoreCallback m_StoreCallback;
+        IStoreCallback? m_StoreCallback;
         readonly IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
         readonly IGooglePlayStoreExtensions m_GooglePlayStoreExtensions;
         bool m_HasInitiallyRetrievedProducts;
@@ -34,7 +34,7 @@ namespace UnityEngine.Purchasing
             m_RetrieveProductsFailed = false;
         }
 
-        public void SetStoreCallback(IStoreCallback storeCallback)
+        public void SetStoreCallback(IStoreCallback? storeCallback)
         {
             m_StoreCallback = storeCallback;
         }
@@ -77,7 +77,7 @@ namespace UnityEngine.Purchasing
             {
                 m_RetrieveProductsFailed = true;
                 m_GooglePlayConfigurationInternal.NotifyInitializationConnectionFailed();
-                m_StoreCallback.OnSetupFailed(InitializationFailureReason.PurchasingUnavailable, $"GoogleBillingResponseCode: {responseCode.ToString()}");
+                m_StoreCallback?.OnSetupFailed(InitializationFailureReason.PurchasingUnavailable, $"GoogleBillingResponseCode: {responseCode.ToString()}");
             }
         }
 

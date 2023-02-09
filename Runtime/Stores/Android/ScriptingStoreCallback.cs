@@ -39,7 +39,7 @@ namespace UnityEngine.Purchasing
             m_Util.RunOnMainThread(() => m_ForwardTo.OnProductsRetrieved(products));
         }
 
-        public void OnPurchaseSucceeded(string id, string receipt, string transactionID)
+        public void OnPurchaseSucceeded(string id, string? receipt, string transactionID)
         {
             m_Util.RunOnMainThread(() => m_ForwardTo.OnPurchaseSucceeded(id, receipt, transactionID));
         }

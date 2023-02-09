@@ -39,7 +39,7 @@ namespace UnityEngine.Purchasing
         /// Initiate a purchase from the controlled store
         /// </summary>
         /// <param name="productId"> The id of the product to be purchased. </param>
-        void InitiatePurchase(string productId);
+        void InitiatePurchase(string? productId);
 
 
         /// <summary>

@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class CodelessIAPStoreListener : IStoreListener
     {
-        private static CodelessIAPStoreListener instance;
+        private static CodelessIAPStoreListener? instance;
         private readonly List<IAPButton> activeButtons = new List<IAPButton>();
         private readonly List<IAPListener> activeListeners = new List<IAPListener>();
         private static bool unityPurchasingInitialized;
@@ -23,14 +23,14 @@ namespace UnityEngine.Purchasing
         /// For advanced scripted IAP actions, use this session's <typeparamref name="IStoreController"/> after initialization.
         /// </summary>
         /// <see cref="StoreController"/>
-        protected IStoreController controller;
+        protected IStoreController? controller;
         /// <summary>
         /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IExtensionProvider"/> after initialization.
         /// </summary>
         /// <see cref="ExtensionProvider"/>
-        protected IExtensionProvider extensions;
+        protected IExtensionProvider extensions = null!;
 
-        ConfigurationBuilder m_Builder;
+        ConfigurationBuilder m_Builder = null!;
 
         /// <summary>
         /// For adding <typeparamref name="ProductDefinition"/> this default <typeparamref name="ProductCatalog"/> is
@@ -62,10 +62,10 @@ namespace UnityEngine.Purchasing
 
             var builder = ConfigurationBuilder.Instance(module);
 
-            IAPConfigurationHelper.PopulateConfigurationBuilder(ref builder, instance.catalog);
-            instance.m_Builder = builder;
+            IAPConfigurationHelper.PopulateConfigurationBuilder(ref builder, Instance.catalog);
+            Instance.m_Builder = builder;
 
-            UnityPurchasing.Initialize(instance, builder);
+            UnityPurchasing.Initialize(Instance, builder);
 
             unityPurchasingInitialized = true;
         }
@@ -110,7 +110,7 @@ namespace UnityEngine.Purchasing
                     CreateCodelessIAPStoreListenerInstance();
                 }
 
-                return instance;
+                return instance!;
             }
         }
 
@@ -136,8 +136,8 @@ namespace UnityEngine.Purchasing
 
         private static bool ShouldAutoInitUgs()
         {
-            return instance.catalog.enableCodelessAutoInitialization &&
-                instance.catalog.enableUnityGamingServicesAutoInitialization;
+            return Instance.catalog.enableCodelessAutoInitialization &&
+                Instance.catalog.enableUnityGamingServicesAutoInitialization;
         }
 
         /// <summary>
@@ -145,7 +145,7 @@ namespace UnityEngine.Purchasing
         /// initialization.
         /// </summary>
         /// <see cref="StoreController"/>
-        public IStoreController StoreController => controller;
+        public IStoreController? StoreController => controller;
 
         /// <summary>
         /// Inspect my <typeparamref name="ProductCatalog"/> for a product identifier.
@@ -173,7 +173,7 @@ namespace UnityEngine.Purchasing
         /// <param name="productID">A product identifier to find as a <typeparamref name="Product"/></param>
         /// <returns>A <typeparamref name="Product"/> corresponding to <paramref name="productID"/>, or <c>null</c> if
         /// the identifier is not available.</returns>
-        public Product GetProduct(string productID)
+        public Product? GetProduct(string? productID)
         {
             if (controller != null && controller.products != null && !string.IsNullOrEmpty(productID))
             {
@@ -229,7 +229,7 @@ namespace UnityEngine.Purchasing
         /// to all registered IAPButtons if not yet successfully initialized.
         /// </summary>
         /// <param name="productID">Product identifier of <typeparamref name="Product"/> to be purchased</param>
-        public void InitiatePurchase(string productID)
+        public void InitiatePurchase(string? productID)
         {
             if (controller == null)
             {

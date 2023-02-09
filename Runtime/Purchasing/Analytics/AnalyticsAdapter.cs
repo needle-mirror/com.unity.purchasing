@@ -1,3 +1,4 @@
+#if IAP_ANALYTICS_SERVICE_ENABLED
 using System;
 using System.Collections.Generic;
 using Unity.Services.Analytics;
@@ -127,3 +128,4 @@ namespace UnityEngine.Purchasing
         }
     }
 }
+#endif

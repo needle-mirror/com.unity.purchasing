@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.7.0] - 2023-02-09
+### Added
+- Added `storeSpecificErrorCode` to `PurchaseFailureDescription.message` when available.
+
+### Fixed
+- Unity IAP will consider the call to `UnityPurchasing.initialize` completed before invoking the correct callback `IStoreListener.OnInitialized` or `IStoreListener.OnInitializeFailed`. This prevents these callbacks from being invoked more than once per initialization.
+- GooglePlay - Fixed `No such proxy method` exception in our representation of `BillingClientStateListener.onBillingServiceDisconnected()` introduced by Unity IAP 4.6.0
+- Apple - Fixed a `NullReferenceException` happening when the receipt isn't found.
+
+### Changed
+- Removed `com.unity.services.analytics` from the IAP SDK dependencies
+
 ## [4.6.0] - 2023-02-02
 ### Added
 - Added a new restore transaction callback `RestoreTransactions(Action<bool, string> callback)` to obtain the error string when RestoreTransactions is not successful (`IAppleExtensions` and `IGooglePlayStoreExtensions`).
@@ -30,6 +42,7 @@
 - GooglePlay - Fixed [Application Not Responding (ANR)](https://developer.android.com/topic/performance/vitals/anr) when foregrounding the application while disconnected from the Google Play Store.
 - GooglePlay - Limited the occurence of `PurchasingUnavailable` errors when retrieving products while in a disconnected state to once per connection.
 - GooglePlay - `Deferred` purchases are, by default, no longer sent to `IStoreListener.ProcessPurchase` when fetching purchases. This avoids the possibility of granting products that were not paid for. These purchases will only be processed once they become `Purchased`. This can be reverted with `IGooglePlayConfiguration.SetFetchPurchasesExcludeDeferred(bool exclude)` to not exclude them, but `Deferred` purchases will need to be handled in `IStoreListener.ProcessPurchase`.
+- Unity IAP will consider the call to `UnityPurchasing.initialize` completed before invoking the correct callback `IStoreListener.OnInitialized` or `IStoreListener.OnInitializeFailed`. This prevents these callbacks from being invoked more than once per initialization.
 
 ## [4.5.2] - 2022-10-28
 ### Fixed

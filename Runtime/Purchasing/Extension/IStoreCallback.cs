@@ -44,7 +44,7 @@ namespace UnityEngine.Purchasing.Extension
         /// <param name="storeSpecificId"> The product id specific to the store it was purchased from. </param>
         /// <param name="receipt"> The receipt provided by the store detailing the purchase </param>
         /// <param name="transactionIdentifier"> The id of the transaction </param>
-        void OnPurchaseSucceeded(string storeSpecificId, string receipt, string transactionIdentifier);
+        void OnPurchaseSucceeded(string storeSpecificId, string? receipt, string transactionIdentifier);
 
         /// <summary>
         /// Inform Unity Purchasing of all active purchases.

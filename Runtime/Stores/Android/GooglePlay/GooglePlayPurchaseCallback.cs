@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
 
         public void OnPurchaseSuccessful(IGooglePurchase purchase, string receipt, string purchaseToken)
         {
-            m_StoreCallback?.OnPurchaseSucceeded(purchase.sku, receipt, purchaseToken);
+            m_StoreCallback?.OnPurchaseSucceeded(purchase.sku ?? string.Empty, receipt, purchaseToken);
         }
 
         public void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription)

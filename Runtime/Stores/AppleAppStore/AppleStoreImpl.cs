@@ -238,8 +238,13 @@ namespace UnityEngine.Purchasing
             return finalProductDescriptions;
         }
 
-        static AppleInAppPurchaseReceipt? FindMostRecentReceipt(AppleReceipt appleReceipt, string productId)
+        static AppleInAppPurchaseReceipt? FindMostRecentReceipt(AppleReceipt? appleReceipt, string productId)
         {
+            if (appleReceipt == null)
+            {
+                return null;
+            }
+
             var foundReceipts = Array.FindAll(appleReceipt.inAppPurchaseReceipts, (r) => r.productID == productId);
             Array.Sort(foundReceipts, (b, a) => a.purchaseDate.CompareTo(b.purchaseDate));
             return FirstNonCancelledReceipt(foundReceipts);
@@ -512,7 +517,7 @@ namespace UnityEngine.Purchasing
         public void OnPurchaseSucceeded(string id, string receipt, string transactionId, string originalTransactionId)
         {
             var appleReceipt = GetAppleReceiptFromBase64String(receipt);
-            var mostRecentReceipt = FindMostRecentReceipt(appleReceipt!, id);
+            var mostRecentReceipt = FindMostRecentReceipt(appleReceipt, id);
 
             if (IsValidPurchaseState(mostRecentReceipt, id))
             {
@@ -570,13 +575,11 @@ namespace UnityEngine.Purchasing
             {
                 isRestored = false;
             }
-            else if (currentProduct.definition.type == ProductType.Subscription)
-            {
-                isRestored = IsSubscriptionRestored(productReceipt, currentProduct);
-            }
             else
             {
-                isRestored = IsNonSubscriptionRestored(transactionId, originalTransactionId);
+                isRestored = currentProduct.definition.type == ProductType.Subscription
+                    ? IsSubscriptionRestored(productReceipt, currentProduct)
+                    : IsNonSubscriptionRestored(transactionId, originalTransactionId);
             }
 
             return isRestored;

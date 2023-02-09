@@ -161,7 +161,6 @@ namespace UnityEngine.Purchasing
             });
         }
 
-        private static readonly int count;
         public void OnPurchaseSucceeded(string productId, string receipt, string tranId)
         {
             util.RunOnMainThread(() =>
@@ -179,7 +178,7 @@ namespace UnityEngine.Purchasing
             {
                 if (message.Contains("801900CC"))
                 {
-                    callback.OnSetupFailed(InitializationFailureReason.AppNotKnown);
+                    callback.OnSetupFailed(InitializationFailureReason.AppNotKnown, null);
                 }
                 else
                 {

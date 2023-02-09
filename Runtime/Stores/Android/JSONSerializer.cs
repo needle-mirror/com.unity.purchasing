@@ -16,6 +16,7 @@ namespace UnityEngine.Purchasing
                     return dic[key].ToString();
                 }
             }
+
             return null;
         }
     }
@@ -34,6 +35,7 @@ namespace UnityEngine.Purchasing
             {
                 result.Add(EncodeProductDef(product));
             }
+
             return MiniJson.JsonEncode(result);
         }
 
@@ -49,6 +51,7 @@ namespace UnityEngine.Purchasing
             {
                 result.Add(EncodeProductDesc(product));
             }
+
             return MiniJson.JsonEncode(result);
         }
 
@@ -99,7 +102,6 @@ namespace UnityEngine.Purchasing
             var result = new Dictionary<string, string>();
             foreach (Dictionary<string, object> obj in objects)
             {
-
                 var details = new Dictionary<string, string>();
                 if (obj.TryGetValue("metadata", out var metadata))
                 {
@@ -144,9 +146,9 @@ namespace UnityEngine.Purchasing
                     Debug.LogWarning("storeSpecificId key not found in product details json");
                 }
             }
+
             return result;
         }
-
 
         public static PurchaseFailureDescription DeserializeFailureReason(string json)
         {
@@ -162,7 +164,7 @@ namespace UnityEngine.Purchasing
 
                 if (dic.TryGetValue("productId", out var productId))
                 {
-                    return new PurchaseFailureDescription((string)productId, reason, dic.TryGetString("message"));
+                    return new PurchaseFailureDescription((string)productId, reason, BuildPurchaseFailureDescriptionMessage(dic));
                 }
             }
             else
@@ -170,15 +172,30 @@ namespace UnityEngine.Purchasing
                 Debug.LogWarning("Reason key not found in purchase failure json: " + json);
             }
 
-            return new PurchaseFailureDescription("Unknown ProductID", reason, dic.TryGetString("message"));
+            return new PurchaseFailureDescription("Unknown ProductID", reason, BuildPurchaseFailureDescriptionMessage(dic));
+        }
+
+        static string BuildPurchaseFailureDescriptionMessage(Dictionary<string, object> dic)
+        {
+            var message = dic.TryGetString("message");
+            var storeSpecificErrorCode = dic.TryGetString("storeSpecificErrorCode");
+
+            if (message == null && storeSpecificErrorCode == null)
+            {
+                return null;
+            }
+
+            if (storeSpecificErrorCode != null)
+            {
+                storeSpecificErrorCode = " storeSpecificErrorCode: " + storeSpecificErrorCode;
+            }
+
+            return message + storeSpecificErrorCode;
         }
 
         private static Dictionary<string, object> EncodeProductDef(ProductDefinition product)
         {
-            var prod = new Dictionary<string, object>
-            {
-                {"id", product.id}, {"storeSpecificId", product.storeSpecificId}, {"type", product.type.ToString()}
-            };
+            var prod = new Dictionary<string, object> { { "id", product.id }, { "storeSpecificId", product.storeSpecificId }, { "type", product.type.ToString() } };
 
             var enabled = true;
             var enabledProp = typeof(ProductDefinition).GetProperty("enabled");
@@ -193,6 +210,7 @@ namespace UnityEngine.Purchasing
                     enabled = true;
                 }
             }
+
             prod.Add("enabled", enabled);
 
             var payoutsArray = new List<object>();
@@ -215,6 +233,7 @@ namespace UnityEngine.Purchasing
                     }
                 }
             }
+
             prod.Add("payouts", payoutsArray);
 
             return prod;
@@ -232,6 +251,7 @@ namespace UnityEngine.Purchasing
                 var typeValue = pdClassFieldType.GetValue(product);
                 prod.Add("type", typeValue.ToString());
             }
+
             prod.Add("metadata", EncodeProductMeta(product.metadata));
             prod.Add("receipt", product.receipt);
             prod.Add("transactionId", product.transactionId);
@@ -243,13 +263,12 @@ namespace UnityEngine.Purchasing
         {
             var prod = new Dictionary<string, object>
             {
-                {"localizedPriceString", product.localizedPriceString},
-                {"localizedTitle", product.localizedTitle},
-                {"localizedDescription", product.localizedDescription},
-                {"isoCurrencyCode", product.isoCurrencyCode},
-                {"localizedPrice", Convert.ToDouble(product.localizedPrice)}
+                { "localizedPriceString", product.localizedPriceString },
+                { "localizedTitle", product.localizedTitle },
+                { "localizedDescription", product.localizedDescription },
+                { "isoCurrencyCode", product.isoCurrencyCode },
+                { "localizedPrice", Convert.ToDouble(product.localizedPrice) }
             };
-
 
             return prod;
         }

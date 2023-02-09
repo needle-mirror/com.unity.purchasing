@@ -1,3 +1,4 @@
+#if IAP_ANALYTICS_SERVICE_ENABLED
 using System;
 using Unity.Services.Analytics;
 
@@ -10,3 +11,4 @@ namespace UnityEngine.Purchasing
         public TransactionServer? transactionServer { get; set; }
     }
 }
+#endif
