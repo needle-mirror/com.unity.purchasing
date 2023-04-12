@@ -1,5 +1,23 @@
 # Changelog
 
+## [4.8.0] - 2023-04-12
+### Added
+- Added new [IAP Button](https://docs.unity3d.com/Packages/com.unity.purchasing@4.8/manual/CodelessIAPButton.html) in the editor. This new button allows for more UI customization.  The new button will no longer update the button fields by default.
+- Added a new event `OnProductFetched(Product)` to the [IAP Listener](https://docs.unity3d.com/Packages/com.unity.purchasing@4.8/manual/IAPListener.html) and to the [IAP Button](https://docs.unity3d.com/Packages/com.unity.purchasing@4.8/manual/CodelessIAPButton.html) it is called after fetching products from the app stores.
+- Added a new `OnPurchaseFailed(Product, PurchaseFailureDescription)` callback containing more information on the failed purchase in `IDetailedStoreListener : IStoreListener`
+
+### Changed
+- [IAP Button](https://docs.unity3d.com/Packages/com.unity.purchasing@4.8/manual/IAPButton.html) is now obsolete.
+- Google Play - Billing Library update from version 4.0.0 to 5.1.0 [Google Release Notes](https://developer.android.com/google/play/billing/release-notes).
+    New Google Billing features are not supported yet, they will be included in a future major update.
+- Removed the nullable operator `?` from public interfaces and classes.
+- `IStoreListener.OnPurchaseFailed` is now obsolete.
+- When present, Analytics 4.4.0 and above will now use the new interface `IAnalyticsStandardEventComponent` from Services Cores 1.8.1.
+- Upgraded `com.unity.services.core` from 1.5.2 to 1.8.1.
+
+### Fixed
+- Samples - Some samples had IAP 4.6.0 `IStoreListener` changes not completely implemented causing compilation errors.
+
 ## [4.7.0] - 2023-02-09
 ### Added
 - Added `storeSpecificErrorCode` to `PurchaseFailureDescription.message` when available.

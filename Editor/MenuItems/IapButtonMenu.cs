@@ -1,5 +1,7 @@
+using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.UI;
 
 namespace UnityEditor.Purchasing
 {
@@ -11,32 +13,57 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Add option to create a IAPButton from the GameObject menu.
         /// </summary>
-        [MenuItem("GameObject/" + IapMenuConsts.PurchasingDisplayName + "/IAP Button", false, 10)]
+        [MenuItem("GameObject/" + IapMenuConsts.PurchasingDisplayName + "/IAP Button (Legacy)", false, 11)]
         public static void GameObjectCreateUnityIAPButton()
         {
-            CreateUnityIAPButtonInternal();
+            CreateUnityIAPButtonInternal("IAP Button (Legacy)");
 
             GenericEditorMenuItemClickEventSenderHelpers.SendGameObjectMenuAddIapButtonEvent();
         }
 
         /// <summary>
+        /// Add option to create a CodelessIAPButton from the GameObject menu.
+        /// </summary>
+        [MenuItem("GameObject/" + IapMenuConsts.PurchasingDisplayName + "/IAP Button", false, 10)]
+        public static void GameObjectCreateUnityCodelessIAPButton()
+        {
+            CreateUnityCodelessIAPButtonInternal("IAP Button");
+
+            GenericEditorMenuItemClickEventSenderHelpers.SendGameObjectMenuAddCodelessIapButtonEvent();
+        }
+
+        /// <summary>
         /// Add option to create a IAPButton from the Window/UnityIAP menu.
         /// </summary>
-        [MenuItem(IapMenuConsts.MenuItemRoot + "/Create IAP Button", false, 100)]
+        [MenuItem(IapMenuConsts.MenuItemRoot + "/Create IAP Button (Legacy)", false, 101)]
         public static void CreateUnityIAPButton()
         {
-            CreateUnityIAPButtonInternal();
+            CreateUnityIAPButtonInternal("IAP Button (Legacy)");
 
             GenericEditorMenuItemClickEventSenderHelpers.SendIapMenuAddIapButtonEvent();
             GameServicesEventSenderHelpers.SendTopMenuCreateIapButtonEvent();
         }
 
-        static void CreateUnityIAPButtonInternal()
+        /// <summary>
+        /// Add option to create a CodelessIAPButton from the Window/UnityIAP menu.
+        /// </summary>
+        [MenuItem(IapMenuConsts.MenuItemRoot + "/Create IAP Button", false, 100)]
+        public static void CreateUnityCodelessIAPButton()
         {
-            var buttonObject = CreateButtonObject();
+            CreateUnityCodelessIAPButtonInternal("IAP Button");
+
+            GenericEditorMenuItemClickEventSenderHelpers.SendIapMenuAddCodelessIapButtonEvent();
+            GameServicesEventSenderHelpers.SendTopMenuCreateCodelessIapButtonEvent();
+        }
+
+        static void CreateUnityIAPButtonInternal(string name)
+        {
+            var buttonObject = ItemCreationUtility.CreateGameObject(name, typeof(Button));
 
             if (buttonObject)
             {
+                //disable Warning CS0618  IAPButton is deprecated, please use CodelessIAPButton instead.
+#pragma warning disable 0618
                 var iapButton = buttonObject.AddComponent<IAPButton>();
 
                 if (iapButton != null)
@@ -48,20 +75,14 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        static GameObject CreateButtonObject()
+        static void CreateUnityCodelessIAPButtonInternal(string name)
         {
-            ExecuteButtonMenuItem();
+            var emptyObject = ItemCreationUtility.CreateGameObject(name);
 
-            return Selection.activeGameObject;
-        }
-
-        static void ExecuteButtonMenuItem()
-        {
-#if UNITY_2022_1_OR_NEWER || (UNITY_2021_2_OR_NEWER && !(UNITY_2021_2_2 || UNITY_2021_2_1))
-            EditorApplication.ExecuteMenuItem("GameObject/UI/Legacy/Button");
-#else
-            EditorApplication.ExecuteMenuItem("GameObject/UI/Button");
-#endif
+            if (emptyObject)
+            {
+                emptyObject.AddComponent<CodelessIAPButton>();
+            }
         }
     }
 }

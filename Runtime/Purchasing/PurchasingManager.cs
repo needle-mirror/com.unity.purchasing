@@ -61,7 +61,8 @@ namespace UnityEngine.Purchasing
 
             if (!product.availableToPurchase)
             {
-                m_Listener?.OnPurchaseFailed(product, PurchaseFailureReason.ProductUnavailable);
+                m_Listener?.OnPurchaseFailed(product, new PurchaseFailureDescription(product.transactionID, PurchaseFailureReason.ProductUnavailable,
+                    "No products were found when fetching from the store"));
                 return;
             }
 
@@ -211,7 +212,7 @@ namespace UnityEngine.Purchasing
                 }
 
                 m_Logger.LogFormat(LogType.Warning, "onPurchaseFailedEvent({0})", "productId:" + product.definition.id + " message:" + description.message);
-                m_Listener?.OnPurchaseFailed(product, description.reason);
+                m_Listener?.OnPurchaseFailed(product, description);
             }
         }
 

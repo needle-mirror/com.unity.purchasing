@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 
 namespace UnityEngine.Purchasing
@@ -20,7 +19,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="error"> The failure reason. </param>
         /// <param name="message"> More detail on the error : for example the GoogleBillingResponseCode. </param>
-        void OnInitializeFailed(InitializationFailureReason error, string? message);
+        void OnInitializeFailed(InitializationFailureReason error, string message);
 
         /// <summary>
         /// A purchase succeeded.
@@ -34,6 +33,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product"> The product that was attempted to be purchased. </param>
         /// <param name="failureReason"> The failure reason. </param>
+        [Obsolete("Use IDetailedStoreListener.OnPurchaseFailed for more detailed callback.", false)]
         void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason);
 
         /// <summary>

@@ -1,9 +1,10 @@
-#nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Unity.Services.Core;
 using UnityEngine.Purchasing.Extension;
+
 
 namespace UnityEngine.Purchasing
 {
@@ -12,10 +13,14 @@ namespace UnityEngine.Purchasing
     /// Automatically initializes at runtime load when enabled in the GUI. <seealso cref="ProductCatalog.enableCodelessAutoInitialization"/>
     /// Manages <typeparamref name="IAPButton"/>s and <typeparamref name="IAPListener"/>s.
     /// </summary>
-    public class CodelessIAPStoreListener : IStoreListener
+    public class CodelessIAPStoreListener : IDetailedStoreListener
     {
-        private static CodelessIAPStoreListener? instance;
+        private static CodelessIAPStoreListener instance;
+
+        //disable Warning CS0618  IAPButton is deprecated, please use CodelessIAPButton instead.
+#pragma warning disable 0618
         private readonly List<IAPButton> activeButtons = new List<IAPButton>();
+        private readonly List<CodelessIAPButton> activeCodelessButtons = new List<CodelessIAPButton>();
         private readonly List<IAPListener> activeListeners = new List<IAPListener>();
         private static bool unityPurchasingInitialized;
 
@@ -23,7 +28,7 @@ namespace UnityEngine.Purchasing
         /// For advanced scripted IAP actions, use this session's <typeparamref name="IStoreController"/> after initialization.
         /// </summary>
         /// <see cref="StoreController"/>
-        protected IStoreController? controller;
+        protected IStoreController controller;
         /// <summary>
         /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IExtensionProvider"/> after initialization.
         /// </summary>
@@ -145,7 +150,7 @@ namespace UnityEngine.Purchasing
         /// initialization.
         /// </summary>
         /// <see cref="StoreController"/>
-        public IStoreController? StoreController => controller;
+        public IStoreController StoreController => controller;
 
         /// <summary>
         /// Inspect my <typeparamref name="ProductCatalog"/> for a product identifier.
@@ -173,7 +178,7 @@ namespace UnityEngine.Purchasing
         /// <param name="productID">A product identifier to find as a <typeparamref name="Product"/></param>
         /// <returns>A <typeparamref name="Product"/> corresponding to <paramref name="productID"/>, or <c>null</c> if
         /// the identifier is not available.</returns>
-        public Product? GetProduct(string? productID)
+        public Product GetProduct(string productID)
         {
             if (controller != null && controller.products != null && !string.IsNullOrEmpty(productID))
             {
@@ -189,9 +194,20 @@ namespace UnityEngine.Purchasing
         /// Use to making IAP functionality visible to the user.
         /// </summary>
         /// <param name="button">The <typeparamref name="IAPButton"/></param>
+        [Obsolete("CodelessIAPStoreListener.AddButton(IAPButton button) is deprecated, please use CodelessIAPStoreListener.AddButton(CodelessIAPButton button) instead.", false)]
         public void AddButton(IAPButton button)
         {
             activeButtons.Add(button);
+        }
+
+        /// <summary>
+        /// Register an <typeparamref name="CodelessIAPButton"/> to send IAP initialization and purchasing events.
+        /// Use to making IAP functionality visible to the user.
+        /// </summary>
+        /// <param name="button"></param>
+        public void AddButton(CodelessIAPButton button)
+        {
+            activeCodelessButtons.Add(button);
         }
 
         /// <summary>
@@ -200,9 +216,21 @@ namespace UnityEngine.Purchasing
         /// IAP events for its product.
         /// </summary>
         /// <param name="button"></param>
+        [Obsolete("CodelessIAPStoreListener.RemoveButton(IAPButton button) is deprecated, please use CodelessIAPStoreListener.RemoveButton(CodelessIAPButton button) instead.", false)]
         public void RemoveButton(IAPButton button)
         {
             activeButtons.Remove(button);
+        }
+
+        /// <summary>
+        /// Stop sending initialization and purchasing events to an <typeparamref name="CodelessIAPButton"/>. Use when disabling
+        /// the button, e.g. when closing a scene containing that button and wanting to prevent the user from making any
+        /// IAP events for its product.
+        /// </summary>
+        /// <param name="button"></param>
+        public void RemoveButton(CodelessIAPButton button)
+        {
+            activeCodelessButtons.Remove(button);
         }
 
         /// <summary>
@@ -229,24 +257,32 @@ namespace UnityEngine.Purchasing
         /// to all registered IAPButtons if not yet successfully initialized.
         /// </summary>
         /// <param name="productID">Product identifier of <typeparamref name="Product"/> to be purchased</param>
-        public void InitiatePurchase(string? productID)
+        public void InitiatePurchase(string productID)
         {
             if (controller == null)
             {
                 Debug.LogError("Purchase failed because Purchasing was not initialized correctly");
 
-                foreach (var button in activeButtons)
-                {
-                    if (button.productId == productID)
-                    {
-                        button.OnPurchaseFailed(null, PurchaseFailureReason.PurchasingUnavailable);
-                    }
-                }
+                SendPurchaseFailedEventsToAllButtons(productID);
 
                 return;
             }
 
             controller.InitiatePurchase(productID);
+        }
+
+        void SendPurchaseFailedEventsToAllButtons(string productID)
+        {
+            foreach (var button in activeButtons.Where(button => button.productId == productID))
+            {
+                button.OnPurchaseFailed(null, PurchaseFailureReason.PurchasingUnavailable);
+            }
+
+            foreach (var button in activeCodelessButtons.Where(button => button.productId == productID))
+            {
+                var purchaseFailureDescription = new PurchaseFailureDescription(productID, PurchaseFailureReason.PurchasingUnavailable, "PurchasingUnavailable");
+                button.OnPurchaseFailed(null, purchaseFailureDescription);
+            }
         }
 
         /// <summary>
@@ -261,9 +297,24 @@ namespace UnityEngine.Purchasing
             this.controller = controller;
             this.extensions = extensions;
 
+            foreach (var iapListener in activeListeners)
+            {
+                iapListener.onProductsFetched.Invoke(controller.products);
+            }
+
+            HandleOnInitForAllButtons();
+        }
+
+        void HandleOnInitForAllButtons()
+        {
             foreach (var button in activeButtons)
             {
-                button.UpdateText();
+                button.OnInitCompleted();
+            }
+
+            foreach (var button in activeCodelessButtons)
+            {
+                button.OnInitCompleted();
             }
         }
 
@@ -284,7 +335,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="error">Reported in the app log. </param>
         /// <param name="message"> More information on the failure reason. </param>
-        public void OnInitializeFailed(InitializationFailureReason error, string? message)
+        public void OnInitializeFailed(InitializationFailureReason error, string message)
         {
             var errorMessage = $"Purchasing failed to initialize. Reason: {error.ToString()}.";
 
@@ -312,19 +363,28 @@ namespace UnityEngine.Purchasing
             var consumePurchase = false;
             var resultProcessed = false;
 
-            foreach (var button in activeButtons)
+            foreach (var button in activeButtons.Where(button => button.productId == e.purchasedProduct.definition.id))
             {
-                if (button.productId == e.purchasedProduct.definition.id)
+                result = button.ProcessPurchase(e);
+
+                if (result == PurchaseProcessingResult.Complete)
                 {
-                    result = button.ProcessPurchase(e);
-
-                    if (result == PurchaseProcessingResult.Complete)
-                    {
-                        consumePurchase = true;
-                    }
-
-                    resultProcessed = true;
+                    consumePurchase = true;
                 }
+
+                resultProcessed = true;
+            }
+
+            foreach (var button in activeCodelessButtons.Where(button => button.productId == e.purchasedProduct.definition.id))
+            {
+                result = button.ProcessPurchase(e);
+
+                if (result == PurchaseProcessingResult.Complete)
+                {
+                    consumePurchase = true;
+                }
+
+                resultProcessed = true;
             }
 
             foreach (var listener in activeListeners)
@@ -362,14 +422,11 @@ namespace UnityEngine.Purchasing
         {
             var resultProcessed = false;
 
-            foreach (var button in activeButtons)
+            foreach (var button in activeButtons.Where(button => button.productId == product.definition.id))
             {
-                if (button.productId == product.definition.id)
-                {
-                    button.OnPurchaseFailed(product, reason);
+                button.OnPurchaseFailed(product, reason);
 
-                    resultProcessed = true;
-                }
+                resultProcessed = true;
             }
 
             foreach (var listener in activeListeners)
@@ -384,6 +441,24 @@ namespace UnityEngine.Purchasing
             {
                 Debug.LogError("Failed purchase not correctly handled for product \"" + product.definition.id +
                     "\". Add an active IAPButton to handle this failure, or add an IAPListener to receive any unhandled purchase failures.");
+            }
+        }
+
+        /// <summary>
+        /// Implementation of <typeparamref name="UnityEngine.Purchasing.IDetailedStoreListener.OnPurchaseFailed"/> indicating
+        /// a purchase failed with a detailed failure description. Send this event to any appropriate registered
+        /// <typeparamref name="IAPButton"/>s and <typeparamref name="IAPListener"/>s.
+        /// Logs an error if there are no appropriate registered handlers.
+        /// </summary>
+        /// <param name="product">What failed to purchase</param>
+        /// <param name="description">Why the purchase failed</param>
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription description)
+        {
+            OnPurchaseFailed(product, description.reason);
+
+            foreach (var button in activeCodelessButtons.Where(button => button.productId == product.definition.id))
+            {
+                button.OnPurchaseFailed(product, description);
             }
         }
     }

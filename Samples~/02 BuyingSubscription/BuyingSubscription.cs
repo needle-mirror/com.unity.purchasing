@@ -45,7 +45,19 @@ namespace Samples.Purchasing.Core.BuyingSubscription
 
         public void OnInitializeFailed(InitializationFailureReason error)
         {
-            Debug.Log($"In-App Purchasing initialize failed: {error}");
+            OnInitializeFailed(error, null);
+        }
+
+        public void OnInitializeFailed(InitializationFailureReason error, string message)
+        {
+            var errorMessage = $"Purchasing failed to initialize. Reason: {error}.";
+
+            if (message != null)
+            {
+                errorMessage += $" More details: {message}";
+            }
+
+            Debug.Log(errorMessage);
         }
 
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)

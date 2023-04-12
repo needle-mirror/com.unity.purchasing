@@ -1,4 +1,4 @@
-using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -20,9 +20,9 @@ namespace UnityEngine.Purchasing
             m_AnalyticsAdapter.SendTransactionEvent(product);
         }
 
-        public void SendTransactionFailedEvent(Product product, PurchaseFailureReason reason)
+        public void SendTransactionFailedEvent(Product product, PurchaseFailureDescription description)
         {
-            m_AnalyticsAdapter.SendTransactionFailedEvent(product, reason);
+            m_AnalyticsAdapter.SendTransactionFailedEvent(product, description);
         }
 
         public void OnUpdatedCoreServicesEnvironment(string currentEnvironment)

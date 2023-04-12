@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Services.Core.Analytics.Internal;
 using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Internal;
 using Unity.Services.Core.Telemetry.Internal;
@@ -17,32 +18,35 @@ namespace UnityEngine.Purchasing.Registration
         {
             CoreRegistry.Instance.RegisterPackage(new IapCoreInitializeCallback())
                 .DependsOn<IMetricsFactory>()
-                .DependsOn<IDiagnosticsFactory>();
+                .DependsOn<IDiagnosticsFactory>()
+                .OptionallyDependsOn<IAnalyticsStandardEventComponent>();
         }
 
         public Task Initialize(CoreRegistry registry)
         {
-            CacheInitializedEnvironment(registry);
-
             var metricsInstanceWrapper = StandardPurchasingModule.Instance().telemetryMetricsInstanceWrapper;
             var diagnosticsInstanceWrapper = StandardPurchasingModule.Instance().telemetryDiagnosticsInstanceWrapper;
 
             ITelemetryMetricsService telemetryMetricsService = new TelemetryMetricsService(metricsInstanceWrapper);
             telemetryMetricsService.ExecuteTimedAction(
-                () => InitializeTelemetryComponents(metricsInstanceWrapper, diagnosticsInstanceWrapper),
+                () =>
+                {
+                    CacheInitializedEnvironment(registry);
+                    InitializeTelemetryComponents(metricsInstanceWrapper, diagnosticsInstanceWrapper);
+                },
                 TelemetryMetricDefinitions.packageInitTimeName
             );
 
             return Task.CompletedTask;
         }
 
-        void CacheInitializedEnvironment(CoreRegistry registry)
+        static void CacheInitializedEnvironment(CoreRegistry registry)
         {
             var currentEnvironment = GetCurrentEnvironment(registry);
             CoreServicesEnvironmentSubject.Instance().UpdateCurrentEnvironment(currentEnvironment);
         }
 
-        string GetCurrentEnvironment(CoreRegistry registry)
+        static string GetCurrentEnvironment(CoreRegistry registry)
         {
             try
             {

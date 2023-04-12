@@ -10,9 +10,17 @@ namespace UnityEngine.Purchasing
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
     [AddComponentMenu("In-App Purchasing/IAP Listener")]
-    [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
+    [HelpURL("https://docs.unity3d.com/Packages/com.unity.purchasing@latest")]
     public class IAPListener : MonoBehaviour
     {
+        /// <summary>
+        /// Type of event fired after a successful fetching the products from the store.
+        /// </summary>
+        [System.Serializable]
+        public class OnProductsFetchedEvent : UnityEvent<ProductCollection>
+        {
+        };
+
         /// <summary>
         /// Type of event fired after a successful purchase of a product.
         /// </summary>
@@ -40,6 +48,12 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Tooltip("Preserve this GameObject when a new scene is loaded.")]
         public bool dontDestroyOnLoad = true;
+
+        /// <summary>
+        /// Event fired after a successful fetching the products from the store.
+        /// </summary>
+        [Tooltip("Event fired after a successful fetching the products from the store.")]
+        public OnProductsFetchedEvent onProductsFetched;
 
         /// <summary>
         /// Event fired after a successful purchase of this product.

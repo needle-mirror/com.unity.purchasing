@@ -53,7 +53,12 @@ namespace Samples.Purchasing.Core.BuyingConsumables
             m_StoreController = controller;
         }
 
-        public void OnInitializeFailed(InitializationFailureReason error, string? message = null)
+        public void OnInitializeFailed(InitializationFailureReason error)
+        {
+            OnInitializeFailed(error, null);
+        }
+
+        public void OnInitializeFailed(InitializationFailureReason error, string message)
         {
             var errorMessage = $"Purchasing failed to initialize. Reason: {error}.";
 

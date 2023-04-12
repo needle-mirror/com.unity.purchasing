@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 
@@ -31,13 +29,13 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="callback">Action will be called when the request to Apple comes back. The bool will be true if it was successful or false if it was not.</param>
         [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
-        void RestoreTransactions(Action<bool>? callback);
+        void RestoreTransactions(Action<bool> callback);
 
         /// <summary>
         /// Initiate a request to Apple to restore previously made purchases.
         /// </summary>
         /// <param name="callback">Action will be called when the request to Apple comes back. The bool will be true if it was successful with a null string or false if it was not with the error message in the string.</param>
-        void RestoreTransactions(Action<bool, string?>? callback);
+        void RestoreTransactions(Action<bool, string> callback);
 
         /// <summary>
         /// Called when a processing a purchase from Apple that is in the "onProductPurchaseDeferred" state.

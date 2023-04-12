@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using Uniject;
 using UnityEngine;
-using UnityEngine.Purchasing;
-using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {

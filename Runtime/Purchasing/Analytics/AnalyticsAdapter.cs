@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using Unity.Services.Analytics;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -41,14 +42,25 @@ namespace UnityEngine.Purchasing
             };
         }
 
-        public void SendTransactionFailedEvent(Product product, PurchaseFailureReason reason)
+        public void SendTransactionFailedEvent(Product product, PurchaseFailureDescription description)
         {
-            var transactionFailedParameters = BuildTransactionFailedParameters(product, reason);
+            var transactionFailedParameters = BuildTransactionFailedParameters(product, BuildFailureReason(description));
             m_Analytics.TransactionFailed(transactionFailedParameters);
         }
 
+        static string BuildFailureReason(PurchaseFailureDescription description)
+        {
+            var failureReason = $"Failure reason: {description.reason.ToString()}";
+            if (string.IsNullOrEmpty(description.message))
+            {
+                failureReason += $" Failure message: {description.message}";
+            }
+
+            return failureReason;
+        }
+
         TransactionFailedParameters BuildTransactionFailedParameters(Product product,
-            PurchaseFailureReason reason)
+            string failureReason)
         {
             return new TransactionFailedParameters
             {
@@ -57,7 +69,7 @@ namespace UnityEngine.Purchasing
                 TransactionType = TransactionType.PURCHASE,
                 ProductsReceived = GenerateItemReceivedForPurchase(product),
                 ProductsSpent = GenerateRealCurrencySpentOnPurchase(product),
-                FailureReason = reason.ToString()
+                FailureReason = failureReason
             };
         }
 

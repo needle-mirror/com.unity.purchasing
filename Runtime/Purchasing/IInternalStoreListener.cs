@@ -1,4 +1,5 @@
 #nullable enable
+using UnityEngine.Purchasing.Extension;
 using System;
 
 namespace UnityEngine.Purchasing
@@ -21,7 +22,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// A purchase failed with specified reason.
         /// </summary>
-        void OnPurchaseFailed(Product i, PurchaseFailureReason p);
+        void OnPurchaseFailed(Product i, PurchaseFailureDescription p);
 
         /// <summary>
         /// Purchasing initialized successfully.

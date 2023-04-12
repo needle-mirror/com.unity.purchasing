@@ -1,4 +1,4 @@
-#nullable enable
+using System;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
@@ -9,10 +9,11 @@ namespace UnityEngine.Purchasing
     /// elements through the Inspector.
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
+    [Obsolete("IAPButton is deprecated, please use CodelessIAPButton instead.", false)]
     [RequireComponent(typeof(Button))]
-    [AddComponentMenu("In-App Purchasing/IAP Button")]
+    [AddComponentMenu("In-App Purchasing/IAP Button (legacy)", int.MaxValue)]
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
-    public class IAPButton : MonoBehaviour
+    public class IAPButton : BaseIAPButton
     {
         /// <summary>
         /// The type of this button, can be either a purchase or a restore button.
@@ -31,34 +32,34 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Type of event fired after a restore transactions was completed.
-        /// </summary>
-        [System.Serializable]
-        public class OnTransactionsRestoredEvent : UnityEvent<bool, string?>
-        {
-        };
-
-        /// <summary>
         /// Type of event fired after a successful purchase of a product.
         /// </summary>
-        [System.Serializable]
+        [Serializable]
         public class OnPurchaseCompletedEvent : UnityEvent<Product>
         {
-        };
+        }
 
         /// <summary>
         /// Type of event fired after a failed purchase of a product.
         /// </summary>
-        [System.Serializable]
-        public class OnPurchaseFailedEvent : UnityEvent<Product?, PurchaseFailureReason>
+        [Serializable]
+        public class OnPurchaseFailedEvent : UnityEvent<Product, PurchaseFailureReason>
         {
-        };
+        }
+
+        /// <summary>
+        /// Type of event fired after a restore transactions was completed.
+        /// </summary>
+        [Serializable]
+        public class OnTransactionsRestoredEvent : UnityEvent<bool, string>
+        {
+        }
 
         /// <summary>
         /// Which product identifier to represent. Note this is not a store-specific identifier.
         /// </summary>
         [HideInInspector]
-        public string? productId;
+        public string productId = "";
 
         /// <summary>
         /// The type of this button, can be either a purchase or a restore button.
@@ -76,147 +77,66 @@ namespace UnityEngine.Purchasing
         /// Event fired after a restore transactions.
         /// </summary>
         [Tooltip("Event fired after a restore transactions.")]
-        public OnTransactionsRestoredEvent? onTransactionsRestored;
+        public OnTransactionsRestoredEvent onTransactionsRestored = null;
 
         /// <summary>
         /// Event fired after a successful purchase of this product.
         /// </summary>
         [Tooltip("Event fired after a successful purchase of this product.")]
-        public OnPurchaseCompletedEvent? onPurchaseComplete;
+        public OnPurchaseCompletedEvent onPurchaseComplete = null;
 
         /// <summary>
         /// Event fired after a failed purchase of this product.
         /// </summary>
         [Tooltip("Event fired after a failed purchase of this product.")]
-        public OnPurchaseFailedEvent? onPurchaseFailed;
+        public OnPurchaseFailedEvent onPurchaseFailed = null;
 
         /// <summary>
         /// Displays the localized title from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized title from the app store.")]
-        public Text? titleText;
+        public Text titleText;
 
         /// <summary>
         /// Displays the localized description from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized description from the app store.")]
-        public Text? descriptionText;
+        public Text descriptionText;
 
         /// <summary>
         /// Displays the localized price from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized price from the app store.")]
-        public Text? priceText;
+        public Text priceText;
 
-        void Start()
+        internal override string GetProductId()
         {
-            var button = GetComponent<Button>();
-
-            if (buttonType == ButtonType.Purchase)
-            {
-                if (button)
-                {
-                    button.onClick.AddListener(PurchaseProduct);
-                }
-
-                if (string.IsNullOrEmpty(productId))
-                {
-                    Debug.LogError("IAPButton productId is empty");
-                }
-                else if (!CodelessIAPStoreListener.Instance.HasProductInCatalog(productId!))
-                {
-                    Debug.LogWarning("The product catalog has no product with the ID \"" + productId + "\"");
-                }
-            }
-            else if (buttonType == ButtonType.Restore)
-            {
-                if (button)
-                {
-                    button.onClick.AddListener(Restore);
-                }
-            }
+            return productId;
         }
 
-        void OnEnable()
+        internal override bool IsAPurchaseButton()
         {
-            if (buttonType == ButtonType.Purchase)
-            {
-                CodelessIAPStoreListener.Instance.AddButton(this);
-                if (CodelessIAPStoreListener.initializationComplete)
-                {
-                    UpdateText();
-                }
-            }
+            return buttonType == ButtonType.Purchase;
         }
 
-        void OnDisable()
+        protected override bool IsARestoreButton()
         {
-            if (buttonType == ButtonType.Purchase)
-            {
-                CodelessIAPStoreListener.Instance.RemoveButton(this);
-            }
+            return buttonType == ButtonType.Restore;
         }
 
-        void PurchaseProduct()
+        protected override bool ShouldConsumePurchase()
         {
-            if (buttonType == ButtonType.Purchase)
-            {
-                CodelessIAPStoreListener.Instance.InitiatePurchase(productId);
-            }
+            return consumePurchase;
         }
 
-        void Restore()
-        {
-            if (buttonType == ButtonType.Restore)
-            {
-                if (Application.platform == RuntimePlatform.WSAPlayerX86 ||
-                    Application.platform == RuntimePlatform.WSAPlayerX64 ||
-                    Application.platform == RuntimePlatform.WSAPlayerARM)
-                {
-                    CodelessIAPStoreListener.Instance.GetStoreExtensions<IMicrosoftExtensions>()
-                        .RestoreTransactions();
-                }
-                else if (Application.platform == RuntimePlatform.IPhonePlayer ||
-                         Application.platform == RuntimePlatform.OSXPlayer ||
-                         Application.platform == RuntimePlatform.tvOS)
-                {
-                    CodelessIAPStoreListener.Instance.GetStoreExtensions<IAppleExtensions>()
-                        .RestoreTransactions(OnTransactionsRestored);
-                }
-                else if (Application.platform == RuntimePlatform.Android &&
-                    StandardPurchasingModule.Instance().appStore == AppStore.GooglePlay)
-                {
-                    CodelessIAPStoreListener.Instance.GetStoreExtensions<IGooglePlayStoreExtensions>()
-                        .RestoreTransactions(OnTransactionsRestored);
-                }
-                else
-                {
-                    Debug.LogWarning(Application.platform.ToString() +
-                                     " is not a supported platform for the Codeless IAP restore button");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Invoked on transactions restored.
-        /// </summary>
-        /// <param name="success">Indicates if the restore transaction was successful.</param>
-        /// <param name="error">When unsuccessful, the error message.</param>
-        void OnTransactionsRestored(bool success, string? error)
+        protected override void OnTransactionsRestored(bool success, string error)
         {
             onTransactionsRestored?.Invoke(success, error);
         }
 
-        /// <summary>
-        /// Invoke to process a successful purchase of the product associated with this button.
-        /// </summary>
-        /// <param name="e">The successful <c>PurchaseEventArgs</c> for the purchase event. </param>
-        /// <returns>The result of the successful purchase</returns>
-        public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
+        protected override void OnPurchaseComplete(Product purchasedProduct)
         {
-            onPurchaseComplete?.Invoke(e.purchasedProduct);
-
-            return consumePurchase ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
+            onPurchaseComplete?.Invoke(purchasedProduct);
         }
 
         /// <summary>
@@ -224,12 +144,32 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
         /// <param name="reason">Information to help developers recover from this failure</param>
-        public void OnPurchaseFailed(Product? product, PurchaseFailureReason reason)
+        public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
         {
             onPurchaseFailed?.Invoke(product, reason);
         }
 
-        internal void UpdateText()
+        protected override Button GetPurchaseButton()
+        {
+            return GetComponent<Button>();
+        }
+
+        protected override void AddButtonToCodelessListener()
+        {
+            CodelessIAPStoreListener.Instance.AddButton(this);
+        }
+
+        protected override void RemoveButtonToCodelessListener()
+        {
+            CodelessIAPStoreListener.Instance.RemoveButton(this);
+        }
+
+        internal override void OnInitCompleted()
+        {
+            UpdateAllTexts();
+        }
+
+        void UpdateAllTexts()
         {
             var product = CodelessIAPStoreListener.Instance.GetProduct(productId);
             if (product != null)
@@ -249,6 +189,16 @@ namespace UnityEngine.Purchasing
                     priceText.text = product.metadata.localizedPriceString;
                 }
             }
+        }
+
+        /// <summary>
+        /// Invoke to process a successful purchase of the product associated with this button.
+        /// </summary>
+        /// <param name="e">The successful <c>PurchaseEventArgs</c> for the purchase event. </param>
+        /// <returns>The result of the successful purchase</returns>
+        public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
+        {
+            return ProcessPurchaseInternal(e);
         }
     }
 }

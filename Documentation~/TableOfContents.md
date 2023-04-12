@@ -15,7 +15,8 @@
     * [Fetching Additional Products](UnityIAPFetchingProductsIncrementally.md)
     * Creating a Purchasing Button
         * [Browsing Product Metadata](UnityIAPBrowsingMetadata.md)
-        * [IAP Button](IAPButton.md)
+        * [IAP Button](CodelessIAPButton.md)
+        * [IAP Button (Legacy)](IAPButton.md)
         * [Coded](UnityIAPInitiatingPurchases.md)
     * The Purchasing Flow
         * Processing Purchases

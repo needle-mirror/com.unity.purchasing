@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
@@ -15,7 +13,7 @@ namespace UnityEngine.Purchasing
         /// Read the App Receipt from local storage.
         /// Returns null for iOS less than or equal to 6, may also be null on a reinstalling and require refreshing.
         /// </summary>
-        string? appReceipt { get; }
+        string appReceipt { get; }
 
         /// <summary>
         /// Determine if the user can make payments; [SKPaymentQueue canMakePayments].

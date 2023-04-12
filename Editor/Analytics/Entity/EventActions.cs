@@ -2,6 +2,7 @@ namespace UnityEditor.Purchasing
 {
     internal static class EventActions
     {
+        internal const string k_ActionAddIapButton_legacy = "legacy_add_iap_button";
         internal const string k_ActionAddIapButton = "add_iap_button";
         internal const string k_ActionAddIapListener = "add_iap_listener";
         internal const string k_ActionAddPayout = "add_payout";

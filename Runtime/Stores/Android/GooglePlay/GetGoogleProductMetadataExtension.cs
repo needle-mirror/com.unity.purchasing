@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -12,7 +10,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="productMetadata">Product Metadata</param>
         /// <returns>Google Product Metadata</returns>
-        public static GoogleProductMetadata? GetGoogleProductMetadata(this ProductMetadata productMetadata)
+        public static GoogleProductMetadata GetGoogleProductMetadata(this ProductMetadata productMetadata)
         {
             return productMetadata as GoogleProductMetadata;
         }

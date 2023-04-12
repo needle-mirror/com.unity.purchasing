@@ -1,3 +1,5 @@
+using UnityEngine.Purchasing.Extension;
+
 using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
@@ -20,12 +22,12 @@ namespace UnityEngine.Purchasing
                 null);
         }
 
-        public void SendTransactionFailedEvent(Product product, PurchaseFailureReason reason)
+        public void SendTransactionFailedEvent(Product product, PurchaseFailureDescription description)
         {
             var data = new Dictionary<string, object>()
             {
                 {"productID", product.definition.storeSpecificId},
-                {"reason", reason},
+                {"reason", description.reason},
                 {"price", product.metadata.localizedPrice},
                 {"currency", product.metadata.isoCurrencyCode}
             };

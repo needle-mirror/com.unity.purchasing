@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-#if IAP_ANALYTICS_SERVICE_ENABLED
+#if IAP_ANALYTICS_SERVICE_ENABLED || IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT
 using Unity.Services.Analytics;
 using Unity.Services.Core;
 #endif
@@ -18,7 +18,24 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="listener"> The <c>IStoreListener</c> to receive callbacks for future transactions </param>
         /// <param name="builder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
+        [Obsolete("Use Initialize(IDetailedStoreListener, ConfigurationBuilder)", false)]
         public static void Initialize(IStoreListener listener, ConfigurationBuilder builder)
+        {
+            var logger = Debug.unityLogger;
+            var unityServicesInitializationChecker = new UnityServicesInitializationChecker(logger);
+            var legacyAnalyticsWrapper = new LegacyAnalyticsWrapper(GenerateLegacyUnityAnalytics(), new EmptyAnalyticsAdapter());
+
+            Initialize(listener, builder, logger, Application.persistentDataPath,
+                GenerateUnityAnalytics(logger), legacyAnalyticsWrapper, builder.factory.GetCatalogProvider(),
+                unityServicesInitializationChecker);
+        }
+
+        /// <summary>
+        /// The main initialization call for Unity Purchasing.
+        /// </summary>
+        /// <param name="listener"> The <c>IDetailedStoreListener</c> to receive callbacks for future transactions </param>
+        /// <param name="builder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
+        public static void Initialize(IDetailedStoreListener listener, ConfigurationBuilder builder)
         {
             var logger = Debug.unityLogger;
             var unityServicesInitializationChecker = new UnityServicesInitializationChecker(logger);
@@ -31,12 +48,16 @@ namespace UnityEngine.Purchasing
 
         private static IAnalyticsAdapter GenerateUnityAnalytics(ILogger logger)
         {
-#if DISABLE_RUNTIME_IAP_ANALYTICS || !IAP_ANALYTICS_SERVICE_ENABLED
+#if DISABLE_RUNTIME_IAP_ANALYTICS || (!IAP_ANALYTICS_SERVICE_ENABLED && !IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT)
             return new EmptyAnalyticsAdapter();
 #else
             try
             {
+#if IAP_ANALYTICS_SERVICE_ENABLED
                 return new AnalyticsAdapter(AnalyticsService.Instance, logger);
+#elif IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT
+                return new CoreAnalyticsAdapter(AnalyticsService.Instance, logger);
+#endif
             }
             catch (ServicesInitializationException)
             {

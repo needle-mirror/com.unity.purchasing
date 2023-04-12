@@ -112,7 +112,19 @@ namespace Samples.Purchasing.GooglePlay.FraudDetection
 
         public void OnInitializeFailed(InitializationFailureReason error)
         {
-            Debug.Log($"In-App Purchasing initialize failed: {error}");
+            OnInitializeFailed(error, null);
+        }
+
+        public void OnInitializeFailed(InitializationFailureReason error, string message)
+        {
+            var errorMessage = $"Purchasing failed to initialize. Reason: {error}.";
+
+            if (message != null)
+            {
+                errorMessage += $" More details: {message}";
+            }
+
+            Debug.Log(errorMessage);
         }
 
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)

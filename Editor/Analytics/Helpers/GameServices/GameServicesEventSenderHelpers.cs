@@ -9,6 +9,11 @@ namespace UnityEditor.Purchasing
 
         internal static void SendTopMenuCreateIapButtonEvent()
         {
+            BuildAndSendEvent(GameServicesEventComponents.k_ComponentTopMenu, GameServicesEventActions.k_ActionCreateIapButton_legacy);
+        }
+
+        internal static void SendTopMenuCreateCodelessIapButtonEvent()
+        {
             BuildAndSendEvent(GameServicesEventComponents.k_ComponentTopMenu, GameServicesEventActions.k_ActionCreateIapButton);
         }
 

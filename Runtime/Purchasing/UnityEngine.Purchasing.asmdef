@@ -17,8 +17,13 @@
   "versionDefines": [
     {
       "name": "com.unity.services.analytics",
-      "expression": "4.0.0",
+      "expression": "[4.0.0,4.4.0)",
       "define": "IAP_ANALYTICS_SERVICE_ENABLED"
+    },
+    {
+      "name": "com.unity.services.analytics",
+      "expression": "4.4.0",
+      "define": "IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT"
     }
   ],
   "noEngineReferences": false

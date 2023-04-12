@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -24,10 +24,10 @@ namespace UnityEngine.Purchasing
             m_LegacyAnalytics.SendTransactionEvent(product);
         }
 
-        public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription description)
         {
-            m_Analytics.SendTransactionFailedEvent(product, reason);
-            m_LegacyAnalytics.SendTransactionFailedEvent(product, reason);
+            m_Analytics.SendTransactionFailedEvent(product, description);
+            m_LegacyAnalytics.SendTransactionFailedEvent(product, description);
         }
     }
 }

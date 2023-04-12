@@ -1,10 +1,12 @@
-# IAP Button
+# IAP Button (Legacy)
+
+IAP Button (Legacy) is obsolete. Please use [IAP Button](CodelessIAPButton.md). This new button allows for more UI customization and new events such as `OnProductFetched(Product)`.
 
 IAP Button is a way to purchase or restore products without writing code.
 
 ## Adding IAP Button to the Scene
 
-To add an __IAP Button__ to your Scene, in the Unity Editor, select __Window &gt; Unity IAP &gt; Create IAP Button__.
+To add an __IAP Button__ to your Scene, in the Unity Editor, select __Window &gt; Unity IAP &gt; Create IAP Button (Legacy)__.
 
 ![Creating a Codeless **IAP Button** in the Unity Editor](images/CreateButton.png)
 

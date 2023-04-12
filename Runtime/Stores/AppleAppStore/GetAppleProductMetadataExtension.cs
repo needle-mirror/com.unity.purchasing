@@ -1,5 +1,3 @@
-#nullable enable
-
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -12,7 +10,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="productMetadata">Product Metadata</param>
         /// <returns>Apple Product Metadata or null if the current store is not the Apple store.</returns>
-        public static AppleProductMetadata? GetAppleProductMetadata(this ProductMetadata productMetadata)
+        public static AppleProductMetadata GetAppleProductMetadata(this ProductMetadata productMetadata)
         {
             return productMetadata as AppleProductMetadata;
         }

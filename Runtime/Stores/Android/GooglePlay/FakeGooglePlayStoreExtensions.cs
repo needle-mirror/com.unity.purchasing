@@ -1,5 +1,3 @@
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 using UnityEngine.Purchasing.Security;
@@ -55,7 +53,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="callback">Will be called as often as many purchases the queryPurchases finds. (the IStoreCallback will be called as well)</param>
         [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
-        public void RestoreTransactions(Action<bool>? callback) { }
+        public void RestoreTransactions(Action<bool> callback) { }
 
         /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
@@ -64,7 +62,7 @@ namespace UnityEngine.Purchasing
         /// using all the different support sku types.
         /// </summary>
         /// <param name="callback">Will be called as often as many purchases the queryPurchases finds. (the IStoreCallback will be called as well)</param>
-        public void RestoreTransactions(Action<bool, string?>? callback) { }
+        public void RestoreTransactions(Action<bool, string> callback) { }
 
         /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
