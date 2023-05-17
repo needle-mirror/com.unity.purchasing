@@ -104,6 +104,7 @@ namespace UnityEngine.Purchasing
             }
 
             m_Store.FinishTransaction(product.definition, product.transactionID);
+            m_Listener?.SendTransactionEvent(product);
         }
 
         public ProductCollection products { get; private set; } = null!;

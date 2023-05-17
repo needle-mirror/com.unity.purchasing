@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.AppleAppStore.FamilySharing
 {
     [RequireComponent(typeof(UserWarningAppleAppStore))]
-    public class FamilySharing : MonoBehaviour, IStoreListener
+    public class FamilySharing : MonoBehaviour, IDetailedStoreListener
     {
         public Text subscriptionStatusText;
         public Text isFamilyShareableText;
@@ -145,6 +146,13 @@ namespace Samples.Purchasing.AppleAppStore.FamilySharing
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningText()

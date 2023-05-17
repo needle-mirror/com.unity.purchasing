@@ -4,12 +4,13 @@ using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.AppleAppStore.FraudDetection
 {
     [RequireComponent(typeof(UserWarningAppleAppStore))]
-    public class FraudDetection : MonoBehaviour, IStoreListener
+    public class FraudDetection : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
 
@@ -128,6 +129,13 @@ namespace Samples.Purchasing.AppleAppStore.FraudDetection
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningMessage()

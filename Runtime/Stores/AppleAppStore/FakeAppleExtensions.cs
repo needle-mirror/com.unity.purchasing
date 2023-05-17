@@ -14,6 +14,21 @@ namespace UnityEngine.Purchasing
     {
         bool m_FailRefresh;
 
+        public void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)
+        {
+            if (m_FailRefresh)
+            {
+                errorCallback("A fake error message");
+            }
+            else
+            {
+                successCallback("A fake refreshed receipt!");
+            }
+
+            m_FailRefresh = !m_FailRefresh;
+        }
+
+        [Obsolete("RefreshAppReceipt(Action<string> successCallback, Action errorCallback) is deprecated, please use RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback) instead.")]
         public void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
         {
             if (m_FailRefresh)

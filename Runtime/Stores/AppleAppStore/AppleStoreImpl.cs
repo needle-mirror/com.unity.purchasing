@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
     {
         Action<Product>? m_DeferredCallback;
         Action<List<Product>>? m_RevokedCallback;
-        Action? m_RefreshReceiptError;
+        Action<string>? m_RefreshReceiptError;
         Action<string>? m_RefreshReceiptSuccess;
         Action<bool>? m_ObsoleteRestoreCallback;
         Action<bool, string?>? m_RestoreCallback;
@@ -276,10 +276,20 @@ namespace UnityEngine.Purchasing
             m_Native?.RestoreTransactions();
         }
 
-        public virtual void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
+        public virtual void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)
         {
             m_RefreshReceiptSuccess = successCallback;
             m_RefreshReceiptError = errorCallback;
+            m_Native?.RefreshAppReceipt();
+        }
+
+        public virtual void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
+        {
+            m_RefreshReceiptSuccess = successCallback;
+            m_RefreshReceiptError = _ =>
+            {
+                errorCallback();
+            };
             m_Native?.RefreshAppReceipt();
         }
 
@@ -354,9 +364,9 @@ namespace UnityEngine.Purchasing
             m_RefreshReceiptSuccess?.Invoke(receipt);
         }
 
-        public void OnAppReceiptRefreshedFailed()
+        public void OnAppReceiptRefreshedFailed(string error)
         {
-            m_RefreshReceiptError?.Invoke();
+            m_RefreshReceiptError?.Invoke(error);
         }
 
         void OnEntitlementsRevoked(string productIds)
@@ -449,15 +459,15 @@ namespace UnityEngine.Purchasing
         }
 
         [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
-        private static void MessageCallback(string subject, string payload, string receipt, string transactionId, string originalTransactionId)
+        private static void MessageCallback(string subject, string payload, string receipt, string transactionId, string originalTransactionId, bool isRestored)
         {
             s_Util?.RunOnMainThread(() =>
             {
-                s_Instance?.ProcessMessage(subject, payload, receipt, transactionId, originalTransactionId);
+                s_Instance?.ProcessMessage(subject, payload, receipt, transactionId, originalTransactionId, isRestored);
             });
         }
 
-        void ProcessMessage(string subject, string payload, string receipt, string transactionId, string originalTransactionId)
+        void ProcessMessage(string subject, string payload, string receipt, string transactionId, string originalTransactionId, bool isRestored)
         {
             if (string.IsNullOrEmpty(receipt))
             {
@@ -473,7 +483,7 @@ namespace UnityEngine.Purchasing
                     OnProductsRetrieved(payload);
                     break;
                 case "OnPurchaseSucceeded":
-                    OnPurchaseSucceeded(payload, receipt, transactionId, originalTransactionId);
+                    OnPurchaseSucceeded(payload, receipt, transactionId, originalTransactionId, isRestored);
                     break;
                 case "OnPurchaseFailed":
                     OnPurchaseFailed(payload);
@@ -506,7 +516,7 @@ namespace UnityEngine.Purchasing
                     OnAppReceiptRetrieved(payload);
                     break;
                 case "onAppReceiptRefreshFailed":
-                    OnAppReceiptRefreshedFailed();
+                    OnAppReceiptRefreshedFailed(payload);
                     break;
                 case "onEntitlementsRevoked":
                     OnEntitlementsRevoked(payload);
@@ -514,14 +524,14 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public void OnPurchaseSucceeded(string id, string receipt, string transactionId, string originalTransactionId)
+        public void OnPurchaseSucceeded(string id, string receipt, string transactionId, string originalTransactionId, bool isRestored)
         {
             var appleReceipt = GetAppleReceiptFromBase64String(receipt);
             var mostRecentReceipt = FindMostRecentReceipt(appleReceipt, id);
 
             if (IsValidPurchaseState(mostRecentReceipt, id))
             {
-                var isRestored = IsRestored(id, mostRecentReceipt, transactionId, originalTransactionId);
+                isRestored = isRestored || IsRestored(id, mostRecentReceipt, transactionId, originalTransactionId);
                 UpdateAppleProductFields(id, originalTransactionId, isRestored);
                 base.OnPurchaseSucceeded(id, receipt, transactionId);
             }

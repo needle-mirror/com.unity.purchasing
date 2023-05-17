@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.AppleAppStore.PresentCodeRedemptionSheet
 {
     [RequireComponent(typeof(UserWarningAppleAppStore))]
-    public class PresentCodeRedemptionSheet : MonoBehaviour, IStoreListener
+    public class PresentCodeRedemptionSheet : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
         IAppleExtensions m_AppleExtensions;
@@ -97,6 +98,13 @@ namespace Samples.Purchasing.AppleAppStore.PresentCodeRedemptionSheet
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningMessage()

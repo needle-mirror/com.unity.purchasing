@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.9.2] - 2023-05-17
+### Changed
+- Analytics events are now sent when a purchase has been confirmed (`ConfirmPendingTransaction` or `ProcessPurchase` returning `PurchaseProcessingResult.Complete`). This will improve the accuracy of revenue tracking by no longer considering pending purchases.
+- Updated `Product.transactionID`, `Product.hasReceipt` and `Product.receipt` documentation to include pending transaction use cases.
+- Updated samples to use `IDetailedStoreListener` and its improved `OnPurchaseFailed` callback.
+- Added a new `RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)` callback containing more information when the errorCallback is invoked in `IAppleExtensions : IStoreListener`.
+
+### Fixed
+- `OnPurchaseFailed` will no longer log an error when there's only new IAP Buttons with no IAP Listener.
+- Apple - Improved the accuracy of `Product.appleProductIsRestored` when using the restore transaction button. These will now correctly be flagged as true.
+- Codeless - `OnPurchaseFailed(Product, PurchaseFailureDescription)` callback was not invoked in `IAP Listener`
+
 ## [4.8.0] - 2023-04-12
 ### Added
 - Added new [IAP Button](https://docs.unity3d.com/Packages/com.unity.purchasing@4.8/manual/CodelessIAPButton.html) in the editor. This new button allows for more UI customization.  The new button will no longer update the button fields by default.

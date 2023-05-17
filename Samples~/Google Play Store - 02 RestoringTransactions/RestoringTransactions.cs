@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.GooglePlay.RestoringTransactions
 {
     [RequireComponent(typeof(UserWarningGooglePlayStore))]
-    public class RestoringTransactions : MonoBehaviour, IStoreListener
+    public class RestoringTransactions : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
         IGooglePlayStoreExtensions m_GooglePlayStoreExtensions;
@@ -112,6 +113,13 @@ namespace Samples.Purchasing.GooglePlay.RestoringTransactions
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningMessage()

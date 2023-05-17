@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.AppleAppStore.RetrievingProductReceipt
 {
     [RequireComponent(typeof(UserWarningAppleAppStore))]
-    public class RetrievingProductReceipt : MonoBehaviour, IStoreListener
+    public class RetrievingProductReceipt : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
         IAppleExtensions m_AppleExtensions;
@@ -77,6 +78,7 @@ namespace Samples.Purchasing.AppleAppStore.RetrievingProductReceipt
             {
                 var receipt = m_AppleExtensions.GetTransactionReceiptForProduct(product);
                 Debug.Log($"Product receipt for deferred purchase: {receipt}");
+
                 // Send transaction receipt to server for validation
             }
 
@@ -93,6 +95,7 @@ namespace Samples.Purchasing.AppleAppStore.RetrievingProductReceipt
             {
                 AddGold();
             }
+
             UpdateUI();
         }
 
@@ -126,6 +129,13 @@ namespace Samples.Purchasing.AppleAppStore.RetrievingProductReceipt
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningMessage()

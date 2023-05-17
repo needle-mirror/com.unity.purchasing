@@ -1,6 +1,6 @@
 # Initialization
 
-You must provide an implementation of the ``IStoreListener`` interface which Unity IAP uses to inform your application of purchase-related events.
+You must provide an implementation of the ``IDetailedStoreListener`` interface which Unity IAP uses to inform your application of purchase-related events.
 
 Call the ``UnityPurchasing.Initialize`` method to start the initialization process, supplying your listener implementation and configuration.
 
@@ -11,8 +11,9 @@ Consequently Unity IAP may take an arbitrary period of time to initialize; indef
 ````
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 
-public class MyIAPManager : IStoreListener {
+public class MyIAPManager : IDetailedStoreListener {
 
     private IStoreController controller;
     private IExtensionProvider extensions;
@@ -59,8 +60,17 @@ public class MyIAPManager : IStoreListener {
 
     /// <summary>
     /// Called when a purchase fails.
+    /// IStoreListener.OnPurchaseFailed is deprecated,
+    /// use IDetailedStoreListener.OnPurchaseFailed instead.
     /// </summary>
     public void OnPurchaseFailed (Product i, PurchaseFailureReason p)
+    {
+    }
+
+    /// <summary>
+    /// Called when a purchase fails.
+    /// </summary>
+    public void OnPurchaseFailed (Product i, PurchaseFailureDescription p)
     {
     }
 }

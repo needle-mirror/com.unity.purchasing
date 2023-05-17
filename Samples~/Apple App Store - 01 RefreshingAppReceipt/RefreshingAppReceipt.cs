@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
 {
     [RequireComponent(typeof(UserWarningAppleAppStore))]
-    public class RefreshingAppReceipt : MonoBehaviour, IStoreListener
+    public class RefreshingAppReceipt : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
         IAppleExtensions m_AppleExtensions;
@@ -55,14 +56,16 @@ namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
             // https://developer.apple.com/library/archive/releasenotes/General/ValidateAppStoreReceipt/Chapters/ValidateLocally.html#//apple_ref/doc/uid/TP40010573-CH1-SW2
             // as well as:
             // https://docs.unity3d.com/Manual/UnityIAPValidatingReceipts.html
-            Debug.Log("Refresh Successful");
-            refreshReceiptText.text = "Refresh Successful";
+            var message = $"Refresh Successful: {receipt}";
+            Debug.Log(message);
+            refreshReceiptText.text = message;
         }
 
-        void OnRefreshFailure()
+        void OnRefreshFailure(string error)
         {
-            Debug.Log("Refresh Failed");
-            refreshReceiptText.text = "Refresh Failed";
+            var message = $"Refresh Failed: {error}";
+            Debug.Log(message);
+            refreshReceiptText.text = message;
         }
 
         public void BuyNoAds()
@@ -111,6 +114,13 @@ namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningMessage()

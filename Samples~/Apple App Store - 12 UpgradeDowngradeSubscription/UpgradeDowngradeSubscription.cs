@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.AppleAppStore.UpgradeDowngradeSubscription
 {
     [RequireComponent(typeof(UserWarningAppleAppStore))]
-    public class UpgradeDowngradeSubscription : MonoBehaviour, IStoreListener
+    public class UpgradeDowngradeSubscription : MonoBehaviour, IDetailedStoreListener
     {
         //Your products IDs. They should match the ids of your products in your store.
         public string normalSubscriptionId = "com.mycompany.mygame.my_normal_pass_subscription";
@@ -74,6 +75,7 @@ namespace Samples.Purchasing.AppleAppStore.UpgradeDowngradeSubscription
             currentSubscriptionText.text = $"Current Subscription: {subscriptionId ?? "None"}";
             deferredSubscriptionChangeText.text = "";
         }
+
         public void OnInitializeFailed(InitializationFailureReason error)
         {
             OnInitializeFailed(error, null);
@@ -94,6 +96,13 @@ namespace Samples.Purchasing.AppleAppStore.UpgradeDowngradeSubscription
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningText()

@@ -47,8 +47,9 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// A unique identifier for this product's transaction.
-        ///
         /// This will only be set when the product was purchased during this session.
+        /// Consumable's transactionID are not set between app restarts unless it has a pending transaction.
+        /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `transactionID` is removed.
         /// </summary>
         public string transactionID { get; internal set; }
 
@@ -66,14 +67,16 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// Owned Non Consumables and Subscriptions should always have receipts.
-        /// Consumable's receipts are not persisted between App restarts.
+        /// Consumable's receipts are not persisted between App restarts unless it has a pending transaction.
+        /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `receipt` is removed.
         /// </summary>
         public bool hasReceipt => !string.IsNullOrEmpty(receipt);
 
         /// <summary>
         /// The purchase receipt for this product, if owned.
         /// For consumable purchases, this will be the most recent purchase receipt.
-        /// Consumable receipts are not saved between app restarts.
+        /// Consumable's receipts are not set between app restarts unless it has a pending transaction.
+        /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `receipt` is removed.
         /// Receipts is in JSON format.
         /// </summary>
         public string receipt { get; internal set; }

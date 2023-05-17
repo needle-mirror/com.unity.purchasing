@@ -23,8 +23,9 @@ Please refer to this usage sample:
 ```
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 
-public class GooglePlayInitializationDisconnectListener : IStoreListener
+public class GooglePlayInitializationDisconnectListener : IDetailedStoreListener
 {
     public GooglePlayInitializationDisconnectListener()
     {
@@ -48,6 +49,8 @@ public class GooglePlayInitializationDisconnectListener : IStoreListener
     }
 
     public void OnPurchaseFailed(Product i, PurchaseFailureReason p) { }
+
+    public void OnPurchaseFailed(Product i, PurchaseFailureDescription p) { }
 }
 ```
 
@@ -64,8 +67,9 @@ Please refer to this usage sample:
 ```
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 
-public class QueryProductDetailsFailedListener : IStoreListener
+public class QueryProductDetailsFailedListener : IDetailedStoreListener
 {
     public QueryProductDetailsFailedListener()
     {
@@ -88,5 +92,7 @@ public class QueryProductDetailsFailedListener : IStoreListener
     }
 
     public void OnPurchaseFailed(Product i, PurchaseFailureReason p) { }
+
+    public void OnPurchaseFailed(Product i, PurchaseFailureDescription p) { }
 }
 ```

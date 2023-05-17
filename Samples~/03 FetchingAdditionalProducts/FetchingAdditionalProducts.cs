@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.Core.FetchingAdditionalProducts
 {
-    public class FetchingAdditionalProducts : MonoBehaviour, IStoreListener
+    public class FetchingAdditionalProducts : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
 
@@ -136,6 +137,13 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void AddGold()

@@ -33,5 +33,7 @@ namespace UnityEngine.Purchasing
         /// Initialized products will include receipts, if currently owned.
         /// </summary>
         void OnInitialized(IStoreController controller);
+
+        void SendTransactionEvent(Product product);
     }
 }

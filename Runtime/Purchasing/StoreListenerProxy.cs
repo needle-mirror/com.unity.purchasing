@@ -31,7 +31,6 @@ namespace UnityEngine.Purchasing
 
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
         {
-            m_Analytics.OnPurchaseSucceeded(e.purchasedProduct);
             return m_ForwardTo.ProcessPurchase(e);
         }
 
@@ -47,6 +46,11 @@ namespace UnityEngine.Purchasing
 #pragma warning disable 0618
                 m_ForwardTo.OnPurchaseFailed(i, p.reason);
             }
+        }
+
+        public void SendTransactionEvent(Product product)
+        {
+            m_Analytics.OnPurchaseSucceeded(product);
         }
     }
 }

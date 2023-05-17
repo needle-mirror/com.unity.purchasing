@@ -2,7 +2,7 @@
 
 // Callback to Unity identifying the subject, JSON message body and optional app receipt.
 // Note that App Receipts are sent separately to the JSON body for performance reasons.
-typedef void (*UnityPurchasingCallback)(const char* subject, const char* payload, const char* receipt, const char* transactionId, const char* originalTransactionId);
+typedef void (*UnityPurchasingCallback)(const char* subject, const char* payload, const char* receipt, const char* transactionId, const char* originalTransactionId, bool isRestored);
 
 @interface ProductDefinition : NSObject
 
@@ -15,7 +15,7 @@ typedef void (*UnityPurchasingCallback)(const char* subject, const char* payload
 
 @interface ReceiptRefresher : NSObject<SKRequestDelegate>
 
-@property (nonatomic, strong) void (^callback)(BOOL);
+@property (nonatomic, strong) void (^callback)(BOOL, NSString*);
 
 @end
 

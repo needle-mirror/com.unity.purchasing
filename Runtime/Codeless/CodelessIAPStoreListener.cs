@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Unity.Services.Core;
 using UnityEngine.Purchasing.Extension;
 
-
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -429,6 +428,11 @@ namespace UnityEngine.Purchasing
                 resultProcessed = true;
             }
 
+            if (activeCodelessButtons.Exists(button => button.productId == product.definition.id))
+            {
+                resultProcessed = true;
+            }
+
             foreach (var listener in activeListeners)
             {
                 listener.OnPurchaseFailed(product, reason);
@@ -459,6 +463,11 @@ namespace UnityEngine.Purchasing
             foreach (var button in activeCodelessButtons.Where(button => button.productId == product.definition.id))
             {
                 button.OnPurchaseFailed(product, description);
+            }
+
+            foreach (var listener in activeListeners)
+            {
+                listener.OnPurchaseFailed(product, description);
             }
         }
     }

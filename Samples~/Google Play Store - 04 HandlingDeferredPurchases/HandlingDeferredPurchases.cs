@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.GooglePlay.HandlingDeferredPurchases
 {
     [RequireComponent(typeof(UserWarningGooglePlayStore))]
-    public class HandlingDeferredPurchases : MonoBehaviour, IStoreListener
+    public class HandlingDeferredPurchases : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
         IGooglePlayStoreExtensions m_GooglePlayStoreExtensions;
@@ -125,6 +126,13 @@ namespace Samples.Purchasing.GooglePlay.HandlingDeferredPurchases
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningMessage()

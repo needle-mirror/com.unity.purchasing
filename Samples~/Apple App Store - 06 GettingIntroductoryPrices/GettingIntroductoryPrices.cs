@@ -1,12 +1,13 @@
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace Samples.Purchasing.AppleAppStore.GettingIntroductoryPrices
 {
     [RequireComponent(typeof(UserWarningAppleAppStore))]
-    public class GettingIntroductoryPrices : MonoBehaviour, IStoreListener
+    public class GettingIntroductoryPrices : MonoBehaviour, IDetailedStoreListener
     {
         IStoreController m_StoreController;
         IGooglePlayStoreExtensions m_GooglePlayStoreExtensions;
@@ -108,6 +109,13 @@ namespace Samples.Purchasing.AppleAppStore.GettingIntroductoryPrices
         public void OnPurchaseFailed(Product product, PurchaseFailureReason failureReason)
         {
             Debug.Log($"Purchase failed - Product: '{product.definition.id}', PurchaseFailureReason: {failureReason}");
+        }
+
+        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        {
+            Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
+                $" Purchase failure reason: {failureDescription.reason}," +
+                $" Purchase failure details: {failureDescription.message}");
         }
 
         void UpdateWarningMessage()

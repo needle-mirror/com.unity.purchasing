@@ -115,8 +115,9 @@ Sometimes consumable Ask to Buy purchases don't show up in the App Receipt, in w
 using System;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 
-public class AskToBuy : MonoBehaviour, IStoreListener
+public class AskToBuy : MonoBehaviour, IDetailedStoreListener
 {
     // Unity IAP objects
     private IStoreController m_Controller;
@@ -161,20 +162,24 @@ public class AskToBuy : MonoBehaviour, IStoreListener
     }
 
     /// <summary>
-    /// Called when Unity IAP encounters an unrecoverable initialization error.
-    ///
-    /// Note that this will not be called if Internet is unavailable; Unity IAP
-    /// will attempt initialization until it becomes available.
+    /// Called when a purchase fails.
+    /// IStoreListener.OnPurchaseFailed is deprecated,
+    /// use IDetailedStoreListener.OnPurchaseFailed instead.
     /// </summary>
-    public void OnInitializeFailed (InitializationFailureReason error)
+    public void OnPurchaseFailed (Product i, PurchaseFailureReason p)
     {
+        Debug.Log ("OnPurchaseFailed for ProductID: " + item.definition.id);
+        Debug.Log ("PurchaseFailureReason: " + p);
     }
 
     /// <summary>
     /// Called when a purchase fails.
     /// </summary>
-    public void OnPurchaseFailed (Product i, PurchaseFailureReason p)
+    public void OnPurchaseFailed (Product i, PurchaseFailureDescription p)
     {
+         Debug.Log ("OnPurchaseFailed for ProductID: " + item.definition.id);
+         Debug.Log ("PurchaseFailureReason: " + p.reason);
+         Debug.Log ("More Details: " + p.message;
     }
 
     /// <summary>

@@ -51,7 +51,7 @@ namespace UnityEngine.Purchasing
                 () => base.RestoreTransactions(callback), TelemetryMetricDefinitions.restoreTransactionName);
         }
 
-        public override void RefreshAppReceipt(Action<string> successCallback, Action errorCallback)
+        public override void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.RefreshAppReceipt(successCallback, errorCallback),

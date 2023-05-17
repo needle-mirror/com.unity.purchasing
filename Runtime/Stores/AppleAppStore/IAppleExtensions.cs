@@ -13,7 +13,16 @@ namespace UnityEngine.Purchasing
         /// This requires an Internet connection and will prompt the user for their credentials.
         /// </summary>
         /// <param name="successCallback">This action will be called when the refresh is successful. The receipt will be passed through.</param>
+        /// <param name="errorCallback">This action will be called when the refresh is in error. The error's details will be passed through.</param>
+        void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback);
+
+        /// <summary>
+        /// Fetch the latest App Receipt from Apple.
+        /// This requires an Internet connection and will prompt the user for their credentials.
+        /// </summary>
+        /// <param name="successCallback">This action will be called when the refresh is successful. The receipt will be passed through.</param>
         /// <param name="errorCallback">This action will be called when the refresh is in error.</param>
+        [Obsolete("RefreshAppReceipt(Action<string> successCallback, Action errorCallback) is deprecated, please use RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback) instead.")]
         void RefreshAppReceipt(Action<string> successCallback, Action errorCallback);
 
         /// <summary>
