@@ -1,6 +1,6 @@
 # Changelog
 
-## [4.9.2] - 2023-05-17
+## [4.9.3] - 2023-05-17
 ### Changed
 - Analytics events are now sent when a purchase has been confirmed (`ConfirmPendingTransaction` or `ProcessPurchase` returning `PurchaseProcessingResult.Complete`). This will improve the accuracy of revenue tracking by no longer considering pending purchases.
 - Updated `Product.transactionID`, `Product.hasReceipt` and `Product.receipt` documentation to include pending transaction use cases.
