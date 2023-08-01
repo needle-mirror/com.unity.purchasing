@@ -38,15 +38,7 @@ namespace UnityEngine.Purchasing.Security
                 bool ok = true;
                 foreach (var sinfo in sinfos)
                 {
-                    X509Cert signCert = null;
-                    foreach (var c in certChain)
-                    {
-                        if (c.SerialNumber == sinfo.IssuerSerialNumber)
-                        {
-                            signCert = c;
-                            break;
-                        }
-                    }
+                    X509Cert signCert = FindSignCert(sinfo);
 
                     if (signCert != null && signCert.PubKey != null)
                     {
@@ -54,12 +46,12 @@ namespace UnityEngine.Purchasing.Security
 
                         if (IsStoreKitSimulatorData())
                         {
-                            ok = ok && signCert.PubKey.Verify256(data.GetChildNode(0).Data, sinfo.EncryptedDigest);
-                            ok = ok && ValidateStorekitSimulatorCertRoot(cert, signCert);
+                            ok = ok && signCert.PubKey.VerifySha256(data.GetChildNode(0).Data, sinfo.EncryptedDigest);
+                            ok = ok && ValidateStoreKitSimulatorCertRoot(cert, signCert);
                         }
                         else
                         {
-                            ok = ok && signCert.PubKey.Verify(data.Data, sinfo.EncryptedDigest);
+                            ok = ok && VerifyPublicKeyWithSha256OrSha1(signCert, sinfo);
                             ok = ok && ValidateChain(cert, signCert, certificateCreationTime);
                         }
                     }
@@ -71,20 +63,45 @@ namespace UnityEngine.Purchasing.Security
             return false;
         }
 
+        X509Cert FindSignCert(SignerInfo sinfo)
+        {
+            foreach (var cert in certChain)
+            {
+                if (cert.SerialNumber == sinfo.IssuerSerialNumber)
+                {
+                    return cert;
+                }
+            }
+
+            return null;
+        }
+
         bool IsStoreKitSimulatorData()
         {
             return data.IsIndefiniteLength && data.ChildNodeCount == 1;
         }
 
-        bool ValidateStorekitSimulatorCertRoot(X509Cert root, X509Cert cert)
+        bool VerifyPublicKeyWithSha256OrSha1(X509Cert signCert, SignerInfo sinfo)
         {
-            return cert.CheckSignature256(root);
+            if (signCert.PubKey.VerifySha256(data.Data, sinfo.EncryptedDigest))
+            {
+                return true;
+            }
+
+            return signCert.PubKey.VerifySha1(data.Data, sinfo.EncryptedDigest);
+        }
+
+        static bool ValidateStoreKitSimulatorCertRoot(X509Cert root, X509Cert cert)
+        {
+            return cert.CheckSignatureSha256(root);
         }
 
         private bool ValidateChain(X509Cert root, X509Cert cert, DateTime certificateCreationTime)
         {
             if (cert.Issuer.Equals(root.Subject))
+            {
                 return cert.CheckSignature(root);
+            }
 
             /**
              * TODO: improve this logic
@@ -94,12 +111,16 @@ namespace UnityEngine.Purchasing.Security
                 if (c != cert && c.Subject.Equals(cert.Issuer) && c.CheckCertTime(certificateCreationTime))
                 {
                     if (c.Issuer.Equals(root.Subject) && c.SerialNumber == root.SerialNumber)
+                    {
                         return c.CheckSignature(root);
+                    }
                     else
                     {
                         // cert was issued by c
                         if (cert.CheckSignature(c))
+                        {
                             return ValidateChain(root, c, certificateCreationTime);
+                        }
                     }
                 }
             }

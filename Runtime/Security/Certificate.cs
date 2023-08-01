@@ -136,16 +136,26 @@ namespace UnityEngine.Purchasing.Security
         {
             if (Issuer.Equals(signer.Subject))
             {
-                return signer.PubKey.Verify(rawTBSCertificate, Signature.Data);
+                return VerifySignatureWithSha256OrSha1(signer);
             }
             return false;
         }
 
-        public bool CheckSignature256(X509Cert signer)
+        bool VerifySignatureWithSha256OrSha1(X509Cert signer)
+        {
+            if (signer.PubKey.VerifySha256(rawTBSCertificate, Signature.Data))
+            {
+                return true;
+            }
+
+            return signer.PubKey.VerifySha1(rawTBSCertificate, Signature.Data);
+        }
+
+        public bool CheckSignatureSha256(X509Cert signer)
         {
             if (Issuer.Equals(signer.Subject))
             {
-                return signer.PubKey.Verify256(rawTBSCertificate, Signature.Data);
+                return signer.PubKey.VerifySha256(rawTBSCertificate, Signature.Data);
             }
 
             return false;

@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.9.4] - 2023-08-01
+### Changed
+- Google Play - Billing Library updated to 5.2.1 (was previously 5.1.0). No new feature support was added, this is simply to add compatibility with Android 14.
+- Apple - Using the CrossPlatformValidation (or AppleValidator), receipts will now be validated if their certificate chain is encoded in SHA-256 instead of SHA-1. Old receipts encoded in SHA-1 will still be validated. See [Apple Technical Note](https://developer.apple.com/documentation/technotes/tn3138-handling-app-store-receipt-signing-certificate-changes).
+
 ## [4.9.3] - 2023-05-17
 ### Changed
 - Analytics events are now sent when a purchase has been confirmed (`ConfirmPendingTransaction` or `ProcessPurchase` returning `PurchaseProcessingResult.Complete`). This will improve the accuracy of revenue tracking by no longer considering pending purchases.

@@ -28,7 +28,7 @@ namespace UnityEngine.Purchasing.Security
         /**
          * Public verification of a message
          */
-        public bool Verify(byte[] message, byte[] signature)
+        public bool VerifySha1(byte[] message, byte[] signature)
         {
             var sha1hash = new SHA1Managed();
             var msgHash = sha1hash.ComputeHash(message);
@@ -37,7 +37,7 @@ namespace UnityEngine.Purchasing.Security
             return rsa.VerifyHash(msgHash, null, signature);
         }
 
-        public bool Verify256(byte[] message, byte[] signature)
+        public bool VerifySha256(byte[] message, byte[] signature)
         {
             var sha256hash = new SHA256Managed();
             var msgHash = sha256hash.ComputeHash(message);

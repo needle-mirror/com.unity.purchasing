@@ -15,9 +15,9 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Changed\n- Analytics events are now sent when a purchase has been confirmed (`ConfirmPendingTransaction` or `ProcessPurchase` returning `PurchaseProcessingResult.Complete`). This will improve the accuracy of revenue tracking by no longer considering pending purchases.\n- Updated `Product.transactionID`, `Product.hasReceipt` and `Product.receipt` documentation to include pending transaction use cases.\n- Updated samples to use `IDetailedStoreListener` and its improved `OnPurchaseFailed` callback.\n- Added a new `RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)` callback containing more information when the errorCallback is invoked in `IAppleExtensions : IStoreListener`.\n\n### Fixed\n- `OnPurchaseFailed` will no longer log an error when there's only new IAP Buttons with no IAP Listener.\n- Apple - Improved the accuracy of `Product.appleProductIsRestored` when using the restore transaction button. These will now correctly be flagged as true.\n- Codeless - `OnPurchaseFailed(Product, PurchaseFailureDescription)` callback was not invoked in `IAP Listener`"
+    "changelog": "### Changed\n- Google Play - Billing Library updated to 5.2.1 (was previously 5.1.0). No new feature support was added, this is simply to add compatibility with Android 14.\n- Apple - Using the CrossPlatformValidation (or AppleValidator), receipts will now be validated if their certificate chain is encoded in SHA-256 instead of SHA-1. Old receipts encoded in SHA-1 will still be validated. See [Apple Technical Note](https://developer.apple.com/documentation/technotes/tn3138-handling-app-store-receipt-signing-certificate-changes)."
   },
-  "version": "4.9.3",
+  "version": "4.9.4",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -35,16 +35,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.9.3"
+    "com.unity.purchasing.tests": "4.9.4"
   },
   "upmCi": {
-    "footprint": "91415d00952a4a457502d551566c21f547eef3d5"
+    "footprint": "19e0452c9372b862949f9f812aa23ed31b53a489"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.9/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "42718bbbc4b238be117b2c0c72c843152dffec63"
+    "revision": "68f2d826211743b93100781be51c9209ee1377be"
   },
   "samples": [
     {

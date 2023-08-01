@@ -18,7 +18,7 @@ namespace UnityEngine.Purchasing.Security
             var rawReceipt = System.Text.Encoding.UTF8.GetBytes(receipt); // "{\"orderId\":\"G...
             var rawSignature = System.Convert.FromBase64String(signature);
 
-            if (!key.Verify(rawReceipt, rawSignature))
+            if (!key.VerifySha1(rawReceipt, rawSignature))
             {
                 throw new InvalidSignatureException();
             }
