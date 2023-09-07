@@ -10,7 +10,7 @@ namespace UnityEditor.Purchasing
         const string k_VerificationSection = "verification";
         const string k_ErrorSection = "error-message";
 
-        VisualElement m_ObfuscatorBlock;
+        protected VisualElement m_ObfuscatorBlock;
 
         protected string m_ErrorMessage;
 

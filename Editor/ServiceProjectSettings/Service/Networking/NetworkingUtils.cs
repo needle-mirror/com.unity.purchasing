@@ -1,27 +1,38 @@
 using System.Collections.Generic;
+using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
     static class NetworkingUtils
     {
-        internal static string GetProjectGuid()
-        {
-            return CloudProjectSettings.projectId;
-        }
-
-        public static string Base64Encode(string plainText)
-        {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return System.Convert.ToBase64String(plainTextBytes);
-        }
-
-        internal static string GetValueFromJsonDictionary(string rawJson, string key)
+        internal static string GetStringFromRawJsonDictionaryString(string rawJson, string key)
         {
             var container = (Dictionary<string, object>)MiniJson.JsonDecode(rawJson);
 
-            container.TryGetValue(key, out var value);
+            return GetStringFromJsonDictionary(container, key);
+        }
+
+        internal static string GetStringFromJsonDictionary(Dictionary<string, object> container, string key)
+        {
+            object value = null;
+            container?.TryGetValue(key, out value);
             return value as string;
+        }
+
+        internal static Dictionary<string, object> GetJsonDictionaryWithinRawJsonDictionaryString(string rawJson, string key)
+        {
+            var container = (Dictionary<string, object>)MiniJson.JsonDecode(rawJson);
+
+            return GetJsonDictionaryWithinJsonDictionary(container, key);
+        }
+
+
+        static Dictionary<string, object> GetJsonDictionaryWithinJsonDictionary(Dictionary<string, object> container, string key)
+        {
+            object value = null;
+            container?.TryGetValue(key, out value);
+            return value as Dictionary<string, object>;
         }
     }
 }

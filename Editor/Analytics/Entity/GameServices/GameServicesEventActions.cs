@@ -9,6 +9,6 @@ namespace UnityEditor.Purchasing
         internal const string k_ActionIapCatalog = "IapCatalog";
         internal const string k_ActionReceiptValidationObfuscator = "ReceiptValidationObfuscator";
         internal const string k_ActionSwitchStore = "SwitchStore";
-        internal const string k_ActionValidatePublicKey = "ValidatePublicKey";
+        internal const string k_ActionOpenDashboardForPublicKey = "OpenDashboardForPublicKey";
     }
 }

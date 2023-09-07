@@ -1,4 +1,5 @@
 using System;
+using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -6,19 +7,15 @@ namespace UnityEditor.Purchasing
 {
     internal class GooglePlayConfigurationSettingsBlock : IPurchasingSettingsUIBlock
     {
-        const string k_UpdateGooglePlayKeyBtn = "UpdateGooglePlayKeyBtn";
         const string k_GooglePlayLink = "GooglePlayLink";
-        const string k_GooglePlayKeyEntry = "GooglePlayKeyEntry";
-
+        const string k_DashboardSettingsLink = "DashboardSettingsLink";
         const string k_VerifiedMode = "verified-mode";
         const string k_UnverifiedMode = "unverified-mode";
-        const string k_ErrorKeyFormat = "error-key-format";
+        const string k_ErrorKeyFormat = "error-request-format";
         const string k_ErrorUnauthorized = "error-unauthorized-user";
         const string k_ErrorServer = "error-server-error";
         const string k_ErrorFetchKey = "error-fetch-key";
 
-        const string k_GooglePlayKeyBtnUpdateLabel = "Update";
-        const string k_GooglePlayKeyBtnVerifyLabel = "Verify";
         readonly GoogleConfigurationData m_GooglePlayDataRef;
         readonly GoogleConfigurationWebRequests m_WebRequests;
 
@@ -28,7 +25,7 @@ namespace UnityEditor.Purchasing
         internal GooglePlayConfigurationSettingsBlock()
         {
             m_GooglePlayDataRef = GoogleConfigService.Instance().GoogleConfigData;
-            m_WebRequests = new GoogleConfigurationWebRequests(m_GooglePlayDataRef, OnGetGooglePlayKey, OnUpdateGooglePlayKey);
+            m_WebRequests = new GoogleConfigurationWebRequests(OnGetGooglePlayKey);
 
             m_ObfuscatorSection = new GoogleObfuscatorSection(m_GooglePlayDataRef);
         }
@@ -44,7 +41,8 @@ namespace UnityEditor.Purchasing
 
             SetupStyleSheets();
             PopulateConfigBlock();
-            m_ObfuscatorSection.SetupObfuscatorBlock(m_ConfigurationBlock);
+            PopulateObfuscatorBlock();
+            ObtainExistingGooglePlayKey();
 
             return m_ConfigurationBlock;
         }
@@ -57,9 +55,14 @@ namespace UnityEditor.Purchasing
 
         void PopulateConfigBlock()
         {
-            ObtainExistingGooglePlayKey();
             ToggleGoogleKeyStateDisplay();
-            SetupButtonActions();
+            SetupLinkActions();
+        }
+
+        void PopulateObfuscatorBlock()
+        {
+            m_ObfuscatorSection.SetupObfuscatorBlock(m_ConfigurationBlock);
+            m_ObfuscatorSection.RegisterGooglePlayKeyChangedCallback();
         }
 
         void ObtainExistingGooglePlayKey()
@@ -75,9 +78,8 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void SetupButtonActions()
+        void SetupLinkActions()
         {
-            m_ConfigurationBlock.Q<Button>(k_UpdateGooglePlayKeyBtn).clicked += UpdateGooglePlayKey;
             var googlePlayExternalLink = m_ConfigurationBlock.Q(k_GooglePlayLink);
             if (googlePlayExternalLink != null)
             {
@@ -85,38 +87,35 @@ namespace UnityEditor.Purchasing
                 googlePlayExternalLink.AddManipulator(clickable);
             }
 
-            m_ConfigurationBlock.Q<TextField>(k_GooglePlayKeyEntry).RegisterValueChangedCallback(evt =>
+            var projectSettingsDashboardLink = m_ConfigurationBlock.Q(k_DashboardSettingsLink);
+            if (projectSettingsDashboardLink != null)
             {
-                m_GooglePlayDataRef.googlePlayKey = evt.newValue;
-            });
+                var clickable = new Clickable(OpenProjectSettingsUnityDashboard);
+                projectSettingsDashboardLink.AddManipulator(clickable);
+            }
         }
 
-        void UpdateGooglePlayKey()
-        {
-            m_WebRequests.RequestUpdateOperation();
-        }
-
-        void OpenGooglePlayDevConsole()
+        static void OpenGooglePlayDevConsole()
         {
             Application.OpenURL(PurchasingUrls.googlePlayDevConsoleUrl);
         }
 
-        void ToggleGoogleKeyStateDisplay()
+        static void OpenProjectSettingsUnityDashboard()
         {
-            ToggleUpdateButtonDisplay();
-            ToggleVerifiedModeDisplay();
-            ToggleUnverifiedModeDisplay();
+            Application.OpenURL(BuildProjectSettingsUri());
+
+            GameServicesEventSenderHelpers.SendProjectSettingsOpenDashboardForPublicKey();
         }
 
-        void ToggleUpdateButtonDisplay()
+        static string BuildProjectSettingsUri()
         {
-            var updateGooglePlayKeyBtn = m_ConfigurationBlock.Q<Button>(k_UpdateGooglePlayKeyBtn);
-            if (updateGooglePlayKeyBtn != null)
-            {
-                updateGooglePlayKeyBtn.text = GetTrackingKeyState() == GooglePlayRevenueTrackingKeyState.Verified
-                    ? k_GooglePlayKeyBtnUpdateLabel
-                    : k_GooglePlayKeyBtnVerifyLabel;
-            }
+            return string.Format(PurchasingUrls.protjectSettingUrl, OrganizationProvider.Organization.Key, CloudProjectSettings.projectId);
+        }
+
+        void ToggleGoogleKeyStateDisplay()
+        {
+            ToggleVerifiedModeDisplay();
+            ToggleUnverifiedModeDisplay();
         }
 
         GooglePlayRevenueTrackingKeyState GetTrackingKeyState()
@@ -160,16 +159,14 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void OnGetGooglePlayKey(string key)
+        void OnGetGooglePlayKey(string key, GooglePlayRevenueTrackingKeyState state)
         {
+            m_GooglePlayDataRef.googlePlayKey = key;
+            m_GooglePlayDataRef.revenueTrackingState = state;
+
             if (!string.IsNullOrEmpty(key))
             {
-                m_GooglePlayDataRef.revenueTrackingState = GooglePlayRevenueTrackingKeyState.Verified;
                 SetGooglePlayKeyText(key);
-            }
-            else
-            {
-                m_GooglePlayDataRef.revenueTrackingState = GooglePlayRevenueTrackingKeyState.CantFetch;
             }
 
             ToggleGoogleKeyStateDisplay();
@@ -177,16 +174,7 @@ namespace UnityEditor.Purchasing
 
         void SetGooglePlayKeyText(string key)
         {
-            m_ConfigurationBlock.Q<TextField>(k_GooglePlayKeyEntry).SetValueWithoutNotify(key);
-        }
-
-        void OnUpdateGooglePlayKey(GooglePlayRevenueTrackingKeyState keyState)
-        {
-            m_GooglePlayDataRef.revenueTrackingState = keyState;
-
-            GameServicesEventSenderHelpers.SendProjectSettingsValidatePublicKey();
-
-            ToggleGoogleKeyStateDisplay();
+            m_ObfuscatorSection.SetGooglePlayKeyText(key);
         }
     }
 }

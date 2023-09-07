@@ -15,17 +15,16 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Changed\n- Google Play - Billing Library updated to 5.2.1 (was previously 5.1.0). No new feature support was added, this is simply to add compatibility with Android 14.\n- Apple - Using the CrossPlatformValidation (or AppleValidator), receipts will now be validated if their certificate chain is encoded in SHA-256 instead of SHA-1. Old receipts encoded in SHA-1 will still be validated. See [Apple Technical Note](https://developer.apple.com/documentation/technotes/tn3138-handling-app-store-receipt-signing-certificate-changes)."
+    "changelog": "### Changed\n- Unity Distribution Portal - IAP will retract support for UDP at some point in the near future (Announcement TBD). Until then, all UDP features will continue to function, but the public interfaces, as well as some private functions are now marked `[Obsolete]`. In the next major update these will all be removed and UDP will cease to function with that version of In-App Purchasing and those that follow.\n- Unity Distribution Portal - If the editor is unable to connect to the UDP backend, the developer can now use some UDP catalog features in offline mode. This allows the developer to continue to enter prices, meaning that prices will need to be synced manually. In this case, we strongly suggest you sync your prices properly once connection is re-established. A warning message will display in the Catalog if the editor is unable to connect to the UDP backend.\n- Analytics - The Legacy Analytics built-in module, com.unity.modules.unityanalytics, is now no longer a dependency. You may not remove it from your project if you don't use it. Make sure it is in your project if you do use it.\n- Project Settings - In the Services Project Settings page of the Editor, we have changed the endpoint from which the Google Play Key is obtained. Also, instead of setting the key directly in the editor, there is now a dashboard link to set it directly on the backend to avoid future errors.\n\n### Fixed\n- Google Play - Some versions of the Unity Editor compiler were stripping `GooglePurchaseUpdatedListener.onPurchasesUpdated`, which was assigned as a callback to the Google Billing module, causing a lack of purchase failure callbacks, and logging `\"No such proxy method:\"`. Also fixed this for `BillingClientStateListener.onBillingServiceDisconnected`, `BillingClientStateListener.onBillingSetupFinished` and `SkuDetailsResponseListener.onSkuDetailsResponse`."
   },
-  "version": "4.9.4",
+  "version": "4.10.0",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
-    "com.unity.modules.unityanalytics": "1.0.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.modules.jsonserialize": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
-    "com.unity.services.core": "1.8.1"
+    "com.unity.services.core": "1.8.2"
   },
   "keywords": [
     "purchasing",
@@ -35,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.9.4"
+    "com.unity.purchasing.tests": "4.10.0"
   },
   "upmCi": {
-    "footprint": "19e0452c9372b862949f9f812aa23ed31b53a489"
+    "footprint": "313e6114563bae2e5578a67d5c5591869ae28a71"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.9/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.10/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "68f2d826211743b93100781be51c9209ee1377be"
+    "revision": "c1569b96eee83bd027cadf45a97ec73f6edf6661"
   },
   "samples": [
     {

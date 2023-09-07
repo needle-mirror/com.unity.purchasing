@@ -1,111 +1,149 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using UnityEditor.Callbacks;
-using UnityEditorInternal;
 using UnityEngine;
-using UnityEngine.Purchasing;
-#if UNITY_2019_3_OR_NEWER
-using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.UI;
-#endif
 
 namespace UnityEditor.Purchasing
 {
+    [Obsolete("UDP support will be removed in the next major update of In-App Purchasing. Right now, the UDP SDK will still function normally in tandem with IAP.")]
     /// <summary>
     /// This class directs the developer to install UDP if it is not already installed through Package Manager.
     /// </summary>
     public class UdpInstaller
     {
-#if UNITY_2019_3_OR_NEWER
         private const string k_PackManWindowTitle = "Get UDP via Package Manager";
-#else
-        private const string k_AssetStoreWindowTitle = "Get UDP via Asset Store";
-#endif
+        private const string k_NoPackManWindowTitle = "UDP is no longer available in the Package Manager";
         private static readonly Vector2 k_WindowDims = new Vector2(480, 120);
 
         internal static void PromptUdpInstallation()
         {
-            var window = (UdpInstallInstructionsWindow)EditorWindow.GetWindow(typeof(UdpInstallInstructionsWindow));
-#if UNITY_2019_3_OR_NEWER
-            window.titleContent.text = k_PackManWindowTitle;
-#else
-            window.titleContent.text = k_AssetStoreWindowTitle;
-#endif
+            OpenUdpInstallationInstructionsWindow();
+        }
+
+        static void OpenUdpInstallationInstructionsWindow()
+        {
+            OpenUdpWindow<UdpInstallInstructionsWindow>(k_PackManWindowTitle);
+        }
+
+        static void OpenUdpWindow<TEditorWindow>(string title) where TEditorWindow : RichEditorWindow
+        {
+            var window = (TEditorWindow)EditorWindow.GetWindow(typeof(TEditorWindow));
+            window.titleContent.text = title;
             window.minSize = k_WindowDims;
             window.Show();
         }
+
+        internal static void PromptUdpUnavailability()
+        {
+            OpenUdpDeprecatedDisclaimerWindow();
+        }
+
+        static void OpenUdpDeprecatedDisclaimerWindow()
+        {
+            OpenUdpWindow<UdpDeprecatedDisclaimerWindow>(k_NoPackManWindowTitle);
+        }
     }
 
-    /// <summary>
-    /// Instructs user how to install UDP.
-    /// </summary>
     internal class UdpInstallInstructionsWindow : RichEditorWindow
     {
-#if UNITY_2019_3_OR_NEWER
         private const string k_InfoText = "In order to use this functionality, you must install or update the Unity Distribution Portal Package. Would you like to begin?";
-        private const string k_UdpPackageName = "com.unity.purchasing.udp";
-#else
-        private const string k_InfoText = "In order to use this functionality, you must install or update the Unity Distribution Portal Plugin. Would you like to begin?";
-
-        //Browser URL is "https://assetstore.unity.com/packages/add-ons/services/billing/unity-distribution-portal-138507".
-        //Took the number at the end and dropped it into the pattern "content/{0}?assetID={1}".
-        //This special URL fragment is required by the API and appended to the root URL pattern
-        private const string k_UdpAssetStoreIdentifier = "content/138507?assetID=138507";
-#endif
 
         private const string k_NotNowButtonText = "Not Now";
         private const string k_GoButtonText = "Go";
 
         private void OnGUI()
         {
-            // Make fit entire window vertically
             EditorGUILayout.BeginVertical(GUILayout.ExpandHeight(true));
 
-            // Align info text & values horizontally
-            EditorGUILayout.BeginHorizontal();
+            OnTextGui();
+            OnButtonGui();
 
-            // Version labels - horizontal stack
+            EditorGUILayout.EndVertical();
+        }
+
+        void OnTextGui()
+        {
+            EditorGUILayout.BeginHorizontal();
             EditorGUILayout.BeginVertical();
 
             GUILayout.Label(k_InfoText, EditorStyles.wordWrappedLabel);
+
             EditorGUILayout.EndVertical();
+            EditorGUILayout.EndHorizontal();
+        }
 
-            EditorGUILayout.EndHorizontal();  // END Info text row
-
-            // Action button row
-
+        void OnButtonGui()
+        {
             EditorGUILayout.BeginHorizontal();
 
             GUILayout.FlexibleSpace();
-            var notNowButton = GUILayout.Button(k_NotNowButtonText);
-            var goButton = GUILayout.Button(k_GoButtonText);
 
-            EditorGUILayout.EndHorizontal(); // END Action button row
-
-            EditorGUILayout.EndVertical(); // END window alignment
-
-            // Handle buttons
-            if (notNowButton)
+            if (GUILayout.Button(k_NotNowButtonText))
             {
                 Close();
             }
 
-            if (goButton)
+            if (GUILayout.Button(k_GoButtonText))
             {
-                // Direct user to install page. User must install manually. Close immediately
                 GoToInstaller();
                 Close();
             }
+
+            EditorGUILayout.EndHorizontal();
         }
 
-        void GoToInstaller()
+        static void GoToInstaller()
         {
-#if UNITY_2019_3_OR_NEWER
-            Window.Open(k_UdpPackageName);
-#else
-            AssetStore.Open(k_UdpAssetStoreIdentifier);
-#endif
+            try
+            {
+                Window.Open(UnityPurchasingEditor.UdpPackageName);
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning("Could not locate the Unity Distribution Portal package in package manager. It is now deprecated and you will need to install a local archived copy if you need these features.\nThe Package Manager sent this exception: " + exception.Message);
+            }
+        }
+    }
+
+
+    class UdpDeprecatedDisclaimerWindow : RichEditorWindow
+    {
+        const string k_InfoText = "In order to use this functionality, you must install or update the Unity Distribution Portal Package.\nUnfortunately, the package is now deprecated and is no longer hosted in the Unity Registry. You will need to obtain a local copy of it and install it manually.";
+
+        const string k_CloseButtonText = "Close";
+
+        private void OnGUI()
+        {
+            EditorGUILayout.BeginVertical(GUILayout.ExpandHeight(true));
+
+            OnTextGui();
+            OnButtonGui();
+
+            EditorGUILayout.EndVertical();
+        }
+
+        void OnTextGui()
+        {
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.BeginVertical();
+
+            GUILayout.Label(k_InfoText, EditorStyles.wordWrappedLabel);
+
+            EditorGUILayout.EndVertical();
+            EditorGUILayout.EndHorizontal();
+        }
+
+        void OnButtonGui()
+        {
+            EditorGUILayout.BeginHorizontal();
+
+            GUILayout.FlexibleSpace();
+
+            if (GUILayout.Button(k_CloseButtonText))
+            {
+                Close();
+            }
+
+            EditorGUILayout.EndHorizontal();
         }
     }
 }

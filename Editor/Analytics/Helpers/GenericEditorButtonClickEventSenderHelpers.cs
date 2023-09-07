@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace UnityEditor.Purchasing
@@ -44,6 +45,7 @@ namespace UnityEditor.Purchasing
             BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventTools.k_ToolCatalog, EventActions.k_ActionAppStoreExport, option);
         }
 
+        [Obsolete("Internal API to be removed with UDP deprecation.")]
         internal static void SendCatalogSyncToUdpEvent()
         {
             BuildAndSendEventWithoutOption(EventComponents.k_ComponentCodeless, EventTools.k_ToolCatalog, EventActions.k_ActionSyncToUdp);

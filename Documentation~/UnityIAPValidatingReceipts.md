@@ -10,10 +10,12 @@ Receipt validation is performed using known encryption keys. For your applicatio
 
 If a user can replace these, they can defeat your receipt validation checks, so it is important to make it difficult for a user to easily find and modify these keys.
 
-Unity IAP provides a tool that can help you obfuscate your encryption keys within your Application. This confuses or jumbles the keys so that it is much harder for a user to acces them. In the Unity menu bar, go to __Services__ > __In-App Purchasing__ > __IAP Receipt Validation Obfuscator__.
+Unity IAP provides a tool that can help you obfuscate your encryption keys within your Application. This confuses or jumbles the keys so that it is much harder for a user to acces them.
 
-
+* For Unity 2021 or older: In the Unity menu bar, go to __Services__ > __In-App Purchasing__ > __IAP Receipt Validation Obfuscator__.
 ![The Obfuscator window](images/IAPObfuscator.png)
+* For more recent versions: In the Project Settings for In-App Purchasing, under Receipt Obfuscator. Note that if you have followed the steps in the [Google Public Key Guide](GooglePublicKey.md) entered your Google Play public key in the dashboard, this text field may already be populated with it.
+![The Obfuscator setting](images/IAPObfuscatorServiceSettings.png)
 
 This window encodes Apple's root certificate, [StoreKit Test certificate](https://developer.apple.com/documentation/Xcode/setting-up-storekit-testing-in-xcode) (which are bundled with Unity IAP) and your Google Play public key (copied by you from the application's [Google Play Developer Console's Services &amp; APIs](https://developer.android.com/google/play/licensing/setting-up.html) page) into different C# classes: __AppleTangle__, __AppleStoreKitTestTangle__, and __GooglePlayTangle__. These are added to your project for use in the next section.
 

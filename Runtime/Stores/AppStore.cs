@@ -1,3 +1,5 @@
+using System;
+
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -20,8 +22,10 @@ namespace UnityEngine.Purchasing
         /// </summary>
         AmazonAppStore, //
 
+        [Obsolete("AppStore to be removed with UDP deprecation.")]
         /// <summary>
         /// Unity Distribution Portal, which supports a set of stores internally.
+        /// Will become deprecated with UDP eventually.
         /// </summary>
         UDP, // Last Android store. Also in AppStoreMeta.
 

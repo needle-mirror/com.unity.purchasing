@@ -1,3 +1,5 @@
+using System;
+
 namespace UnityEditor.Purchasing
 {
     internal static class EventActions
@@ -16,6 +18,7 @@ namespace UnityEditor.Purchasing
         internal const string k_ActionRemoveProduct = "remove_product";
         internal const string k_ActionRemoveTranslation = "remove_translation";
         internal const string k_ActionSelectAppleScreenshot = "select_apple_screenshot";
+        [Obsolete("Internal API to be removed with UDP deprecation.")]
         internal const string k_ActionSyncToUdp = "sync_to_udp";
     }
 }

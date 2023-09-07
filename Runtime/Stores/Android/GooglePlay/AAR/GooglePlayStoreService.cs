@@ -169,20 +169,11 @@ namespace UnityEngine.Purchasing
             {
                 StartConnection();
             }
-            else
-            {
-                OnReconnectionFailure(googleBillingResponseCode);
-            }
         }
 
         bool AreConnectionAttemptsExhausted()
         {
             return m_CurrentConnectionAttempts >= k_MaxConnectionAttempts;
-        }
-
-        void OnReconnectionFailure(GoogleBillingResponseCode googleBillingResponseCode)
-        {
-            DequeueQueryProducts(googleBillingResponseCode);
         }
 
         public virtual void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)

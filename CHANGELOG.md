@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.10.0] - 2023-09-07
+### Changed
+- Unity Distribution Portal - IAP will retract support for UDP at some point in the near future (Announcement TBD). Until then, all UDP features will continue to function, but the public interfaces, as well as some private functions are now marked `[Obsolete]`. In the next major update these will all be removed and UDP will cease to function with that version of In-App Purchasing and those that follow.
+- Unity Distribution Portal - If the editor is unable to connect to the UDP backend, the developer can now use some UDP catalog features in offline mode. This allows the developer to continue to enter prices, meaning that prices will need to be synced manually. In this case, we strongly suggest you sync your prices properly once connection is re-established. A warning message will display in the Catalog if the editor is unable to connect to the UDP backend.
+- Analytics - The Legacy Analytics built-in module, com.unity.modules.unityanalytics, is now no longer a dependency. You may not remove it from your project if you don't use it. Make sure it is in your project if you do use it.
+- Project Settings - In the Services Project Settings page of the Editor, we have changed the endpoint from which the Google Play Key is obtained. Also, instead of setting the key directly in the editor, there is now a dashboard link to set it directly on the backend to avoid future errors.
+
+### Fixed
+- Google Play - Some versions of the Unity Editor compiler were stripping `GooglePurchaseUpdatedListener.onPurchasesUpdated`, which was assigned as a callback to the Google Billing module, causing a lack of purchase failure callbacks, and logging `"No such proxy method:"`. Also fixed this for `BillingClientStateListener.onBillingServiceDisconnected`, `BillingClientStateListener.onBillingSetupFinished` and `SkuDetailsResponseListener.onSkuDetailsResponse`.
+
 ## [4.9.4] - 2023-08-01
 ### Changed
 - Google Play - Billing Library updated to 5.2.1 (was previously 5.1.0). No new feature support was added, this is simply to add compatibility with Android 14.

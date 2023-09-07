@@ -68,7 +68,7 @@ namespace UnityEngine.Purchasing
 
         static IAnalyticsAdapter GenerateLegacyUnityAnalytics()
         {
-#if DISABLE_RUNTIME_IAP_ANALYTICS || !ENABLE_CLOUD_SERVICES_ANALYTICS || !IAP_ANALYTICS_SERVICE_ENABLED
+#if DISABLE_RUNTIME_IAP_ANALYTICS || !ENABLE_CLOUD_SERVICES_ANALYTICS || !IAP_LEGACY_ANALYTICS_SERVICE_ENABLED
             return new EmptyAnalyticsAdapter();
 #else
             return new LegacyAnalyticsAdapter(new LegacyUnityAnalytics());

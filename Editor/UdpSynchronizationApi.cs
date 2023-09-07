@@ -9,12 +9,12 @@ using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
+    [Obsolete("UDP support will be removed in the next major update of In-App Purchasing. Right now, the UDP SDK will still function normally in tandem with IAP.")]
     /// <summary>
     /// Synchronize store data from UDP and IAP
     /// </summary>
     public static class UdpSynchronizationApi
     {
-
         internal const string kOAuthClientId = "channel_editor";
 
         // Although a client secret is here, it doesn't matter
