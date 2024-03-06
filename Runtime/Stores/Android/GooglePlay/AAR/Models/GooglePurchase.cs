@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing.Models
     /// </summary>
     class GooglePurchase : IGooglePurchase
     {
-        public IAndroidJavaObjectWrapper javaPurchase { get; }
+        public bool isAcknowledged { get; }
         public int purchaseState { get; }
         public List<string> skus { get; }
         public string orderId { get; }
@@ -24,11 +24,13 @@ namespace UnityEngine.Purchasing.Models
 
         public string? sku => skus.FirstOrDefault();
 
-        internal GooglePurchase(IAndroidJavaObjectWrapper purchase, IEnumerable<IAndroidJavaObjectWrapper> skuDetails)
+        internal GooglePurchase(AndroidJavaObject purchase, IEnumerable<AndroidJavaObject> skuDetails)
         {
-            javaPurchase = purchase;
+            using var skusList = purchase.Call<AndroidJavaObject>("getSkus");
+
+            isAcknowledged = purchase.Call<bool>("isAcknowledged");
             purchaseState = purchase.Call<int>("getPurchaseState");
-            skus = purchase.Call<AndroidJavaObject>("getSkus").Enumerate<string>().ToList();
+            skus = skusList.Enumerate<string>().ToList();
             orderId = purchase.Call<string>("getOrderId");
             originalJson = purchase.Call<string>("getOriginalJson");
             signature = purchase.Call<string>("getSignature");
@@ -42,19 +44,10 @@ namespace UnityEngine.Purchasing.Models
             );
         }
 
-        public virtual bool IsAcknowledged()
-        {
-            return javaPurchase != null && javaPurchase.Call<bool>("isAcknowledged");
-        }
+        public virtual bool IsAcknowledged() => isAcknowledged;
 
-        public virtual bool IsPurchased()
-        {
-            return javaPurchase != null && purchaseState == GooglePurchaseStateEnum.Purchased();
-        }
+        public virtual bool IsPurchased() => purchaseState == GooglePurchaseStateEnum.Purchased();
 
-        public virtual bool IsPending()
-        {
-            return javaPurchase != null && purchaseState == GooglePurchaseStateEnum.Pending();
-        }
+        public virtual bool IsPending() => purchaseState == GooglePurchaseStateEnum.Pending();
     }
 }

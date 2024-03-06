@@ -31,6 +31,9 @@ static class BuildTargetGroupExtensions
 
             case BuildTargetGroup.iOS:
             case BuildTargetGroup.tvOS:
+#if UNITY_VISIONOS
+            case BuildTargetGroup.VisionOS:
+#endif
                 storesArray = new[] { AppStore.AppleAppStore };
                 break;
 

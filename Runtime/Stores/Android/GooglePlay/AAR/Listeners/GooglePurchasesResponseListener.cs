@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Purchasing.Utils;
 using UnityEngine.Scripting;
@@ -14,10 +15,10 @@ namespace UnityEngine.Purchasing
     {
         const string k_AndroidSkuDetailsResponseListenerClassName =
             "com.android.billingclient.api.PurchasesResponseListener";
-        readonly Action<IGoogleBillingResult, IEnumerable<IAndroidJavaObjectWrapper>> m_OnQueryPurchasesResponse;
+        readonly Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> m_OnQueryPurchasesResponse;
 
         internal GooglePurchasesResponseListener(
-            Action<IGoogleBillingResult, IEnumerable<IAndroidJavaObjectWrapper>> onQueryPurchasesResponse)
+            Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse)
             : base(k_AndroidSkuDetailsResponseListenerClassName)
         {
             m_OnQueryPurchasesResponse = onQueryPurchasesResponse;
@@ -26,7 +27,16 @@ namespace UnityEngine.Purchasing
         [Preserve]
         public void onQueryPurchasesResponse(AndroidJavaObject billingResult, AndroidJavaObject purchases)
         {
-            m_OnQueryPurchasesResponse(new GoogleBillingResult(billingResult), purchases.EnumerateAndWrap());
+            var purchasesList = purchases.Enumerate().ToList();
+            m_OnQueryPurchasesResponse(new GoogleBillingResult(billingResult), purchasesList);
+
+            foreach (var obj in purchasesList)
+            {
+                obj?.Dispose();
+            }
+
+            billingResult.Dispose();
+            purchases?.Dispose();
         }
     }
 }

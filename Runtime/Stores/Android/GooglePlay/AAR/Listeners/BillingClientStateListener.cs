@@ -41,6 +41,8 @@ namespace UnityEngine.Purchasing
             {
                 m_Disconnect(result.responseCode);
             }
+
+            billingResult.Dispose();
         }
 
         [Preserve]

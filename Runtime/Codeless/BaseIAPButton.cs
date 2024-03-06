@@ -102,7 +102,11 @@ namespace UnityEngine.Purchasing
                 }
                 else if (Application.platform == RuntimePlatform.IPhonePlayer ||
                          Application.platform == RuntimePlatform.OSXPlayer ||
-                         Application.platform == RuntimePlatform.tvOS)
+                         Application.platform == RuntimePlatform.tvOS
+#if UNITY_VISIONOS
+                         || Application.platform == RuntimePlatform.VisionOS
+#endif
+                         )
                 {
                     CodelessIAPStoreListener.Instance.GetStoreExtensions<IAppleExtensions>()
                         .RestoreTransactions(OnTransactionsRestored);

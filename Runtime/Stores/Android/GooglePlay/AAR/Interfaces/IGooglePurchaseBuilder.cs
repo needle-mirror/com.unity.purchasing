@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing.Interfaces
 {
     interface IGooglePurchaseBuilder
     {
-        IEnumerable<IGooglePurchase> BuildPurchases(IEnumerable<IAndroidJavaObjectWrapper> purchases);
-        IGooglePurchase BuildPurchase(IAndroidJavaObjectWrapper purchase);
+        IEnumerable<IGooglePurchase> BuildPurchases(IEnumerable<AndroidJavaObject> purchases);
+        IGooglePurchase BuildPurchase(AndroidJavaObject purchase);
     }
 }

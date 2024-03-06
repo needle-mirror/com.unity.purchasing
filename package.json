@@ -15,9 +15,9 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Changed\n- Unity Distribution Portal - IAP will retract support for UDP at some point in the near future (Announcement TBD). Until then, all UDP features will continue to function, but the public interfaces, as well as some private functions are now marked `[Obsolete]`. In the next major update these will all be removed and UDP will cease to function with that version of In-App Purchasing and those that follow.\n- Unity Distribution Portal - If the editor is unable to connect to the UDP backend, the developer can now use some UDP catalog features in offline mode. This allows the developer to continue to enter prices, meaning that prices will need to be synced manually. In this case, we strongly suggest you sync your prices properly once connection is re-established. A warning message will display in the Catalog if the editor is unable to connect to the UDP backend.\n- Analytics - The Legacy Analytics built-in module, com.unity.modules.unityanalytics, is now no longer a dependency. You may not remove it from your project if you don't use it. Make sure it is in your project if you do use it.\n- Project Settings - In the Services Project Settings page of the Editor, we have changed the endpoint from which the Google Play Key is obtained. Also, instead of setting the key directly in the editor, there is now a dashboard link to set it directly on the backend to avoid future errors.\n\n### Fixed\n- Google Play - Some versions of the Unity Editor compiler were stripping `GooglePurchaseUpdatedListener.onPurchasesUpdated`, which was assigned as a callback to the Google Billing module, causing a lack of purchase failure callbacks, and logging `\"No such proxy method:\"`. Also fixed this for `BillingClientStateListener.onBillingServiceDisconnected`, `BillingClientStateListener.onBillingSetupFinished` and `SkuDetailsResponseListener.onSkuDetailsResponse`."
+    "changelog": "### Added\n- GooglePlay - `IGooglePlayConfiguration.SetMaxConnectionAttempts(int maxConnectionAttempts)` has been added to specify the max connection attempts to the Google Play Store.\n- Apple - Added privacy manifest to comply with Apple's new privacy requirements. More details on how the Unity Engine supports this can be found [here](https://forum.unity.com/threads/apple-privacy-manifest-updates-for-unity-engine.1529026/).\n- Added `ConfigurationBuilder.logUnavailableProducts` to specify if unavailable products should be logged.\n\n### Changed\n- GooglePlay - The default max connection attempt to the Google Play Store has been increased from 1 to 3. See `IGooglePlayConfiguration.SetMaxConnectionAttempts` to configure this to a different value.\n- Apple - The log when retrieving products (SKProductsResponse) now also contains the invalid products count.\n- Improved `IStoreListener.OnInitializeFailed` for `InitializationFailureReason.NoProductsAvailable` by adding a message to clarify whether the store returned products or not.\n\n### Fixed\n- GooglePlay - Fixed AndroidJavaObject not being disposed causing a global reference table overflow in an edge case.\n- GooglePlay - Fixed bug causing BillingClient duplication resulting in ANR.\n- Apple - Fixed isFamilyShareable on tvOS to be only available on supported versions (14.0 and above).\n- Apple - Error codes when a purchase fails now always returns the code from Apple instead of defaulting to `SKErrorUnknown`.\n- Fixed Analytics' transactionServer being null."
   },
-  "version": "4.10.0",
+  "version": "4.11.0",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.10.0"
+    "com.unity.purchasing.tests": "4.11.0"
   },
   "upmCi": {
-    "footprint": "313e6114563bae2e5578a67d5c5591869ae28a71"
+    "footprint": "72d426a29282f0ac1ae5c00e4a52102f61fe97f4"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.10/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.11/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "c1569b96eee83bd027cadf45a97ec73f6edf6661"
+    "revision": "d048512094268963253b336dd8eba44548759d38"
   },
   "samples": [
     {

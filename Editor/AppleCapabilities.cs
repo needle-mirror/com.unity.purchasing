@@ -1,5 +1,6 @@
-#if UNITY_TVOS || UNITY_IOS
+#if UNITY_TVOS || UNITY_IOS || UNITY_VISIONOS
 using System;
+using System.IO;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.iOS.Xcode;
@@ -14,7 +15,11 @@ namespace UnityEditor.Purchasing
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            if (report.summary.platform == BuildTarget.tvOS || report.summary.platform == BuildTarget.iOS)
+            if (report.summary.platform == BuildTarget.tvOS || report.summary.platform == BuildTarget.iOS
+#if UNITY_VISIONOS
+                || report.summary.platform == BuildTarget.VisionOS
+#endif
+                )
             {
                 OnPostprocessBuild(report.summary.platform, report.summary.outputPath);
             }
@@ -27,7 +32,11 @@ namespace UnityEditor.Purchasing
 
         static void OnPostprocessBuildForApple(string path)
         {
+#if UNITY_IOS || UNITY_TVOS
             var projPath = PBXProject.GetPBXProjectPath(path);
+#elif UNITY_VISIONOS
+            var projPath = Path.Combine(path, "Unity-VisionOS.xcodeproj/project.pbxproj");
+#endif
             var proj = new PBXProject();
             proj.ReadFromFile(projPath);
 

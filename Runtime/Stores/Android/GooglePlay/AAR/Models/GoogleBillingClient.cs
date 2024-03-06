@@ -14,50 +14,59 @@ namespace UnityEngine.Purchasing.Models
     class GoogleBillingClient : IGoogleBillingClient
     {
         const string k_AndroidSkuDetailsParamClassName = "com.android.billingclient.api.SkuDetailsParams";
-
+        static AndroidJavaClass s_SkuDetailsParamsClass;
         static AndroidJavaClass GetSkuDetailsParamClass()
         {
-            return new AndroidJavaClass(k_AndroidSkuDetailsParamClassName);
+            s_SkuDetailsParamsClass ??= new AndroidJavaClass(k_AndroidSkuDetailsParamClassName);
+            return s_SkuDetailsParamsClass;
         }
 
         const string k_AndroidBillingFlowParamClassName = "com.android.billingclient.api.BillingFlowParams";
-
+        static AndroidJavaClass s_BillingFlowParamsClass;
         static AndroidJavaClass GetBillingFlowParamClass()
         {
-            return new AndroidJavaClass(k_AndroidBillingFlowParamClassName);
+            s_BillingFlowParamsClass ??= new AndroidJavaClass(k_AndroidBillingFlowParamClassName);
+            return s_BillingFlowParamsClass;
         }
 
         const string k_AndroidSubscriptionUpdateParamClassName = "com.android.billingclient.api.BillingFlowParams$SubscriptionUpdateParams";
-
+        static AndroidJavaClass s_SubscriptionUpdateParamsClass;
         static AndroidJavaClass GetSubscriptionUpdateParamClass()
         {
-            return new AndroidJavaClass(k_AndroidSubscriptionUpdateParamClassName);
+            s_SubscriptionUpdateParamsClass ??= new AndroidJavaClass(k_AndroidSubscriptionUpdateParamClassName);
+            return s_SubscriptionUpdateParamsClass;
         }
 
         const string k_AndroidPriceChangeFlowParamClassName = "com.android.billingclient.api.PriceChangeFlowParams";
-
+        static AndroidJavaClass s_PriceChangeFlowParamsClass;
         static AndroidJavaClass GetPriceChangeFlowParamClass()
         {
-            return new AndroidJavaClass(k_AndroidPriceChangeFlowParamClassName);
+            s_PriceChangeFlowParamsClass ??= new AndroidJavaClass(k_AndroidPriceChangeFlowParamClassName);
+            return s_PriceChangeFlowParamsClass;
         }
 
         const string k_AndroidConsumeParamsClassName = "com.android.billingclient.api.ConsumeParams";
+        static AndroidJavaClass s_ConsumeParamsClass;
         static AndroidJavaClass GetConsumeParamsClass()
         {
-            return new AndroidJavaClass(k_AndroidConsumeParamsClassName);
+            s_ConsumeParamsClass ??= new AndroidJavaClass(k_AndroidConsumeParamsClassName);
+            return s_ConsumeParamsClass;
         }
 
         const string k_AndroidAcknowledgePurchaseParamsClassName = "com.android.billingclient.api.AcknowledgePurchaseParams";
+        static AndroidJavaClass s_AcknowledgePurchaseParamsClass;
         static AndroidJavaClass GetAcknowledgePurchaseParamsClass()
         {
-            return new AndroidJavaClass(k_AndroidAcknowledgePurchaseParamsClassName);
+            s_AcknowledgePurchaseParamsClass ??= new AndroidJavaClass(k_AndroidAcknowledgePurchaseParamsClassName);
+            return s_AcknowledgePurchaseParamsClass;
         }
 
         const string k_AndroidBillingClientClassName = "com.android.billingclient.api.BillingClient";
-
+        static AndroidJavaClass s_BillingClientClass;
         static AndroidJavaClass GetBillingClientClass()
         {
-            return new AndroidJavaClass(k_AndroidBillingClientClassName);
+            s_BillingClientClass ??= new AndroidJavaClass(k_AndroidBillingClientClassName);
+            return s_BillingClientClass;
         }
 
         readonly AndroidJavaObject m_BillingClient;
@@ -71,9 +80,9 @@ namespace UnityEngine.Purchasing.Models
         {
             m_Util = util;
             m_TelemetryDiagnostics = telemetryDiagnostics;
-            var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>("newBuilder", UnityActivity.GetCurrentActivity());
-            builder = builder.Call<AndroidJavaObject>("setListener", googlePurchaseUpdatedListener);
-            builder = builder.Call<AndroidJavaObject>("enablePendingPurchases");
+            using var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>("newBuilder", UnityActivity.GetCurrentActivity());
+            builder.Call<AndroidJavaObject>("setListener", googlePurchaseUpdatedListener).Dispose();
+            builder.Call<AndroidJavaObject>("enablePendingPurchases").Dispose();
             m_BillingClient = builder.Call<AndroidJavaObject>("build");
         }
 
@@ -107,7 +116,7 @@ namespace UnityEngine.Purchasing.Models
             return (GoogleBillingConnectionState)m_BillingClient.Call<int>("getConnectionState");
         }
 
-        public void QueryPurchasesAsync(string skuType, Action<IGoogleBillingResult, IEnumerable<IAndroidJavaObjectWrapper>> onQueryPurchasesResponse)
+        public void QueryPurchasesAsync(string skuType, Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse)
         {
             var listener = new GooglePurchasesResponseListener(onQueryPurchasesResponse);
             m_BillingClient.Call("queryPurchasesAsync", skuType, listener);
@@ -116,10 +125,12 @@ namespace UnityEngine.Purchasing.Models
         public void QuerySkuDetailsAsync(List<string> skus, string type,
             Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction)
         {
-            var skuDetailsParamsBuilder = GetSkuDetailsParamClass().CallStatic<AndroidJavaObject>("newBuilder");
-            skuDetailsParamsBuilder = skuDetailsParamsBuilder.Call<AndroidJavaObject>("setSkusList", skus.ToJava());
-            skuDetailsParamsBuilder = skuDetailsParamsBuilder.Call<AndroidJavaObject>("setType", type);
-            var skuDetailsParams = skuDetailsParamsBuilder.Call<AndroidJavaObject>("build");
+            using var skusJavaList = skus.ToJava();
+            using var skuDetailsParamsBuilder = GetSkuDetailsParamClass().CallStatic<AndroidJavaObject>("newBuilder");
+            skuDetailsParamsBuilder.Call<AndroidJavaObject>("setSkusList", skusJavaList).Dispose();
+            skuDetailsParamsBuilder.Call<AndroidJavaObject>("setType", type).Dispose();
+            using var skuDetailsParams = skuDetailsParamsBuilder.Call<AndroidJavaObject>("build");
+
             var listener = new SkuDetailsResponseListener(onSkuDetailsResponseAction, m_Util, m_TelemetryDiagnostics);
             m_BillingClient.Call("querySkuDetailsAsync", skuDetailsParams, listener);
         }
@@ -181,32 +192,33 @@ namespace UnityEngine.Purchasing.Models
 
         public void ConsumeAsync(string purchaseToken, Action<IGoogleBillingResult> onConsume)
         {
-            var consumeParams = GetConsumeParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
-            consumeParams = consumeParams.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken);
-            consumeParams = consumeParams.Call<AndroidJavaObject>("build");
+            using var consumeParamsBuilder = GetConsumeParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
+            consumeParamsBuilder.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken).Dispose();
+            using var consumeParams = consumeParamsBuilder.Call<AndroidJavaObject>("build");
 
             m_BillingClient.Call("consumeAsync", consumeParams, new GoogleConsumeResponseListener(onConsume));
         }
 
         public void AcknowledgePurchase(string purchaseToken, Action<IGoogleBillingResult> onAcknowledge)
         {
-            var acknowledgePurchaseParams = GetAcknowledgePurchaseParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
-            acknowledgePurchaseParams = acknowledgePurchaseParams.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken);
-            acknowledgePurchaseParams = acknowledgePurchaseParams.Call<AndroidJavaObject>("build");
+            using var acknowledgePurchaseParamsBuilder = GetAcknowledgePurchaseParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
+            acknowledgePurchaseParamsBuilder.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken).Dispose();
+            using var acknowledgePurchaseParams = acknowledgePurchaseParamsBuilder.Call<AndroidJavaObject>("build");
 
             m_BillingClient.Call("acknowledgePurchase", acknowledgePurchaseParams, new GoogleAcknowledgePurchaseListener(onAcknowledge));
         }
 
         public void LaunchPriceChangeConfirmationFlow(AndroidJavaObject skuDetails, GooglePriceChangeConfirmationListener listener)
         {
-            m_BillingClient.Call("launchPriceChangeConfirmationFlow", UnityActivity.GetCurrentActivity(), MakePriceChangeFlowParams(skuDetails), listener);
+            using var priceChangeFlowParams = MakePriceChangeFlowParams(skuDetails);
+            m_BillingClient.Call("launchPriceChangeConfirmationFlow", UnityActivity.GetCurrentActivity(), priceChangeFlowParams, listener);
         }
 
         AndroidJavaObject MakePriceChangeFlowParams(AndroidJavaObject skuDetails)
         {
-            var priceChangeFlowParams = GetPriceChangeFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
-            priceChangeFlowParams = priceChangeFlowParams.Call<AndroidJavaObject>("setSkuDetails", skuDetails);
-            priceChangeFlowParams = priceChangeFlowParams.Call<AndroidJavaObject>("build");
+            var priceChangeFlowParamsBuilder = GetPriceChangeFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
+            priceChangeFlowParamsBuilder.Call<AndroidJavaObject>("setSkuDetails", skuDetails).Dispose();
+            var priceChangeFlowParams = priceChangeFlowParamsBuilder.Call<AndroidJavaObject>("build");
             return priceChangeFlowParams;
         }
     }

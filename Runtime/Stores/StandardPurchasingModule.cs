@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.10.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.11.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -214,6 +214,9 @@ namespace UnityEngine.Purchasing
                     return new StoreInstance(MacAppStore.Name, InstantiateApple());
                 case RuntimePlatform.IPhonePlayer:
                 case RuntimePlatform.tvOS:
+#if UNITY_VISIONOS
+                case RuntimePlatform.VisionOS:
+#endif
                     appStore = AppStore.AppleAppStore;
                     return new StoreInstance(AppleAppStore.Name, InstantiateApple());
                 case RuntimePlatform.Android:
@@ -321,6 +324,7 @@ namespace UnityEngine.Purchasing
             var googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener, util, telemetryDiagnostics);
             var skuDetailsConverter = new SkuDetailsConverter();
             var retryPolicy = new ExponentialRetryPolicy();
+            var googleRetryPolicy = new GoogleConnectionRetryPolicy();
             var googleQuerySkuDetailsService = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService, skuDetailsConverter, retryPolicy, googleProductCallback, util, telemetryDiagnostics);
             var purchaseService = new GooglePurchaseService(googleBillingClient, googlePurchaseCallback, googleQuerySkuDetailsService);
             var queryPurchasesService = new GoogleQueryPurchasesService(googleBillingClient, googlePurchaseBuilder);
@@ -342,7 +346,9 @@ namespace UnityEngine.Purchasing
                 googleLastKnownProductService,
                 telemetryDiagnostics,
                 telemetryMetrics,
-                logger
+                logger,
+                googleRetryPolicy,
+                util
             );
 
             googlePlayStoreService.InitConnectionWithGooglePlay();

@@ -17,6 +17,7 @@ namespace UnityEngine.Purchasing
         private readonly ILogger m_Logger;
         private readonly TransactionLog m_TransactionLog;
         private readonly string m_StoreName;
+        readonly bool m_logUnavailableProducts;
         private readonly IUnityServicesInitializationChecker m_UnityServicesInitializationChecker;
         private Action? m_AdditionalProductsCallback;
         private Action<InitializationFailureReason>? m_AdditionalProductsFailCallback;
@@ -29,13 +30,14 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool useTransactionLog { get; set; }
 
-        internal PurchasingManager(TransactionLog tDb, ILogger logger, IStore store, string storeName, IUnityServicesInitializationChecker unityServicesInitializationChecker)
+        internal PurchasingManager(TransactionLog tDb, ILogger logger, IStore store, string storeName, IUnityServicesInitializationChecker unityServicesInitializationChecker, bool logUnavailableProducts)
         {
             m_TransactionLog = tDb;
             m_Store = store;
             m_Logger = logger;
             m_StoreName = storeName;
             useTransactionLog = true;
+            m_logUnavailableProducts = logUnavailableProducts;
             m_UnityServicesInitializationChecker = unityServicesInitializationChecker;
         }
 
@@ -250,7 +252,7 @@ namespace UnityEngine.Purchasing
             }
 
             // Fire our initialisation events if this is a first poll.
-            CheckForInitialization();
+            CheckForInitialization(products.Count);
 
             ProcessPurchaseOnStart();
         }
@@ -321,21 +323,22 @@ namespace UnityEngine.Purchasing
 
         private bool initialized;
 
-        private void CheckForInitialization()
+        private void CheckForInitialization(int productCount)
         {
             if (!initialized)
             {
                 initialized = true;
-
-                var hasAvailableProductsToPurchase = HasAvailableProductsToPurchase();
-
-                if (hasAvailableProductsToPurchase)
+                if (productCount > 0 && HasAvailableProductsToPurchase())
                 {
                     m_Listener?.OnInitialized(this);
                 }
                 else
                 {
-                    m_Listener?.OnInitializeFailed(InitializationFailureReason.NoProductsAvailable);
+                    var message = productCount == 0 ?
+                        "No product returned from the store." :
+                        "Products returned from the store don't match.";
+                    m_Listener?.OnInitializeFailed(InitializationFailureReason.NoProductsAvailable,
+                        message);
                 }
             }
             else
@@ -344,7 +347,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        bool HasAvailableProductsToPurchase(bool shouldLogUnavailableProducts = true)
+        bool HasAvailableProductsToPurchase()
         {
             var available = false;
             foreach (var product in products.set)
@@ -353,7 +356,7 @@ namespace UnityEngine.Purchasing
                 {
                     available = true;
                 }
-                else if (shouldLogUnavailableProducts)
+                else if (m_logUnavailableProducts)
                 {
                     m_Logger.LogFormat(LogType.Warning, "Unavailable product {0}-{1}", product.definition.id, product.definition.storeSpecificId);
                 }

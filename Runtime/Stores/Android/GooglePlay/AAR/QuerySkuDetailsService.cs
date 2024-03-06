@@ -107,7 +107,7 @@ namespace UnityEngine.Purchasing
 
         IEnumerable<AndroidJavaObject> GetCachedSkuDetails(IEnumerable<ProductDefinition> products)
         {
-            var cachedProducts = products.Where(m_GoogleCachedQuerySkuDetailsService.Contains);
+            var cachedProducts = products.Where(m_GoogleCachedQuerySkuDetailsService.Contains).ToList();
             return m_GoogleCachedQuerySkuDetailsService.GetCachedQueriedSkus(cachedProducts);
         }
 

@@ -16,7 +16,7 @@ namespace UnityEngine.Purchasing.Utils
 
         static ProductDescription ToProductDescription(AndroidJavaObject skusDetails)
         {
-            return BuildProductDescription(skusDetails.Wrap());
+            return BuildProductDescription(skusDetails);
         }
 
         /// <summary>
@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing.Utils
         /// </summary>
         /// <param name="skuDetails">`AndroidJavaObject` of SkuDetails</param>
         /// <returns>`ProductDescription` representation of a SkuDetails</returns>
-        internal static ProductDescription BuildProductDescription(IAndroidJavaObjectWrapper skuDetails)
+        internal static ProductDescription BuildProductDescription(AndroidJavaObject skuDetails)
         {
             var sku = skuDetails.Call<string>("getSku");
             var price = skuDetails.Call<string>("getPrice");

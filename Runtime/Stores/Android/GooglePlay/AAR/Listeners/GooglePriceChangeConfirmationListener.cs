@@ -24,6 +24,8 @@ namespace UnityEngine.Purchasing
         {
             IGoogleBillingResult billingResult = new GoogleBillingResult(javaBillingResult);
             m_OnPriceChangeConfirmationResult(billingResult);
+
+            javaBillingResult.Dispose();
         }
     }
 }

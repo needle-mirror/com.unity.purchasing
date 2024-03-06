@@ -42,6 +42,14 @@ namespace UnityEngine.Purchasing
         void SetDeferredProrationUpgradeDowngradeSubscriptionListener(Action<Product> action);
 
         /// <summary>
+        /// Set the maximum connection attempt to the Google Play Billing service.
+        ///
+        /// Default is <c>3</c>.
+        /// </summary>
+        /// <param name="maxConnectionAttempts">The maximum connection attempts</param>
+        void SetMaxConnectionAttempts(int maxConnectionAttempts);
+
+        /// <summary>
         /// Optional obfuscation string to detect irregular activities when making a purchase.
         /// For more information please visit <a href="https://developer.android.com/google/play/billing/security">https://developer.android.com/google/play/billing/security</a>
         /// </summary>

@@ -34,23 +34,32 @@ namespace UnityEngine.Purchasing
         [Preserve]
         public void onSkuDetailsResponse(AndroidJavaObject billingResult, AndroidJavaObject? skuDetails)
         {
-            if (skuDetails == null)
+            m_Util.RunOnMainThread(() =>
             {
-                return;
-            }
+                List<AndroidJavaObject>? skuDetailsList = null;
 
-            try
-            {
-                m_Util.RunOnMainThread(() =>
+                try
                 {
-                    var skuDetailsList = skuDetails.Enumerate<AndroidJavaObject>().ToList();
+                    skuDetailsList = skuDetails.Enumerate<AndroidJavaObject>().ToList();
                     m_OnSkuDetailsResponse(new GoogleBillingResult(billingResult), skuDetailsList);
-                });
-            }
-            catch (Exception ex)
-            {
-                m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.SkuDetailsResponseError, ex);
-            }
+                }
+                catch (Exception ex)
+                {
+                    m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.SkuDetailsResponseError, ex);
+
+                }
+
+                if (skuDetailsList != null)
+                {
+                    foreach (var obj in skuDetailsList)
+                    {
+                        obj?.Dispose();
+                    }
+                }
+
+                billingResult.Dispose();
+                skuDetails?.Dispose();
+            });
         }
     }
 }

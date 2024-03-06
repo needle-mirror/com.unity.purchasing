@@ -7,7 +7,6 @@ namespace UnityEngine.Purchasing.Interfaces
 {
     internal interface IGooglePurchase
     {
-        IAndroidJavaObjectWrapper javaPurchase { get; }
         int purchaseState { get; }
         List<string> skus { get; }
         string orderId { get; }

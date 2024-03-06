@@ -17,10 +17,10 @@ namespace UnityEngine.Purchasing.Utils
             m_Logger = logger;
         }
 
-        public IEnumerable<IGooglePurchase> BuildPurchases(IEnumerable<IAndroidJavaObjectWrapper> purchases)
+        public IEnumerable<IGooglePurchase> BuildPurchases(IEnumerable<AndroidJavaObject> purchases)
         {
             return purchases.Select(BuildPurchase)
-                .IgnoreExceptions<IGooglePurchase, ArgumentException>(LogWarningForException);
+                .IgnoreExceptions<IGooglePurchase, ArgumentException>(LogWarningForException).ToList();
         }
 
         void LogWarningForException(Exception exception)
@@ -28,10 +28,11 @@ namespace UnityEngine.Purchasing.Utils
             m_Logger.LogIAPWarning(exception.Message);
         }
 
-        public IGooglePurchase BuildPurchase(IAndroidJavaObjectWrapper purchase)
+        public IGooglePurchase BuildPurchase(AndroidJavaObject purchase)
         {
-            var cachedSkuDetails = m_CachedQuerySkuDetailsService.GetCachedQueriedSkus().Wrap();
-            var purchaseSkus = purchase.Call<AndroidJavaObject>("getSkus").Enumerate<string>();
+            var cachedSkuDetails = m_CachedQuerySkuDetailsService.GetCachedQueriedSkus();
+            using var getSkusObj = purchase.Call<AndroidJavaObject>("getSkus");
+            var purchaseSkus = getSkusObj.Enumerate<string>();
 
             try
             {
@@ -46,7 +47,7 @@ namespace UnityEngine.Purchasing.Utils
             }
         }
 
-        static IEnumerable<IAndroidJavaObjectWrapper> TryFindAllSkuDetails(IEnumerable<string> skus, IEnumerable<IAndroidJavaObjectWrapper> skuDetails)
+        static IEnumerable<AndroidJavaObject> TryFindAllSkuDetails(IEnumerable<string> skus, IEnumerable<AndroidJavaObject> skuDetails)
         {
             return skus.Select(sku => skuDetails.First(
                 skuDetail => sku == skuDetail.Call<string>("getSku")));

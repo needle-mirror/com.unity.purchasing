@@ -7,6 +7,14 @@ namespace UnityEngine.Purchasing
     {
         readonly Dictionary<string, AndroidJavaObject> m_CachedQueriedSkus = new Dictionary<string, AndroidJavaObject>();
 
+        ~GoogleCachedQuerySkuDetailsService()
+        {
+            foreach (var cachedQueriedSku in m_CachedQueriedSkus)
+            {
+                cachedQueriedSku.Value?.Dispose();
+            }
+        }
+
         public IEnumerable<AndroidJavaObject> GetCachedQueriedSkus()
         {
             return m_CachedQueriedSkus.Values;
@@ -24,7 +32,7 @@ namespace UnityEngine.Purchasing
 
         public IEnumerable<AndroidJavaObject> GetCachedQueriedSkus(IEnumerable<ProductDefinition> products)
         {
-            return GetCachedQueriedSkus(products.Select(product => product.storeSpecificId));
+            return GetCachedQueriedSkus(products.Select(product => product.storeSpecificId).ToList());
         }
 
         bool Contains(string sku)
@@ -42,7 +50,11 @@ namespace UnityEngine.Purchasing
             foreach (var queriedSkuDetails in queriedSkus)
             {
                 var queriedSku = queriedSkuDetails.Call<string>("getSku");
+#if UNITY_2021_1_OR_NEWER
+                m_CachedQueriedSkus[queriedSku] = queriedSkuDetails.CloneReference();
+#else
                 m_CachedQueriedSkus[queriedSku] = queriedSkuDetails;
+#endif
             }
         }
     }

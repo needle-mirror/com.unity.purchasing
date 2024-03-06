@@ -13,14 +13,26 @@ namespace UnityEngine.Purchasing.Models
             return new AndroidJavaClass(k_AndroidPurchaseStateClassName);
         }
 
+        static int? s_Purchased;
         internal static int Purchased()
         {
-            return GetPurchaseStateJavaObject().GetStatic<int>("PURCHASED");
+            if (s_Purchased == null)
+            {
+                using var obj = GetPurchaseStateJavaObject();
+                s_Purchased = obj.GetStatic<int>("PURCHASED");
+            }
+            return s_Purchased.Value;
         }
 
+        static int? s_Pending;
         internal static int Pending()
         {
-            return GetPurchaseStateJavaObject().GetStatic<int>("PENDING");
+            if (s_Pending == null)
+            {
+                using var obj = GetPurchaseStateJavaObject();
+                s_Pending = obj.GetStatic<int>("PENDING");
+            }
+            return s_Pending.Value;
         }
     }
 }

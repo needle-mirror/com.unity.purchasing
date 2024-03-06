@@ -13,6 +13,7 @@ namespace UnityEngine.Purchasing.Interfaces
         void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode);
         void FinishTransaction(ProductDefinition product, string purchaseToken, Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished);
         void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed);
+        void SetMaxConnectionAttempts(int maxConnectionAttempts);
         void SetObfuscatedAccountId(string obfuscatedAccountId);
         void SetObfuscatedProfileId(string obfuscatedProfileId);
         void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangeAction);

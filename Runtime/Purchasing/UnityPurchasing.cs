@@ -99,7 +99,7 @@ namespace UnityEngine.Purchasing
 
             var transactionLog = new TransactionLog(logger, persistentDatapath);
             var manager = new PurchasingManager(transactionLog, logger, builder.factory.service,
-                builder.factory.storeName, unityServicesInitializationChecker);
+                builder.factory.storeName, unityServicesInitializationChecker, builder.logUnavailableProducts);
 
             var analyticsClient = new AnalyticsClient(ugsAnalytics, legacyAnalytics);
 

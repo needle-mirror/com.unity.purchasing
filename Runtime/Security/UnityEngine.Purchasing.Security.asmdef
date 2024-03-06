@@ -1,16 +1,28 @@
 {
     "name": "UnityEngine.Purchasing.Security",
+    "rootNamespace": "",
     "references": [
         "Purchasing.Common",
         "UnityEngine.Purchasing.SecurityCore"
     ],
-    "includePlatforms": [
-        "Android",
-        "iOS",
-        "macOSStandalone",
-        "tvOS"
+    "includePlatforms": [],
+    "excludePlatforms": [
+        "Editor",
+        "GameCoreScarlett",
+        "GameCoreXboxOne",
+        "LinuxStandalone64",
+        "CloudRendering",
+        "Lumin",
+        "PS4",
+        "PS5",
+        "Stadia",
+        "Switch",
+        "WSA",
+        "WebGL",
+        "WindowsStandalone32",
+        "WindowsStandalone64",
+        "XboxOne"
     ],
-    "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],

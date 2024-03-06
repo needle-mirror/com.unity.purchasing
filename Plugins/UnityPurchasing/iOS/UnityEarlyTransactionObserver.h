@@ -1,4 +1,4 @@
-#pragma once
+#if !MAC_APPSTORE
 #import <StoreKit/StoreKit.h>
 #import "LifeCycleListener.h"
 
@@ -23,3 +23,4 @@
 - (void)initiateQueuedPayments;
 
 @end
+#endif

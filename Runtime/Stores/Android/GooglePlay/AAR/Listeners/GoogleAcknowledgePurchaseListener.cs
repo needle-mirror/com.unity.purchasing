@@ -23,6 +23,8 @@ namespace UnityEngine.Purchasing
         void onAcknowledgePurchaseResponse(AndroidJavaObject billingResult)
         {
             m_OnAcknowledgePurchaseResponse(new GoogleBillingResult(billingResult));
+
+            billingResult.Dispose();
         }
     }
 }

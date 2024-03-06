@@ -3,9 +3,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Stores.Util;
 using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
@@ -26,10 +28,12 @@ namespace UnityEngine.Purchasing
             IGoogleLastKnownProductService lastKnownProductService,
             ITelemetryDiagnostics telemetryDiagnostics,
             ITelemetryMetricsService telemetryMetricsService,
-            ILogger logger)
+            ILogger logger,
+            IRetryPolicy retryPolicy,
+            IUtil util)
             : base(billingClient, querySkuDetailsService, purchaseService, finishTransactionService,
                 queryPurchasesService, billingClientStateListener, priceChangeService, lastKnownProductService,
-                telemetryDiagnostics, logger)
+                telemetryDiagnostics, logger, retryPolicy, util)
         {
             m_TelemetryDiagnostics = telemetryDiagnostics;
             m_TelemetryMetricsService = telemetryMetricsService;

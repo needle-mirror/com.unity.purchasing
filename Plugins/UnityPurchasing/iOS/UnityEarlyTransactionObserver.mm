@@ -1,3 +1,4 @@
+#if !MAC_APPSTORE
 #import "UnityEarlyTransactionObserver.h"
 #import "UnityPurchasing.h"
 
@@ -103,3 +104,4 @@ static UnityEarlyTransactionObserver *s_Observer = nil;
 }
 
 @end
+#endif

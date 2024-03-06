@@ -24,6 +24,8 @@ namespace UnityEngine.Purchasing
         void onConsumeResponse(AndroidJavaObject billingResult, string purchaseToken)
         {
             m_OnConsumeResponse(new GoogleBillingResult(billingResult));
+
+            billingResult.Dispose();
         }
     }
 }

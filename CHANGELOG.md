@@ -1,10 +1,28 @@
 # Changelog
 
+## [4.11.0] - 2024-03-06
+### Added
+- GooglePlay - `IGooglePlayConfiguration.SetMaxConnectionAttempts(int maxConnectionAttempts)` has been added to specify the max connection attempts to the Google Play Store.
+- Apple - Added privacy manifest to comply with Apple's new privacy requirements. More details on how the Unity Engine supports this can be found [here](https://forum.unity.com/threads/apple-privacy-manifest-updates-for-unity-engine.1529026/).
+- Added `ConfigurationBuilder.logUnavailableProducts` to specify if unavailable products should be logged.
+
+### Changed
+- GooglePlay - The default max connection attempt to the Google Play Store has been increased from 1 to 3. See `IGooglePlayConfiguration.SetMaxConnectionAttempts` to configure this to a different value.
+- Apple - The log when retrieving products (SKProductsResponse) now also contains the invalid products count.
+- Improved `IStoreListener.OnInitializeFailed` for `InitializationFailureReason.NoProductsAvailable` by adding a message to clarify whether the store returned products or not.
+
+### Fixed
+- GooglePlay - Fixed AndroidJavaObject not being disposed causing a global reference table overflow in an edge case.
+- GooglePlay - Fixed bug causing BillingClient duplication resulting in ANR.
+- Apple - Fixed isFamilyShareable on tvOS to be only available on supported versions (14.0 and above).
+- Apple - Error codes when a purchase fails now always returns the code from Apple instead of defaulting to `SKErrorUnknown`.
+- Fixed Analytics' transactionServer being null.
+
 ## [4.10.0] - 2023-09-07
 ### Changed
 - Unity Distribution Portal - IAP will retract support for UDP at some point in the near future (Announcement TBD). Until then, all UDP features will continue to function, but the public interfaces, as well as some private functions are now marked `[Obsolete]`. In the next major update these will all be removed and UDP will cease to function with that version of In-App Purchasing and those that follow.
 - Unity Distribution Portal - If the editor is unable to connect to the UDP backend, the developer can now use some UDP catalog features in offline mode. This allows the developer to continue to enter prices, meaning that prices will need to be synced manually. In this case, we strongly suggest you sync your prices properly once connection is re-established. A warning message will display in the Catalog if the editor is unable to connect to the UDP backend.
-- Analytics - The Legacy Analytics built-in module, com.unity.modules.unityanalytics, is now no longer a dependency. You may not remove it from your project if you don't use it. Make sure it is in your project if you do use it.
+- Analytics - The Legacy Analytics built-in module, com.unity.modules.unityanalytics, is now no longer a dependency. You may now remove it from your project if you don't use it. Make sure it is in your project if you do use it.
 - Project Settings - In the Services Project Settings page of the Editor, we have changed the endpoint from which the Google Play Key is obtained. Also, instead of setting the key directly in the editor, there is now a dashboard link to set it directly on the backend to avoid future errors.
 
 ### Fixed

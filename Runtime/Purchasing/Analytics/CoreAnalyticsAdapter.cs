@@ -45,7 +45,7 @@ namespace UnityEngine.Purchasing
                 { "transactionName", GetTransactionName(product) },
                 { "transactionReceipt", analyticsReceipt.transactionReceipt },
                 { "transactionReceiptSignature", analyticsReceipt.transactionReceiptSignature },
-                { "transactionServer", null },
+                { "transactionServer", analyticsReceipt.transactionServer },
                 { "transactionType", TransactionType.PURCHASE },
                 { "productID", product.definition.storeSpecificId },
                 { "productsSpent", GenerateRealCurrencySpentOnPurchase(product) },

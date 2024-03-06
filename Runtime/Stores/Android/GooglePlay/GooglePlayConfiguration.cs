@@ -3,7 +3,6 @@
 using System;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
-using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing
 {
@@ -133,6 +132,11 @@ namespace UnityEngine.Purchasing
         public void SetFetchPurchasesExcludeDeferred(bool exclude)
         {
             m_FetchPurchasesExcludeDeferred = exclude;
+        }
+
+        public void SetMaxConnectionAttempts(int maxConnectionAttempts)
+        {
+            m_GooglePlayStoreService.SetMaxConnectionAttempts(maxConnectionAttempts);
         }
     }
 }

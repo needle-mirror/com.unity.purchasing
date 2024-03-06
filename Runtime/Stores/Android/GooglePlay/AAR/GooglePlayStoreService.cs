@@ -2,20 +2,20 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
+using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Stores.Util;
 using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreService : IGooglePlayStoreService
     {
-        const int k_MaxConnectionAttempts = 1;
-
         int m_CurrentConnectionAttempts;
+        int m_MaxConnectionAttempts = 3;
         readonly IGoogleBillingClient m_BillingClient;
         readonly IBillingClientStateListener m_BillingClientStateListener;
         readonly IQuerySkuDetailsService m_QuerySkuDetailsService;
@@ -28,6 +28,8 @@ namespace UnityEngine.Purchasing
         readonly IGoogleLastKnownProductService m_GoogleLastKnownProductService;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
         readonly ILogger m_Logger;
+        readonly IRetryPolicy m_RetryPolicy;
+        readonly IUtil m_Util;
 
         internal GooglePlayStoreService(
             IGoogleBillingClient billingClient,
@@ -39,7 +41,9 @@ namespace UnityEngine.Purchasing
             IGooglePriceChangeService priceChangeService,
             IGoogleLastKnownProductService lastKnownProductService,
             ITelemetryDiagnostics telemetryDiagnostics,
-            ILogger logger)
+            ILogger logger,
+            IRetryPolicy retryPolicy,
+            IUtil util)
         {
             m_BillingClient = billingClient;
             m_QuerySkuDetailsService = querySkuDetailsService;
@@ -51,6 +55,8 @@ namespace UnityEngine.Purchasing
             m_BillingClientStateListener = billingClientStateListener;
             m_TelemetryDiagnostics = telemetryDiagnostics;
             m_Logger = logger;
+            m_RetryPolicy = retryPolicy;
+            m_Util = util;
         }
 
         internal void InitConnectionWithGooglePlay()
@@ -71,7 +77,34 @@ namespace UnityEngine.Purchasing
         {
             if (m_BillingClient.GetConnectionState() == GoogleBillingConnectionState.Disconnected)
             {
+                AttemptReconnection();
+            }
+        }
+
+        void AttemptReconnection()
+        {
+            if (!AreConnectionAttemptsExhausted())
+            {
+                m_RetryPolicy.Invoke(retryAction => RetryConnection(retryAction));
+            }
+        }
+
+        bool AreConnectionAttemptsExhausted()
+        {
+            return m_CurrentConnectionAttempts >= m_MaxConnectionAttempts;
+        }
+
+        void RetryConnection(Action ActionToRetry)
+        {
+            m_Util.RunOnMainThread(() => RetryConnectionAttempt(ActionToRetry));
+        }
+
+        void RetryConnectionAttempt(Action ActionToRetry)
+        {
+            if (!AreConnectionAttemptsExhausted() && m_BillingClient.GetConnectionState() == GoogleBillingConnectionState.Disconnected)
+            {
                 StartConnection();
+                ActionToRetry();
             }
         }
 
@@ -160,20 +193,7 @@ namespace UnityEngine.Purchasing
         void OnDisconnected(GoogleBillingResponseCode googleBillingResponseCode)
         {
             DequeueQueryProducts(googleBillingResponseCode);
-            AttemptReconnection(googleBillingResponseCode);
-        }
-
-        void AttemptReconnection(GoogleBillingResponseCode googleBillingResponseCode)
-        {
-            if (!AreConnectionAttemptsExhausted())
-            {
-                StartConnection();
-            }
-        }
-
-        bool AreConnectionAttemptsExhausted()
-        {
-            return m_CurrentConnectionAttempts >= k_MaxConnectionAttempts;
+            AttemptReconnection();
         }
 
         public virtual void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
@@ -254,6 +274,11 @@ namespace UnityEngine.Purchasing
             {
                 m_OnPurchaseSucceededQueue.Enqueue(onQueryPurchaseSucceed);
             }
+        }
+
+        public void SetMaxConnectionAttempts(int maxConnectionAttempts)
+        {
+            m_MaxConnectionAttempts = maxConnectionAttempts;
         }
 
         public void SetObfuscatedAccountId(string obfuscatedAccountId)

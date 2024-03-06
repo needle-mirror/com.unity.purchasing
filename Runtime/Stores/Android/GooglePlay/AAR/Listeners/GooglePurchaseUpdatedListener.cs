@@ -52,9 +52,18 @@ namespace UnityEngine.Purchasing
         [Preserve]
         public void onPurchasesUpdated(AndroidJavaObject billingResult, AndroidJavaObject javaPurchasesList)
         {
+            var purchaseList = javaPurchasesList.Enumerate().ToList();
             IGoogleBillingResult result = new GoogleBillingResult(billingResult);
-            var purchases = m_PurchaseBuilder.BuildPurchases(javaPurchasesList.EnumerateAndWrap()).ToList();
+            var purchases = m_PurchaseBuilder.BuildPurchases(purchaseList).ToList();
             OnPurchasesUpdated(result, purchases);
+
+            foreach (var obj in purchaseList)
+            {
+                obj?.Dispose();
+            }
+
+            billingResult.Dispose();
+            javaPurchasesList?.Dispose();
         }
 
         internal void OnPurchasesUpdated(IGoogleBillingResult result, List<IGooglePurchase> purchases)

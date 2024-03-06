@@ -92,6 +92,12 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Whether or not unavailable products should be logged as warnings
+        /// </summary>
+        /// Default is <c>true</c>.
+        public bool logUnavailableProducts { get; set; } = true;
+
+        /// <summary>
         /// The set of products in the catalog.
         /// </summary>
         public HashSet<ProductDefinition> products { get; } = new HashSet<ProductDefinition>();

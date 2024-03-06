@@ -85,5 +85,15 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="exclude"></param>
         public void SetFetchPurchasesExcludeDeferred(bool exclude) { }
+
+        /// <summary>
+        /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
+        ///
+        /// Set the maximum connection attempt to the Google Play Billing service.
+        ///
+        /// Default is <c>3</c>.
+        /// </summary>
+        /// <param name="maxConnectionAttempts">The maximum connection attempts</param>
+        public void SetMaxConnectionAttempts(int maxConnectionAttempts) { }
     }
 }
