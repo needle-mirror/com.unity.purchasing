@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -13,17 +12,17 @@ namespace UnityEngine.Purchasing
     class GooglePlayStoreExtensions : IGooglePlayStoreExtensions, IGooglePlayStoreExtensionsInternal
     {
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
-        readonly IGooglePlayStoreFinishTransactionService m_GooglePlayStoreFinishTransactionService;
+        readonly IGooglePurchaseStateEnumProvider m_GooglePurchaseStateEnumProvider;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
         readonly ILogger m_Logger;
         IStoreCallback? m_StoreCallback;
         readonly Action<Product>? m_DeferredPurchaseAction;
         readonly Action<Product>? m_DeferredProrationUpgradeDowngradeSubscriptionAction;
 
-        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics)
+        internal GooglePlayStoreExtensions(IGooglePlayStoreService googlePlayStoreService, IGooglePurchaseStateEnumProvider googlePurchaseStateEnumProvider, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
-            m_GooglePlayStoreFinishTransactionService = googlePlayStoreFinishTransactionService;
+            m_GooglePurchaseStateEnumProvider = googlePurchaseStateEnumProvider;
             m_Logger = logger;
             m_TelemetryDiagnostics = telemetryDiagnostics;
         }
@@ -86,14 +85,6 @@ namespace UnityEngine.Purchasing
 
         public void ConfirmSubscriptionPriceChange(string productId, Action<bool> callback)
         {
-            var product = m_StoreCallback.FindProductById(productId);
-            if (product != null)
-            {
-                m_GooglePlayStoreService.ConfirmSubscriptionPriceChange(product.definition, result =>
-                {
-                    callback(result.responseCode == GoogleBillingResponseCode.Ok);
-                });
-            }
         }
 
         public void SetStoreCallback(IStoreCallback storeCallback)
@@ -131,15 +122,32 @@ namespace UnityEngine.Purchasing
 
         public GooglePurchaseState GetPurchaseState(Product product)
         {
-            var unifiedReceipt = MiniJson.JsonDecode(product.receipt) as Dictionary<string, object>;
-            var payloadStr = unifiedReceipt!["Payload"] as string;
+            var purchase = GooglePurchaseFromProduct(product);
+            if (purchase == null || purchase.purchaseState == 0)
+            {
+                throw new InvalidOperationException("Cannot find purchase for product: " + product.definition.id);
+            }
 
-            var payload = MiniJson.JsonDecode(payloadStr) as Dictionary<string, object>;
-            var jsonStr = payload!["json"] as string;
+            return purchase.purchaseState == m_GooglePurchaseStateEnumProvider.Purchased() ? GooglePurchaseState.Purchased : GooglePurchaseState.Deferred;
+        }
 
-            var jsonDic = MiniJson.JsonDecode(jsonStr) as Dictionary<string, object>;
-            var purchaseState = (long)jsonDic!["purchaseState"];
-            return (GooglePurchaseState)purchaseState;
+        public string? GetObfuscatedAccountId(Product product)
+        {
+            var purchase = GooglePurchaseFromProduct(product);
+            return purchase?.obfuscatedAccountId;
+        }
+
+        public string? GetObfuscatedProfileId(Product product)
+        {
+            var purchase = GooglePurchaseFromProduct(product);
+            return purchase?.obfuscatedProfileId;
+        }
+
+        IGooglePurchase? GooglePurchaseFromProduct(Product product)
+        {
+            var skuType = product.definition.type == ProductType.Subscription ? GoogleProductTypeEnum.Sub() : GoogleProductTypeEnum.InApp();
+            var purchase = m_GooglePlayStoreService.GetPurchase(product.transactionID, skuType);
+            return purchase;
         }
     }
 }

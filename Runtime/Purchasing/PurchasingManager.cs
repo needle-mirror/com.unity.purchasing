@@ -63,7 +63,7 @@ namespace UnityEngine.Purchasing
 
             if (!product.availableToPurchase)
             {
-                m_Listener?.OnPurchaseFailed(product, new PurchaseFailureDescription(product.transactionID, PurchaseFailureReason.ProductUnavailable,
+                m_Listener?.OnPurchaseFailed(product, new PurchaseFailureDescription(product.definition.id, PurchaseFailureReason.ProductUnavailable,
                     "No products were found when fetching from the store"));
                 return;
             }

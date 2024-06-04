@@ -51,8 +51,14 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnProductsRetrievedWithPurchaseFetch(List<ProductDescription> retrievedProducts)
+        void OnProductsRetrievedWithPurchaseFetch(List<ProductDescription> retrievedProducts, IGoogleBillingResult billingResult)
         {
+            if (retrievedProducts.Count == 0 && billingResult.responseCode != GoogleBillingResponseCode.Ok)
+            {
+                OnRetrieveProductsFailed(GoogleRetrieveProductsFailureReason.BillingServiceUnavailable, billingResult.responseCode);
+                return;
+            }
+
             m_HasInitiallyRetrievedProducts = true;
 
             m_GoogleFetchPurchases.FetchPurchases(purchaseProducts =>
@@ -62,8 +68,14 @@ namespace UnityEngine.Purchasing
             });
         }
 
-        void OnProductsRetrieved(List<ProductDescription> retrievedProducts)
+        void OnProductsRetrieved(List<ProductDescription> retrievedProducts, IGoogleBillingResult billingResult)
         {
+            if (retrievedProducts.Count == 0 && billingResult.responseCode != GoogleBillingResponseCode.Ok)
+            {
+                OnRetrieveProductsFailed(GoogleRetrieveProductsFailureReason.BillingServiceUnavailable, billingResult.responseCode);
+                return;
+            }
+
             m_HasInitiallyRetrievedProducts = true;
             m_RetrieveProductsFailed = false;
 

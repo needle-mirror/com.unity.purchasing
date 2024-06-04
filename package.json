@@ -15,16 +15,16 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Added\n- GooglePlay - `IGooglePlayConfiguration.SetMaxConnectionAttempts(int maxConnectionAttempts)` has been added to specify the max connection attempts to the Google Play Store.\n- Apple - Added privacy manifest to comply with Apple's new privacy requirements. More details on how the Unity Engine supports this can be found [here](https://forum.unity.com/threads/apple-privacy-manifest-updates-for-unity-engine.1529026/).\n- Added `ConfigurationBuilder.logUnavailableProducts` to specify if unavailable products should be logged.\n\n### Changed\n- GooglePlay - The default max connection attempt to the Google Play Store has been increased from 1 to 3. See `IGooglePlayConfiguration.SetMaxConnectionAttempts` to configure this to a different value.\n- Apple - The log when retrieving products (SKProductsResponse) now also contains the invalid products count.\n- Improved `IStoreListener.OnInitializeFailed` for `InitializationFailureReason.NoProductsAvailable` by adding a message to clarify whether the store returned products or not.\n\n### Fixed\n- GooglePlay - Fixed AndroidJavaObject not being disposed causing a global reference table overflow in an edge case.\n- GooglePlay - Fixed bug causing BillingClient duplication resulting in ANR.\n- Apple - Fixed isFamilyShareable on tvOS to be only available on supported versions (14.0 and above).\n- Apple - Error codes when a purchase fails now always returns the code from Apple instead of defaulting to `SKErrorUnknown`.\n- Fixed Analytics' transactionServer being null."
+    "changelog": "### Added\n- GooglePlay - `IGooglePlayStoreExtensions.GetObfuscatedAccountId(Product product)` has been added to obtain the obfuscated account ID of the purchase set with `IGooglePlayConfiguration.SetObfuscatedAccountId`.\n- GooglePlay - `IGooglePlayStoreExtensions.GetObfuscatedProfileId(Product product)` has been added to obtain the obfuscated profile ID of the purchase set with `IGooglePlayConfiguration.SetObfuscatedProfileId`.\n- Apple - Added visionOS support\n\n### Changed\n- Upgraded `com.unity.services.core` from 1.8.2 to 1.12.5 to include their Apple privacy manifest.\n- GooglePlay - Dependencies are now injected in the gradle files. The Billing aar is no longer included.\n- GooglePlay - Billing Library updated to 6.2.1 (was previously 5.2.1). No new feature support was added. Subscriptions must still have only 1 base plan.\n- GooglePlay - Updated the internal implementation to use `productDetails` instead of `skuDetails` to solve the `setOfferToken` warning issued by Google.\n- GooglePlay - `IGooglePlayStoreExtensions.GetPurchaseState(Product product)` has been updated to use the [getPurchaseState() instead of getOriginalJson()](https://developer.android.com/google/play/billing/integrate#pending). This change will make the purchase state more reliable.\n- GooglePlay - `IGooglePlayStoreExtensions.ConfirmSubscriptionPriceChange` has been marked `[Obsolete]` as it is no longer supported since Google Play Billing Library 6.0.0. For alternatives, see the [price changes guide](https://developer.android.com/google/play/billing/price-changes).\n- GooglePlay - `IStoreListener.OnInitializeFailed` for `InitializationFailureReason.PurchasingUnavailable` will now return the BillingResponseCode when product retrieval is successful, but an error occured and no products were returned.\n\n### Fixed\n- Fixed `OnPurchaseFailed` - It now returns the `productId` (previously the `transactionId`) in the `PurchaseFailureDescription` when the product isn't available for purchase.\n- Fixed a NullReferenceException when retrieving products on Unity Engine 2020.\n\n### Removed\n- GooglePlay - The `iconUrl` and `skuDetailsToken` sub-entry to the `Product.receipt`'s `\"Payload\"`'s `\"skuDetails\"` will now return an empty string since they are no longer supported."
   },
-  "version": "4.11.0",
+  "version": "4.12.0",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.modules.jsonserialize": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
-    "com.unity.services.core": "1.8.2"
+    "com.unity.services.core": "1.12.5"
   },
   "keywords": [
     "purchasing",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.11.0"
+    "com.unity.purchasing.tests": "4.12.0"
   },
   "upmCi": {
-    "footprint": "72d426a29282f0ac1ae5c00e4a52102f61fe97f4"
+    "footprint": "75e81fa5f2b97bee3999379f12345c7712162201"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.11/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.12/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "d048512094268963253b336dd8eba44548759d38"
+    "revision": "8615c80aac558fdbe941fd7401c06c83355507b1"
   },
   "samples": [
     {
@@ -145,11 +145,6 @@
       "displayName": "Google Play Store - 02 Restoring Transactions",
       "description": "This sample showcases how to use the Google Play Store extensions to restore transactions. This allows users to be granted Non-Consumable and Subscription products they already own after reinstalling the application.",
       "path": "Samples~/Google Play Store - 02 RestoringTransactions"
-    },
-    {
-      "displayName": "Google Play Store - 03 Confirming Subscription Price Change",
-      "description": "This sample showcases how to use the Google Play Store extensions to confirm subscription price changes.",
-      "path": "Samples~/Google Play Store - 03 ConfirmingSubscriptionPriceChange"
     },
     {
       "displayName": "Google Play Store - 04 Handling Deferred Purchases",

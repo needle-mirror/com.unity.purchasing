@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing.Models
     /// This is C# representation of the Java Class SkuType
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingClient.SkuType">See more</a>
     /// </summary>
-    static class GoogleSkuTypeEnum
+    static class GoogleProductTypeEnum
     {
         internal static string InApp()
         {

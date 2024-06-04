@@ -59,8 +59,9 @@ namespace UnityEngine.Purchasing
                 return new CoreAnalyticsAdapter(AnalyticsService.Instance, logger);
 #endif
             }
-            catch (ServicesInitializationException)
+            catch (ServicesInitializationException ex)
             {
+                Debug.Log("Unity Purchasing: Failed to initialize Unity Analytics. " + ex.Message + " Disabling analytics.");
                 return new EmptyAnalyticsAdapter();
             }
 #endif

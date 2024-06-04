@@ -63,3 +63,5 @@
             * [Registering your store](UnityIAPModuleRegistration.md)
             * [Store Configuration](UnityIAPModuleConfiguration.md)
             * [Store Extensions](UnityIAPModuleExtension.md)
+* Privacy and consent
+    * [Apple privacy manifest](apple-privacy-manifest.md)

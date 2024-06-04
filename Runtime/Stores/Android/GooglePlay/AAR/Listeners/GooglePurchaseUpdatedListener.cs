@@ -20,20 +20,20 @@ namespace UnityEngine.Purchasing
         readonly IGoogleLastKnownProductService m_LastKnownProductService;
         readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
         readonly IGooglePurchaseBuilder m_PurchaseBuilder;
-        readonly IGoogleCachedQuerySkuDetailsService m_GoogleCachedQuerySkuDetailsService;
+        readonly IGoogleCachedQueryProductDetailsService m_GoogleCachedQueryProductDetailsService;
         readonly IGooglePurchaseStateEnumProvider m_GooglePurchaseStateEnumProvider;
         IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
 
         internal GooglePurchaseUpdatedListener(IGoogleLastKnownProductService googleLastKnownProductService,
             IGooglePurchaseCallback googlePurchaseCallback, IGooglePurchaseBuilder purchaseBuilder,
-            IGoogleCachedQuerySkuDetailsService googleCachedQuerySkuDetailsService,
+            IGoogleCachedQueryProductDetailsService googleCachedQueryProductDetailsService,
             IGooglePurchaseStateEnumProvider googlePurchaseStateEnumProvider,
             IGoogleQueryPurchasesService googleQueryPurchasesService = null)
             : base(k_AndroidPurchaseListenerClassName)
         {
             m_LastKnownProductService = googleLastKnownProductService;
             m_GooglePurchaseCallback = googlePurchaseCallback;
-            m_GoogleCachedQuerySkuDetailsService = googleCachedQuerySkuDetailsService;
+            m_GoogleCachedQueryProductDetailsService = googleCachedQueryProductDetailsService;
             m_GooglePurchaseStateEnumProvider = googlePurchaseStateEnumProvider;
             m_GoogleQueryPurchasesService = googleQueryPurchasesService;
             m_PurchaseBuilder = purchaseBuilder;

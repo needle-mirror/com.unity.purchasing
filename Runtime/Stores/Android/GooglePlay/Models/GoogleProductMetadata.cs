@@ -4,8 +4,8 @@ namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Product definition used by Google Play Store.
-    /// This is a representation of SkuDetails
-    /// <a href="https://developer.android.com/reference/com/android/billingclient/api/SkuDetails">Google documentation</a>
+    /// This is a representation of ProductDetails
+    /// <a href="https://developer.android.com/reference/com/android/billingclient/api/ProductDetails">Google documentation</a>
     /// </summary>
     public class GoogleProductMetadata : ProductMetadata
     {

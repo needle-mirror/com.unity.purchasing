@@ -17,6 +17,7 @@ namespace UnityEngine.Purchasing.Models
         DeveloperError = 5,
         FatalError = 6,
         ItemAlreadyOwned = 7,
-        ItemNotOwned = 8
+        ItemNotOwned = 8,
+        NetworkError = 12
     }
 }

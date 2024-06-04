@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.11.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "4.12.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -255,8 +255,9 @@ namespace UnityEngine.Purchasing
         {
             IGooglePurchaseCallback googlePurchaseCallback = new GooglePlayPurchaseCallback(util);
             IGoogleProductCallback googleProductCallback = new GooglePlayProductCallback();
+            var googlePurchaseStateEnumProvider = new GooglePurchaseStateEnumProvider();
 
-            var googlePlayStoreService = BuildAndInitGooglePlayStoreServiceAar(googlePurchaseCallback, googleProductCallback);
+            var googlePlayStoreService = BuildAndInitGooglePlayStoreServiceAar(googlePurchaseCallback, googleProductCallback, googlePurchaseStateEnumProvider);
 
             IGooglePlayStorePurchaseService googlePlayStorePurchaseService = new GooglePlayStorePurchaseService(googlePlayStoreService);
             IGooglePlayStoreFinishTransactionService googlePlayStoreFinishTransactionService = new GooglePlayStoreFinishTransactionService(googlePlayStoreService);
@@ -266,7 +267,7 @@ namespace UnityEngine.Purchasing
             var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
             var googlePlayStoreExtensions = new MetricizedGooglePlayStoreExtensions(
                 googlePlayStoreService,
-                googlePlayStoreFinishTransactionService,
+                googlePurchaseStateEnumProvider,
                 logger,
                 telemetryDiagnostics,
                 telemetryMetrics);
@@ -311,38 +312,35 @@ namespace UnityEngine.Purchasing
         }
 
         IGooglePlayStoreService BuildAndInitGooglePlayStoreServiceAar(IGooglePurchaseCallback googlePurchaseCallback,
-            IGoogleProductCallback googleProductCallback)
+            IGoogleProductCallback googleProductCallback, IGooglePurchaseStateEnumProvider googlePurchaseStateEnumProvider)
         {
-            var googleCachedQuerySkuDetailsService = new GoogleCachedQuerySkuDetailsService();
+            var googleCachedQueryProductDetailsService = new GoogleCachedQueryProductDetailsService();
             var googleLastKnownProductService = new GoogleLastKnownProductService();
-            var googlePurchaseStateEnumProvider = new GooglePurchaseStateEnumProvider();
-            var googlePurchaseBuilder = new GooglePurchaseBuilder(googleCachedQuerySkuDetailsService, logger);
+            var googlePurchaseBuilder = new GooglePurchaseBuilder(googleCachedQueryProductDetailsService, logger);
             var googlePurchaseUpdatedListener = new GooglePurchaseUpdatedListener(googleLastKnownProductService,
-                googlePurchaseCallback, googlePurchaseBuilder, googleCachedQuerySkuDetailsService,
+                googlePurchaseCallback, googlePurchaseBuilder, googleCachedQueryProductDetailsService,
                 googlePurchaseStateEnumProvider);
             var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
             var googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener, util, telemetryDiagnostics);
-            var skuDetailsConverter = new SkuDetailsConverter();
+            var productDetailsConverter = new ProductDetailsConverter();
             var retryPolicy = new ExponentialRetryPolicy();
             var googleRetryPolicy = new GoogleConnectionRetryPolicy();
-            var googleQuerySkuDetailsService = new QuerySkuDetailsService(googleBillingClient, googleCachedQuerySkuDetailsService, skuDetailsConverter, retryPolicy, googleProductCallback, util, telemetryDiagnostics);
-            var purchaseService = new GooglePurchaseService(googleBillingClient, googlePurchaseCallback, googleQuerySkuDetailsService);
+            var googleQueryProductDetailsService = new QueryProductDetailsService(googleBillingClient, googleCachedQueryProductDetailsService, productDetailsConverter, retryPolicy, googleProductCallback, util, telemetryDiagnostics);
+            var purchaseService = new GooglePurchaseService(googleBillingClient, googlePurchaseCallback, googleQueryProductDetailsService);
             var queryPurchasesService = new GoogleQueryPurchasesService(googleBillingClient, googlePurchaseBuilder);
             var finishTransactionService = new GoogleFinishTransactionService(googleBillingClient, queryPurchasesService);
             var billingClientStateListener = new BillingClientStateListener();
-            var priceChangeService = new GooglePriceChangeService(googleBillingClient, googleQuerySkuDetailsService);
             var telemetryMetrics = new TelemetryMetricsService(telemetryMetricsInstanceWrapper);
 
             googlePurchaseUpdatedListener.SetGoogleQueryPurchaseService(queryPurchasesService);
 
             var googlePlayStoreService = new MetricizedGooglePlayStoreService(
                 googleBillingClient,
-                googleQuerySkuDetailsService,
+                googleQueryProductDetailsService,
                 purchaseService,
                 finishTransactionService,
                 queryPurchasesService,
                 billingClientStateListener,
-                priceChangeService,
                 googleLastKnownProductService,
                 telemetryDiagnostics,
                 telemetryMetrics,

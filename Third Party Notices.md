@@ -1,7 +1,7 @@
 This package contains third-party software components governed by the license(s) indicated below:
 ---------
 
-Component Name: Google Play Billing Library v5.2.1
+Component Name: Google Play Billing Library v6.2.1
 License Type: Apache 2.0
 Copyright © 2023 Google, LLC
 [https://developer.android.com/studio/terms.html](https://developer.android.com/studio/terms.html)

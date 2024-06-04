@@ -191,7 +191,6 @@ namespace UnityEngine.Purchasing
         /// <exception cref="NullReceiptException">My product must have</exception>
         public SubscriptionInfo getSubscriptionInfo()
         {
-
             if (receipt != null)
             {
                 var receipt_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(receipt);
@@ -526,7 +525,6 @@ namespace UnityEngine.Purchasing
         public SubscriptionInfo(string skuDetails, bool isAutoRenewing, DateTime purchaseDate, bool isFreeTrial,
                 bool hasIntroductoryPriceTrial, bool purchaseHistorySupported, string updateMetadata)
         {
-
             var skuDetails_wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(skuDetails);
             var validTypeKey = skuDetails_wrapper.TryGetValue("type", out var typeObject);
 

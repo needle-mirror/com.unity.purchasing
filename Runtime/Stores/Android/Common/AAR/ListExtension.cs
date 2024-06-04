@@ -4,12 +4,12 @@ namespace UnityEngine.Purchasing
 {
     static class ListExtension
     {
-        internal static AndroidJavaObject ToJava(this List<string> values)
+        internal static AndroidJavaObject ToJava<T>(this List<T> values)
         {
             return ToJavaArray(values);
         }
 
-        static AndroidJavaObject ToJavaArray(List<string> values)
+        static AndroidJavaObject ToJavaArray<T>(List<T> values)
         {
             var list = new AndroidJavaObject("java.util.ArrayList");
             foreach (var value in values)

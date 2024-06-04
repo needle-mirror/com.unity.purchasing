@@ -11,33 +11,33 @@ namespace UnityEngine.Purchasing
     {
         readonly IGoogleBillingClient m_BillingClient;
         readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
-        readonly IQuerySkuDetailsService m_QuerySkuDetailsService;
+        readonly IQueryProductDetailsService m_QueryProductDetailsService;
 
-        internal GooglePurchaseService(IGoogleBillingClient billingClient, IGooglePurchaseCallback googlePurchaseCallback, IQuerySkuDetailsService querySkuDetailsService)
+        internal GooglePurchaseService(IGoogleBillingClient billingClient, IGooglePurchaseCallback googlePurchaseCallback, IQueryProductDetailsService queryProductDetailsService)
         {
             m_BillingClient = billingClient;
             m_GooglePurchaseCallback = googlePurchaseCallback;
-            m_QuerySkuDetailsService = querySkuDetailsService;
+            m_QueryProductDetailsService = queryProductDetailsService;
         }
 
         public void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
-            m_QuerySkuDetailsService.QueryAsyncSku(product,
-                skus =>
+            m_QueryProductDetailsService.QueryAsyncProduct(product,
+                (productDetailsList, _) =>
                 {
-                    OnQuerySkuDetailsResponse(skus, product, oldProduct, desiredProrationMode);
+                    OnQueryProductDetailsResponse(productDetailsList, product, oldProduct, desiredProrationMode);
                 });
         }
 
-        void OnQuerySkuDetailsResponse(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
-            if (ValidateQuerySkuDetailsResponseParams(skus, productToBuy, oldProduct))
+            if (ValidateQueryProductDetailsResponseParams(productDetailsList, productToBuy, oldProduct))
             {
-                LaunchGoogleBillingFlow(skus[0], oldProduct, desiredProrationMode);
+                LaunchGoogleBillingFlow(productDetailsList[0], oldProduct, desiredProrationMode);
             }
         }
 
-        bool ValidateQuerySkuDetailsResponseParams(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product? oldProduct)
+        bool ValidateQueryProductDetailsResponseParams(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product? oldProduct)
         {
             if (!ValidateSkus(skus))
             {
@@ -64,7 +64,7 @@ namespace UnityEngine.Purchasing
         {
             if (skus?.Count > 1)
             {
-                Debug.LogWarning(GoogleBillingStrings.getWarningMessageMoreThanOneSkuFound(skus[0].Call<string>("getSku")));
+                Debug.LogWarning(GoogleBillingStrings.getWarningMessageMoreThanOneSkuFound(skus[0].Call<string>("getProductId")));
             }
         }
 
@@ -107,7 +107,7 @@ namespace UnityEngine.Purchasing
             {
                 m_GooglePurchaseCallback.OnPurchaseFailed(
                     new PurchaseFailureDescription(
-                        sku.Call<string>("getSku"),
+                        sku.Call<string>("getProductId"),
                         PurchaseFailureReason.PurchasingUnavailable,
                         billingResult.debugMessage
                     )

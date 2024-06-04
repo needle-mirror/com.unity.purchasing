@@ -89,11 +89,40 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
         ///
-        /// Determines the purchase state of a product in the Google Play Store based on its receipt.
+        /// Returns the purchase state of a product in the Google Play Store.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getPurchaseState()">getPurchaseState</a>
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the purchase state when successful, otherwise an exception is thrown.</returns>
         public GooglePurchaseState GetPurchaseState(Product product)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
+        ///
+        /// Returns the obfuscated account id of the user who made the purchase.
+        /// This requires using <typeparamref name="IGooglePlayConfiguration.SetObfuscatedAccountId"/> before the purchase is made.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getAccountIdentifiers()">getAccountIdentifiers</a>
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <returns>Returns the obfuscated account id if it exists, otherwise null is returned.</returns>
+        public string GetObfuscatedAccountId(Product product)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
+        ///
+        /// Returns the obfuscated profile id of the user who made the purchase.
+        /// This requires using <typeparamref name="IGooglePlayConfiguration.SetObfuscatedProfileId"/> before the purchase is made.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getAccountIdentifiers()">getAccountIdentifiers</a>
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <returns>Returns the obfuscated profile id if it exists, otherwise null is returned.</returns>
+        public string GetObfuscatedProfileId(Product product)
         {
             throw new NotImplementedException();
         }

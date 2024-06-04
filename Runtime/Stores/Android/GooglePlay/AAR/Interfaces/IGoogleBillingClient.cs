@@ -12,12 +12,11 @@ namespace UnityEngine.Purchasing.Interfaces
         bool IsReady();
         GoogleBillingConnectionState GetConnectionState();
         void QueryPurchasesAsync(string skuType, Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse);
-        void QuerySkuDetailsAsync(List<string> skus, string type, Action<IGoogleBillingResult, List<AndroidJavaObject>> onSkuDetailsResponseAction);
-        AndroidJavaObject LaunchBillingFlow(AndroidJavaObject sku, string oldPurchaseToken, GooglePlayProrationMode? prorationMode);
+        void QueryProductDetailsAsync(List<string> skus, string type, Action<IGoogleBillingResult, List<AndroidJavaObject>> onProductDetailsResponseAction);
+        AndroidJavaObject LaunchBillingFlow(AndroidJavaObject productDetails, string oldPurchaseToken, GooglePlayProrationMode? prorationMode);
         void ConsumeAsync(string purchaseToken, Action<IGoogleBillingResult> onConsume);
         void AcknowledgePurchase(string purchaseToken, Action<IGoogleBillingResult> onAcknowledge);
         void SetObfuscationAccountId(string obfuscationAccountId);
         void SetObfuscationProfileId(string obfuscationProfileId);
-        void LaunchPriceChangeConfirmationFlow(AndroidJavaObject skuDetails, GooglePriceChangeConfirmationListener listener);
     }
 }

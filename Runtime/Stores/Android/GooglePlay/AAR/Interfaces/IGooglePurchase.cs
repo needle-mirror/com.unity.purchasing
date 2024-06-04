@@ -12,6 +12,8 @@ namespace UnityEngine.Purchasing.Interfaces
         string orderId { get; }
         string receipt { get; }
         string signature { get; }
+        string? obfuscatedAccountId { get; }
+        string? obfuscatedProfileId { get; }
         string originalJson { get; }
         string purchaseToken { get; }
         string? sku { get; }

@@ -5,11 +5,11 @@ using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 namespace UnityEngine.Purchasing
 {
-    class SkuDetailsQueryResponse : ISkuDetailsQueryResponse
+    class ProductDetailsQueryResponse : IProductDetailsQueryResponse
     {
         readonly ConcurrentBag<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)> m_Responses = new ConcurrentBag<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)>();
 
-        ~SkuDetailsQueryResponse()
+        ~ProductDetailsQueryResponse()
         {
             foreach (var response in m_Responses)
             {
@@ -26,16 +26,16 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public void AddResponse(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> skuDetails)
+        public void AddResponse(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> productDetails)
         {
 #if UNITY_2021_1_OR_NEWER
-            m_Responses.Add((billingResult, skuDetails.Select(sku => sku.CloneReference()).ToList()));
+            m_Responses.Add((billingResult, productDetails.Select(product => product.CloneReference()).ToList()));
 #else
-            m_Responses.Add((billingResult, skuDetails.Select(sku => sku).ToList()));
+            m_Responses.Add((billingResult, productDetails.Select(product => product).ToList()));
 #endif
         }
 
-        public List<AndroidJavaObject> SkuDetails()
+        public List<AndroidJavaObject> ProductDetails()
         {
             return m_Responses.Where(response => response.Item1.responseCode == GoogleBillingResponseCode.Ok)
                 .SelectMany(response => response.Item2).ToList();
@@ -44,6 +44,11 @@ namespace UnityEngine.Purchasing
         public bool IsRecoverable()
         {
             return m_Responses.Select(response => response.Item1).Any(IsRecoverable);
+        }
+
+        public IGoogleBillingResult GetGoogleBillingResult()
+        {
+            return m_Responses.Select(response => response.Item1).FirstOrDefault(response => response.responseCode != GoogleBillingResponseCode.Ok);
         }
 
         static bool IsRecoverable(IGoogleBillingResult billingResult)

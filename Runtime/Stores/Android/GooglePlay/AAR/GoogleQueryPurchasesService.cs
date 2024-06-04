@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,7 +22,7 @@ namespace UnityEngine.Purchasing
 
         public async Task<List<IGooglePurchase>> QueryPurchases()
         {
-            var purchaseResults = await Task.WhenAll(QueryPurchasesWithSkuType(GoogleSkuTypeEnum.Sub()), QueryPurchasesWithSkuType(GoogleSkuTypeEnum.InApp()));
+            var purchaseResults = await Task.WhenAll(QueryPurchasesWithSkuType(GoogleProductTypeEnum.Sub()), QueryPurchasesWithSkuType(GoogleProductTypeEnum.InApp()));
             return purchaseResults.SelectMany(result => result).ToList();
         }
 
@@ -35,6 +37,20 @@ namespace UnityEngine.Purchasing
                 });
 
             return taskCompletion.Task;
+        }
+
+        public IGooglePurchase? GetPurchaseByToken(string purchaseToken, string skuType)
+        {
+            var taskCompletion = new TaskCompletionSource<IGooglePurchase?>();
+            m_BillingClient.QueryPurchasesAsync(skuType,
+                (billingResult, purchases) =>
+                {
+                    var purchase = purchases.FirstOrDefault(purchase => purchase != null && purchase.Call<string>("getPurchaseToken") == purchaseToken);
+                    var result = purchase != null && IsResultOk(billingResult) ? m_PurchaseBuilder.BuildPurchase(purchase) : null;
+                    taskCompletion.SetResult(result);
+                });
+
+            return taskCompletion.Task.Result;
         }
 
         static bool IsResultOk(IGoogleBillingResult result)

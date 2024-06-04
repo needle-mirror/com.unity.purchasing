@@ -19,20 +19,19 @@ namespace UnityEngine.Purchasing
 
         internal MetricizedGooglePlayStoreService(
             IGoogleBillingClient billingClient,
-            IQuerySkuDetailsService querySkuDetailsService,
+            IQueryProductDetailsService queryProductDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,
             IGoogleQueryPurchasesService queryPurchasesService,
             IBillingClientStateListener billingClientStateListener,
-            IGooglePriceChangeService priceChangeService,
             IGoogleLastKnownProductService lastKnownProductService,
             ITelemetryDiagnostics telemetryDiagnostics,
             ITelemetryMetricsService telemetryMetricsService,
             ILogger logger,
             IRetryPolicy retryPolicy,
             IUtil util)
-            : base(billingClient, querySkuDetailsService, purchaseService, finishTransactionService,
-                queryPurchasesService, billingClientStateListener, priceChangeService, lastKnownProductService,
+            : base(billingClient, queryProductDetailsService, purchaseService, finishTransactionService,
+                queryPurchasesService, billingClientStateListener, lastKnownProductService,
                 telemetryDiagnostics, logger, retryPolicy, util)
         {
             m_TelemetryDiagnostics = telemetryDiagnostics;
@@ -54,7 +53,7 @@ namespace UnityEngine.Purchasing
         }
 
         public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products,
-            Action<List<ProductDescription>> onProductsReceived,
+            Action<List<ProductDescription>, IGoogleBillingResult> onProductsReceived,
             Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
@@ -62,20 +61,12 @@ namespace UnityEngine.Purchasing
                 TelemetryMetricDefinitions.retrieveProductsName);
         }
 
-        public override void Purchase(ProductDefinition product, Product oldProduct,
+        public override void Purchase(ProductDefinition product, Product? oldProduct,
             GooglePlayProrationMode? desiredProrationMode)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.Purchase(product, oldProduct, desiredProrationMode),
                 TelemetryMetricDefinitions.initPurchaseName);
-        }
-
-        public override void ConfirmSubscriptionPriceChange(ProductDefinition product,
-            Action<IGoogleBillingResult> onPriceChangeAction)
-        {
-            m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.ConfirmSubscriptionPriceChange(product, onPriceChangeAction),
-                TelemetryMetricDefinitions.confirmSubscriptionPriceChangeName);
         }
     }
 }

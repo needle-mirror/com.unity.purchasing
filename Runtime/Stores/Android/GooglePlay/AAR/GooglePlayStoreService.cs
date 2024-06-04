@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,13 +20,12 @@ namespace UnityEngine.Purchasing
         int m_MaxConnectionAttempts = 3;
         readonly IGoogleBillingClient m_BillingClient;
         readonly IBillingClientStateListener m_BillingClientStateListener;
-        readonly IQuerySkuDetailsService m_QuerySkuDetailsService;
+        readonly IQueryProductDetailsService m_QueryProductDetailsService;
         readonly ConcurrentQueue<ProductDescriptionQuery> m_ProductsToQuery = new ConcurrentQueue<ProductDescriptionQuery>();
         readonly ConcurrentQueue<Action<List<IGooglePurchase>>> m_OnPurchaseSucceededQueue = new ConcurrentQueue<Action<List<IGooglePurchase>>>();
         readonly IGooglePurchaseService m_GooglePurchaseService;
         readonly IGoogleFinishTransactionService m_GoogleFinishTransactionService;
         readonly IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
-        readonly IGooglePriceChangeService m_GooglePriceChangeService;
         readonly IGoogleLastKnownProductService m_GoogleLastKnownProductService;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
         readonly ILogger m_Logger;
@@ -33,12 +34,11 @@ namespace UnityEngine.Purchasing
 
         internal GooglePlayStoreService(
             IGoogleBillingClient billingClient,
-            IQuerySkuDetailsService querySkuDetailsService,
+            IQueryProductDetailsService queryProductDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,
             IGoogleQueryPurchasesService queryPurchasesService,
             IBillingClientStateListener billingClientStateListener,
-            IGooglePriceChangeService priceChangeService,
             IGoogleLastKnownProductService lastKnownProductService,
             ITelemetryDiagnostics telemetryDiagnostics,
             ILogger logger,
@@ -46,11 +46,10 @@ namespace UnityEngine.Purchasing
             IUtil util)
         {
             m_BillingClient = billingClient;
-            m_QuerySkuDetailsService = querySkuDetailsService;
+            m_QueryProductDetailsService = queryProductDetailsService;
             m_GooglePurchaseService = purchaseService;
             m_GoogleFinishTransactionService = finishTransactionService;
             m_GoogleQueryPurchasesService = queryPurchasesService;
-            m_GooglePriceChangeService = priceChangeService;
             m_GoogleLastKnownProductService = lastKnownProductService;
             m_BillingClientStateListener = billingClientStateListener;
             m_TelemetryDiagnostics = telemetryDiagnostics;
@@ -136,7 +135,7 @@ namespace UnityEngine.Purchasing
                         if (m_ProductsToQuery.TryDequeue(out var productDescriptionQuery) &&
                             productDescriptionQuery != null)
                         {
-                            m_QuerySkuDetailsService.QueryAsyncSku(productDescriptionQuery.products,
+                            m_QueryProductDetailsService.QueryAsyncProduct(productDescriptionQuery.products,
                                 productDescriptionQuery.onProductsReceived);
                         }
 
@@ -196,12 +195,12 @@ namespace UnityEngine.Purchasing
             AttemptReconnection();
         }
 
-        public virtual void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
+        public virtual void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>, IGoogleBillingResult> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
         {
             var currentConnectionState = m_BillingClient.GetConnectionState();
             if (currentConnectionState == GoogleBillingConnectionState.Connected)
             {
-                m_QuerySkuDetailsService.QueryAsyncSku(products, onProductsReceived);
+                m_QueryProductDetailsService.QueryAsyncProduct(products, onProductsReceived);
             }
             else
             {
@@ -209,7 +208,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void HandleRetrieveProductsNotConnected(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
+        void HandleRetrieveProductsNotConnected(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>, IGoogleBillingResult> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
         {
             if (m_BillingClient.GetConnectionState() == GoogleBillingConnectionState.Disconnected)
             {
@@ -232,7 +231,7 @@ namespace UnityEngine.Purchasing
             Purchase(product, null, null);
         }
 
-        public virtual void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        public virtual void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
             m_GoogleLastKnownProductService.LastKnownOldProductId = oldProduct?.definition.storeSpecificId;
             m_GoogleLastKnownProductService.LastKnownProductId = product.storeSpecificId;
@@ -276,6 +275,11 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        public IGooglePurchase? GetPurchase(string purchaseToken, string skuType)
+        {
+            return m_GoogleQueryPurchasesService.GetPurchaseByToken(purchaseToken, skuType);
+        }
+
         public void SetMaxConnectionAttempts(int maxConnectionAttempts)
         {
             m_MaxConnectionAttempts = maxConnectionAttempts;
@@ -289,11 +293,6 @@ namespace UnityEngine.Purchasing
         public void SetObfuscatedProfileId(string obfuscatedProfileId)
         {
             m_BillingClient.SetObfuscationProfileId(obfuscatedProfileId);
-        }
-
-        public virtual void ConfirmSubscriptionPriceChange(ProductDefinition product, Action<IGoogleBillingResult> onPriceChangeAction)
-        {
-            m_GooglePriceChangeService.PriceChange(product, onPriceChangeAction);
         }
     }
 }

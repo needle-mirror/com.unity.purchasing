@@ -1,5 +1,27 @@
 # Changelog
 
+## [4.12.0] - 2024-06-04
+### Added
+- GooglePlay - `IGooglePlayStoreExtensions.GetObfuscatedAccountId(Product product)` has been added to obtain the obfuscated account ID of the purchase set with `IGooglePlayConfiguration.SetObfuscatedAccountId`.
+- GooglePlay - `IGooglePlayStoreExtensions.GetObfuscatedProfileId(Product product)` has been added to obtain the obfuscated profile ID of the purchase set with `IGooglePlayConfiguration.SetObfuscatedProfileId`.
+- Apple - Added visionOS support
+
+### Changed
+- Upgraded `com.unity.services.core` from 1.8.2 to 1.12.5 to include their Apple privacy manifest.
+- GooglePlay - Dependencies are now injected in the gradle files. The Billing aar is no longer included.
+- GooglePlay - Billing Library updated to 6.2.1 (was previously 5.2.1). No new feature support was added. Subscriptions must still have only 1 base plan.
+- GooglePlay - Updated the internal implementation to use `productDetails` instead of `skuDetails` to solve the `setOfferToken` warning issued by Google.
+- GooglePlay - `IGooglePlayStoreExtensions.GetPurchaseState(Product product)` has been updated to use the [getPurchaseState() instead of getOriginalJson()](https://developer.android.com/google/play/billing/integrate#pending). This change will make the purchase state more reliable.
+- GooglePlay - `IGooglePlayStoreExtensions.ConfirmSubscriptionPriceChange` has been marked `[Obsolete]` as it is no longer supported since Google Play Billing Library 6.0.0. For alternatives, see the [price changes guide](https://developer.android.com/google/play/billing/price-changes).
+- GooglePlay - `IStoreListener.OnInitializeFailed` for `InitializationFailureReason.PurchasingUnavailable` will now return the BillingResponseCode when product retrieval is successful, but an error occured and no products were returned.
+
+### Fixed
+- Fixed `OnPurchaseFailed` - It now returns the `productId` (previously the `transactionId`) in the `PurchaseFailureDescription` when the product isn't available for purchase.
+- Fixed a NullReferenceException when retrieving products on Unity Engine 2020.
+
+### Removed
+- GooglePlay - The `iconUrl` and `skuDetailsToken` sub-entry to the `Product.receipt`'s `"Payload"`'s `"skuDetails"` will now return an empty string since they are no longer supported.
+
 ## [4.11.0] - 2024-03-06
 ### Added
 - GooglePlay - `IGooglePlayConfiguration.SetMaxConnectionAttempts(int maxConnectionAttempts)` has been added to specify the max connection attempts to the Google Play Store.

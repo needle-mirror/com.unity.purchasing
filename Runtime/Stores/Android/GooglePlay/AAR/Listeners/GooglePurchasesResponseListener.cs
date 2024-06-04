@@ -13,13 +13,13 @@ namespace UnityEngine.Purchasing
     /// </summary>
     class GooglePurchasesResponseListener : AndroidJavaProxy
     {
-        const string k_AndroidSkuDetailsResponseListenerClassName =
+        const string k_AndroidPurchasesResponseListenerClassName =
             "com.android.billingclient.api.PurchasesResponseListener";
         readonly Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> m_OnQueryPurchasesResponse;
 
         internal GooglePurchasesResponseListener(
             Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse)
-            : base(k_AndroidSkuDetailsResponseListenerClassName)
+            : base(k_AndroidPurchasesResponseListenerClassName)
         {
             m_OnQueryPurchasesResponse = onQueryPurchasesResponse;
         }

@@ -4,13 +4,13 @@ namespace UnityEngine.Purchasing.Utils
 {
     static class GoogleReceiptEncoder
     {
-        internal static string EncodeReceipt(string purchaseOriginalJson, string purchaseSignature, List<string> skuDetailsJson)
+        internal static string EncodeReceipt(string purchaseOriginalJson, string purchaseSignature, List<string> productDetailsJson)
         {
             var dic = new Dictionary<string, object>
             {
                 ["json"] = purchaseOriginalJson,
                 ["signature"] = purchaseSignature,
-                ["skuDetails"] = skuDetailsJson,
+                ["skuDetails"] = productDetailsJson,
             };
             return MiniJson.JsonEncode(dic);
         }

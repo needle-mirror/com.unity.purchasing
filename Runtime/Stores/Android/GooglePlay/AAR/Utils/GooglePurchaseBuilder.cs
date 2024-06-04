@@ -8,12 +8,12 @@ namespace UnityEngine.Purchasing.Utils
 {
     class GooglePurchaseBuilder : IGooglePurchaseBuilder
     {
-        readonly IGoogleCachedQuerySkuDetailsService m_CachedQuerySkuDetailsService;
+        readonly IGoogleCachedQueryProductDetailsService m_CachedQueryProductDetailsService;
         readonly ILogger m_Logger;
 
-        public GooglePurchaseBuilder(IGoogleCachedQuerySkuDetailsService cachedQuerySkuDetailsService, ILogger logger)
+        public GooglePurchaseBuilder(IGoogleCachedQueryProductDetailsService cachedQueryProductDetailsService, ILogger logger)
         {
-            m_CachedQuerySkuDetailsService = cachedQuerySkuDetailsService;
+            m_CachedQueryProductDetailsService = cachedQueryProductDetailsService;
             m_Logger = logger;
         }
 
@@ -30,14 +30,14 @@ namespace UnityEngine.Purchasing.Utils
 
         public IGooglePurchase BuildPurchase(AndroidJavaObject purchase)
         {
-            var cachedSkuDetails = m_CachedQuerySkuDetailsService.GetCachedQueriedSkus();
-            using var getSkusObj = purchase.Call<AndroidJavaObject>("getSkus");
-            var purchaseSkus = getSkusObj.Enumerate<string>();
+            var cachedProductDetails = m_CachedQueryProductDetailsService.GetCachedQueriedProducts();
+            using var getProductsObj = purchase.Call<AndroidJavaObject>("getProducts");
+            var purchaseSkus = getProductsObj.Enumerate<string>();
 
             try
             {
-                var skuDetails = TryFindAllSkuDetails(purchaseSkus, cachedSkuDetails);
-                return new GooglePurchase(purchase, skuDetails);
+                var productDetailsEnum = TryFindAllProductDetails(purchaseSkus, cachedProductDetails);
+                return new GooglePurchase(purchase, productDetailsEnum);
             }
             catch (InvalidOperationException)
             {
@@ -47,10 +47,10 @@ namespace UnityEngine.Purchasing.Utils
             }
         }
 
-        static IEnumerable<AndroidJavaObject> TryFindAllSkuDetails(IEnumerable<string> skus, IEnumerable<AndroidJavaObject> skuDetails)
+        static IEnumerable<AndroidJavaObject> TryFindAllProductDetails(IEnumerable<string> skus, IEnumerable<AndroidJavaObject> productDetails)
         {
-            return skus.Select(sku => skuDetails.First(
-                skuDetail => sku == skuDetail.Call<string>("getSku")));
+            return skus.Select(sku => productDetails.First(
+                productDetail => sku == productDetail.Call<string>("getProductId")));
         }
     }
 }

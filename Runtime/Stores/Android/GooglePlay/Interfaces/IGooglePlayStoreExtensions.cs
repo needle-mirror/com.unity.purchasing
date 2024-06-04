@@ -56,6 +56,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="productId">Product id</param>
         /// <param name="callback">Price changed event finished successfully</param>
+        [Obsolete("No longer functional. This calls launchPriceChangeConfirmationFlow which was removed from Google Play Billing Library 6.0.0")]
         void ConfirmSubscriptionPriceChange(string productId, Action<bool> callback);
 
         /// <summary>
@@ -67,10 +68,29 @@ namespace UnityEngine.Purchasing
         bool IsPurchasedProductDeferred(Product product);
 
         /// <summary>
-        /// Determines the purchase state of a product in the Google Play Store based on its receipt.
+        /// Returns the purchase state of a product in the Google Play Store.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getPurchaseState()">getPurchaseState</a>
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the purchase state when successful, otherwise an exception is thrown.</returns>
         GooglePurchaseState GetPurchaseState(Product product);
+
+        /// <summary>
+        /// Returns the obfuscated account id of the user who made the purchase.
+        /// This requires using <typeparamref name="IGooglePlayConfiguration.SetObfuscatedAccountId"/> before the purchase is made.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getAccountIdentifiers()">getAccountIdentifiers</a>
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <returns>Returns the obfuscated account id if it exists, otherwise null is returned.</returns>
+        string GetObfuscatedAccountId(Product product);
+
+        /// <summary>
+        /// Returns the obfuscated profile id of the user who made the purchase.
+        /// This requires using <typeparamref name="IGooglePlayConfiguration.SetObfuscatedProfileId"/> before the purchase is made.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getAccountIdentifiers()">getAccountIdentifiers</a>
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <returns>Returns the obfuscated profile id if it exists, otherwise null is returned.</returns>
+        string GetObfuscatedProfileId(Product product);
     }
 }

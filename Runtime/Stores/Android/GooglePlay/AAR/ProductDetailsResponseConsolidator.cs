@@ -7,34 +7,34 @@ using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
-    class SkuDetailsResponseConsolidator : ISkuDetailsResponseConsolidator
+    class ProductDetailsResponseConsolidator : IProductDetailsResponseConsolidator
     {
         const int k_RequiredNumberOfCallbacks = 2;
         int m_NumberReceivedCallbacks;
-        readonly Action<ISkuDetailsQueryResponse> m_OnSkuDetailsResponseConsolidated;
-        readonly ISkuDetailsQueryResponse m_Responses = new SkuDetailsQueryResponse();
+        readonly Action<IProductDetailsQueryResponse> m_OnProductDetailsResponseConsolidated;
+        readonly IProductDetailsQueryResponse m_Responses = new ProductDetailsQueryResponse();
         readonly IUtil m_Util;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
-        internal SkuDetailsResponseConsolidator(IUtil util, ITelemetryDiagnostics telemetryDiagnostics,
-            Action<ISkuDetailsQueryResponse> onSkuDetailsResponseConsolidated)
+        internal ProductDetailsResponseConsolidator(IUtil util, ITelemetryDiagnostics telemetryDiagnostics,
+            Action<IProductDetailsQueryResponse> onProductDetailsResponseConsolidated)
         {
             m_Util = util;
-            m_OnSkuDetailsResponseConsolidated = onSkuDetailsResponseConsolidated;
+            m_OnProductDetailsResponseConsolidated = onProductDetailsResponseConsolidated;
             m_TelemetryDiagnostics = telemetryDiagnostics;
         }
 
-        public void Consolidate(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> skuDetails)
+        public void Consolidate(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> productDetails)
         {
             try
             {
                 m_NumberReceivedCallbacks++;
 
-                m_Responses.AddResponse(billingResult, skuDetails);
+                m_Responses.AddResponse(billingResult, productDetails);
 
                 if (m_NumberReceivedCallbacks >= k_RequiredNumberOfCallbacks)
                 {
-                    m_OnSkuDetailsResponseConsolidated(m_Responses);
+                    m_OnProductDetailsResponseConsolidated(m_Responses);
                 }
             }
             catch (Exception ex)
