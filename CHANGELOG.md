@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.12.1-pre.1] - 2024-06-06
+### Fixed
+- GooglePlay - Fixed errors related to `CloneReference` on Unity Engine 2021.1.
+
+### Removed
+- Removed unnecessary Android dependency, `androidx.activity:activity-compose:1.3.1`, which could cause conflicts with other plugins.
+
 ## [4.12.0] - 2024-06-04
 ### Added
 - GooglePlay - `IGooglePlayStoreExtensions.GetObfuscatedAccountId(Product product)` has been added to obtain the obfuscated account ID of the purchase set with `IGooglePlayConfiguration.SetObfuscatedAccountId`.

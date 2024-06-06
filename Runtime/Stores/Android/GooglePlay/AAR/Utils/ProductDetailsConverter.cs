@@ -45,21 +45,6 @@ namespace UnityEngine.Purchasing.Utils
             using var subscriptionPricingPhasesList = subscriptionPricingPhases?.Call<AndroidJavaObject>("getPricingPhaseList");
             var subscriptionPricingPhasesListEnum = subscriptionPricingPhasesList?.Enumerate().ToList();
 
-            if (subscriptionPricingPhasesListEnum != null)
-            {
-                foreach (var t in subscriptionPricingPhasesListEnum)
-                {
-                    var t1 = t.Call<string>("getFormattedPrice");
-                    var t2 = Convert.ToDecimal(t.Call<long>("getPriceAmountMicros") > 0 ? t.Call<long>("getPriceAmountMicros") / 1000000.0 : 0);
-
-                    var t3 = t.Call<string>("getPriceCurrencyCode");
-
-                    var t4 = t.Call<string>("getBillingPeriod");
-
-                    Debug.Log($"ProductDetailsConverter: {productId} {t1} {t2} {t3} {t4}");
-                }
-            }
-
             var subscriptionBasePricingPhase = subscriptionPricingPhasesListEnum?.LastOrDefault();
             var offerCount = subscriptionPricingPhasesListEnum?.Count;
             AndroidJavaObject? subscriptionTrialPricingPhase = null;

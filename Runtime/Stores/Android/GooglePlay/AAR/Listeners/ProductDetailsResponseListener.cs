@@ -49,7 +49,7 @@ namespace UnityEngine.Purchasing
 
                 }
 
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 if (productDetailsList != null)
                 {
                     foreach (var obj in productDetailsList)

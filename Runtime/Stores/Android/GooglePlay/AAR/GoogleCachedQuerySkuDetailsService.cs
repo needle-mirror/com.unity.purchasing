@@ -50,7 +50,7 @@ namespace UnityEngine.Purchasing
             foreach (var queriedProductDetails in queriedProducts)
             {
                 var queriedProductId = queriedProductDetails.Call<string>("getProductId");
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
                 m_CachedQueriedProductDetails[queriedProductId] = queriedProductDetails.CloneReference();
 #else
                 m_CachedQueriedProductDetails[queriedProductId] = queriedProductDetails;

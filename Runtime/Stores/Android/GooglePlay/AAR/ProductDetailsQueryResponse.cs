@@ -28,7 +28,7 @@ namespace UnityEngine.Purchasing
 
         public void AddResponse(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> productDetails)
         {
-#if UNITY_2021_1_OR_NEWER
+#if UNITY_2021_2_OR_NEWER
             m_Responses.Add((billingResult, productDetails.Select(product => product.CloneReference()).ToList()));
 #else
             m_Responses.Add((billingResult, productDetails.Select(product => product).ToList()));
