@@ -53,7 +53,7 @@ namespace UnityEngine.Purchasing
 
         void OnProductsRetrievedWithPurchaseFetch(List<ProductDescription> retrievedProducts, IGoogleBillingResult billingResult)
         {
-            if (retrievedProducts.Count == 0 && billingResult.responseCode != GoogleBillingResponseCode.Ok)
+            if (billingResult != null && retrievedProducts.Count == 0 && billingResult.responseCode != GoogleBillingResponseCode.Ok)
             {
                 OnRetrieveProductsFailed(GoogleRetrieveProductsFailureReason.BillingServiceUnavailable, billingResult.responseCode);
                 return;
@@ -70,7 +70,7 @@ namespace UnityEngine.Purchasing
 
         void OnProductsRetrieved(List<ProductDescription> retrievedProducts, IGoogleBillingResult billingResult)
         {
-            if (retrievedProducts.Count == 0 && billingResult.responseCode != GoogleBillingResponseCode.Ok)
+            if (billingResult != null && retrievedProducts.Count == 0 && billingResult.responseCode != GoogleBillingResponseCode.Ok)
             {
                 OnRetrieveProductsFailed(GoogleRetrieveProductsFailureReason.BillingServiceUnavailable, billingResult.responseCode);
                 return;

@@ -1,3 +1,4 @@
+// SelfDeclaredAndroidDependencies v2
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -5,6 +6,7 @@ using System.Linq;
 using System.Xml.Linq;
 using UnityEditor;
 using UnityEditor.Android;
+using UnityEngine;
 
 namespace Unity.SelfDeclaredAndroidDependencies.Editor
 {
@@ -87,10 +89,18 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
             }
 
             var buildGradle = Path.Combine(path, "build.gradle");
-            InjectGradleDependencies(buildGradle);
 
-            var settingsGradle = Path.Combine(path, "..", "settings.gradle");
-            InjectGradleRepositories(settingsGradle);
+            if (GetUnityVersionAsFloat(Application.unityVersion) >= 2022.2f)
+            {
+                var settingsGradle = Path.Combine(path, "..", "settings.gradle");
+                InjectGradleRepositoriesInSettings(settingsGradle);
+            }
+            else
+            {
+                InjectGradleRepositoriesInUnityLib(buildGradle);
+            }
+
+            InjectGradleDependencies(buildGradle);
 
             var gradleProperties = Path.Combine(path, "..", "gradle.properties");
             InjectGradleProperties(gradleProperties);
@@ -102,11 +112,6 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
         void InjectGradleDependencies(string buildGradle)
         {
             var dependencies = GenerateGradleDependencies();
-            if (dependencies == null)
-            {
-                return;
-            }
-
             var startLine = DependenciesLineStart;
             var endLine = DependenciesLineEnd;
 
@@ -117,18 +122,26 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
         /// Injects the repositories into the settings.gradle file.
         /// </summary>
         /// <param name="settingsGradle">The path to the settings.gradle file.</param>
-        void InjectGradleRepositories(string settingsGradle)
+        void InjectGradleRepositoriesInSettings(string settingsGradle)
         {
-            var repositories = GenerateGradleRepositories();
-            if (repositories == null)
-            {
-                return;
-            }
-
+            var repositories = GenerateGradleRepositoriesForSettings();
             var startLine = RepositoriesLineStart;
             var endLine = RepositoriesLineEnd;
 
             ReplaceOrAddSectionFile(settingsGradle, startLine, endLine, repositories);
+        }
+
+        /// <summary>
+        /// Injects the repositories into the build.gradle file.
+        /// </summary>
+        /// <param name="buildGradle">The path to the build.gradle file.</param>
+        void InjectGradleRepositoriesInUnityLib(string buildGradle)
+        {
+            var repositories = GenerateGradleRepositoriesForUnityLib();
+            var startLine = RepositoriesLineStart;
+            var endLine = RepositoriesLineEnd;
+
+            ReplaceOrAddSectionFile(buildGradle, startLine, endLine, repositories);
         }
 
         /// <summary>
@@ -138,11 +151,6 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
         void InjectGradleProperties(string gradleProperties)
         {
             var properties = GenerateGradleProperties();
-            if (properties == null)
-            {
-                return;
-            }
-
             var startLine = GradlePropertiesLineStart;
             var endLine = GradlePropertiesLineEnd;
 
@@ -183,25 +191,37 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
             var dependencies = Dependencies;
             if (dependencies == null || dependencies.Count == 0)
             {
-                return null;
+                return "";
             }
 
-            return string.Join("\n", Dependencies
+            var dependencyLines = string.Join("\n", dependencies
                 .Distinct()
-                .Select(dependency => $"project.getDependencies().add('implementation', '{dependency}')")
-                .Select(dependency => IsEnabled ? dependency : $"// {dependency}"));
+                .Select(dependency => $"        implementation '{dependency}'"));
+
+            var dependencyBlock = $@"afterEvaluate {{
+    dependencies {{
+{dependencyLines}
+    }}
+}}";
+
+            if (!IsEnabled)
+            {
+                dependencyBlock = string.Join("\n", dependencyBlock.Split('\n').Select(line => $"// {line}"));
+            }
+
+            return dependencyBlock;
         }
 
         /// <summary>
-        /// Generates the repositories to be added to the build.gradle file.
+        /// Generates the repositories to be added to the settings.gradle file.
         /// </summary>
-        /// <returns>A string containing the repositories to be added to the build.gradle file.</returns>
-        protected string GenerateGradleRepositories()
+        /// <returns>A string containing the repositories to be added to the settings.gradle file.</returns>
+        protected string GenerateGradleRepositoriesForSettings()
         {
             var repositories = Repositories;
             if (repositories == null || repositories.Count == 0)
             {
-                return null;
+                return "";
             }
 
             return string.Join("\n", repositories
@@ -209,6 +229,36 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
                 .Select(repository =>
                     $"settings.getDependencyResolutionManagement().getRepositories().maven(mavenRepository -> {{ mavenRepository.setUrl('{repository}'); }})")
                 .Select(repository => IsEnabled ? repository : $"// {repository}"));
+        }
+
+        /// <summary>
+        /// Generates the repositories to be added to the build.gradle file.
+        /// </summary>
+        /// <returns>A string containing the repositories to be added to the build.gradle file.</returns>
+        protected string GenerateGradleRepositoriesForUnityLib()
+        {
+            var repositories = Repositories;
+            if (repositories == null || repositories.Count == 0)
+            {
+                return "";
+            }
+
+            var repositoryLines = string.Join("\n", repositories
+                .Distinct()
+                .Select(repository => $"        maven {{ url \"{repository}\" }}"));
+
+            var repositoryBlock = $@"([rootProject] + (rootProject.subprojects as List)).each {{ project ->
+    project.repositories {{
+{repositoryLines}
+    }}
+}}";
+
+            if (!IsEnabled)
+            {
+                repositoryBlock = string.Join("\n", repositoryBlock.Split('\n').Select(line => $"// {line}"));
+            }
+
+            return repositoryBlock;
         }
 
         /// <summary>
@@ -220,7 +270,7 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
             var properties = GradleProperties;
             if (properties == null || properties.Count == 0)
             {
-                return null;
+                return "";
             }
 
             return string.Join("\n", properties.Select(property => IsEnabled ? property : $"# {property}"));
@@ -286,6 +336,26 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
             }
 
             return dependencies;
+        }
+
+        public virtual float GetUnityVersionAsFloat(string unityVersion)
+        {
+            if (string.IsNullOrEmpty(unityVersion))
+            {
+                return 0f;
+            }
+            var versionParts = unityVersion.Split('.');
+            if (versionParts.Length < 2)
+            {
+                return 0f;
+            }
+
+            if (!float.TryParse($"{versionParts[0]}.{versionParts[1]}", out var version))
+            {
+                return 0f;
+            }
+
+            return version;
         }
 
         public class AndroidXmlDependencies

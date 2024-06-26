@@ -46,7 +46,6 @@ namespace UnityEngine.Purchasing.Utils
             var subscriptionPricingPhasesListEnum = subscriptionPricingPhasesList?.Enumerate().ToList();
 
             var subscriptionBasePricingPhase = subscriptionPricingPhasesListEnum?.LastOrDefault();
-            var offerCount = subscriptionPricingPhasesListEnum?.Count;
             AndroidJavaObject? subscriptionTrialPricingPhase = null;
             AndroidJavaObject? subscriptionIntroPricingPhase = null;
             if (subscriptionPricingPhasesListEnum != null)
@@ -67,9 +66,10 @@ namespace UnityEngine.Purchasing.Utils
             }
 
             var price = oneTimePurchaseOffer?.Call<string>("getFormattedPrice") ?? subscriptionBasePricingPhase?.Call<string>("getFormattedPrice");
-            var priceAmount = oneTimePurchaseOffer != null ?
-                Convert.ToDecimal(oneTimePurchaseOffer.Call<long>("getPriceAmountMicros") > 0 ? oneTimePurchaseOffer.Call<long>("getPriceAmountMicros") / 1000000.0 : 0) :
-                Convert.ToDecimal(subscriptionBasePricingPhase?.Call<long>("getPriceAmountMicros") > 0 ? subscriptionBasePricingPhase.Call<long>("getPriceAmountMicros") / 1000000.0 : 0);
+            var priceAmountMicros = oneTimePurchaseOffer != null ?
+                Convert.ToDecimal(oneTimePurchaseOffer.Call<long>("getPriceAmountMicros") > 0 ? oneTimePurchaseOffer.Call<long>("getPriceAmountMicros") : 0) :
+                Convert.ToDecimal(subscriptionBasePricingPhase?.Call<long>("getPriceAmountMicros") > 0 ? subscriptionBasePricingPhase.Call<long>("getPriceAmountMicros") : 0);
+            var priceAmount = priceAmountMicros / (decimal)1000000.0;
             var title = productDetails.Call<string>("getTitle");
             var description = productDetails.Call<string>("getDescription");
             var priceCurrencyCode = oneTimePurchaseOffer?.Call<string>("getPriceCurrencyCode") ?? subscriptionBasePricingPhase?.Call<string>("getPriceCurrencyCode");
@@ -77,7 +77,7 @@ namespace UnityEngine.Purchasing.Utils
             var subscriptionPeriod = subscriptionBasePricingPhase?.Call<string>("getBillingPeriod");
             var freeTrialPeriod = subscriptionTrialPricingPhase?.Call<string>("getBillingPeriod");
             var introductoryPrice = subscriptionIntroPricingPhase?.Call<string>("getFormattedPrice");
-            var introductoryPriceAmountMicros = subscriptionIntroPricingPhase == null ? 0 : Convert.ToDecimal((subscriptionIntroPricingPhase?.Call<long>("getPriceAmountMicros") ?? 0.0) / 1000000.0);
+            var introductoryPriceAmountMicros = subscriptionIntroPricingPhase == null ? 0 : Convert.ToDecimal(subscriptionIntroPricingPhase.Call<long>("getPriceAmountMicros"));
             var introductoryPricePeriod = subscriptionIntroPricingPhase?.Call<string>("getBillingPeriod");
             var introductoryPriceCycles = subscriptionIntroPricingPhase?.Call<int>("getBillingCycleCount") ?? 0;
 
@@ -88,7 +88,7 @@ namespace UnityEngine.Purchasing.Utils
             productDetailsJsonDic["name"] = productDetails.Call<string>("getName");
             productDetailsJsonDic["description"] = description;
             productDetailsJsonDic["price"] = price ?? "";
-            productDetailsJsonDic["price_amount_micros"] = priceAmount.ToString();
+            productDetailsJsonDic["price_amount_micros"] = priceAmountMicros.ToString();
             productDetailsJsonDic["price_currency_code"] = priceCurrencyCode ?? "";
 
             if (subscriptionBasePricingPhase != null)

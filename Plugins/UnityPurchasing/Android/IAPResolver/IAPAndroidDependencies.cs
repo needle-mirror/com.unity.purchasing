@@ -18,7 +18,8 @@ namespace IAPResolver
         public override List<string> GradleProperties =>
             new List<string>()
             {
-                "android.useAndroidX=true"
+                "android.useAndroidX=true",
+                "android.enableJetifier=true"
             };
     }
 }

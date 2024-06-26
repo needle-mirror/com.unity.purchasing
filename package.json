@@ -15,9 +15,9 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Fixed\n- GooglePlay - Fixed errors related to `CloneReference` on Unity Engine 2021.1.\n\n### Removed\n- Removed unnecessary Android dependency, `androidx.activity:activity-compose:1.3.1`, which could cause conflicts with other plugins."
+    "changelog": "### Changed\n- Apple - Retrieved purchases from the store will be considered as `appleProductIsRestored`.\n- Apple - `Product.appleProductIsRestored` will no longer be sent to `ProcessPurchase` since they have already been processed.\n- Apple - The changes above will improve Analytics data by avoiding duplicate purchase events.\n\n### Fixed\n- GooglePlay - Fixed an issue where dependencies were added after dependency resolution happened resulting in an error.\n- GooglePlay - Fixed `Product.receipt`'s `price_amount_micros` returning the price instead of the price in micro-units.\n- GooglePlay - Fixed `NullReferenceException` occurring when retrieving products on Unity Engine 2021.2 and earlier.\n- GooglePlay - Fixed `OnProductReceived` callback not being fired with an invalid ProductID."
   },
-  "version": "4.12.1-pre.1",
+  "version": "4.12.1-pre.3",
   "description": "IMPORTANT UPGRADE NOTES:\n\nIf updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:\n 1. Move IAPProductCatalog.json and BillingMode.json\n\tFROM: Assets/Plugins/UnityPurchasing/Resources/\n\tTO: Assets/Resources/.\n 2. Move AppleTangle.cs and GooglePlayTangle.cs\n\tFROM: Assets/Plugins/UnityPurchasing/generated\n\tTO: Assets/Scripts/UnityPurchasing/generated.\n 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores(*).\n ▪ Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "4.12.1-pre.1"
+    "com.unity.purchasing.tests": "4.12.1-pre.3"
   },
   "upmCi": {
-    "footprint": "8e7c3e1f483ff409f9d6e9a422a61958a1fc729d"
+    "footprint": "2a2e499f77f34c88a8a8967adac96ba1400a0900"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@4.12/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "ed4505208f3bcbcf72a12da60e5d7eec5af8e9e5"
+    "revision": "e09db56a0b80a1d4c27d61b1408fadc7b1be4234"
   },
   "samples": [
     {

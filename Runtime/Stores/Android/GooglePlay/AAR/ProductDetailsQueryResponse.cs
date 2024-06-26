@@ -11,6 +11,7 @@ namespace UnityEngine.Purchasing
 
         ~ProductDetailsQueryResponse()
         {
+#if UNITY_2021_2_OR_NEWER
             foreach (var response in m_Responses)
             {
                 var objList = response.Item2;
@@ -24,6 +25,7 @@ namespace UnityEngine.Purchasing
                     obj?.Dispose();
                 }
             }
+#endif
         }
 
         public void AddResponse(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> productDetails)

@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.12.1-pre.3] - 2024-06-26
+### Changed
+- Apple - Retrieved purchases from the store will be considered as `appleProductIsRestored`.
+- Apple - `Product.appleProductIsRestored` will no longer be sent to `ProcessPurchase` since they have already been processed.
+- Apple - The changes above will improve Analytics data by avoiding duplicate purchase events.
+
+### Fixed
+- GooglePlay - Fixed an issue where dependencies were added after dependency resolution happened resulting in an error.
+- GooglePlay - Fixed `Product.receipt`'s `price_amount_micros` returning the price instead of the price in micro-units.
+- GooglePlay - Fixed `NullReferenceException` occurring when retrieving products on Unity Engine 2021.2 and earlier.
+- GooglePlay - Fixed `OnProductReceived` callback not being fired with an invalid ProductID.
+
 ## [4.12.1-pre.1] - 2024-06-06
 ### Fixed
 - GooglePlay - Fixed errors related to `CloneReference` on Unity Engine 2021.1.

@@ -298,7 +298,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         private void ProcessPurchaseIfNew(Product product)
         {
-            if (HasRecordedTransaction(product.transactionID))
+            if (HasRecordedTransaction(product.transactionID) || product.appleProductIsRestored)
             {
                 m_Store.FinishTransaction(product.definition, product.transactionID);
                 return;
