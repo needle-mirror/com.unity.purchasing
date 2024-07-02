@@ -1,4 +1,4 @@
-// SelfDeclaredAndroidDependencies v2
+// SelfDeclaredAndroidDependencies v3
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -206,7 +206,7 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
 
             if (!IsEnabled)
             {
-                dependencyBlock = string.Join("\n", dependencyBlock.Split('\n').Select(line => $"// {line}"));
+                dependencyBlock = CommentBlock(dependencyBlock, "//");
             }
 
             return dependencyBlock;
@@ -224,11 +224,17 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
                 return "";
             }
 
-            return string.Join("\n", repositories
+            var repositoriesBlock = string.Join("\n", repositories
                 .Distinct()
                 .Select(repository =>
-                    $"settings.getDependencyResolutionManagement().getRepositories().maven(mavenRepository -> {{ mavenRepository.setUrl('{repository}'); }})")
-                .Select(repository => IsEnabled ? repository : $"// {repository}"));
+                    $"settings.getDependencyResolutionManagement().getRepositories().maven(mavenRepository -> {{ mavenRepository.setUrl('{repository}'); }})"));
+
+            if (!IsEnabled)
+            {
+                repositoriesBlock = CommentBlock(repositoriesBlock, "//");
+            }
+
+            return repositoriesBlock;
         }
 
         /// <summary>
@@ -255,7 +261,7 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
 
             if (!IsEnabled)
             {
-                repositoryBlock = string.Join("\n", repositoryBlock.Split('\n').Select(line => $"// {line}"));
+                repositoryBlock = CommentBlock(repositoryBlock, "//");
             }
 
             return repositoryBlock;
@@ -273,7 +279,19 @@ namespace Unity.SelfDeclaredAndroidDependencies.Editor
                 return "";
             }
 
-            return string.Join("\n", properties.Select(property => IsEnabled ? property : $"# {property}"));
+            var propertiesBlock = string.Join("\n", properties);
+            if (!IsEnabled)
+            {
+                propertiesBlock = CommentBlock(propertiesBlock, "#");
+            }
+
+            return propertiesBlock;
+        }
+
+        public static string CommentBlock(string block, string commentPrefix)
+        {
+            return string.Join("\n", block.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => $"{commentPrefix} {line.TrimEnd()}"));
         }
 
         /// <summary>

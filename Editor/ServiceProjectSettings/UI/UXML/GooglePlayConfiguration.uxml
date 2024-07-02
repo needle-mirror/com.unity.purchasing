@@ -11,7 +11,7 @@
                 </VisualElement>
             </VisualElement>
             <Label text="2. Go to your appropriate project." class="numbered-item"/>
-            <Label text="3. Go to &quot;Services and API&quot;, there you will find your License Key " class="numbered-item"/>
+            <Label text="3. Go to &quot;Monetization setup&quot;, there you will find your License Key " class="numbered-item"/>
         </VisualElement>
         <VisualElement class="invisible-separator" />
         <VisualElement name="RevenueValidationBlock">

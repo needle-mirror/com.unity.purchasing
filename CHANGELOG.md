@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.12.1-pre.4] - 2024-07-02
+### Fixed
+- GooglePlay - Fixed an issue that happens on Windows when disabling the IAP Dependencies.
+- GooglePlay - Fixed an `InvalidOperationException` that could occur when obtaining purchases. (Since Unity IAP 4.6.0)
+
 ## [4.12.1-pre.3] - 2024-06-26
 ### Changed
 - Apple - Retrieved purchases from the store will be considered as `appleProductIsRestored`.

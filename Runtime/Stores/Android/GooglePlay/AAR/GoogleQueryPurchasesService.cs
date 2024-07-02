@@ -33,7 +33,7 @@ namespace UnityEngine.Purchasing
                 (billingResult, purchases) =>
                 {
                     var result = IsResultOk(billingResult) ? m_PurchaseBuilder.BuildPurchases(purchases) : Enumerable.Empty<IGooglePurchase>();
-                    taskCompletion.SetResult(result);
+                    taskCompletion.TrySetResult(result);
                 });
 
             return taskCompletion.Task;
@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing
                 {
                     var purchase = purchases.FirstOrDefault(purchase => purchase != null && purchase.Call<string>("getPurchaseToken") == purchaseToken);
                     var result = purchase != null && IsResultOk(billingResult) ? m_PurchaseBuilder.BuildPurchase(purchase) : null;
-                    taskCompletion.SetResult(result);
+                    taskCompletion.TrySetResult(result);
                 });
 
             return taskCompletion.Task.Result;
