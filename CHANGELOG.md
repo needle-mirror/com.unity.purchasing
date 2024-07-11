@@ -1,4 +1,10 @@
 # Changelog
+## [4.12.1] - 2024-07-11
+### Changed
+- Apple - The change where `Product.appleProductIsRestored` was no longer sent to `ProcessPurchase` has been reverted.
+
+### Fixed
+- GooglePlay - Fixed an issue where a warning was output in the logs when retrieving purchases.
 
 ## [4.12.1-pre.4] - 2024-07-02
 ### Fixed

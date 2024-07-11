@@ -106,7 +106,11 @@ namespace UnityEngine.Purchasing
             }
 
             m_Store.FinishTransaction(product.definition, product.transactionID);
-            m_Listener?.SendTransactionEvent(product);
+
+            if (!product.appleProductIsRestored)
+            {
+                m_Listener?.SendTransactionEvent(product);
+            }
         }
 
         public ProductCollection products { get; private set; } = null!;
@@ -298,7 +302,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         private void ProcessPurchaseIfNew(Product product)
         {
-            if (HasRecordedTransaction(product.transactionID) || product.appleProductIsRestored)
+            if (HasRecordedTransaction(product.transactionID))
             {
                 m_Store.FinishTransaction(product.definition, product.transactionID);
                 return;

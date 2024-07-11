@@ -124,15 +124,7 @@ namespace UnityEngine.Purchasing
 
         bool IsPurchasedProductDeferred(Product product)
         {
-            var tmpProduct = CreateNewProductUnifiedReceipt(product);
-            return m_GooglePlayStoreExtensions.IsPurchasedProductDeferred(tmpProduct);
-        }
-
-        static Product CreateNewProductUnifiedReceipt(Product product)
-        {
-            var unifiedReceipt = UnifiedReceiptFormatter.FormatUnifiedReceipt(product.receipt,
-                product.transactionID, GooglePlay.Name);
-            return new Product(product.definition, product.metadata, unifiedReceipt);
+            return m_GooglePlayStoreExtensions.IsPurchasedProductDeferred(product);
         }
 
         public bool HasInitiallyRetrievedProducts()
