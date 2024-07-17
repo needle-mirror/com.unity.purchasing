@@ -88,7 +88,7 @@ namespace UnityEngine.Purchasing.Utils
             productDetailsJsonDic["name"] = productDetails.Call<string>("getName");
             productDetailsJsonDic["description"] = description;
             productDetailsJsonDic["price"] = price ?? "";
-            productDetailsJsonDic["price_amount_micros"] = priceAmountMicros.ToString();
+            productDetailsJsonDic["price_amount_micros"] = priceAmountMicros;
             productDetailsJsonDic["price_currency_code"] = priceCurrencyCode ?? "";
 
             if (subscriptionBasePricingPhase != null)

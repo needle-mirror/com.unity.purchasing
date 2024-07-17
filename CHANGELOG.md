@@ -1,4 +1,8 @@
 # Changelog
+## [4.12.2] - 2024-07-17
+### Fixed
+- GooglePlay - Fixed `Product.receipt`'s `price_amount_micros` returning a string instead of a long.
+
 ## [4.12.1] - 2024-07-11
 ### Changed
 - Apple - The change where `Product.appleProductIsRestored` was no longer sent to `ProcessPurchase` has been reverted.
