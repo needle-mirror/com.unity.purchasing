@@ -21,6 +21,11 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Subscriptions have a finite window of validity.
         /// </summary>
-        Subscription
+        Subscription,
+
+        /// <summary>
+        /// Unknown product type.
+        /// </summary>
+        Unknown
     }
 }

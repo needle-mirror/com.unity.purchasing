@@ -2,19 +2,9 @@ namespace UnityEditor.Purchasing
 {
     internal static class GenericEditorMenuItemClickEventSenderHelpers
     {
-        internal static void SendGameObjectMenuAddIapButtonEvent()
-        {
-            BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventSourceMenuItems.k_SourceGameObjectMenu, EventActions.k_ActionAddIapButton_legacy);
-        }
-
         internal static void SendGameObjectMenuAddCodelessIapButtonEvent()
         {
             BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventSourceMenuItems.k_SourceGameObjectMenu, EventActions.k_ActionAddIapButton);
-        }
-
-        internal static void SendIapMenuAddIapButtonEvent()
-        {
-            BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventSourceMenuItems.k_SourceIapMenu, EventActions.k_ActionAddIapButton_legacy);
         }
 
         internal static void SendIapMenuAddCodelessIapButtonEvent()

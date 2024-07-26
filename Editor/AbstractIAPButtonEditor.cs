@@ -12,7 +12,7 @@ namespace UnityEditor.Purchasing
     public abstract class AbstractIAPButtonEditor : Editor
     {
         private static readonly string[] excludedFields = new string[] { "m_Script", "onTransactionsRestored" };
-        private static readonly string[] restoreButtonExcludedFields = new string[] { "m_Script", "consumePurchase", "onPurchaseComplete", "onPurchaseFailed", "titleText", "descriptionText", "priceText" };
+        private static readonly string[] restoreButtonExcludedFields = new string[] { "m_Script", "automaticallyConfirmTransaction", "onPurchaseComplete", "onPurchaseFailed", "titleText", "descriptionText", "priceText" };
         private const string kNoProduct = "<None>";
 
         private readonly List<string> m_ValidIDs = new List<string>();
@@ -27,12 +27,12 @@ namespace UnityEditor.Purchasing
         }
 
         /// <summary>
-        /// Event trigger when trying to draw the BaseIAPButton in the inspector.
+        /// Event trigger when trying to draw the CodelessIAPButton in the inspector.
         /// </summary>
         protected void OnInspectorGuiInternal()
         {
-            var isAPurchaseButton = ((BaseIAPButton)target).IsAPurchaseButton();
-            var productId = ((BaseIAPButton)target).GetProductId();
+            var isAPurchaseButton = ((CodelessIAPButton)target).IsAPurchaseButton();
+            var productId = ((CodelessIAPButton)target).productId;
             DrawProductIdDropDown(isAPurchaseButton, productId);
         }
 

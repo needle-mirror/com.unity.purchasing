@@ -1,55 +1,83 @@
 #nullable enable
 
+using System;
+using System.Collections.Generic;
 using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
     class GooglePlayPurchaseCallback : IGooglePurchaseCallback
     {
-        IStoreCallback? m_StoreCallback;
-        IGooglePlayConfigurationInternal? m_GooglePlayConfigurationInternal;
+        IProductCache? m_ProductCache;
+        IStorePurchaseCallback? m_PurchaseCallback;
+        IStorePurchaseFetchCallback? m_PurchaseFetchCallback;
+        IGooglePlayChangeSubscriptionCallback? m_ChangeSubscriptionCallback;
+        readonly IGooglePurchaseConverter m_GooglePurchaseConverter;
         readonly IUtil m_Util;
 
-        public GooglePlayPurchaseCallback(IUtil util)
+        [Preserve]
+        internal GooglePlayPurchaseCallback(IGooglePurchaseConverter googlePurchaseConverter, IUtil util)
         {
+            m_GooglePurchaseConverter = googlePurchaseConverter;
             m_Util = util;
         }
 
-        public void SetStoreCallback(IStoreCallback storeCallback)
+        public void SetProductCache(IProductCache productCache)
         {
-            m_StoreCallback = storeCallback;
+            m_ProductCache = productCache;
         }
 
-        public void SetStoreConfiguration(IGooglePlayConfigurationInternal configuration)
+        public void SetPurchaseCallback(IStorePurchaseCallback purchaseCallback)
         {
-            m_GooglePlayConfigurationInternal = configuration;
+            m_PurchaseCallback = purchaseCallback;
         }
 
-        public void OnPurchaseSuccessful(IGooglePurchase purchase, string receipt, string purchaseToken)
+        public void SetPurchaseFetchCallback(IStorePurchaseFetchCallback fetchCallback)
         {
-            m_StoreCallback?.OnPurchaseSucceeded(purchase.sku ?? string.Empty, receipt, purchaseToken);
+            m_PurchaseFetchCallback = fetchCallback;
+        }
+
+        public void SetChangeSubscriptionCallback(IGooglePlayChangeSubscriptionCallback changeSubscriptionCallback)
+        {
+            m_ChangeSubscriptionCallback = changeSubscriptionCallback;
+        }
+
+        public void OnPurchaseSuccessful(IGooglePurchase purchase)
+        {
+            var order = m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
+            OnOrderPurchaseSuccessful(order);
+        }
+
+        void OnOrderPurchaseSuccessful(Order order)
+        {
+            if (order is PendingOrder pendingOrder)
+            {
+                m_PurchaseCallback?.OnPurchaseSucceeded(pendingOrder);
+            }
+            else if (order is ConfirmedOrder confirmedOrder)
+            {
+                m_PurchaseFetchCallback?.OnAllPurchasesRetrieved(new List<ConfirmedOrder>() { confirmedOrder });
+            }
         }
 
         public void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription)
         {
-            m_StoreCallback?.OnPurchaseFailed(purchaseFailureDescription);
+            m_PurchaseCallback?.OnPurchaseFailed(
+                purchaseFailureDescription.ConvertToFailedOrder());
         }
 
-        public void NotifyDeferredPurchase(IGooglePurchase purchase, string receipt, string purchaseToken)
+        public void NotifyDeferredPurchase(IGooglePurchase purchase)
         {
-            m_Util.RunOnMainThread(() =>
-                m_GooglePlayConfigurationInternal?.NotifyDeferredPurchase(m_StoreCallback, purchase, receipt,
-                    purchaseToken));
-
+            var order = (DeferredOrder)m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
+            m_PurchaseCallback?.OnPurchaseDeferred(order);
         }
 
         public void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku)
         {
-            m_Util.RunOnMainThread(() =>
-                m_GooglePlayConfigurationInternal?.NotifyDeferredProrationUpgradeDowngradeSubscription(m_StoreCallback,
-                    sku));
+            m_ChangeSubscriptionCallback?.OnSubscriptionChangeDeferredUntilRenewal(sku);
         }
     }
 }

@@ -5,6 +5,7 @@ using Uniject;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.Utils;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing.Models
 {
@@ -84,13 +85,14 @@ namespace UnityEngine.Purchasing.Models
         readonly IUtil m_Util;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
-        internal GoogleBillingClient(IGooglePurchaseUpdatedListener googlePurchaseUpdatedListener, IUtil util,
+        [Preserve]
+        internal GoogleBillingClient(IGooglePurchasesUpdatedListener googlePurchasesUpdatedListener, IUtil util,
             ITelemetryDiagnostics telemetryDiagnostics)
         {
             m_Util = util;
             m_TelemetryDiagnostics = telemetryDiagnostics;
             using var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>("newBuilder", UnityActivity.GetCurrentActivity());
-            builder.Call<AndroidJavaObject>("setListener", googlePurchaseUpdatedListener).Dispose();
+            builder.Call<AndroidJavaObject>("setListener", googlePurchasesUpdatedListener).Dispose();
             builder.Call<AndroidJavaObject>("enablePendingPurchases").Dispose();
             m_BillingClient = builder.Call<AndroidJavaObject>("build");
         }
@@ -127,7 +129,7 @@ namespace UnityEngine.Purchasing.Models
 
         public void QueryPurchasesAsync(string skuType, Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse)
         {
-            var listener = new GooglePurchasesResponseListener(onQueryPurchasesResponse);
+            var listener = new GooglePurchasesResponseListener(onQueryPurchasesResponse, m_Util);
             m_BillingClient.Call("queryPurchasesAsync", skuType, listener);
         }
 
@@ -237,7 +239,7 @@ namespace UnityEngine.Purchasing.Models
             consumeParamsBuilder.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken).Dispose();
             using var consumeParams = consumeParamsBuilder.Call<AndroidJavaObject>("build");
 
-            m_BillingClient.Call("consumeAsync", consumeParams, new GoogleConsumeResponseListener(onConsume));
+            m_BillingClient.Call("consumeAsync", consumeParams, new GoogleConsumeResponseListener(onConsume, m_Util));
         }
 
         public void AcknowledgePurchase(string purchaseToken, Action<IGoogleBillingResult> onAcknowledge)
@@ -246,7 +248,7 @@ namespace UnityEngine.Purchasing.Models
             acknowledgePurchaseParamsBuilder.Call<AndroidJavaObject>("setPurchaseToken", purchaseToken).Dispose();
             using var acknowledgePurchaseParams = acknowledgePurchaseParamsBuilder.Call<AndroidJavaObject>("build");
 
-            m_BillingClient.Call("acknowledgePurchase", acknowledgePurchaseParams, new GoogleAcknowledgePurchaseListener(onAcknowledge));
+            m_BillingClient.Call("acknowledgePurchase", acknowledgePurchaseParams, new GoogleAcknowledgePurchaseListener(onAcknowledge, m_Util));
         }
     }
 }

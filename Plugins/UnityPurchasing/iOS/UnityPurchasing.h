@@ -40,6 +40,8 @@ typedef void (*UnityPurchasingCallback)(const char* subject, const char* payload
 - (NSString*)getAppReceipt;
 - (NSString*)getTransactionReceiptForProductId:(NSString *)productId;
 - (void)addTransactionObserver;
+
+
 @property (nonatomic, strong) ReceiptRefresher* receiptRefresher;
 @property (nonatomic, strong) SKReceiptRefreshRequest* refreshRequest;
 @property BOOL simulateAskToBuyEnabled;

@@ -13,10 +13,7 @@ namespace UnityEditor.Purchasing
 
         internal static GoogleConfigService Instance()
         {
-            if (m_Instance == null)
-            {
-                m_Instance = new GoogleConfigService();
-            }
+            m_Instance ??= new GoogleConfigService();
 
             return m_Instance;
         }

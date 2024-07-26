@@ -5,32 +5,41 @@ using System.Threading;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreFinishTransactionService : IGooglePlayStoreFinishTransactionService
     {
-        readonly HashSet<string> m_ProcessedPurchaseToken;
+        readonly HashSet<string?> m_ProcessedPurchaseToken;
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
-        IStoreCallback? m_StoreCallback;
+        IProductCache? m_ProductCache;
+        IStorePurchaseConfirmCallback? m_ConfirmCallback;
         int m_RetryCount = 0;
         const int k_MaxRetryAttempts = 5;
 
+        [Preserve]
         internal GooglePlayStoreFinishTransactionService(IGooglePlayStoreService googlePlayStoreService)
         {
-            m_ProcessedPurchaseToken = new HashSet<string>();
+            m_ProcessedPurchaseToken = new HashSet<string?>();
             m_GooglePlayStoreService = googlePlayStoreService;
         }
 
-        public void SetStoreCallback(IStoreCallback? storeCallback)
+        public void SetProductCache(IProductCache? productCache)
         {
-            m_StoreCallback = storeCallback;
+            m_ProductCache = productCache;
+        }
+
+        public void SetConfirmCallback(IStorePurchaseConfirmCallback confirmCallback)
+        {
+            m_ConfirmCallback = confirmCallback;
         }
 
         public void FinishTransaction(ProductDefinition? product, string? purchaseToken)
         {
             m_GooglePlayStoreService.FinishTransaction(product, purchaseToken,
-                (billingResult, googlePurchase) => HandleFinishTransaction(product, billingResult, googlePurchase));
+                    (billingResult, googlePurchase) => HandleFinishTransaction(product, billingResult, googlePurchase));
+
         }
 
         void HandleFinishTransaction(ProductDefinition? product, IGoogleBillingResult billingResult, IGooglePurchase purchase)
@@ -50,24 +59,27 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    m_StoreCallback?.OnPurchaseFailed(
+                    SendTransactionFailedCallback(
                         new PurchaseFailureDescription(
-                            product?.storeSpecificId,
+                            m_ProductCache?.FindOrDefault(product?.storeSpecificId) ??
+                                Product.CreateUnknownProduct(product?.storeSpecificId),
                             PurchaseFailureReason.Unknown,
                             billingResult.debugMessage + " {code: " + billingResult.responseCode + ", M: GPSFTS.HFT}"
-                        )
+                        ), purchase.purchaseToken
                     );
                 }
             }
         }
 
+
+        public void SendTransactionFailedCallback(PurchaseFailureDescription purchaseFailureDescription, string? purchaseToken)
+        {
+            m_ConfirmCallback?.OnConfirmOrderFailed(purchaseFailureDescription.ConvertToFailedOrder(), purchaseToken);
+        }
+
         void CallPurchaseSucceededUpdateReceipt(IGooglePurchase googlePurchase)
         {
-            m_StoreCallback?.OnPurchaseSucceeded(
-                googlePurchase.sku ?? string.Empty,
-                googlePurchase.receipt,
-                googlePurchase.purchaseToken
-            );
+            m_ConfirmCallback?.OnConfirmOrderSucceeded(googlePurchase.purchaseToken);
         }
 
         static bool IsResponseCodeInRecoverableState(IGoogleBillingResult billingResult)

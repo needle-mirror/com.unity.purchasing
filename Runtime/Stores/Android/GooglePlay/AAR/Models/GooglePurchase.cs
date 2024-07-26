@@ -2,6 +2,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.MiniJSON;
 using UnityEngine.Purchasing.Utils;
@@ -21,9 +22,10 @@ namespace UnityEngine.Purchasing.Models
         public string receipt { get; }
         public string signature { get; }
         public string originalJson { get; }
-        public string purchaseToken { get; }
+        public string? purchaseToken { get; }
         public string? obfuscatedAccountId { get; }
-        public string obfuscatedProfileId { get; }
+        public string? obfuscatedProfileId { get; }
+        public IEnumerable<ProductDescription> productDescriptions { get; }
 
         public string? sku => skus.FirstOrDefault();
 
@@ -41,8 +43,9 @@ namespace UnityEngine.Purchasing.Models
             var accountIdentifiers = purchase.Call<AndroidJavaObject>("getAccountIdentifiers");
             obfuscatedAccountId = accountIdentifiers.Call<string>("getObfuscatedAccountId");
             obfuscatedProfileId = accountIdentifiers.Call<string>("getObfuscatedProfileId");
+            productDescriptions = productDetailsEnum.Select(ProductDetailsConverter.BuildProductDescription);
 
-            var productDetailsJson = productDetailsEnum.Select(productDetails => ProductDetailsConverter.BuildProductDescription(productDetails).metadata.GetGoogleProductMetadata().originalJson).ToList();
+            var productDetailsJson = productDescriptions.Select(productDescription => productDescription.metadata.GetGoogleProductMetadata().originalJson).ToList();
             receipt = GoogleReceiptEncoder.EncodeReceipt(
                 originalJson,
                 signature,

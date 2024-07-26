@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
@@ -153,7 +154,8 @@ namespace UnityEditor.Purchasing
                     }
                     else
                     {
-                        Debug.LogError("SimpleStateMachine.ProcessEvent: " + L10n.Tr("Attempting to change to an undefined state. Contact Unity Support."));
+                        Debug.unityLogger.LogIAPError("SimpleStateMachine.ProcessEvent: " +
+                            L10n.Tr("Attempting to change to an undefined state. Contact Unity Support."));
                     }
                 }
             }

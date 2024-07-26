@@ -1,8 +1,7 @@
+using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine.Events;
 using UnityEngine.Purchasing.Extension;
-using UnityEngine.UI;
 
 namespace UnityEngine.Purchasing
 {
@@ -15,42 +14,58 @@ namespace UnityEngine.Purchasing
     public class IAPListener : MonoBehaviour
     {
         /// <summary>
-        /// Type of event fired after a successful fetching the products from the store.
+        /// Type of event fired after fetching products.
         /// </summary>
-        [System.Serializable]
-        public class OnProductsFetchedEvent : UnityEvent<ProductCollection>
-        {
-        };
+        [Serializable]
+        public class OnProductsFetchedEvent : UnityEvent<List<Product>> { }
 
         /// <summary>
-        /// Type of event fired after a successful purchase of a product.
+        /// Type of event fired after failing to fetch products.
         /// </summary>
-        [System.Serializable]
-        public class OnPurchaseCompletedEvent : UnityEvent<Product>
-        {
-        };
+        [Serializable]
+        public class OnProductsFetchFailedEvent : UnityEvent<ProductFetchFailed> { }
 
         /// <summary>
-        /// Type of event fired after a failed purchase of a product.
+        /// Type of event fired after fetching purchases.
         /// </summary>
-        [System.Serializable]
-        public class OnPurchaseFailedEvent : UnityEvent<Product, PurchaseFailureReason>
-        {
-        };
+        [Serializable]
+        public class OnPurchasesFetchedEvent : UnityEvent<Orders> { }
 
         /// <summary>
-        /// Type of event fired after a failed purchase of a product.
+        /// Type of event fired after failing to fetch purchases.
         /// </summary>
-        [System.Serializable]
-        public class OnPurchaseDetailedFailedEvent : UnityEvent<Product, PurchaseFailureDescription>
-        {
-        };
+        [Serializable]
+        public class OnPurchasesFetchFailureEvent : UnityEvent<PurchasesFetchFailureDescription> { }
+
+        /// <summary>
+        /// Type of event fired after updating a pending order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderPendingEvent : UnityEvent<PendingOrder> { }
+
+        /// <summary>
+        /// Type of event fired after updating a confirmed order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderConfirmedEvent : UnityEvent<ConfirmedOrder> { }
+
+        /// <summary>
+        /// Type of event fired after failing to purchase an order.
+        /// </summary>
+        [Serializable]
+        public class OnPurchaseFailedEvent : UnityEvent<FailedOrder> { }
+
+        /// <summary>
+        /// Type of event fired after deferring to purchase an order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderDeferredEvent : UnityEvent<DeferredOrder> { }
 
         /// <summary>
         /// Consume successful purchases immediately.
         /// </summary>
-        [Tooltip("Consume successful purchases immediately.")]
-        public bool consumePurchase = true;
+        [Tooltip("Automatically confirm the transaction immediately after a successful purchase.")]
+        public bool automaticallyConfirmTransaction = true;
 
         /// <summary>
         /// Preserve this GameObject when a new scene is loaded.
@@ -59,28 +74,52 @@ namespace UnityEngine.Purchasing
         public bool dontDestroyOnLoad = true;
 
         /// <summary>
-        /// Event fired after a successful fetching the products from the store.
+        /// Event fired after fetching products.
         /// </summary>
-        [Tooltip("Event fired after a successful fetching the products from the store.")]
+        [Tooltip("Event fired after fetching products.")]
         public OnProductsFetchedEvent onProductsFetched;
 
         /// <summary>
-        /// Event fired after a successful purchase of this product.
+        /// Event fired after failing to fetch products.
         /// </summary>
-        [Tooltip("Event fired after a successful purchase of this product.")]
-        public OnPurchaseCompletedEvent onPurchaseComplete;
+        [Tooltip("Event fired after failing to fetch products.")]
+        public OnProductsFetchFailedEvent onProductsFetchFailed;
 
         /// <summary>
-        /// Event fired after a failed purchase of this product.
+        /// Event fired after fetching purchases.
         /// </summary>
-        [Tooltip("Event fired after a failed purchase of this product.")]
+        [Tooltip("Event fired after fetching purchases.")]
+        public OnPurchasesFetchedEvent onPurchasesFetched;
+
+        /// <summary>
+        /// Event fired after failing to fetch purchases.
+        /// </summary>
+        [Tooltip("Event fired after failing to fetch purchases.")]
+        public OnPurchasesFetchFailureEvent onPurchasesFetchFailure;
+
+        /// <summary>
+        /// Event fired after updating a pending order.
+        /// </summary>
+        [Tooltip("Event fired after updating a pending order.")]
+        public OnOrderPendingEvent onOrderPending;
+
+        /// <summary>
+        /// Event fired after updating a confirmed order.
+        /// </summary>
+        [Tooltip("Event fired after updating a confirmed order.")]
+        public OnOrderConfirmedEvent onOrderConfirmed;
+
+        /// <summary>
+        /// Event fired after failing to purchase an order.
+        /// </summary>
+        [Tooltip("Event fired after failing to purchase an order.")]
         public OnPurchaseFailedEvent onPurchaseFailed;
 
         /// <summary>
-        /// Event fired after a failed purchase of this product.
+        /// Event fired after deferring to purchase an order.
         /// </summary>
-        [Tooltip("Event fired after a failed purchase of this product.")]
-        public OnPurchaseDetailedFailedEvent onPurchaseDetailedFailedEvent;
+        [Tooltip("Event fired after the payment of a purchase was delayed or postponed.")]
+        public OnOrderDeferredEvent onOrderDeferred;
 
         void OnEnable()
         {
@@ -98,36 +137,75 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Invoked to process a successful purchase of the product associated with this button
+        /// Invoked when fetching products
         /// </summary>
-        /// <param name="e">The successful <c>PurchaseEventArgs</c> for the purchase event. </param>
-        /// <returns>The result of the successful purchase</returns>
-        public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
+        /// <param name="products">The <typeparamref name="Product"/> which were fetched</param>
+        public void OnProductsFetched(List<Product> products)
         {
-            onPurchaseComplete.Invoke(e.purchasedProduct);
-
-            return consumePurchase ? PurchaseProcessingResult.Complete : PurchaseProcessingResult.Pending;
+            onProductsFetched.Invoke(products);
         }
 
         /// <summary>
-        /// Invoked on a failed purchase of the product associated with this button
+        /// Invoked when failing to fetch products
         /// </summary>
-        /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
-        /// <param name="reason">Information to help developers recover from this failure</param>
-        public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
+        /// <param name="productFetchFailed">The <typeparamref name="productFetchFailed"/> containing details about the product fetch failure</param>
+        public void OnProductsFetchFailed(ProductFetchFailed productFetchFailed)
         {
-            onPurchaseFailed.Invoke(product, reason);
+            onProductsFetchFailed.Invoke(productFetchFailed);
         }
 
         /// <summary>
-        /// Invoked on a failed purchase a product
+        /// Invoked when fetching purchases
         /// </summary>
-        /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
-        /// <param name="description">Information to help developers recover from this failure</param>
-        public void OnPurchaseFailed(Product product, PurchaseFailureDescription description)
+        /// <param name="orders">The fetched purchase <typeparamref name="Orders"/></param>
+        public void OnPurchasesFetched(Orders orders)
         {
-            onPurchaseDetailedFailedEvent.Invoke(product, description);
+            onPurchasesFetched.Invoke(orders);
         }
 
+        /// <summary>
+        /// Invoked when failing to fetch purchases
+        /// </summary>
+        /// <param name="purchasesFetchFailureDescription">The <typeparamref name="PurchasesFetchFailureDescription"/> containing details about the purchases fetch failure</param>
+        public void OnPurchasesFetchFailure(PurchasesFetchFailureDescription purchasesFetchFailureDescription)
+        {
+            onPurchasesFetchFailure.Invoke(purchasesFetchFailureDescription);
+        }
+
+        /// <summary>
+        /// Invoked when updating a pending order
+        /// </summary>
+        /// <param name="pendingOrder">The <typeparamref name="PendingOrder"/> that was updated</param>
+        public void OnOrderPending(PendingOrder pendingOrder)
+        {
+            onOrderPending?.Invoke(pendingOrder);
+        }
+
+        /// <summary>
+        /// Invoked when updating a confirmed order.
+        /// </summary>
+        /// <param name="confirmedOrder">The <typeparamref name="ConfirmedOrder"/> that was updated</param>
+        public void OnOrderConfirmed(ConfirmedOrder confirmedOrder)
+        {
+            onOrderConfirmed?.Invoke(confirmedOrder);
+        }
+
+        /// <summary>
+        /// Invoked on failing to purchase an order.
+        /// </summary>
+        /// <param name="failedOrder">The <typeparamref name="FailedOrder"/> which failed to purchase</param>
+        public void OnPurchaseFailed(FailedOrder failedOrder)
+        {
+            onPurchaseFailed.Invoke(failedOrder);
+        }
+
+        /// <summary>
+        /// Invoked on deferring to purchase an order.
+        /// </summary>
+        /// <param name="deferredOrder">The <typeparamref name="DeferredOrder"/> that was deferred</param>
+        public void OnOrderDeferred(DeferredOrder deferredOrder)
+        {
+            onOrderDeferred.Invoke(deferredOrder);
+        }
     }
 }

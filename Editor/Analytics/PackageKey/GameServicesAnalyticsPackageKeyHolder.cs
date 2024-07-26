@@ -12,10 +12,7 @@ namespace UnityEditor.Purchasing
         {
             get
             {
-                if (s_Identifier == null)
-                {
-                    s_Identifier = EditorGameServiceRegistry.Instance.GetEditorGameService<PurchasingServiceIdentifier>().Identifier;
-                }
+                s_Identifier ??= EditorGameServiceRegistry.Instance.GetEditorGameService<PurchasingServiceIdentifier>().Identifier;
                 return s_Identifier;
             }
         }

@@ -32,11 +32,9 @@ namespace UnityEngine.Purchasing
         readonly IUtil m_Util;
 #pragma warning restore 0414
 
-        public UIFakeStore()
-        {
-        }
+        public UIFakeStore(ICartValidator cartValidator, ILogger logger) : base(cartValidator, logger) { }
 
-        public UIFakeStore(IUtil util)
+        public UIFakeStore(ICartValidator cartValidator, IUtil util, ILogger logger) : base(cartValidator, logger)
         {
             m_Util = util;
         }
@@ -93,7 +91,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                Debug.LogError("Unrecognized DialogType " + dialogType);
+                Debug.unityLogger.LogIAPError($"Unrecognized DialogType {dialogType}");
             }
             cancelButton = "Cancel";
 
@@ -141,7 +139,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                Debug.LogError(this + " requires m_CurrentDialog. Not showing dialog.");
+                Debug.unityLogger.LogIAPError(this + " requires m_CurrentDialog. Not showing dialog.");
             }
         }
 

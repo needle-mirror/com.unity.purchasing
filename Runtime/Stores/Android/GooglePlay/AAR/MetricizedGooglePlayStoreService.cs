@@ -2,59 +2,46 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Uniject;
+using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
-using UnityEngine.Purchasing.Stores.Util;
 using UnityEngine.Purchasing.Telemetry;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
     class MetricizedGooglePlayStoreService : GooglePlayStoreService
     {
         readonly ITelemetryMetricsService m_TelemetryMetricsService;
-        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
-        internal MetricizedGooglePlayStoreService(
-            IGoogleBillingClient billingClient,
+        [Preserve]
+        internal MetricizedGooglePlayStoreService(IGoogleBillingClient billingClient,
+            IGooglePlayStoreConnectionService connectionService,
             IQueryProductDetailsService queryProductDetailsService,
-            IGooglePurchaseService purchaseService,
-            IGoogleFinishTransactionService finishTransactionService,
-            IGoogleQueryPurchasesService queryPurchasesService,
-            IBillingClientStateListener billingClientStateListener,
             IGoogleLastKnownProductService lastKnownProductService,
+            IGooglePurchaseService purchaseService,
+            IGoogleFinishTransactionUseCase finishTransactionUseCase,
+            IGoogleQueryPurchasesUseCase queryPurchasesUseCase,
+            IGooglePlayCheckEntitlementUseCase googleCheckEntitlementUseCase,
             ITelemetryDiagnostics telemetryDiagnostics,
-            ITelemetryMetricsService telemetryMetricsService,
-            ILogger logger,
-            IRetryPolicy retryPolicy,
-            IUtil util)
-            : base(billingClient, queryProductDetailsService, purchaseService, finishTransactionService,
-                queryPurchasesService, billingClientStateListener, lastKnownProductService,
-                telemetryDiagnostics, logger, retryPolicy, util)
+            ITelemetryMetricsService telemetryMetricsService)
+            : base(billingClient,
+                connectionService,
+                queryProductDetailsService,
+                lastKnownProductService,
+                purchaseService,
+                finishTransactionUseCase,
+                queryPurchasesUseCase,
+                googleCheckEntitlementUseCase,
+                telemetryDiagnostics)
         {
-            m_TelemetryDiagnostics = telemetryDiagnostics;
             m_TelemetryMetricsService = telemetryMetricsService;
         }
 
-        protected override void DequeueQueryProducts(GoogleBillingResponseCode googleBillingResponseCode)
-        {
-            m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.DequeueQueryProducts(googleBillingResponseCode),
-                TelemetryMetricDefinitions.dequeueQueryProductsTimeName);
-        }
-
-        protected override void DequeueFetchPurchases()
-        {
-            m_TelemetryMetricsService.ExecuteTimedAction(
-                base.DequeueFetchPurchases,
-                TelemetryMetricDefinitions.dequeueQueryPurchasesTimeName);
-        }
-
-        public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products,
-            Action<List<ProductDescription>, IGoogleBillingResult> onProductsReceived,
-            Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
+        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products,
+            Action<List<ProductDescription>> onProductsReceived,
+            Action<GoogleRetrieveProductException> onRetrieveProductsFailed)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.RetrieveProducts(products, onProductsReceived, onRetrieveProductsFailed),

@@ -28,7 +28,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The user opted to cancel rather than proceed with the purchase.
         /// This is not specified on platforms that do not distinguish
-        /// cancellation from other failure (Amazon, Microsoft).
+        /// cancellation from other failure (Amazon).
         /// </summary>
         UserCancelled,
 

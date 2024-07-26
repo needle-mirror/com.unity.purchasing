@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
@@ -26,7 +27,7 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                Debug.unityLogger.LogIAPException(ex);
             }
         }
 

@@ -1,19 +1,22 @@
+#nullable enable
 using System;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace UnityEngine.Purchasing
 {
+    //TODO Revamp Codeless for Core API Revamp https://jira.unity3d.com/browse/IAP-2673
+
     /// <summary>
     /// A GUI component for exposing the current price and allow purchasing of In-App Purchases. Exposes configurable
     /// elements through the Inspector.
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
-    [Obsolete("IAPButton is deprecated, please use CodelessIAPButton instead.", false)]
     [RequireComponent(typeof(Button))]
-    [AddComponentMenu("In-App Purchasing/IAP Button (legacy)", int.MaxValue)]
+    [AddComponentMenu("In-App Purchasing/IAP Button")]
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
-    public class IAPButton : BaseIAPButton
+    [Obsolete]
+    public class IAPButton : MonoBehaviour
     {
         /// <summary>
         /// The type of this button, can be either a purchase or a restore button.
@@ -32,34 +35,58 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Type of event fired after a successful purchase of a product.
+        /// Type of event fired for each fetched product.
         /// </summary>
         [Serializable]
-        public class OnPurchaseCompletedEvent : UnityEvent<Product>
-        {
-        }
+        public class OnProductFetchedEvent : UnityEvent<Product> { }
 
         /// <summary>
-        /// Type of event fired after a failed purchase of a product.
+        /// Type of event fired for each product that failed to be fetched.
         /// </summary>
         [Serializable]
-        public class OnPurchaseFailedEvent : UnityEvent<Product, PurchaseFailureReason>
-        {
-        }
+        public class OnProductFetchFailedEvent : UnityEvent<ProductDefinition, string> { }
+
+        /// <summary>
+        /// Type of event fired for each fetched purchase.
+        /// </summary>
+        [Serializable]
+        public class OnPurchaseFetchedEvent : UnityEvent<Order> { }
 
         /// <summary>
         /// Type of event fired after a restore transactions was completed.
         /// </summary>
         [Serializable]
-        public class OnTransactionsRestoredEvent : UnityEvent<bool, string>
-        {
-        }
+        public class OnTransactionsRestoredEvent : UnityEvent<bool, string?> { };
+
+        /// <summary>
+        /// Type of event fired after a pending order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderPendingEvent : UnityEvent<PendingOrder> { }
+
+        /// <summary>
+        /// Type of event fired after a confirmed order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderConfirmedEvent : UnityEvent<ConfirmedOrder> { }
+
+        /// <summary>
+        /// Type of event fired after a failed purchase of a product.
+        /// </summary>
+        [Serializable]
+        public class OnPurchaseFailedEvent : UnityEvent<FailedOrder> { }
+
+        /// <summary>
+        /// Type of event fired after deferring to purchase an order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderDeferredEvent : UnityEvent<DeferredOrder> { }
 
         /// <summary>
         /// Which product identifier to represent. Note this is not a store-specific identifier.
         /// </summary>
         [HideInInspector]
-        public string productId = "";
+        public string? productId;
 
         /// <summary>
         /// The type of this button, can be either a purchase or a restore button.
@@ -74,131 +101,143 @@ namespace UnityEngine.Purchasing
         public bool consumePurchase = true;
 
         /// <summary>
+        /// Event fired after fetching a product.
+        /// </summary>
+        [Tooltip("Event fired after fetching a product.")]
+        public OnProductFetchedEvent? onProductFetched;
+
+        /// <summary>
+        /// Event fired after failing to fetch a product.
+        /// </summary>
+        [Tooltip("Event fired after failing to fetch a product.")]
+        public OnProductFetchFailedEvent? onProductFetchFailed;
+
+        /// <summary>
+        /// Event fired after fetching a purchase.
+        /// </summary>
+        [Tooltip("Event fired after fetching a purchase.")]
+        public OnPurchaseFetchedEvent? onPurchaseFetched;
+
+        /// <summary>
         /// Event fired after a restore transactions.
         /// </summary>
         [Tooltip("Event fired after a restore transactions.")]
-        public OnTransactionsRestoredEvent onTransactionsRestored = null;
+        public OnTransactionsRestoredEvent? onTransactionsRestored;
 
         /// <summary>
-        /// Event fired after a successful purchase of this product.
+        /// Event fired after a pending order.
         /// </summary>
-        [Tooltip("Event fired after a successful purchase of this product.")]
-        public OnPurchaseCompletedEvent onPurchaseComplete = null;
+        [Tooltip("Event fired after a pending order.")]
+        public OnOrderPendingEvent? onOrderPending;
+
+        /// <summary>
+        /// Event fired after a confirmed order.
+        /// </summary>
+        [Tooltip("Event fired after a confirmed order.")]
+        public OnOrderConfirmedEvent? onOrderConfirmed;
 
         /// <summary>
         /// Event fired after a failed purchase of this product.
         /// </summary>
         [Tooltip("Event fired after a failed purchase of this product.")]
-        public OnPurchaseFailedEvent onPurchaseFailed = null;
+        public OnPurchaseFailedEvent? onPurchaseFailed;
+
+        /// <summary>
+        /// Event fired after deferring to purchase an order.
+        /// </summary>
+        [Tooltip("Event fired after the payment of a purchase was delayed or postponed for this product.")]
+        public OnOrderDeferredEvent? onOrderDeferred;
 
         /// <summary>
         /// Displays the localized title from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized title from the app store.")]
-        public Text titleText;
+        public Text? titleText;
 
         /// <summary>
         /// Displays the localized description from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized description from the app store.")]
-        public Text descriptionText;
+        public Text? descriptionText;
 
         /// <summary>
         /// Displays the localized price from the app store.
         /// </summary>
         [Tooltip("[Optional] Displays the localized price from the app store.")]
-        public Text priceText;
+        public Text? priceText;
 
-        internal override string GetProductId()
+        /// <summary>
+        /// Invoked for each fetched product.
+        /// </summary>
+        /// <param name="product">The fetched product.</param>
+        public void OnProductFetched(Product product)
         {
-            return productId;
+            throw new NotImplementedException();
         }
 
-        internal override bool IsAPurchaseButton()
+        /// <summary>
+        /// Invoked for each failed fetch product.
+        /// </summary>
+        /// <param name="product">The product that failed to be fetched.</param>
+        /// <param name="failureReason">The reason the fetch product failed.</param>
+        public void OnProductFetchFailed(ProductDefinition product, string failureReason)
         {
-            return buttonType == ButtonType.Purchase;
+            throw new NotImplementedException();
         }
 
-        protected override bool IsARestoreButton()
+        /// <summary>
+        /// Invoked for each fetched purchase.
+        /// </summary>
+        /// <param name="order">The fetched purchase.</param>
+        public void OnPurchaseFetched(Order order)
         {
-            return buttonType == ButtonType.Restore;
+            throw new NotImplementedException();
         }
 
-        protected override bool ShouldConsumePurchase()
+        /// <summary>
+        /// Invoked on transactions restored.
+        /// </summary>
+        /// <param name="success">Indicates if the restore transaction was successful.</param>
+        /// <param name="error">When unsuccessful, the error message.</param>
+        void OnTransactionsRestored(bool success, string? error)
         {
-            return consumePurchase;
-        }
-
-        protected override void OnTransactionsRestored(bool success, string error)
-        {
-            onTransactionsRestored?.Invoke(success, error);
-        }
-
-        protected override void OnPurchaseComplete(Product purchasedProduct)
-        {
-            onPurchaseComplete?.Invoke(purchasedProduct);
+            throw new NotImplementedException();
         }
 
         /// <summary>
         /// Invoked on a failed purchase of the product associated with this button
         /// </summary>
-        /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
-        /// <param name="reason">Information to help developers recover from this failure</param>
-        public void OnPurchaseFailed(Product product, PurchaseFailureReason reason)
+        /// <param name="order">The <typeparamref name="Product"/> which failed to purchase</param>
+        public void OnOrderPending(PendingOrder order)
         {
-            onPurchaseFailed?.Invoke(product, reason);
-        }
-
-        protected override Button GetPurchaseButton()
-        {
-            return GetComponent<Button>();
-        }
-
-        protected override void AddButtonToCodelessListener()
-        {
-            CodelessIAPStoreListener.Instance.AddButton(this);
-        }
-
-        protected override void RemoveButtonToCodelessListener()
-        {
-            CodelessIAPStoreListener.Instance.RemoveButton(this);
-        }
-
-        internal override void OnInitCompleted()
-        {
-            UpdateAllTexts();
-        }
-
-        void UpdateAllTexts()
-        {
-            var product = CodelessIAPStoreListener.Instance.GetProduct(productId);
-            if (product != null)
-            {
-                if (titleText != null)
-                {
-                    titleText.text = product.metadata.localizedTitle;
-                }
-
-                if (descriptionText != null)
-                {
-                    descriptionText.text = product.metadata.localizedDescription;
-                }
-
-                if (priceText != null)
-                {
-                    priceText.text = product.metadata.localizedPriceString;
-                }
-            }
+            throw new NotImplementedException();
         }
 
         /// <summary>
-        /// Invoke to process a successful purchase of the product associated with this button.
+        /// Invoked on a failed purchase of the product associated with this button
         /// </summary>
-        /// <param name="e">The successful <c>PurchaseEventArgs</c> for the purchase event. </param>
-        /// <returns>The result of the successful purchase</returns>
-        public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs e)
+        /// <param name="order">The <typeparamref name="Product"/> which failed to purchase</param>
+        public void OnOrderConfirmed(ConfirmedOrder order)
         {
-            return ProcessPurchaseInternal(e);
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Invoked on a failed order associated with this button
+        /// </summary>
+        /// <param name="failedOrder">The <typeparamref name="Order"/> which failed to purchase</param>
+        public void OnPurchaseFailed(FailedOrder failedOrder)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Invoked on a deferred order associated with this button
+        /// </summary>
+        /// <param name="deferredOrder">The <typeparamref name="DeferredOrder"/> that was deferred</param>
+        public void OnOrderDeferred(DeferredOrder deferredOrder)
+        {
+            throw new NotImplementedException();
         }
     }
 }

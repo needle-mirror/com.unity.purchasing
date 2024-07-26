@@ -26,7 +26,7 @@
             </VisualElement>
             <VisualElement name="unverified-mode">
                 <VisualElement name="error-request-format">
-                    <Label text="The request to get the key on the dashboard was invalid. Please Report this as a possible bug." class="warning-message"/>
+                    <Label text="The request to get the key on the dashboard was invalid. Please report this as a possible bug." class="warning-message"/>
                 </VisualElement>
                 <VisualElement name="error-unauthorized-user">
                     <Label text="You are not authorized to set the license key." class="warning-message"/>
@@ -38,7 +38,7 @@
                     <Label text="There seems to be no existing key set on the backend." class="warning-message"/>
                     <VisualElement class="warning-label-container">
                         <VisualElement class="warning-info-icon2x"/>
-                        <Label text="Please verify your Dashboard in the link above to set Google Public Key for this application, in order to ensure revenue numbers reflect verified payments for Google." class="warning-message"/>
+                        <Label text="Please verify the key in your Dashboard's Project Settings via the link above. Under In-App Purchasing Settings, set the Google License Key for this application, in order to ensure revenue numbers reflect verified payments for Google." class="warning-message"/>
                     </VisualElement>
                 </VisualElement>
             </VisualElement>

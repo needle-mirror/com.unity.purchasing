@@ -1,0 +1,37 @@
+{
+    "name": "Unity.Purchasing.Stores",
+    "references": [
+        "Unity.Purchasing.Apple",
+        "Unity.Purchasing.AppleMacos",
+        "Unity.Purchasing.AppleMacosStub",
+        "Unity.Purchasing.AppleStub",
+        "Unity.Purchasing",
+        "Unity.Purchasing.Security",
+        "Unity.Purchasing.SecurityCore",
+        "Unity.Purchasing.SecurityStub",
+        "Unity.Purchasing.Utilities",
+        "Unity.Services.Core",
+        "Unity.Services.Core.Internal",
+        "Unity.Services.Analytics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.analytics",
+            "expression": "[4.0.0,4.4.0)",
+            "define": "IAP_ANALYTICS_SERVICE_ENABLED"
+        },
+        {
+            "name": "com.unity.services.analytics",
+            "expression": "4.4.0",
+            "define": "IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT"
+        }
+    ],
+    "noEngineReferences": false
+}

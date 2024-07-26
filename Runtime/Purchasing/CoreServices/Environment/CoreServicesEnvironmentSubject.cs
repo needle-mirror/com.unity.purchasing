@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
         const string k_DefaultLiveEnvironment = "production";
 
         string m_LastKnownEnvironment;
-        List<ICoreServicesEnvironmentObserver> m_Observers = new List<ICoreServicesEnvironmentObserver>();
+        readonly List<ICoreServicesEnvironmentObserver> m_Observers = new List<ICoreServicesEnvironmentObserver>();
 
         internal static CoreServicesEnvironmentSubject Instance()
         {

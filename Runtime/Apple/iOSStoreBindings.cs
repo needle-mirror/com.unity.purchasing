@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.InteropServices;
 
 #if !UNITY_EDITOR
@@ -97,6 +98,11 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        public void Connect()
+        {
+            unityPurchasingAddTransactionObserver();
+        }
+
         public bool simulateAskToBuy
         {
             get
@@ -114,6 +120,11 @@ namespace UnityEngine.Purchasing
             unityPurchasingRetrieveProducts(json);
         }
 
+        public void FetchExistingPurchases()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Purchase(string productJSON, string developerPayload)
         {
             unityPurchasingPurchase(productJSON, developerPayload);
@@ -124,6 +135,11 @@ namespace UnityEngine.Purchasing
             unityPurchasingFinishTransaction(productJSON, transactionId);
         }
 
+        public bool CheckEntitlement(string productJSON)
+        {
+            throw new NotImplementedException();
+        }
+
         public void RestoreTransactions()
         {
             unityPurchasingRestoreTransactions();
@@ -132,11 +148,6 @@ namespace UnityEngine.Purchasing
         public void RefreshAppReceipt()
         {
             unityPurchasingRefreshAppReceipt();
-        }
-
-        public void AddTransactionObserver()
-        {
-            unityPurchasingAddTransactionObserver();
         }
 
         public void SetApplicationUsername(string applicationUsername)

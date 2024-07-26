@@ -1,6 +1,8 @@
+#nullable enable
+
 using System;
 using UnityEngine.Events;
-using UnityEngine.Purchasing.Extension;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace UnityEngine.Purchasing
@@ -12,7 +14,7 @@ namespace UnityEngine.Purchasing
     /// <seealso cref="CodelessIAPStoreListener"/>
     [AddComponentMenu("In-App Purchasing/IAP Button")]
     [HelpURL("https://docs.unity3d.com/Packages/com.unity.purchasing@latest")]
-    public class CodelessIAPButton : BaseIAPButton
+    public class CodelessIAPButton : MonoBehaviour
     {
         /// <summary>
         /// Type of event fired after a successful fetching the product information from the store.
@@ -23,34 +25,52 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Type of event fired after a successful purchase of a product.
+        /// Type of event fired for each product that failed to be fetched.
         /// </summary>
         [Serializable]
-        public class OnPurchaseCompletedEvent : UnityEvent<Product>
-        {
-        }
+        public class OnProductFetchFailedEvent : UnityEvent<ProductDefinition, string> { }
 
         /// <summary>
-        /// Type of event fired after a failed purchase of a product.
+        /// Type of event fired for each fetched purchase.
         /// </summary>
         [Serializable]
-        public class OnPurchaseFailedEvent : UnityEvent<Product, PurchaseFailureDescription>
-        {
-        }
+        public class OnPurchaseFetchedEvent : UnityEvent<Order> { }
 
         /// <summary>
         /// Type of event fired after a restore transactions was completed.
         /// </summary>
         [Serializable]
-        public class OnTransactionsRestoredEvent : UnityEvent<bool, string>
-        {
-        }
+        public class OnTransactionsRestoredEvent : UnityEvent<bool, string?> { }
+
+        /// <summary>
+        /// Type of event fired after a pending order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderPendingEvent : UnityEvent<PendingOrder> { }
+
+        /// <summary>
+        /// Type of event fired after a confirmed order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderConfirmedEvent : UnityEvent<ConfirmedOrder> { }
+
+        /// <summary>
+        /// Type of event fired after a failed purchase of a product.
+        /// </summary>
+        [Serializable]
+        public class OnPurchaseFailedEvent : UnityEvent<FailedOrder> { }
+
+        /// <summary>
+        /// Type of event fired after deferring to purchase an order.
+        /// </summary>
+        [Serializable]
+        public class OnOrderDeferredEvent : UnityEvent<DeferredOrder> { }
 
         /// <summary>
         /// Which product identifier to represent. Note this is not a store-specific identifier.
         /// </summary>
         [HideInInspector]
-        public string productId;
+        public string? productId;
 
         /// <summary>
         /// The type of this button, can be either a purchase or a restore button.
@@ -61,109 +81,234 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Consume the product immediately after a successful purchase.
         /// </summary>
-        [Tooltip("Consume the product immediately after a successful purchase.")]
-        public bool consumePurchase = true;
+        [FormerlySerializedAs("consumePurchase")]
+        [Tooltip("Automatically confirm the transaction immediately after a successful purchase.")]
+        public bool automaticallyConfirmTransaction = true;
+
+        /// <summary>
+        /// Event fired after fetching a product.
+        /// </summary>
+        [Tooltip("Event fired after fetching a product.")]
+        public OnProductFetchedEvent? onProductFetched;
+
+        /// <summary>
+        /// Event fired after failing to fetch a product.
+        /// </summary>
+        [Tooltip("Event fired after failing to fetch a product.")]
+        public OnProductFetchFailedEvent? onProductFetchFailed;
+
+        /// <summary>
+        /// Event fired after fetching a purchase.
+        /// </summary>
+        [Tooltip("Event fired after fetching a purchase.")]
+        public OnPurchaseFetchedEvent? onPurchaseFetched;
 
         /// <summary>
         /// Event fired after a restore transactions.
         /// </summary>
         [Tooltip("Event fired after a restore transactions.")]
-        public OnTransactionsRestoredEvent onTransactionsRestored;
+        public OnTransactionsRestoredEvent? onTransactionsRestored;
 
         /// <summary>
-        /// Event fired after a successful purchase of this product.
+        /// Event fired after a pending order.
         /// </summary>
-        [Tooltip("Event fired after a successful purchase of this product.")]
-        public OnPurchaseCompletedEvent onPurchaseComplete;
+        [Tooltip("Event fired after a pending order.")]
+        public OnOrderPendingEvent? onOrderPending;
+
+        /// <summary>
+        /// Event fired after a confirmed order.
+        /// </summary>
+        [Tooltip("Event fired after a confirmed order.")]
+        public OnOrderConfirmedEvent? onOrderConfirmed;
 
         /// <summary>
         /// Event fired after a failed purchase of this product.
         /// </summary>
         [Tooltip("Event fired after a failed purchase of this product.")]
-        public OnPurchaseFailedEvent onPurchaseFailed;
+        public OnPurchaseFailedEvent? onPurchaseFailed;
 
         /// <summary>
-        /// Event fired after a successful fetching the product information from the store.
+        /// Event fired after deferring to purchase an order.
         /// </summary>
-        [Tooltip("Event fired after a successful fetching the product information from the store.")]
-        public OnProductFetchedEvent onProductFetched;
+        [Tooltip("Event fired after the payment of a purchase was delayed or postponed for this product.")]
+        public OnOrderDeferredEvent? onOrderDeferred;
 
         [Tooltip("Button that triggers purchase.")]
-        public Button button;
+        public Button? button;
 
-        internal override string GetProductId()
+        void Start()
         {
-            return productId;
+            if (IsAPurchaseButton())
+            {
+                AddPurchaseButtonListener();
+            }
+            else if (IsARestoreButton())
+            {
+                AddRestoreButtonListener();
+            }
         }
 
-        internal override bool IsAPurchaseButton()
+        void AddPurchaseButtonListener()
+        {
+            GetButton()?.onClick.AddListener(PurchaseProduct);
+
+            if (string.IsNullOrEmpty(productId))
+            {
+                Debug.LogError("IAPButton productId is empty");
+            }
+            else if (!CodelessIAPStoreListener.Instance.HasProductInCatalog(productId!))
+            {
+                Debug.LogWarning("The product catalog has no product with the ID \"" + productId + "\"");
+            }
+        }
+
+        void AddRestoreButtonListener()
+        {
+            GetButton()?.onClick.AddListener(Restore);
+        }
+
+        void OnEnable()
+        {
+            if (IsAPurchaseButton())
+            {
+                AddButtonToCodelessListener();
+                if (CodelessIAPStoreListener.Instance.IsInitialized())
+                {
+                    OnInitCompleted();
+                }
+            }
+        }
+
+        void OnDisable()
+        {
+            if (IsAPurchaseButton())
+            {
+                RemoveButtonToCodelessListener();
+            }
+        }
+
+        void PurchaseProduct()
+        {
+            if (IsAPurchaseButton())
+            {
+                CodelessIAPStoreListener.Instance.InitiatePurchase(productId);
+            }
+        }
+
+        void Restore()
+        {
+            if (IsARestoreButton())
+            {
+                UnityIAPServices.DefaultPurchase().RestoreTransactions(OnTransactionsRestored);
+            }
+        }
+
+        internal bool IsAPurchaseButton()
         {
             return buttonType == CodelessButtonType.Purchase;
         }
 
-        protected override bool IsARestoreButton()
+        bool IsARestoreButton()
         {
             return buttonType == CodelessButtonType.Restore;
         }
 
-        protected override bool ShouldConsumePurchase()
+        /// <summary>
+        /// Invoked for each fetched product.
+        /// </summary>
+        /// <param name="product">The fetched product.</param>
+        public void OnProductFetched(Product product)
         {
-            return consumePurchase;
+            onProductFetched?.Invoke(product);
         }
 
-        protected override void OnTransactionsRestored(bool success, string error)
+        /// <summary>
+        /// Invoked for each failed fetch product.
+        /// </summary>
+        /// <param name="product">The product that failed to be fetched.</param>
+        /// <param name="failureReason">The reason the fetch product failed.</param>
+        public void OnProductFetchFailed(ProductDefinition product, string failureReason)
+        {
+            onProductFetchFailed?.Invoke(product, failureReason);
+        }
+
+        /// <summary>
+        /// Invoked for each fetched purchase.
+        /// </summary>
+        /// <param name="order">The fetched purchase.</param>
+        public void OnPurchaseFetched(Order order)
+        {
+            onPurchaseFetched?.Invoke(order);
+        }
+
+        /// <summary>
+        /// Invoked on transactions restored.
+        /// </summary>
+        /// <param name="success">Indicates if the restore transaction was successful.</param>
+        /// <param name="error">When unsuccessful, the error message.</param>
+        public void OnTransactionsRestored(bool success, string? error)
         {
             onTransactionsRestored?.Invoke(success, error);
-        }
-
-
-        protected override void OnPurchaseComplete(Product purchasedProduct)
-        {
-            onPurchaseComplete?.Invoke(purchasedProduct);
         }
 
         /// <summary>
         /// Invoked on a failed purchase of the product associated with this button
         /// </summary>
-        /// <param name="product">The <typeparamref name="Product"/> which failed to purchase</param>
-        /// <param name="failureDescription">Information to help developers recover from this failure</param>
-        public void OnPurchaseFailed(Product product, PurchaseFailureDescription failureDescription)
+        /// <param name="order">The <typeparamref name="Product"/> which failed to purchase</param>
+        public void OnOrderPending(PendingOrder order)
         {
-            onPurchaseFailed?.Invoke(product, failureDescription);
+            onOrderPending?.Invoke(order);
         }
 
-        protected override Button GetPurchaseButton()
+        /// <summary>
+        /// Invoked on a failed purchase of the product associated with this button
+        /// </summary>
+        /// <param name="order">The <typeparamref name="Product"/> which failed to purchase</param>
+        public void OnOrderConfirmed(ConfirmedOrder order)
+        {
+            onOrderConfirmed?.Invoke(order);
+        }
+
+        /// <summary>
+        /// Invoked on a failed order associated with this button
+        /// </summary>
+        /// <param name="failedOrder">The <typeparamref name="Order"/> which failed to purchase</param>
+        public void OnPurchaseFailed(FailedOrder failedOrder)
+        {
+            onPurchaseFailed?.Invoke(failedOrder);
+        }
+
+        /// <summary>
+        /// Invoked on a deferred order associated with this button
+        /// </summary>
+        /// <param name="deferredOrder">The <typeparamref name="DeferredOrder"/> that was deferred</param>
+        public void OnOrderDeferred(DeferredOrder deferredOrder)
+        {
+            onOrderDeferred?.Invoke(deferredOrder);
+        }
+
+        Button? GetButton()
         {
             return button;
         }
 
-        protected override void AddButtonToCodelessListener()
+        void AddButtonToCodelessListener()
         {
             CodelessIAPStoreListener.Instance.AddButton(this);
         }
 
-        protected override void RemoveButtonToCodelessListener()
+        void RemoveButtonToCodelessListener()
         {
             CodelessIAPStoreListener.Instance.RemoveButton(this);
         }
 
-        internal override void OnInitCompleted()
+        internal void OnInitCompleted()
         {
             var product = CodelessIAPStoreListener.Instance.GetProduct(productId);
             if (product != null)
             {
-                onProductFetched.Invoke(product);
+                onProductFetched?.Invoke(product);
             }
-        }
-
-        /// <summary>
-        /// Invoke to process a successful purchase of the product associated with this button.
-        /// </summary>
-        /// <param name="e">The successful <c>PurchaseEventArgs</c> for the purchase event. </param>
-        /// <returns>The result of the successful purchase</returns>
-        public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args)
-        {
-            return ProcessPurchaseInternal(args);
         }
     }
 }

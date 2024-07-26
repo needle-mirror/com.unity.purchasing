@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
@@ -12,21 +13,22 @@ namespace UnityEngine.Purchasing
         readonly IGoogleBillingClient m_BillingClient;
         readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
         readonly IQueryProductDetailsService m_QueryProductDetailsService;
+        readonly ILogger m_Logger;
+        IProductCache? m_ProductCache;
 
-        internal GooglePurchaseService(IGoogleBillingClient billingClient, IGooglePurchaseCallback googlePurchaseCallback, IQueryProductDetailsService queryProductDetailsService)
+        [Preserve]
+        internal GooglePurchaseService(IGoogleBillingClient billingClient, IGooglePurchaseCallback googlePurchaseCallback, IQueryProductDetailsService queryProductDetailsService, ILogger logger)
         {
             m_BillingClient = billingClient;
             m_GooglePurchaseCallback = googlePurchaseCallback;
             m_QueryProductDetailsService = queryProductDetailsService;
+            m_Logger = logger;
         }
 
-        public void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        public async void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
-            m_QueryProductDetailsService.QueryAsyncProduct(product,
-                (productDetailsList, _) =>
-                {
-                    OnQueryProductDetailsResponse(productDetailsList, product, oldProduct, desiredProrationMode);
-                });
+            var productDetailsList = await m_QueryProductDetailsService.QueryProductDetails(product);
+            OnQueryProductDetailsResponse(productDetailsList, product, oldProduct, desiredProrationMode);
         }
 
         void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
@@ -60,11 +62,12 @@ namespace UnityEngine.Purchasing
             return skus?.Count > 0;
         }
 
-        static void VerifyAndWarnIfMoreThanOneSku(List<AndroidJavaObject>? skus)
+        void VerifyAndWarnIfMoreThanOneSku(List<AndroidJavaObject>? skus)
         {
             if (skus?.Count > 1)
             {
-                Debug.LogWarning(GoogleBillingStrings.getWarningMessageMoreThanOneSkuFound(skus[0].Call<string>("getProductId")));
+                m_Logger.LogIAPWarning(GoogleBillingStrings.getWarningMessageMoreThanOneSkuFound(
+                    skus[0].Call<string>("getProductId")));
             }
         }
 
@@ -72,13 +75,14 @@ namespace UnityEngine.Purchasing
         {
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
-                    productToBuy.id,
+                    m_ProductCache?.FindOrDefault(productToBuy.id) ?? Product.CreateUnknownProduct(productToBuy.id),
                     PurchaseFailureReason.ProductUnavailable,
                     "SKU does not exist in the store."
                 )
             );
         }
 
+        [System.Obsolete]
         bool ValidateOldProduct(Product? oldProduct)
         {
             return oldProduct?.transactionID != "";
@@ -88,13 +92,14 @@ namespace UnityEngine.Purchasing
         {
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
-                    productToBuy.id,
+                    m_ProductCache?.FindOrDefault(productToBuy.id) ?? Product.CreateUnknownProduct(productToBuy.id),
                     PurchaseFailureReason.ProductUnavailable,
                     "Invalid transaction id for old product: " + oldProduct?.definition.id
                 )
             );
         }
 
+        [System.Obsolete]
         void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
         {
             var billingResult = m_BillingClient.LaunchBillingFlow(productToPurchase, oldProduct?.transactionID, desiredProrationMode);
@@ -105,14 +110,20 @@ namespace UnityEngine.Purchasing
         {
             if (billingResult.responseCode != GoogleBillingResponseCode.Ok)
             {
+                var productId = sku.Call<string>("getProductId");
                 m_GooglePurchaseCallback.OnPurchaseFailed(
                     new PurchaseFailureDescription(
-                        sku.Call<string>("getProductId"),
+                        m_ProductCache?.FindOrDefault(productId) ?? Product.CreateUnknownProduct(productId),
                         PurchaseFailureReason.PurchasingUnavailable,
                         billingResult.debugMessage
                     )
                 );
             }
+        }
+
+        public void SetProductCache(IProductCache? productCache)
+        {
+            m_ProductCache = productCache;
         }
     }
 }

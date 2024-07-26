@@ -16,17 +16,17 @@ namespace UnityEditor.Purchasing
             m_CoreAccessTokens = new AccessTokens();
         }
 
-        internal void RequestRetrieveKeyOperation()
+        internal async void RequestRetrieveKeyOperation()
         {
-            GetGatewayTokenAndThenRetrieveGooglePlayKey();
+            await GetGatewayTokenAndThenRetrieveGooglePlayKey();
         }
 
-        async void GetGatewayTokenAndThenRetrieveGooglePlayKey()
+        async Task GetGatewayTokenAndThenRetrieveGooglePlayKey()
         {
             var gatewayToken = await m_CoreAccessTokens.GetServicesGatewayTokenAsync();
             if (!string.IsNullOrEmpty(gatewayToken))
             {
-                GetGooglePlayKey(gatewayToken);
+                await GetGooglePlayKey(gatewayToken);
             }
             else
             {
@@ -34,7 +34,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        async void GetGooglePlayKey(string gatewayToken)
+        async Task GetGooglePlayKey(string gatewayToken)
         {
             var googlePlayKeyResult = await GetGoogleKeyWebRequest.RequestGooglePlayKeyAsync(gatewayToken);
             ReportGooglePlayKeyAndTrackingState(googlePlayKeyResult.GooglePlayKey, googlePlayKeyResult.ResponseCode);

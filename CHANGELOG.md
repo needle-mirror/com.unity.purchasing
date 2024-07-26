@@ -1,7 +1,36 @@
 # Changelog
-## [4.12.2] - 2024-07-17
-### Fixed
-- GooglePlay - Fixed `Product.receipt`'s `price_amount_micros` returning a string instead of a long.
+
+## [5.0.0-pre.1] - 2024-07-26
+In-app purchasing 5.0.0 is a major overhaul of this package.
+Consult the `Coded IAP 5.0.0 Sample` for a complete example of how to use this new version.
+
+### Added
+- Retry Policies:
+  - Add `StoreService.Connect` method which initiates the connection to the store.
+  - Add `IRetryPolicy` interface that can be implemented to provide a custom retry
+    policy. `IRetryPolicy.ShouldRetry(IRetryPolicyInformation)` determines if the request should retried and can wait
+    before retrying.
+  - Add basic implementations of the `IRetryPolicy` such as `ExponentialRetryPolicy`
+    , `MaximumNumberOfAttemptsRetryPolicy`, `NoRetriesPolicy` and `TimeLimitRetryPolicy`.
+- New callbacks on IAP Button and IAP Listener for all the events
+
+### Fixed:
+- Apple - Fixed `SubscriptionPeriodUnit` to return the correct values: Week = 1, Month = 2 (previously Month = 1, Week = 2)
+- Apple - Fixed isFamilyShareable on tvOS to be only available on supported versions (14.0 and above).
+- Apple - Error codes when a purchase fails now always returns the code from Apple instead of defaulting to `SKErrorUnknown`.
+
+### Changed
+- IAP logs are prefixed with `InAppPurchasing`.
+- IAP Catalog
+  - Removed `Apple Configuration`, `Google Configuration` and `Catalog Export` from IAP Catalog since this is no longer supported by the stores.
+  - Moved the Google Configuration `Price` under `Descriptions` which is displayed when products havn't been retrieved yet or in Fake Store
+- Assemblies starting with `UnityEngine.Purchasing` have been renamed to `Unity.Purchasing`
+
+### Removed
+- Support for Windows Store (Universal Windows Platform)
+- Support for the Unity 2020 Editor and Engine. Please upgrade to Unity 2021.3 or later.
+- Android - Support for the Unity Distribution Portal via the In-App Purchasing package. You may still use the Unity Distribution Portal in older versions of In-App Purchasing, or by writing your own implementation of the Unity Distribution Portal SDK directly, or as a custom store.
+- Support for Legacy Analytics (com.unity.modules.unityanalytics). Please use Unity Game Services Analytics instead (com.unity.services.analytics).
 
 ## [4.12.1] - 2024-07-11
 ### Changed

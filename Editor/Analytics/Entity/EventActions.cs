@@ -4,7 +4,6 @@ namespace UnityEditor.Purchasing
 {
     internal static class EventActions
     {
-        internal const string k_ActionAddIapButton_legacy = "legacy_add_iap_button";
         internal const string k_ActionAddIapButton = "add_iap_button";
         internal const string k_ActionAddIapListener = "add_iap_listener";
         internal const string k_ActionAddPayout = "add_payout";
@@ -18,7 +17,5 @@ namespace UnityEditor.Purchasing
         internal const string k_ActionRemoveProduct = "remove_product";
         internal const string k_ActionRemoveTranslation = "remove_translation";
         internal const string k_ActionSelectAppleScreenshot = "select_apple_screenshot";
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        internal const string k_ActionSyncToUdp = "sync_to_udp";
     }
 }

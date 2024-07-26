@@ -1,6 +1,8 @@
+using System;
+using Common.Settings;
+using Editor.Common.Settings;
 using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine;
-using static UnityEditor.Purchasing.UnityPurchasingEditor;
 
 namespace UnityEditor.Purchasing
 {
@@ -20,6 +22,7 @@ namespace UnityEditor.Purchasing
 
         private const string kLabelGoogleKey = "Google Play Public License Key";
         private const string kPublicKeyPlaceholder = "--Paste Public Key Here--";
+        private const string kPublicKeyLoading = "--Loading Public Key from Settings--";
 
         private const string kLabelGoogleInstructions =
             "Follow these four steps to set up receipt validation for Google Play.";
@@ -52,7 +55,7 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// The current Google Play Public Key, in string
         /// </summary>
-        string m_GooglePlayPublicKey = kPublicKeyPlaceholder;
+        string m_GooglePlayPublicKey = kPublicKeyLoading;
 
 #if !ENABLE_EDITOR_GAME_SERVICES
         [MenuItem(IapMenuConsts.MenuItemRoot + "/Receipt Validation Obfuscator...", false, 200)]
@@ -69,8 +72,11 @@ namespace UnityEditor.Purchasing
         }
 #endif
 
-        private ObfuscatorWindow()
+        internal SettingsWebRequests SettingsWebRequest;
+
+        void OnGetIAPSettings(IapSettings settings)
         {
+            m_GooglePlayPublicKey = settings.google?.publicKey ?? kPublicKeyPlaceholder;
         }
 
         void OnGUI()
@@ -97,6 +103,12 @@ namespace UnityEditor.Purchasing
 
             GUILayout.Label(kLabelGooglePlayDeveloperConsoleSteps);
             GUILayout.Label(kLabelGooglePasteKeyInstructions);
+
+            if (SettingsWebRequest == null)
+            {
+                SettingsWebRequest = new SettingsWebRequests(OnGetIAPSettings);
+            }
+
             m_GooglePlayPublicKey = EditorGUILayout.TextArea(
                 m_GooglePlayPublicKey,
                 GUILayout.MinHeight(20),

@@ -20,11 +20,12 @@ This section defines the metadata associated with your Product for use in an in-
 ### Descriptions
 Use the following fields to add descriptive text for your Product:
 
-| **Field** | **Data type** | **Description** | **Example** |
-|:---|:---|:---|:---|
-| __Product Locale__ | Enum | Determines the app stores available in your region. | **English (U.S.)** (Google Play, Apple) |
-| __Product Title__ | String | The name of your Product as it appears in an app store. | “Health Potion” |
-| __Product Description__ | String | The descriptive text for your Product as it appears in an app store, usually an explanation of what the Product is. | “Restores 50 HP.” |
+| **Field**               | **Data type** | **Description**                                                                                                     | **Example**                             |
+|:------------------------|:---|:--------------------------------------------------------------------------------------------------------------------|:----------------------------------------|
+| __Product Price__       | String | The price for your Product as it appears in an app store.       | 9.99                                    |
+| __Product Locale__      | Enum | Determines the app stores available in your region.                                                                 | **English (U.S.)** (Google Play, Apple) |
+| __Product Title__       | String | The name of your Product as it appears in an app store.                                                             | “Health Potion”                         |
+| __Product Description__ | String | The descriptive text for your Product as it appears in an app store, usually an explanation of what the Product is. | “Restores 50 HP.”                       |
 
 ### Payouts
 Use this section to add local, fixed definitions for the content you pay out to the purchaser. Payouts make it easier to manage in-game wallets or inventories. By labeling a Product with a name and quantity, developers can quickly adjust in-game counts of certain item types upon purchase (for example, coins or gems).

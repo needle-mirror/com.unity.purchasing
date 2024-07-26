@@ -1,0 +1,22 @@
+{
+    "name": "Unity.Purchasing",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Services.Core",
+        "Unity.Services.Core.Environments",
+        "Unity.Services.Core.Internal",
+        "Unity.Purchasing.Security",
+        "Unity.Purchasing.SecurityStub",
+        "Unity.Purchasing.SecurityCore",
+        "Unity.Purchasing.Utilities"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

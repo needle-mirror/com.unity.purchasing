@@ -12,9 +12,6 @@ namespace UnityEditor.Purchasing
         {
             switch (report.summary.platform)
             {
-                case BuildTarget.WSAPlayer:
-                    WinRTPatcher.PatchWinRTBuild();
-                    break;
                 case BuildTarget.Android:
                     UnityPurchasingEditor.OnPostProcessScene();
                     break;

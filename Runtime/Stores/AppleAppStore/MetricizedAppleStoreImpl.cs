@@ -2,8 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using Uniject;
 using UnityEngine.Purchasing.Telemetry;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
@@ -11,8 +13,12 @@ namespace UnityEngine.Purchasing
     {
         readonly ITelemetryMetricsService m_TelemetryMetricsService;
 
-        public MetricizedAppleStoreImpl(IUtil util, ITelemetryDiagnostics telemetryDiagnostics,
-            ITelemetryMetricsService telemetryMetricsService) : base(util, telemetryDiagnostics)
+        [Preserve]
+        internal MetricizedAppleStoreImpl(ICartValidator cartValidator,
+            IAppleRetrieveProductsService retrieveProductsService, IAppleReceiptConverter receiptConverter,
+            ITransactionLog transactionLog, IUtil util, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics,
+            ITelemetryMetricsService telemetryMetricsService)
+            : base(cartValidator, retrieveProductsService, receiptConverter, transactionLog, util, logger, telemetryDiagnostics)
         {
             m_TelemetryMetricsService = telemetryMetricsService;
         }
@@ -36,13 +42,6 @@ namespace UnityEngine.Purchasing
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.SetStorePromotionOrder(products), TelemetryMetricDefinitions.setStorePromotionOrderName);
-        }
-
-        [Obsolete("RestoreTransactions(Action<bool> callback) is deprecated, please use RestoreTransactions(Action<bool, string> callback) instead.")]
-        public override void RestoreTransactions(Action<bool>? callback)
-        {
-            m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.RestoreTransactions(callback), TelemetryMetricDefinitions.restoreTransactionName);
         }
 
         public override void RestoreTransactions(Action<bool, string?>? callback)
@@ -70,17 +69,17 @@ namespace UnityEngine.Purchasing
                 base.PresentCodeRedemptionSheet, TelemetryMetricDefinitions.presentCodeRedemptionSheetName);
         }
 
-        public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
+        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.RetrieveProducts(products),
                 TelemetryMetricDefinitions.retrieveProductsName);
         }
 
-        public override void Purchase(ProductDefinition product, string developerPayload)
+        public override void Purchase(ICart cart)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.Purchase(product, developerPayload), TelemetryMetricDefinitions.initPurchaseName);
+                () => base.Purchase(cart), TelemetryMetricDefinitions.initPurchaseName);
         }
     }
 }

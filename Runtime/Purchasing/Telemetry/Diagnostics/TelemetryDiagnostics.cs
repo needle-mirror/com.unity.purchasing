@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing.Telemetry
 {
@@ -6,7 +7,8 @@ namespace UnityEngine.Purchasing.Telemetry
     {
         readonly ITelemetryDiagnosticsInstanceWrapper m_TelemetryDiagnosticsInstanceWrapper;
 
-        public TelemetryDiagnostics(ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper)
+        [Preserve]
+        internal TelemetryDiagnostics(ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper)
         {
             m_TelemetryDiagnosticsInstanceWrapper = telemetryDiagnosticsInstanceWrapper;
         }

@@ -1,3 +1,5 @@
+using System;
+
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -11,15 +13,21 @@ namespace UnityEngine.Purchasing
         /// Further metadata may be populated following retrieval from the
         /// store system.
         /// </summary>
-        internal Product(ProductDefinition definition, ProductMetadata metadata, string receipt)
+        [Obsolete]
+        internal Product(ProductDefinition definition, ProductMetadata metadata, string receipt) : this(definition, metadata)
         {
-            this.definition = definition;
-            this.metadata = metadata;
             this.receipt = receipt;
         }
 
-        internal Product(ProductDefinition definition, ProductMetadata metadata) : this(definition, metadata, null)
+        internal Product(ProductDefinition definition, ProductMetadata metadata)
         {
+            this.definition = definition;
+            this.metadata = metadata;
+        }
+
+        internal static Product CreateUnknownProduct(string productId)
+        {
+            return new Product(new ProductDefinition(productId, ProductType.Unknown), new ProductMetadata());
         }
 
         /// <summary>
@@ -51,6 +59,7 @@ namespace UnityEngine.Purchasing
         /// Consumable's transactionID are not set between app restarts unless it has a pending transaction.
         /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `transactionID` is removed.
         /// </summary>
+        [Obsolete]
         public string transactionID { get; internal set; }
 
         /// <summary>
@@ -70,6 +79,7 @@ namespace UnityEngine.Purchasing
         /// Consumable's receipts are not persisted between App restarts unless it has a pending transaction.
         /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `receipt` is removed.
         /// </summary>
+        [Obsolete]
         public bool hasReceipt => !string.IsNullOrEmpty(receipt);
 
         /// <summary>
@@ -79,6 +89,7 @@ namespace UnityEngine.Purchasing
         /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `receipt` is removed.
         /// Receipts is in JSON format.
         /// </summary>
+        [Obsolete]
         public string receipt { get; internal set; }
 
         /// <summary>

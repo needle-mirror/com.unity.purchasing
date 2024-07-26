@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
@@ -51,7 +52,7 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception e)
             {
-                Debug.LogWarning(e.StackTrace);
+                Debug.unityLogger.LogIAPWarning(e.StackTrace);
             }
 
             // Ensure all the Tangle classes exist, even if they were not generated at this time.
@@ -63,7 +64,7 @@ namespace UnityEditor.Purchasing
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning(e.StackTrace);
+                    Debug.unityLogger.LogIAPWarning(e.StackTrace);
                 }
             }
 
@@ -74,10 +75,7 @@ namespace UnityEditor.Purchasing
         {
             var err = WriteObfuscatedAppleClassAsAsset(k_AppleCertPath, k_AppleClassIncompleteErr, TangleFileConsts.k_AppleClassPrefix);
 
-            if (err == null)
-            {
-                err = WriteObfuscatedAppleClassAsAsset(k_AppleStoreKitTestCertPath, k_AppleStoreKitTestClassIncompleteErr, TangleFileConsts.k_AppleStoreKitTestClassPrefix);
-            }
+            err ??= WriteObfuscatedAppleClassAsAsset(k_AppleStoreKitTestCertPath, k_AppleStoreKitTestClassIncompleteErr, TangleFileConsts.k_AppleStoreKitTestClassPrefix);
 
             return err;
         }
@@ -99,7 +97,8 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"{classIncompleteErr}. Generating incomplete credentials file. " + e);
+                Debug.unityLogger.LogIAPWarning($"{classIncompleteErr}. Generating incomplete credentials " +
+                    "file. " + e);
                 appleError = $"  {classIncompleteErr}";
             }
 
@@ -123,7 +122,8 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception e)
             {
-                Debug.LogWarning("Invalid Google Play Public Key. Generating incomplete credentials file. " + e);
+                Debug.unityLogger.LogIAPWarning("Invalid Google Play Public Key. Generating incomplete " +
+                    "credentials file. " + e);
                 googleError =
                     "  The Google Play License Key is invalid. GooglePlayTangle was generated with incomplete credentials.";
             }
@@ -198,8 +198,7 @@ namespace UnityEditor.Purchasing
             }
             else
             {
-                Debug.LogError(String.Format("Could not find template \"{0}\"",
-                    m_GeneratedCredentialsTemplateFilename));
+                Debug.unityLogger.LogIAPError($"Could not find template \"{m_GeneratedCredentialsTemplateFilename}\"");
             }
 
             string templateText = null;

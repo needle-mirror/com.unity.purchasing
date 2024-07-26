@@ -1,11 +1,14 @@
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
+    [Preserve]
     class GoogleCachedQueryProductDetailsService : IGoogleCachedQueryProductDetailsService
     {
-        readonly Dictionary<string, AndroidJavaObject> m_CachedQueriedProductDetails = new Dictionary<string, AndroidJavaObject>();
+        readonly ConcurrentDictionary<string, AndroidJavaObject> m_CachedQueriedProductDetails = new();
 
         ~GoogleCachedQueryProductDetailsService()
         {

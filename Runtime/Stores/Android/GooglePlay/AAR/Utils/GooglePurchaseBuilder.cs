@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing.Utils
 {
@@ -11,7 +12,8 @@ namespace UnityEngine.Purchasing.Utils
         readonly IGoogleCachedQueryProductDetailsService m_CachedQueryProductDetailsService;
         readonly ILogger m_Logger;
 
-        public GooglePurchaseBuilder(IGoogleCachedQueryProductDetailsService cachedQueryProductDetailsService, ILogger logger)
+        [Preserve]
+        internal GooglePurchaseBuilder(IGoogleCachedQueryProductDetailsService cachedQueryProductDetailsService, ILogger logger)
         {
             m_CachedQueryProductDetailsService = cachedQueryProductDetailsService;
             m_Logger = logger;

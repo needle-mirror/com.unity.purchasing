@@ -1,28 +1,29 @@
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
 using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
-    class MetricizedJsonStore : JSONStore
+    class MetricizedJsonStore : JsonStore
     {
         readonly ITelemetryMetricsService m_TelemetryMetricsService;
 
-        public MetricizedJsonStore(ITelemetryMetricsService telemetryMetricsService)
+        internal MetricizedJsonStore(ICartValidator cartValidator, ILogger logger, string storeName,
+            ITelemetryMetricsService telemetryMetricsService) : base(cartValidator, logger, storeName)
         {
             m_TelemetryMetricsService = telemetryMetricsService;
         }
 
-        public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
+        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
                 () => base.RetrieveProducts(products),
                 TelemetryMetricDefinitions.retrieveProductsName);
         }
 
-        public override void Purchase(ProductDefinition product, string developerPayload)
+        public override void Purchase(ICart cart)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.Purchase(product, developerPayload),
+                () => base.Purchase(cart),
                 TelemetryMetricDefinitions.initPurchaseName);
         }
     }

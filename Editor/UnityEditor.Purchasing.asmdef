@@ -2,13 +2,13 @@
     "name": "UnityEditor.Purchasing",
     "rootNamespace": "",
     "references": [
-        "UnityEngine.Purchasing",
-        "Purchasing.Common",
-        "UnityEngine.Purchasing.Security",
-        "UnityEngine.Purchasing.SecurityCore",
-        "UnityEngine.Purchasing.SecurityStub",
-        "UnityEngine.Purchasing.Stores",
-        "UnityEngine.Purchasing.Codeless",
+        "Unity.Purchasing",
+        "Unity.Purchasing.Security",
+        "Unity.Purchasing.SecurityCore",
+        "Unity.Purchasing.SecurityStub",
+        "Unity.Purchasing.Stores",
+        "Unity.Purchasing.Codeless",
+        "Unity.Purchasing.Utilities",
         "Unity.Services.Core.Editor"
     ],
     "includePlatforms": [

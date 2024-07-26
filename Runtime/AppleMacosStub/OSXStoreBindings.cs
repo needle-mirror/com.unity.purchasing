@@ -24,7 +24,17 @@ namespace UnityEngine.Purchasing
         {
             throw new NotImplementedException();
         }
+
+        public void Connect()
+        {
+            throw new NotImplementedException();
+        }
+
         public void RetrieveProducts(string json)
+        {
+            throw new NotImplementedException();
+        }
+        public void FetchExistingPurchases()
         {
             throw new NotImplementedException();
         }
@@ -33,6 +43,11 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
         public void FinishTransaction(string productJSON, string transactionID)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool CheckEntitlement(string productJSON)
         {
             throw new NotImplementedException();
         }

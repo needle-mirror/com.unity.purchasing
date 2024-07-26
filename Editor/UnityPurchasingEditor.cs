@@ -20,160 +20,15 @@ namespace UnityEditor.Purchasing
     {
         const string PurchasingPackageName = "com.unity.purchasing";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        internal const string UdpPackageName = "com.unity.purchasing.udp";
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        const string k_UdpErrorText = "In order to use UDP functionality, you must install or update the Unity Distribution Portal Package. Please configure your project's packages before running UDP-related editor commands in batch mode.";
-
         const string ModePath = "Assets/Resources/BillingMode.json";
         const string prevModePath = "Assets/Plugins/UnityPurchasing/Resources/BillingMode.json";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static ListRequest m_ListRequestOfDependentPackages;
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static SearchRequest m_SearchRequestOfAvailablePackages;
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static bool m_UdpUpmPackageInstalled;
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static bool m_UdpUpmPackageAvailable;
-
         const string BinPath = "Packages/com.unity.purchasing/Plugins/UnityPurchasing/Android";
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        const string AssetStoreUdpBinPath = "Assets/Plugins/UDP/Android";
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static readonly string PackManUdpBinPath = $"Packages/{UdpPackageName}/Android";
 
         static StoreConfiguration config;
         static readonly AppStore defaultAppStore = AppStore.GooglePlay;
         internal delegate void AndroidTargetChange(AppStore store);
         internal static AndroidTargetChange OnAndroidTargetChange;
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        internal static bool IsUdpUpmPackageInstalled()
-        {
-            return m_UdpUpmPackageInstalled || File.Exists($"Packages/{UdpPackageName}/package.json");
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static void ListingCurrentPackageProgress()
-        {
-            if (m_ListRequestOfDependentPackages.IsCompleted)
-            {
-                m_UdpUpmPackageInstalled = false;
-                EditorApplication.update -= ListingCurrentPackageProgress;
-                if (m_ListRequestOfDependentPackages.Status == StatusCode.Success)
-                {
-                    var udpPackage = m_ListRequestOfDependentPackages.Result.FirstOrDefault(package => package.name == UdpPackageName);
-
-                    m_UdpUpmPackageInstalled = udpPackage != null;
-                }
-                else if (m_ListRequestOfDependentPackages.Status >= StatusCode.Failure)
-                {
-                    Debug.LogError(m_ListRequestOfDependentPackages.Error.message);
-                }
-
-                if (!m_UdpUpmPackageInstalled)
-                {
-                    CheckUdpUpmPackageAvailableViaPackageManager();
-                }
-            }
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static void SearchingAvailablePackageProgress()
-        {
-            if (m_SearchRequestOfAvailablePackages.IsCompleted)
-            {
-                m_UdpUpmPackageAvailable = false;
-                EditorApplication.update -= SearchingAvailablePackageProgress;
-                if (m_SearchRequestOfAvailablePackages.Status == StatusCode.Success)
-                {
-                    var udpPackage = m_SearchRequestOfAvailablePackages.Result.FirstOrDefault(package => package.name == UdpPackageName);
-
-                    m_UdpUpmPackageAvailable = udpPackage != null;
-                }
-                else if (m_SearchRequestOfAvailablePackages.Status >= StatusCode.Failure)
-                {
-                    Debug.LogError(m_SearchRequestOfAvailablePackages.Error.message);
-                }
-            }
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        internal static bool IsUdpAssetStorePackageInstalled()
-        {
-            return File.Exists("Assets/UDP/UDP.dll") || File.Exists("Assets/Plugins/UDP/UDP.dll");
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        [InitializeOnLoadMethod]
-        static void CheckUdpUpmPackageInstalled()
-        {
-            if (IsInBatchMode())
-            {
-                CheckUdpUpmPackageInstalledViaManifest();
-            }
-            else
-            {
-                CheckUdpUpmPackageInstalledViaPackageManager();
-            }
-        }
-
-
-        static bool IsInBatchMode()
-        {
-            return UnityEditorInternal.InternalEditorUtility.inBatchMode;
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static void CheckUdpUpmPackageInstalledViaPackageManager()
-        {
-            if (IsInBatchMode())
-            {
-                Debug.unityLogger.LogIAPError("CheckUdpUmpPackageInstalledViaPackageManager will always fail in Batch Mode. Call CheckUdpUmpPackageInstalledViaManifest instead");
-            }
-
-            m_ListRequestOfDependentPackages = Client.List();
-            EditorApplication.update += ListingCurrentPackageProgress;
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static void CheckUdpUpmPackageInstalledViaManifest()
-        {
-            if (!IsInBatchMode())
-            {
-                Debug.unityLogger.LogIAPWarning("When not running in batch mode, it's more reliable to check the presence of UDP via CheckUdpUmpPackageInstalledViaPackageManager, in case the manifest file is out of date.");
-            }
-
-            m_UdpUpmPackageInstalled = false;
-
-            if (File.Exists("Packages/manifest.json"))
-            {
-                var jsonText = File.ReadAllText("Packages/manifest.json");
-                m_UdpUpmPackageInstalled = jsonText.Contains(UdpPackageName);
-            }
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static void CheckUdpUpmPackageAvailableViaPackageManager()
-        {
-            if (IsInBatchMode())
-            {
-                Debug.unityLogger.LogIAPError("CheckUdpUpmPackageAvailableViaPackageManager will always fail in Batch Mode.");
-            }
-
-            m_SearchRequestOfAvailablePackages = Client.SearchAll();
-            EditorApplication.update += SearchingAvailablePackageProgress;
-        }
 
         /// <summary>
         /// Since we are changing the billing mode's location, it may be necessary to migrate existing billing
@@ -202,7 +57,7 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                Debug.unityLogger.LogIAPException(ex);
             }
         }
 
@@ -216,13 +71,6 @@ namespace UnityEditor.Purchasing
         {
             {"billing-6.2.1.aar", AppStore.GooglePlay},
             {"AmazonAppStore.aar", AppStore.AmazonAppStore}
-        };
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static readonly Dictionary<string, AppStore> UdpSpecificFiles = new Dictionary<string, AppStore>() {
-            { "udp.aar", AppStore.UDP},
-            { "udpsandbox.aar", AppStore.UDP},
-            { "utils.aar", AppStore.UDP}
         };
 
         // Create or read BillingMode.json at Project Editor load
@@ -283,7 +131,6 @@ namespace UnityEditor.Purchasing
         /// This sets the correct plugin importer settings for the store
         /// and writes the choice to BillingMode.json so the player
         /// can choose the correct store API at runtime.
-        /// Note: This can fail if preconditions are not met for the AppStore.UDP target.
         /// </summary>
         /// <param name="target">App store to enable for next build</param>
         public static void TargetAndroidStore(AppStore target)
@@ -298,14 +145,6 @@ namespace UnityEditor.Purchasing
                 throw new ArgumentException(string.Format("AppStore parameter ({0}) must be an Android app store", target));
             }
 
-            if (target == AppStore.UDP)
-            {
-                if (CheckAndHandleUdpUnavailability())
-                {
-                    return ConfiguredAppStore();
-                }
-            }
-
             ConfigureProject(target);
             SaveConfig(target);
             OnAndroidTargetChange?.Invoke(target);
@@ -314,33 +153,6 @@ namespace UnityEditor.Purchasing
             GenericEditorDropdownSelectEventSenderHelpers.SendIapMenuSelectTargetStoreEvent(targetString);
 
             return ConfiguredAppStore();
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static bool CheckAndHandleUdpUnavailability()
-        {
-            if (!s_udpAvailable || (!IsUdpUpmPackageInstalled() && !IsUdpAssetStorePackageInstalled()) || !UdpSynchronizationApi.CheckUdpCompatibility())
-            {
-                if (IsInBatchMode())
-                {
-                    Debug.unityLogger.LogIAPError(k_UdpErrorText);
-                }
-                else
-                {
-                    if (m_UdpUpmPackageAvailable)
-                    {
-                        UdpInstaller.PromptUdpInstallation();
-                    }
-                    else
-                    {
-                        UdpInstaller.PromptUdpUnavailability();
-                    }
-                }
-
-                return true;
-            }
-
-            return false;
         }
 
         // Unfortunately the UnityEditor API updates only the in-memory list of
@@ -373,47 +185,6 @@ namespace UnityEditor.Purchasing
                     {
                         importer = (PluginImporter)AssetImporter.GetAtPath(paths[0]);
                         importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
-                    }
-                }
-            }
-
-            ConfigureProjectForUdp(target);
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        static void ConfigureProjectForUdp(AppStore target)
-        {
-            var UdpBinPath = IsUdpUpmPackageInstalled() ? PackManUdpBinPath :
-                IsUdpAssetStorePackageInstalled() ? AssetStoreUdpBinPath :
-                null;
-
-            if (s_udpAvailable && !string.IsNullOrEmpty(UdpBinPath))
-            {
-                foreach (var mapping in UdpSpecificFiles)
-                {
-                    // All files enabled when store is determined at runtime.
-                    var enabled = target == AppStore.NotSpecified;
-                    // Otherwise this file must be needed on the target.
-                    enabled |= mapping.Value == target;
-
-                    var path = $"{UdpBinPath}/{mapping.Key}";
-                    var importer = (PluginImporter)AssetImporter.GetAtPath(path);
-
-                    if (importer != null)
-                    {
-                        importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
-                    }
-                    else
-                    {
-                        // Search for any occurrence of this file
-                        // Only fail if more than one found
-                        var paths = FindPaths(mapping.Key);
-
-                        if (paths.Length == 1)
-                        {
-                            importer = (PluginImporter)AssetImporter.GetAtPath(paths[0]);
-                            importer.SetCompatibleWithPlatform(BuildTarget.Android, enabled);
-                        }
                     }
                 }
             }
@@ -477,12 +248,13 @@ namespace UnityEditor.Purchasing
                 catch (Exception e)
                 {
 #if ENABLE_EDITOR_GAME_SERVICES
-                    Debug.LogError("Unity IAP unable to strip undesired Android stores from build, check file: " + ModePath);
+                    Debug.unityLogger.LogIAPError("Unity IAP unable to strip undesired Android stores from " +
+                        $"build, check file: {ModePath}");
 #else
-                    Debug.LogError("Unity IAP unable to strip undesired Android stores from build, use menu (e.g. "
-                        + SwitchStoreMenuItem + ") and check file: " + ModePath);
+                    Debug.unityLogger.LogIAPError("Unity IAP unable to strip undesired Android stores from " +
+                        $"build, use menu (e.g. {SwitchStoreMenuItem}) and check file: {ModePath}");
 #endif
-                    Debug.LogError(e);
+                    Debug.unityLogger.LogIAPException(e);
                 }
             }
         }

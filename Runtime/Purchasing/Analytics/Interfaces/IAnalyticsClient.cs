@@ -2,9 +2,9 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-    internal interface IAnalyticsClient
+    interface IAnalyticsClient
     {
-        void OnPurchaseSucceeded(Product product);
-        void OnPurchaseFailed(Product product, PurchaseFailureDescription purchaseFailureDescription);
+        void OnPurchaseSucceeded(ConfirmedOrder confirmedOrder);
+        void OnPurchaseFailed(FailedOrder failedOrder);
     }
 }

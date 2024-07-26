@@ -13,9 +13,7 @@ namespace UnityEditor.Purchasing
             "Amazon Appstore",
             "Google Play",
             "Apple App Store",
-            "Mac App Store",
-            "Unity Distribution Portal",
-            "Microsoft Store"
+            "Mac App Store"
         };
 
         static readonly string k_TagClass = "platform-tag";

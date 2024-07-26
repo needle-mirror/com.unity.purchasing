@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing
 {
     interface IAnalyticsAdapter
     {
-        void SendTransactionEvent(Product product);
-        void SendTransactionFailedEvent(Product product, PurchaseFailureDescription description);
+        void SendTransactionEvent(CartItem item, string receipt);
+        void SendTransactionFailedEvent(PurchaseFailureDescription failureDescription);
     }
 }

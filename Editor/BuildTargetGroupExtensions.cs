@@ -37,10 +37,6 @@ static class BuildTargetGroupExtensions
                 storesArray = new[] { AppStore.AppleAppStore };
                 break;
 
-            case BuildTargetGroup.WSA:
-                storesArray = new[] { AppStore.WinRT };
-                break;
-
             case BuildTargetGroup.Standalone:
                 if (Application.platform == RuntimePlatform.OSXEditor)
                 {

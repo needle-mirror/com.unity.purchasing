@@ -1,16 +1,17 @@
-using System.Collections.Generic;
+using System;
 using UnityEngine.Purchasing.Extension;
-using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing.Interfaces
 {
     interface IGooglePurchaseCallback
     {
-        void SetStoreCallback(IStoreCallback storeCallback);
-        void SetStoreConfiguration(IGooglePlayConfigurationInternal configuration);
-        void OnPurchaseSuccessful(IGooglePurchase purchase, string receipt, string purchaseToken);
+        void SetProductCache(IProductCache productCache);
+        void SetPurchaseCallback(IStorePurchaseCallback purchaseCallback);
+        void SetPurchaseFetchCallback(IStorePurchaseFetchCallback fetchCallback);
+        void SetChangeSubscriptionCallback(IGooglePlayChangeSubscriptionCallback changeSubscriptionCallback);
+        void OnPurchaseSuccessful(IGooglePurchase purchase);
         void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription);
-        void NotifyDeferredPurchase(IGooglePurchase purchase, string receipt, string purchaseToken);
+        void NotifyDeferredPurchase(IGooglePurchase purchase);
         void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku);
     }
 }

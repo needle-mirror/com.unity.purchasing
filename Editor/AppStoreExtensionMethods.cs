@@ -8,13 +8,11 @@ namespace UnityEditor.Purchasing
     {
         static readonly Dictionary<AppStore, string> AppStoreDisplayNames = new Dictionary<AppStore, string>()
         {
-            {AppStore.AmazonAppStore, "Amazon Appstore"},
-            {AppStore.AppleAppStore, "Apple App Store"},
-            {AppStore.GooglePlay, "Google Play"},
-            {AppStore.UDP, "Unity Distribution Portal"},
-            {AppStore.MacAppStore, "Mac App Store"},
-            {AppStore.WinRT, "Microsoft Store"},
-            {AppStore.fake, "Fake App Store"}
+            {AppStore.AmazonAppStore, AmazonApps.DisplayName},
+            {AppStore.AppleAppStore, AppleAppStore.DisplayName},
+            {AppStore.GooglePlay, GooglePlay.DisplayName},
+            {AppStore.MacAppStore, MacAppStore.DisplayName},
+            {AppStore.fake, FakeAppStore.DisplayName}
         };
 
         public static string ToDisplayName(this AppStore value)

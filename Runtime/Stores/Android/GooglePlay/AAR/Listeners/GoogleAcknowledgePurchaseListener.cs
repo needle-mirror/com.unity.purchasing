@@ -1,4 +1,5 @@
 using System;
+using Uniject;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Scripting;
 
@@ -10,21 +11,28 @@ namespace UnityEngine.Purchasing
     /// </summary>
     class GoogleAcknowledgePurchaseListener : AndroidJavaProxy
     {
-        const string k_AndroidAcknowledgePurchaseResponseListenerClassName = "com.android.billingclient.api.AcknowledgePurchaseResponseListener";
-        readonly Action<IGoogleBillingResult> m_OnAcknowledgePurchaseResponse;
+        const string k_AndroidAcknowledgePurchaseResponseListenerClassName =
+            "com.android.billingclient.api.AcknowledgePurchaseResponseListener";
 
-        internal GoogleAcknowledgePurchaseListener(Action<IGoogleBillingResult> onAcknowledgePurchaseResponseAction)
+        readonly Action<IGoogleBillingResult> m_OnAcknowledgePurchaseResponse;
+        readonly IUtil m_Util;
+
+        internal GoogleAcknowledgePurchaseListener(Action<IGoogleBillingResult> onAcknowledgePurchaseResponseAction,
+            IUtil util)
             : base(k_AndroidAcknowledgePurchaseResponseListenerClassName)
         {
             m_OnAcknowledgePurchaseResponse = onAcknowledgePurchaseResponseAction;
+            m_Util = util;
         }
 
         [Preserve]
         void onAcknowledgePurchaseResponse(AndroidJavaObject billingResult)
         {
-            m_OnAcknowledgePurchaseResponse(new GoogleBillingResult(billingResult));
-
-            billingResult.Dispose();
+            m_Util.RunOnMainThread(() =>
+            {
+                m_OnAcknowledgePurchaseResponse(new GoogleBillingResult(billingResult));
+                billingResult.Dispose();
+            });
         }
     }
 }

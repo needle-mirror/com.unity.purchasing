@@ -1,109 +1,161 @@
-using System.Collections.ObjectModel;
-using Uniject;
+#nullable enable
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Purchasing.Extension;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
-    class GooglePlayStore : AbstractStore
+    class GooglePlayStore : InternalStore, IGooglePlayStore
     {
+        readonly IGooglePlayStoreConnectionService m_ConnectionService;
         readonly IGooglePlayStoreRetrieveProductsService m_RetrieveProductsService;
         readonly IGooglePlayStorePurchaseService m_StorePurchaseService;
-        readonly IGoogleFetchPurchases m_FetchPurchases;
+        readonly IGooglePlayStoreFetchPurchasesService m_PlayStoreFetchPurchasesService;
+        readonly IGooglePlayStoreCheckEntitlementService m_CheckEntitlementsService;
         readonly IGooglePlayStoreFinishTransactionService m_FinishTransactionService;
+        readonly IGooglePlayStoreChangeSubscriptionService m_ChangeSubscriptionService;
         readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
-        readonly IGooglePlayStoreExtensionsInternal m_GooglePlayStoreExtensions;
-        readonly IGooglePlayConfigurationInternal m_GooglePlayConfigurationInternal;
-        readonly IUtil m_Util;
+        readonly ICartValidator m_CartValidator;
 
-        public GooglePlayStore(IGooglePlayStoreRetrieveProductsService retrieveProductsService,
+        [Preserve]
+        internal GooglePlayStore(IGooglePlayStoreRetrieveProductsService retrieveProductsService,
             IGooglePlayStorePurchaseService storePurchaseService,
-            IGoogleFetchPurchases fetchPurchases,
+            IGooglePlayStoreFetchPurchasesService playStoreFetchPurchasesService,
             IGooglePlayStoreFinishTransactionService transactionService,
+            IGooglePlayStoreChangeSubscriptionService changeSubscriptionService,
+            IGooglePlayStoreCheckEntitlementService checkEntitlementsService,
             IGooglePurchaseCallback googlePurchaseCallback,
-            IGooglePlayConfigurationInternal googlePlayConfigurationInternal,
-            IGooglePlayStoreExtensionsInternal googlePlayStoreExtensions,
-            IUtil util)
+            ICartValidator cartValidator,
+            IGooglePlayStoreConnectionService connectionService)
         {
-            m_Util = util;
             m_RetrieveProductsService = retrieveProductsService;
             m_StorePurchaseService = storePurchaseService;
-            m_FetchPurchases = fetchPurchases;
+            m_PlayStoreFetchPurchasesService = playStoreFetchPurchasesService;
+            m_CheckEntitlementsService = checkEntitlementsService;
             m_FinishTransactionService = transactionService;
+            m_ChangeSubscriptionService = changeSubscriptionService;
             m_GooglePurchaseCallback = googlePurchaseCallback;
-            m_GooglePlayConfigurationInternal = googlePlayConfigurationInternal;
-            m_GooglePlayStoreExtensions = googlePlayStoreExtensions;
-        }
-
-        /// <summary>
-        /// Init GooglePlayStore
-        /// </summary>
-        /// <param name="callback">The `IStoreCallback` will be call when receiving events from the google store</param>
-        public override void Initialize(IStoreCallback callback)
-        {
-            var scriptingStoreCallback = new ScriptingStoreCallback(callback, m_Util);
-            m_RetrieveProductsService.SetStoreCallback(scriptingStoreCallback);
-            m_FetchPurchases.SetStoreCallback(scriptingStoreCallback);
-            m_FinishTransactionService.SetStoreCallback(scriptingStoreCallback);
-            m_GooglePurchaseCallback.SetStoreCallback(scriptingStoreCallback);
-            m_GooglePlayStoreExtensions.SetStoreCallback(scriptingStoreCallback);
+            m_CartValidator = cartValidator;
+            m_ConnectionService = connectionService;
         }
 
         /// <summary>
         /// Call the Google Play Store to retrieve the store products. The `IStoreCallback` will be call with the retrieved products.
         /// </summary>
         /// <param name="products">The catalog of products to retrieve the store information from</param>
-        public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
+        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
-            var shouldFetchPurchases = ShouldFetchPurchasesNext();
-
-            m_RetrieveProductsService.RetrieveProducts(products, shouldFetchPurchases);
-        }
-
-        bool HasInitiallyRetrievedProducts()
-        {
-            return m_RetrieveProductsService.HasInitiallyRetrievedProducts();
-        }
-
-        bool ShouldFetchPurchasesNext()
-        {
-            var shouldFetchPurchases = true;
-
-            if (!HasInitiallyRetrievedProducts())
-            {
-                shouldFetchPurchases = !m_GooglePlayConfigurationInternal.IsFetchPurchasesAtInitializeSkipped();
-            }
-
-            return shouldFetchPurchases;
+            m_RetrieveProductsService.RetrieveProducts(products);
         }
 
         /// <summary>
-        /// Call the Google Play Store to purchase a product. The `IStoreCallback` will be call when the purchase is successful.
+        /// Fetch previously existing purchases.
         /// </summary>
-        /// <param name="product">The product to buy</param>
-        /// <param name="dummy">No longer used / required, since fraud prevention is handled by the Google SDK now</param>
-        public override void Purchase(ProductDefinition product, string dummy)
+        public override void FetchPurchases()
         {
-            m_StorePurchaseService.Purchase(product);
+            FetchPurchasesInternal();
+        }
+
+        void FetchPurchasesInternal()
+        {
+            m_PlayStoreFetchPurchasesService.FetchPurchases();
         }
 
         /// <summary>
-        /// Call the Google Play Store to consume a product.
+        /// Call the Google Play Store to purchase a cart. The `IStoreCallback` will be call when the purchase is successful.
         /// </summary>
-        /// <param name="product">Product to consume</param>
-        /// <param name="transactionId">Transaction / order id</param>
-        public override void FinishTransaction(ProductDefinition product, string transactionId)
+        /// <param name="cart">The cart to purchase</param>
+        public override void Purchase(ICart cart)
         {
-            m_FinishTransactionService.FinishTransaction(product, transactionId);
+            m_CartValidator.Validate(cart);
+            var productDefinition = cart.Items().First().Product.definition;
+            m_StorePurchaseService.Purchase(productDefinition);
+        }
+
+        /// <summary>
+        /// Call the Google Play Store to change a subscription. The `IStorePurchaseCallback` will be called.
+        /// </summary>
+        /// <param name="product">The new subscription to buy</param>
+        /// <param name="oldProduct">The previous subscription to be unsubscribed to</param>
+        /// <param name="desiredProrationMode">The desired proration mode for the subscription change</param>
+        public void ChangeSubscription(ProductDefinition product, Product oldProduct,
+            GooglePlayProrationMode? desiredProrationMode)
+        {
+            m_ChangeSubscriptionService.ChangeSubscription(product, oldProduct, desiredProrationMode);
+        }
+
+        public override void FinishTransaction(PendingOrder pendingOrder)
+        {
+            m_CartValidator.Validate(pendingOrder.CartOrdered);
+            var productDefinition = pendingOrder.CartOrdered.Items().First().Product.definition;
+            m_FinishTransactionService.FinishTransaction(productDefinition, pendingOrder.Info.TransactionID);
+        }
+
+        public override void Connect()
+        {
+            m_ConnectionService.Connect();
+        }
+
+        public override void CheckEntitlement(ProductDefinition product)
+        {
+            m_CheckEntitlementsService.CheckEntitlement(product);
+        }
+
+        /// <summary>
+        /// Add an additional fetch Callback for FetchPurchases calls from the GooglePlay Store
+        /// </summary>
+        /// <param name="fetchPurchaseCallback">Implementation of the purchase Callback Interface</param>
+        public override void SetPurchaseFetchCallback(IStorePurchaseFetchCallback fetchPurchaseCallback)
+        {
+            m_PlayStoreFetchPurchasesService.SetPurchaseFetchCallback(fetchPurchaseCallback);
+            m_GooglePurchaseCallback.SetPurchaseFetchCallback(fetchPurchaseCallback);
+        }
+
+        public override void SetPurchaseCallback(IStorePurchaseCallback purchaseCallback)
+        {
+            m_GooglePurchaseCallback.SetPurchaseCallback(purchaseCallback);
+        }
+
+        public void SetChangeSubscriptionCallback(IGooglePlayChangeSubscriptionCallback changeSubscriptionCallback)
+        {
+            m_GooglePurchaseCallback.SetChangeSubscriptionCallback(changeSubscriptionCallback);
+        }
+
+        public override void SetPurchaseConfirmCallback(IStorePurchaseConfirmCallback confirmCallback)
+        {
+            m_FinishTransactionService.SetConfirmCallback(confirmCallback);
+        }
+
+        public override void SetProductsCallback(IStoreProductsCallback productsCallback)
+        {
+            m_RetrieveProductsService.SetProductsCallback(productsCallback);
+        }
+
+        public override void SetEntitlementCheckCallback(IStoreCheckEntitlementCallback entitlementCallback)
+        {
+            m_CheckEntitlementsService.SetCheckEntitlementCallback(entitlementCallback);
+        }
+
+        public override void SetStoreConnectionCallback(IStoreConnectCallback storeConnectCallback)
+        {
+            m_ConnectionService.SetConnectionCallback(storeConnectCallback);
         }
 
         public void OnPause(bool isPaused)
         {
             if (!isPaused)
             {
-                m_RetrieveProductsService.ResumeConnection();
-                m_FetchPurchases.FetchPurchases();
+                FetchPurchasesInternal();
             }
+        }
+
+        public IGooglePurchase GetGooglePurchase(string purchaseToken)
+        {
+            return m_PlayStoreFetchPurchasesService.GetGooglePurchase(purchaseToken);
         }
     }
 }

@@ -82,7 +82,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The ID this product has on a specific store.
         /// </summary>
-        public string storeSpecificId { get; private set; }
+        public string storeSpecificId { get; internal set; }
 
         /// <summary>
         /// The type of the product.

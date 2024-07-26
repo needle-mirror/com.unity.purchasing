@@ -8,6 +8,7 @@ namespace UnityEngine.Purchasing
     /// Provides helper methods to retrieve products by
     /// store independent/store specific id.
     /// </summary>
+    [Obsolete]
     public class ProductCollection
     {
         private Dictionary<string, Product> m_IdToProduct;

@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing.Telemetry
         IUtil m_Util;
         readonly TelemetryQueue<TelemetryMetricParams> m_Queue;
 
-        public TelemetryMetricsInstanceWrapper(ILogger logger, IUtil util)
+        internal TelemetryMetricsInstanceWrapper(ILogger logger, IUtil util)
         {
             m_Logger = logger;
             m_Util = util;

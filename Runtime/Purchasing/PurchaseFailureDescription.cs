@@ -1,6 +1,6 @@
 using System;
 
-namespace UnityEngine.Purchasing.Extension
+namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Represents a failed purchase as described
@@ -11,20 +11,28 @@ namespace UnityEngine.Purchasing.Extension
         /// <summary>
         /// Parametrized Constructor.
         /// </summary>
-        /// <param name="productId"> The id of the product. </param>
+        /// <param name="product"> The product. </param>
         /// <param name="reason"> The reason for the purchase failure </param>
         /// <param name="message"> The message containing details about the failed purchase. </param>
-        public PurchaseFailureDescription(string productId, PurchaseFailureReason reason, string message)
+        public PurchaseFailureDescription(CartItem item, PurchaseFailureReason reason, string message)
         {
-            this.productId = productId;
+            this.item = item;
             this.reason = reason;
             this.message = message;
         }
 
         /// <summary>
-        /// The store specific product ID.
+        /// The cart item wrapping the product and quantity.
         /// </summary>
-        public string productId { get; private set; }
+        public CartItem item { get; private set; }
+
+
+        [Obsolete("Use item.Product instead")]
+        /// <summary>
+        /// The product.
+        /// </summary>
+        public Product product => item.Product;
+
 
         /// <summary>
         /// The reason for the failure.
@@ -35,5 +43,11 @@ namespace UnityEngine.Purchasing.Extension
         /// The message containing details about the failed purchase.
         /// </summary>
         public string message { get; private set; }
+
+        internal FailedOrder ConvertToFailedOrder()
+        {
+            var cart = new Cart(item);
+            return new FailedOrder(cart, reason, message);
+        }
     }
 }

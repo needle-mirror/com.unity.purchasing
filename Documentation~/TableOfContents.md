@@ -1,6 +1,7 @@
 * Introduction to Unity IAP
     * [About Unity IAP](index.md)
     * [Stores supported by Unity IAP](StoresSupported.md)
+    * [Upgrading to IAP v5](UpgradeV5.md)
 * Set up and integrating Unity IAP
     * [Overview](Overview.md)
     * [Getting Started](GettingStarted.md)
@@ -16,7 +17,6 @@
     * Creating a Purchasing Button
         * [Browsing Product Metadata](UnityIAPBrowsingMetadata.md)
         * [IAP Button](CodelessIAPButton.md)
-        * [IAP Button (Legacy)](IAPButton.md)
         * [Coded](UnityIAPInitiatingPurchases.md)
     * The Purchasing Flow
         * Processing Purchases
@@ -49,10 +49,6 @@
         * [Purchase Receipt](AppleReceipt.md)
         * [Testing](AppleTesting.md)
         * [Family Sharing](UnityIAPAppleFamilySharing.md)
-    * Microsoft Store (UWP)
-        * [How to Set Up](UnityIAPWindowsConfiguration.md)
-        * [Purchase Receipt](MicrosoftReceipt.md)
-        * [Testing](UnityIAPUniversalWindows.md)
     * Implement Custom Store
         * [What is a Custom Store](WhatCustomStore.md)
         * [Implementing](UnityIAPImplementingAStore.md)

@@ -1,4 +1,5 @@
 #nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,17 +7,19 @@ using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.MiniJSON;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing.Utils
 {
+    [Preserve]
     class ProductDetailsConverter : IProductDetailsConverter
     {
         public List<ProductDescription> ConvertOnQueryProductDetailsResponse(IEnumerable<AndroidJavaObject> productDetails)
         {
-            return productDetails.Select(ToProductDescription).ToList();
+            return productDetails.Select(ConvertToProductDescription).ToList();
         }
 
-        static ProductDescription ToProductDescription(AndroidJavaObject productDetails)
+        public ProductDescription ConvertToProductDescription(AndroidJavaObject productDetails)
         {
             try
             {
@@ -88,7 +91,7 @@ namespace UnityEngine.Purchasing.Utils
             productDetailsJsonDic["name"] = productDetails.Call<string>("getName");
             productDetailsJsonDic["description"] = description;
             productDetailsJsonDic["price"] = price ?? "";
-            productDetailsJsonDic["price_amount_micros"] = priceAmountMicros;
+            productDetailsJsonDic["price_amount_micros"] = priceAmountMicros.ToString();
             productDetailsJsonDic["price_currency_code"] = priceCurrencyCode ?? "";
 
             if (subscriptionBasePricingPhase != null)

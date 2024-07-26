@@ -24,8 +24,8 @@ namespace UnityEngine.Purchasing.Registration
 
         public Task Initialize(CoreRegistry registry)
         {
-            var metricsInstanceWrapper = StandardPurchasingModule.Instance().telemetryMetricsInstanceWrapper;
-            var diagnosticsInstanceWrapper = StandardPurchasingModule.Instance().telemetryDiagnosticsInstanceWrapper;
+            var metricsInstanceWrapper = StoreFactory.Instance().TelemetryMetricsInstanceWrapper;
+            var diagnosticsInstanceWrapper = StoreFactory.Instance().TelemetryDiagnosticsInstanceWrapper;
 
             ITelemetryMetricsService telemetryMetricsService = new TelemetryMetricsService(metricsInstanceWrapper);
             telemetryMetricsService.ExecuteTimedAction(

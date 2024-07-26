@@ -54,7 +54,7 @@ PluginImporter:
       settings:
         CPU: AnyCPU
   - first:
-      Any: 
+      Any:
     second:
       enabled: 0
       settings: {}
@@ -97,7 +97,7 @@ PluginImporter:
       settings:
         AddToEmbeddedBinaries: false
         CPU: ARM64
-        CompileFlags: 
+        CompileFlags:
         FrameworkDependencies: StoreKit;
   - first:
       iPhone: iOS
@@ -106,13 +106,11 @@ PluginImporter:
       settings:
         AddToEmbeddedBinaries: false
         CPU: AnyCPU
-        CompileFlags: 
+        CompileFlags:
         FrameworkDependencies: StoreKit;
   - first:
       tvOS: tvOS
     second:
       enabled: 1
       settings: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:

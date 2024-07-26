@@ -7,5 +7,6 @@ namespace UnityEngine.Purchasing.Interfaces
     interface IProductDetailsConverter
     {
         List<ProductDescription> ConvertOnQueryProductDetailsResponse(IEnumerable<AndroidJavaObject> productDetails);
+        ProductDescription ConvertToProductDescription(AndroidJavaObject productDetails);
     }
 }

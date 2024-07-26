@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
@@ -36,7 +37,7 @@ namespace UnityEditor.Purchasing
             }
             else
             {
-                Debug.LogWarning("Cannot get icon: " + kLightLinkIconPath);
+                Debug.unityLogger.LogIAPWarning("Cannot get icon: " + kLightLinkIconPath);
             }
 
             if (Event.current.type == EventType.MouseUp && linkRect.Contains(Event.current.mousePosition))

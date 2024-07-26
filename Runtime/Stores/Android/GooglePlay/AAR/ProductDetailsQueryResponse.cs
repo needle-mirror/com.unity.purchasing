@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,11 +31,7 @@ namespace UnityEngine.Purchasing
 
         public void AddResponse(IGoogleBillingResult billingResult, IEnumerable<AndroidJavaObject> productDetails)
         {
-#if UNITY_2021_2_OR_NEWER
-            m_Responses.Add((billingResult, productDetails.Select(product => product.CloneReference()).ToList()));
-#else
             m_Responses.Add((billingResult, productDetails.Select(product => product).ToList()));
-#endif
         }
 
         public List<AndroidJavaObject> ProductDetails()
@@ -48,14 +45,33 @@ namespace UnityEngine.Purchasing
             return m_Responses.Select(response => response.Item1).Any(IsRecoverable);
         }
 
-        public IGoogleBillingResult GetGoogleBillingResult()
+        public GoogleBillingResponseCode GetRecoverableBillingResponseCode()
         {
-            return m_Responses.Select(response => response.Item1).FirstOrDefault(response => response.responseCode != GoogleBillingResponseCode.Ok);
+            if (m_Responses.Select(response => response.Item1).Any(IsServiceUnavailable))
+            {
+                return GoogleBillingResponseCode.ServiceUnavailable;
+            }
+            if (m_Responses.Select(response => response.Item1).Any(IsDeveloperError))
+            {
+                return GoogleBillingResponseCode.DeveloperError;
+            }
+
+            return m_Responses.FirstOrDefault().Item1.responseCode;
         }
 
         static bool IsRecoverable(IGoogleBillingResult billingResult)
         {
-            return billingResult.responseCode == GoogleBillingResponseCode.ServiceUnavailable || billingResult.responseCode == GoogleBillingResponseCode.DeveloperError;
+            return IsServiceUnavailable(billingResult) || IsDeveloperError(billingResult);
+        }
+
+        static bool IsServiceUnavailable(IGoogleBillingResult billingResult)
+        {
+            return billingResult.responseCode == GoogleBillingResponseCode.ServiceUnavailable;
+        }
+
+        static bool IsDeveloperError(IGoogleBillingResult billingResult)
+        {
+            return billingResult.responseCode == GoogleBillingResponseCode.DeveloperError;
         }
     }
 }

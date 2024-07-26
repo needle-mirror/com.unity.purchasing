@@ -53,8 +53,6 @@ void UnityPurchasingLog(NSString *format, ...)
 
 @implementation UnityPurchasing
 
-// The max time we wait in between retrying failed SKProductRequests.
-static const int MAX_REQUEST_PRODUCT_RETRY_DELAY = 60;
 // The currency code for unknown locales, from https://en.wikipedia.org/wiki/ISO_4217#X_currencies
 static const NSString* ISO_CURRENCY_CODE_UNKNOWN = @"XXX";
 
@@ -250,22 +248,11 @@ int delayInSeconds = 2;
 // Request information about our products from Apple.
 - (void)requestProducts:(NSSet*)paramIds
 {
-    productIds = paramIds;
-    UnityPurchasingLog(@"Requesting %lu products", (unsigned long)[productIds count]);
-    // Start an immediate poll.
-    [self initiateProductPoll: 0];
-}
+    UnityPurchasingLog(@"Requesting %lu products", (unsigned long)[paramIds count]);
 
-// Execute a product metadata retrieval request via GCD.
-- (void)initiateProductPoll:(int)delayInSeconds
-{
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
-    dispatch_after(popTime, dispatch_get_main_queue(), ^(void) {
-        UnityPurchasingLog(@"Requesting product data...");
-        request = [[SKProductsRequest alloc] initWithProductIdentifiers: productIds];
-        request.delegate = self;
-        [request start];
-    });
+    request = [[SKProductsRequest alloc] initWithProductIdentifiers: paramIds];
+    request.delegate = self;
+    [request start];
 }
 
 // Called by managed code when a user requests a purchase.
@@ -424,13 +411,10 @@ int delayInSeconds = 2;
 #pragma mark -
 #pragma mark SKPaymentTransactionObserver Methods
 // A product metadata retrieval request failed.
-// We handle it by retrying at an exponentially increasing interval.
 - (void)request:(SKRequest *)request didFailWithError:(NSError *)error
 {
-    delayInSeconds = MIN(MAX_REQUEST_PRODUCT_RETRY_DELAY, 2 * delayInSeconds);
-    UnityPurchasingLog(@"SKProductRequest::didFailWithError: %ld, %@. Unity Purchasing will retry in %i seconds", (long)error.code, error.description, delayInSeconds);
-
-    [self initiateProductPoll: delayInSeconds];
+    NSString* errorMessage = [NSString stringWithFormat: @"SKProductRequest::didFailWithError: %ld, %@.", (long)error.code, error.description];
+    [self UnitySendMessage: @"OnProductsRetrieveFailed" payload: errorMessage];
 }
 
 - (void)requestDidFinish:(SKRequest *)req
@@ -568,7 +552,9 @@ int delayInSeconds = 2;
     if (product != nil)
     {
         UnityPurchasingLog(@"PurchaseDeferred");
-        [self UnitySendMessage: @"onProductPurchaseDeferred" payload: transaction.payment.productIdentifier];
+        NSString* transactionId = transaction.transactionIdentifier;
+        NSString* originalTransactionId = transaction.originalTransaction.transactionIdentifier;
+        [self UnitySendMessage: @"onProductPurchaseDeferred" payload: transaction.payment.productIdentifier receipt: [self selectReceipt: transaction] transactionId: transactionId originalTransactionId: originalTransactionId isRestored: false];
     }
 }
 

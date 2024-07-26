@@ -1,11 +1,10 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Text;
-using Stores.Util;
+using System.Linq;
+using Purchasing.Extension;
 using UnityEngine.Purchasing.Extension;
-using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
 {
@@ -13,177 +12,224 @@ namespace UnityEngine.Purchasing
     /// Internal store implementation passing store requests from the user through to the underlaying
     /// native store system, and back again. Binds a native store system binding to a callback.
     /// </summary>
-    internal class JSONStore : AbstractStore, IUnityCallback, IStoreInternal, ITransactionHistoryExtensions
+    class JsonStore : InternalStore, IUnityCallback
     {
-        public Product[] storeCatalog
-        {
-            get
-            {
-                var result = new List<Product>();
-                if (m_StoreCatalog != null && unity.products.all != null)
-                {
-                    foreach (var catalogProduct in m_StoreCatalog)
-                    {
-                        foreach (var controllerProduct in unity.products.all)
-                        {
-                            // Ensure owned products are excluded from list (except when consumable)
-                            var isProductOwned = false;
-                            if (controllerProduct.definition.type != ProductType.Consumable)
-                            {
-                                if (controllerProduct.hasReceipt || !String.IsNullOrEmpty(controllerProduct.transactionID))
-                                {
-                                    isProductOwned = true;
-                                }
-                            }
-                            // TODO: Update Engine Code so Product Definition comparision Equals checks against storeSpecificId
-                            if (controllerProduct.availableToPurchase &&
-                                !isProductOwned &&
-                                controllerProduct.definition.storeSpecificId == catalogProduct.storeSpecificId)
-                            {
-                                result.Add(controllerProduct);
-                            }
-                        }
-                    }
-                }
-                return result.ToArray();
-            }
-        }
+        ICartValidator m_CartValidator;
+        protected string? m_storeName;
 
-        protected IStoreCallback unity;
-        private INativeStore m_Store;
-        private List<ProductDefinition> m_StoreCatalog;
-        private bool m_IsRefreshing;
+        INativeStore? m_Store;
+        bool m_IsRefreshing;
 
-        private Action m_RefreshCallback;
+        Action? m_RefreshCallback;
 
-        // m_Module is our StandardPurchasingModule, added via reflection to avoid core changes etc.
-        private StandardPurchasingModule m_Module;
-
-        protected ILogger m_Logger;
-
-        protected JsonProductDescriptionsDeserializer m_ProductDescriptionsDeserializer;
+        protected readonly ILogger Logger;
 
         // ITransactionHistoryExtensions stuff
         //
         // Enhanced error information
-        protected PurchaseFailureDescription m_LastPurchaseFailureDescription;
-        private StoreSpecificPurchaseErrorCode m_LastPurchaseErrorCode = StoreSpecificPurchaseErrorCode.Unknown;
+        PurchaseFailureDescription? LastPurchaseFailureDescription;
+        StoreSpecificPurchaseErrorCode m_LastPurchaseErrorCode = StoreSpecificPurchaseErrorCode.Unknown;
 
         const string k_StoreSpecificErrorCodeKey = "storeSpecificErrorCode";
 
         /// <summary>
         /// No arg constructor due to cyclical dependency on IUnityCallback.
         /// </summary>
-        public JSONStore()
-        {
-            m_ProductDescriptionsDeserializer = new JsonProductDescriptionsDeserializer();
-        }
-
         public void SetNativeStore(INativeStore native)
         {
             m_Store = native;
         }
 
-        void IStoreInternal.SetModule(StandardPurchasingModule module)
+        internal JsonStore(ICartValidator cartValidator, ILogger logger, string? storeName)
         {
-            if (module == null)
-            {
-                return;
-            }
-            m_Module = module;
-            m_Logger = module.logger ?? Debug.unityLogger;
+            m_CartValidator = cartValidator;
+            Logger = logger;
+            m_storeName = storeName;
         }
 
-        public override void Initialize(IStoreCallback callback)
+        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
-            unity = callback;
-
-            if (m_Module != null)
-            {
-                var storeName = m_Module.storeInstance.storeName;
-            }
-            else
-            {
-                if (m_Logger != null)
-                {
-                    m_Logger.LogIAPWarning("JSONStore init has no reference to SPM, can't start managed store");
-                }
-            }
+            m_Store?.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
-        public override void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products)
+        internal void ProcessManagedStoreResponse(List<ProductDefinition>? storeProducts)
         {
-            m_Store.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
-        }
-
-        internal void ProcessManagedStoreResponse(List<ProductDefinition> storeProducts)
-        {
-            m_StoreCatalog = storeProducts;
             if (m_IsRefreshing)
             {
                 m_IsRefreshing = false;
+
                 // Skip native store layer during refresh if catalog contains no information
-                if (storeCatalog.Length == 0 && m_RefreshCallback != null)
+                if (storeProducts?.Count == 0 && m_RefreshCallback != null)
                 {
                     m_RefreshCallback();
                     m_RefreshCallback = null;
                     return;
                 }
             }
+
             var products = new HashSet<ProductDefinition>();
             if (storeProducts != null)
             {
                 products.UnionWith(storeProducts);
             }
-            m_Store.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
+
+            m_Store?.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
-        public override void Purchase(ProductDefinition product, string developerPayload)
+        public override void FetchPurchases()
         {
-            m_Store.Purchase(JSONSerializer.SerializeProductDef(product), developerPayload);
+            m_Store?.FetchExistingPurchases();
         }
 
-        public override void FinishTransaction(ProductDefinition product, string transactionId)
+        public void OnProductsRetrieveFailed(string jsonFailureDescription)
         {
-            // Product definitions may be null if a store tells Unity IAP about an unknown product;
+            var description = JSONSerializer.DeserializeProductFetchFailureDescription(jsonFailureDescription);
+            ProductsCallback?.OnProductsRetrieveFailed(description);
+        }
+
+        public void OnPurchasesRetrievalFailed(string jsonFailureDescription)
+        {
+            var description = JSONSerializer.DeserializePurchasesFetchFailureDescription(jsonFailureDescription);
+            PurchaseFetchCallback?.OnPurchasesRetrievalFailed(description);
+        }
+
+        public void OnPurchasesFetched(string json)
+        {
+            var productDescriptions = JSONSerializer.DeserializeProductDescriptions(json);
+            var orders = CreateOrdersFromFetchedPurchases(productDescriptions);
+            PurchaseFetchCallback?.OnAllPurchasesRetrieved(orders);
+        }
+
+        List<Order> CreateOrdersFromFetchedPurchases(List<ProductDescription> productDescriptions)
+        {
+            var orders = new List<Order>();
+            foreach (var product in productDescriptions)
+            {
+                if (product.type == ProductType.Consumable)
+                {
+                    orders.Add(GeneratePendingOrder(product.storeSpecificId, product.receipt, product.transactionId));
+                }
+                else
+                {
+                    orders.Add(GenerateConfirmedOrder(product.storeSpecificId, product.receipt, product.transactionId));
+                }
+            }
+
+            return orders;
+        }
+
+        public override void Purchase(ICart cart)
+        {
+            m_CartValidator.Validate(cart);
+            var productDefinition = cart.Items().First().Product.definition;
+            Purchase(productDefinition, string.Empty);
+        }
+
+        protected virtual void Purchase(ProductDefinition productDefinition, string developerPayload)
+        {
+            m_Store?.Purchase(JSONSerializer.SerializeProductDef(productDefinition), developerPayload);
+        }
+
+        public override void FinishTransaction(PendingOrder pendingOrder)
+        {
+            m_CartValidator.Validate(pendingOrder.CartOrdered);
+            var productDefinition = pendingOrder.CartOrdered.Items().FirstOrDefault()?.Product.definition;
+            FinishTransaction(productDefinition, pendingOrder.Info.TransactionID);
+            ConfirmCallback?.OnConfirmOrderSucceeded(pendingOrder.Info.TransactionID);
+        }
+
+        protected virtual void FinishTransaction(ProductDefinition? productDefinition, string transactionId)
+        {
+            // Product definitions may be null if a store tells Unity IAP about an unknown productDefinition;
             // Unity IAP will not have a corresponding definition but will still finish the transaction.
-            var def = product == null ? null : JSONSerializer.SerializeProductDef(product);
-            m_Store.FinishTransaction(def, transactionId);
+            var def = productDefinition == null ? null : JSONSerializer.SerializeProductDef(productDefinition);
+            m_Store?.FinishTransaction(def, transactionId);
         }
 
-        public void OnSetupFailed(string reason)
+        public override void Connect()
         {
-            var r = (InitializationFailureReason)Enum.Parse(typeof(InitializationFailureReason), reason, true);
-            unity.OnSetupFailed(r, null);
+            m_Store?.Connect();
+        }
+
+        public void OnStoreConnectionSucceeded()
+        {
+            ConnectCallback?.OnStoreConnectionSucceeded();
+        }
+
+        public void OnStoreConnectionFailed(string jsonFailureDescription)
+        {
+            var failureDescription = JSONSerializer.DeserializeConnectionFailureDescription(jsonFailureDescription);
+            ConnectCallback?.OnStoreConnectionFailed(failureDescription);
+        }
+
+        public override void CheckEntitlement(ProductDefinition product)
+        {
+            m_Store?.CheckEntitlement(JSONSerializer.SerializeProductDef(product));
         }
 
         public virtual void OnProductsRetrieved(string json)
         {
             // NB: AppleStoreImpl overrides this completely and does not call the base.
-            unity.OnProductsRetrieved(m_ProductDescriptionsDeserializer.DeserializeProductDescriptions(json));
+            var productDescriptions = JSONSerializer.DeserializeProductDescriptions(json);
+            ProductCache.Add(productDescriptions);
+
+            ProductsCallback?.OnProductsRetrieved(productDescriptions);
         }
 
         public virtual void OnPurchaseSucceeded(string id, string receipt, string transactionID)
         {
-            unity.OnPurchaseSucceeded(id, receipt, transactionID);
+            var order = GeneratePendingOrder(id, receipt, transactionID);
+            PurchaseCallback?.OnPurchaseSucceeded(order);
+        }
+
+        protected DeferredOrder GenerateDeferredOrder(string id, string receipt, string transactionID)
+        {
+            var product = FindProductById(id);
+            var cart = new Cart(product);
+            return new DeferredOrder(cart, new OrderInfo(receipt, transactionID, m_storeName));
+        }
+
+        protected PendingOrder GeneratePendingOrder(string id, string receipt, string transactionID)
+        {
+            var product = FindProductById(id);
+            var cart = new Cart(product);
+            return new PendingOrder(cart, new OrderInfo(receipt, transactionID, m_storeName));
+        }
+
+        protected ConfirmedOrder GenerateConfirmedOrder(string id, string receipt, string transactionID)
+        {
+            var product = FindProductById(id);
+            var cart = new Cart(product);
+            return new ConfirmedOrder(cart, new OrderInfo(receipt, transactionID, m_storeName));
+        }
+
+        protected Product FindProductById(string productId)
+        {
+            return ProductCache.FindOrDefault(productId);
         }
 
         public void OnPurchaseFailed(string json)
         {
-            OnPurchaseFailed(JSONSerializer.DeserializeFailureReason(json), json);
+            OnPurchaseFailed(JSONSerializer.DeserializeFailureReason(json, ProductCache), json);
         }
 
-        public void OnPurchaseFailed(PurchaseFailureDescription failure, string json = null)
+        public void OnPurchaseFailed(PurchaseFailureDescription failure, string? json = null)
         {
-            m_LastPurchaseFailureDescription = failure;
+            LastPurchaseFailureDescription = failure;
             m_LastPurchaseErrorCode = ParseStoreSpecificPurchaseErrorCode(json);
 
-            unity.OnPurchaseFailed(failure);
+            PurchaseCallback?.OnPurchaseFailed(failure.ConvertToFailedOrder());
         }
 
-        public PurchaseFailureDescription GetLastPurchaseFailureDescription()
+        protected void OnPurchaseDeferred(string id, string receipt, string transactionID)
         {
-            return m_LastPurchaseFailureDescription;
+            var deferredOrder = GenerateDeferredOrder(id, receipt, transactionID);
+            PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
+        }
+
+        public PurchaseFailureDescription? GetLastPurchaseFailureDescription()
+        {
+            return LastPurchaseFailureDescription;
         }
 
         public StoreSpecificPurchaseErrorCode GetLastStoreSpecificPurchaseErrorCode()
@@ -191,7 +237,7 @@ namespace UnityEngine.Purchasing
             return m_LastPurchaseErrorCode;
         }
 
-        private StoreSpecificPurchaseErrorCode ParseStoreSpecificPurchaseErrorCode(string json)
+        static StoreSpecificPurchaseErrorCode ParseStoreSpecificPurchaseErrorCode(string? json)
         {
             // If we didn't get any JSON just return Unknown.
             if (json == null)
@@ -207,7 +253,18 @@ namespace UnityEngine.Purchasing
                 return (StoreSpecificPurchaseErrorCode)Enum.Parse(typeof(StoreSpecificPurchaseErrorCode),
                     storeSpecificErrorCodeString);
             }
+
             return StoreSpecificPurchaseErrorCode.Unknown;
+        }
+
+        /// <summary>
+        /// Checks the connection state to the store. Not Implemented.
+        /// </summary>
+        /// <returns>An object describing the connection state.</returns>
+        /// <exception cref="NotImplementedException">Not Implemented for this store.</exception>
+        public ConnectionState CheckConnectionState()
+        {
+            throw new NotImplementedException();
         }
     }
 }

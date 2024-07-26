@@ -1,18 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing.Models
 {
     class ProductDescriptionQuery
     {
-        internal ReadOnlyCollection<ProductDefinition> products;
-        internal Action<List<ProductDescription>, IGoogleBillingResult> onProductsReceived;
-        internal Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed;
+        internal IReadOnlyList<ProductDefinition> products;
+        internal Action<List<ProductDescription>> onProductsReceived;
+        internal Action<GoogleRetrieveProductException> onRetrieveProductsFailed;
 
-        internal ProductDescriptionQuery(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>, IGoogleBillingResult> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductsFailed)
+        internal ProductDescriptionQuery(IReadOnlyList<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductException> onRetrieveProductsFailed)
         {
             this.products = products;
             this.onProductsReceived = onProductsReceived;

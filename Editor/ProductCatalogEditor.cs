@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
+using Editor;
 using UnityEditor.Connect;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -15,16 +15,12 @@ namespace UnityEditor.Purchasing
     /// </summary>
     public class ProductCatalogEditor : EditorWindow
     {
-        private const bool kValidateDebugLog = false;
-
-        private static readonly string[] kStoreKeys =
+        static readonly string[] kStoreKeys =
         {
             AppleAppStore.Name,
             GooglePlay.Name,
             AmazonApps.Name,
-            MacAppStore.Name,
-            WindowsStore.Name,
-            UDP.Name
+            MacAppStore.Name
         };
 
         /// <summary>
@@ -44,52 +40,13 @@ namespace UnityEditor.Purchasing
             GameServicesEventSenderHelpers.SendTopMenuIapCatalogEvent();
         }
 
-        private static readonly GUIContent windowTitle = new GUIContent("IAP Catalog");
-        private static readonly List<ProductCatalogItemEditor> productEditors = new List<ProductCatalogItemEditor>();
-        private static readonly List<ProductCatalogItemEditor> toRemove = new List<ProductCatalogItemEditor>();
-        private Rect exportButtonRect;
-        private ExporterValidationResults validation;
+        static readonly GUIContent windowTitle = new GUIContent("IAP Catalog");
+        static readonly List<ProductCatalogItemEditor> productEditors = new List<ProductCatalogItemEditor>();
+        static readonly List<ProductCatalogItemEditor> toRemove = new List<ProductCatalogItemEditor>();
 
-        private DateTime lastChanged;
-        private bool dirty;
-        private readonly TimeSpan kSaveDelay = new TimeSpan(0, 0, 0, 0, 500); // 500 milliseconds
-
-        #region UDP Related Fields
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static bool kValidLogin = true; // User needs to login to Unity first.
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static bool kValidConfig = true; // User needs to have clientID for the game.
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static readonly Queue<ReqStruct> requestQueue = new Queue<ReqStruct>();
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static bool kIsPreparing = true;
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static TokenInfo kTokenInfo = new TokenInfo();
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static string kOrgId;
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static object kAppStoreSettings; //UDP AppStoreSettings via Reflection
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static readonly IDictionary<string, IapItem> kIapItems = new Dictionary<string, IapItem>();
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static string kUdpErrorMsg = "";
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static bool udpOfflineMode;
-
-        #endregion
+        DateTime lastChanged;
+        bool dirty;
+        readonly TimeSpan kSaveDelay = new TimeSpan(0, 0, 0, 0, 500); // 500 milliseconds
 
         /// <summary>
         /// Since we are changing the product catalog's location, it may be necessary to migrate existing product
@@ -120,7 +77,7 @@ namespace UnityEditor.Purchasing
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
+                Debug.unityLogger.LogIAPException(ex);
             }
         }
 
@@ -133,25 +90,6 @@ namespace UnityEditor.Purchasing
         /// Property which gets the <c>ProductCatalog</c> instance which is being edited.
         /// </summary>
         public ProductCatalog Catalog { get; private set; }
-
-        /// <summary>
-        /// Sets the results of the validation of catalog items upon export.
-        /// </summary>
-        /// <param name="catalogResults"> Validation results of the exported catalog </param>
-        /// <param name="itemResults"> List of validation results of the exported items </param>
-        public void SetCatalogValidationResults(ExporterValidationResults catalogResults,
-            List<ExporterValidationResults> itemResults)
-        {
-            validation = catalogResults;
-
-            if (productEditors.Count == itemResults.Count)
-            {
-                for (var i = 0; i < productEditors.Count; ++i)
-                {
-                    productEditors[i].SetValidationResults(itemResults[i]);
-                }
-            }
-        }
 
         void Awake()
         {
@@ -171,32 +109,9 @@ namespace UnityEditor.Purchasing
             {
                 productEditors.Add(new ProductCatalogItemEditor(product));
             }
-
-            SetupUdpOnEnable();
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        void SetupUdpOnEnable()
-        {
-            if (s_udpAvailable && IsUdpInstalled())
-            {
-                kUdpErrorMsg = "";
-                kTokenInfo = new TokenInfo();
-                kValidLogin = true;
-                kValidConfig = true;
-                kIsPreparing = true;
-                kOrgId = null;
-                PrepareDeveloperInfo();
-            }
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        private static bool IsUdpInstalled()
-        {
-            return UnityPurchasingEditor.IsUdpUpmPackageInstalled() || UnityPurchasingEditor.IsUdpAssetStorePackageInstalled();
-        }
-
-        private void OnDisable()
+        void OnDisable()
         {
             if (dirty)
             {
@@ -204,23 +119,21 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private void Update()
+        void Update()
         {
             if (dirty && DateTime.Now.Subtract(lastChanged) > kSaveDelay)
             {
                 Save();
             }
-
-            CheckApiUpdate();
         }
 
-        private void SetDirtyFlag()
+        void SetDirtyFlag()
         {
             lastChanged = DateTime.Now;
             dirty = true;
         }
 
-        private void Save()
+        void Save()
         {
             dirty = false;
             File.WriteAllText(ProductCatalog.kCatalogPath, ProductCatalog.Serialize(Catalog));
@@ -228,14 +141,13 @@ namespace UnityEditor.Purchasing
             AssetDatabase.ImportAsset(ProductCatalog.kCatalogPath);
         }
 
-        private Vector2 scrollPosition = new Vector2();
+        Vector2 scrollPosition;
 
         void OnGUI()
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, false, false, GUI.skin.horizontalScrollbar,
                 GUI.skin.verticalScrollbar, GUI.skin.box);
 
-            ShowValidationResultsGUI(validation);
             ValidateProductIds();
 
             EditorGUI.BeginChangeCheck();
@@ -272,25 +184,10 @@ namespace UnityEditor.Purchasing
             var exportBox = EditorGUILayout.BeginVertical();
             EditorGUIUtility.labelWidth = defaultLabelWidth;
 
-            EditorGUILayout.LabelField("Catalog Export");
-
-            Catalog.appleSKU = ShowEditTextFieldGuiAndGetValue("appleSKU", "Apple SKU:", Catalog.appleSKU);
-            Catalog.appleTeamID = ShowEditTextFieldGuiAndGetValue("appleTeamID", "Apple Team ID:", Catalog.appleTeamID);
-
             if (EditorGUI.EndChangeCheck())
             {
                 CheckForDuplicateIDs();
                 SetDirtyFlag();
-            }
-
-            exportButtonRect = new Rect(exportBox.xMax - ProductCatalogExportWindow.kWidth,
-                exportBox.yMin,
-                ProductCatalogExportWindow.kWidth,
-                EditorGUIUtility.singleLineHeight);
-            if (GUI.Button(exportButtonRect,
-                    new GUIContent("App Store Export", "Export products for bulk import into app store tools.")))
-            {
-                PopupWindow.Show(exportButtonRect, new ProductCatalogExportWindow(this));
             }
 
             EditorGUILayout.EndVertical();
@@ -308,7 +205,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private void ShowAndProcessCodelessAutoInitToggleGuis()
+        void ShowAndProcessCodelessAutoInitToggleGuis()
         {
             EditorGUILayout.Space();
 
@@ -321,7 +218,7 @@ namespace UnityEditor.Purchasing
             EditorGUILayout.Space();
         }
 
-        private void ShowAndProcessIapAutoInitToggleGui()
+        void ShowAndProcessIapAutoInitToggleGui()
         {
             var newValue = EditorGUILayout.Toggle(
                 new GUIContent("Automatically initialize UnityPurchasing (recommended)",
@@ -331,7 +228,7 @@ namespace UnityEditor.Purchasing
             UpdateIapAutoInitValue(newValue);
         }
 
-        private void UpdateIapAutoInitValue(bool newValue)
+        void UpdateIapAutoInitValue(bool newValue)
         {
             if (newValue != Catalog.enableCodelessAutoInitialization)
             {
@@ -341,7 +238,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private void ShowAndProcessUgsAutoInitToggleGui()
+        void ShowAndProcessUgsAutoInitToggleGui()
         {
             var newValue = EditorGUILayout.Toggle(new GUIContent(
                     "Automatically initialize Unity Gaming Services",
@@ -353,7 +250,7 @@ namespace UnityEditor.Purchasing
             UpdateUgsAutoInitValue(newValue);
         }
 
-        private void UpdateUgsAutoInitValue(bool newValue)
+        void UpdateUgsAutoInitValue(bool newValue)
         {
             if (newValue != Catalog.enableUnityGamingServicesAutoInitialization)
             {
@@ -363,26 +260,12 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        string ShowEditTextFieldGuiAndGetValue(string fieldName, string label, string oldText)
-        {
-            BeginErrorBlock(validation, fieldName);
-            var newText = EditorGUILayout.TextField(label, oldText);
-            EndErrorBlock(validation, fieldName);
-
-            if (newText != oldText)
-            {
-                GenericEditorFieldEditEventSenderHelpers.SendCatalogEditEvent(fieldName);
-            }
-
-            return newText;
-        }
-
-        private static bool IsNullOrWhiteSpace(string value)
+        static bool IsNullOrWhiteSpace(string value)
         {
             return string.IsNullOrEmpty(value?.Trim());
         }
 
-        private void ValidateProductIds()
+        void ValidateProductIds()
         {
             foreach (var productEditor in productEditors)
             {
@@ -393,7 +276,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private void AddNewProduct()
+        void AddNewProduct()
         {
             // go through the previously created products and check if any of them has an empty id, thus we prevent the
             // creation of an empty product if the id is not filled.
@@ -420,7 +303,7 @@ namespace UnityEditor.Purchasing
             Catalog.Add(newEditor.Item);
         }
 
-        private void CheckForDuplicateIDs()
+        void CheckForDuplicateIDs()
         {
             var ids = new HashSet<string>();
             var duplicates = new HashSet<string>();
@@ -440,7 +323,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private static void ShowValidationResultsGUI(ExporterValidationResults results)
+        static void ShowValidationResultsGUI(ExporterValidationResults results)
         {
             if (results != null)
             {
@@ -465,12 +348,12 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        private static void BeginErrorBlock(ExporterValidationResults validation, string fieldName)
+        static void BeginErrorBlock()
         {
             EditorGUI.BeginChangeCheck();
         }
 
-        private static void EndErrorBlock(ExporterValidationResults validation, string fieldName)
+        static void EndErrorBlock(ExporterValidationResults validation, string fieldName)
         {
             if (EditorGUI.EndChangeCheck() && validation != null)
             {
@@ -486,281 +369,32 @@ namespace UnityEditor.Purchasing
         }
 
         /// <summary>
-        /// Exports the Catalog to a file for a particular store, or erases an existing exported file.
-        /// </summary>
-        /// <param name="storeName"> The name of the store to be exported.</param>
-        /// <param name="folder"> The full path of the export file, including the file name.</param>
-        /// <param name="eraseExport"> If true, it will just erase the export file and do nothing else.</param>
-        /// <returns>Whether or not the export was succesful. Always returns false if eraseExport is true.</returns>
-        public static bool Export(string storeName, string folder, bool eraseExport)
-        {
-            var editor = CreateInstance(typeof(ProductCatalogEditor)) as ProductCatalogEditor;
-            return new ProductCatalogExportWindow(editor).Export(storeName, folder, eraseExport);
-        }
-
-        #region UDP Related Functions
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        // This method is used in Update() to check the UnityWebRequest each frame
-        private void CheckApiUpdate()
-        {
-            if (requestQueue.Count == 0)
-            {
-                return;
-            }
-
-            var reqStruct = requestQueue.Dequeue();
-            var request = reqStruct.request;
-
-            if (request != null && request.isDone) // Check what the request is and parse the response
-            {
-                var downloadedRawJson = request.downloadHandler.text;
-
-                if (!CheckAndHandleNetworkErrors(reqStruct, downloadedRawJson))
-                {
-                    var resp = reqStruct.resp;
-                    if (resp.GetType() == typeof(TokenInfo))
-                    {
-                        resp = JsonUtility.FromJson<TokenInfo>(downloadedRawJson);
-                        kTokenInfo.access_token = ((TokenInfo)resp).access_token;
-                        kTokenInfo.refresh_token = ((TokenInfo)resp).refresh_token;
-
-                        var newRequest =
-                            UdpSynchronizationApi.CreateGetOrgIdRequest(kTokenInfo.access_token, Application.cloudProjectId);
-                        var newReqStruct = new ReqStruct { request = newRequest, resp = new OrgIdResponse() };
-
-                        requestQueue.Enqueue(newReqStruct);
-                    }
-                    // Get orgId request
-                    else if (resp.GetType() == typeof(OrgIdResponse))
-                    {
-                        resp = JsonUtility.FromJson<OrgIdResponse>(downloadedRawJson);
-                        kOrgId = ((OrgIdResponse)resp).org_foreign_key;
-
-                        if (kAppStoreSettings != null)
-                        {
-                            var appSlug = AppStoreSettingsInterface.GetAppSlugField();
-
-                            // Then, get all iap items
-                            requestQueue.Enqueue(new ReqStruct
-                            {
-                                request = UdpSynchronizationApi.CreateSearchStoreItemRequest(kTokenInfo.access_token, kOrgId, (string)appSlug.GetValue(kAppStoreSettings)),
-                                resp = new IapItemSearchResponse()
-                            });
-                        }
-                    }
-                    else if (resp.GetType() == typeof(IapItemSearchResponse))
-                    {
-                        if (downloadedRawJson != null)
-                        {
-                            resp = JsonUtility.FromJson<IapItemSearchResponse>(downloadedRawJson);
-                            foreach (var item in ((IapItemSearchResponse)resp).results)
-                            {
-                                kIapItems[item.slug] = item;
-                            }
-
-                            udpOfflineMode = false;
-                        }
-
-                        kIsPreparing = false;
-                    }
-                    // Creating/Updating IAP item succeeds
-                    else if (resp.GetType() == typeof(IapItemResponse))
-                    {
-                        resp = JsonUtility.FromJson<IapItemResponse>(downloadedRawJson);
-
-                        if (reqStruct.iapItem != null) // this should always be true
-                        {
-                            reqStruct.itemEditor.udpItemSyncing = false;
-                            kIapItems[reqStruct.iapItem.slug] = reqStruct.iapItem;
-                            kIapItems[reqStruct.iapItem.slug].id = ((IapItemResponse)resp).id;
-                        }
-                    }
-                }
-
-                Repaint();
-            }
-            else
-            {
-                requestQueue.Enqueue(reqStruct);
-            }
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        bool CheckAndHandleNetworkErrors(ReqStruct reqStruct, string downloadedRawJson)
-        {
-            var request = reqStruct.request;
-
-            // Deal with errors
-            if (DidUdpRequestHaveErrors(request))
-            {
-                TryParseErrorAsJson(downloadedRawJson, request.responseCode);
-
-                if (reqStruct.resp.GetType() == typeof(IapItemSearchResponse))
-                {
-                    if (IsUdpBackendDeprecated(request))
-                    {
-                        kUdpErrorMsg += "\nThe UDP service endpoint is now deprecated. You may continue to use this functionality, but it can't be synchronized online. Make sure to synchronize your product prices with the UDP module manually.";
-                    }
-                    else
-                    {
-                        kUdpErrorMsg += "\nThe UDP service endpoint is currently unavailable. You may continue to use this functionality, but it can't be synchronized online. Make sure to synchronize your product prices with the UDP module manually.";
-                    }
-                    udpOfflineMode = true;
-                }
-
-                if (reqStruct.itemEditor != null)
-                {
-                    kIsPreparing = false;
-                    reqStruct.itemEditor.udpItemSyncing = false;
-
-                    reqStruct.itemEditor.udpSyncErrorMsg = kUdpErrorMsg;
-                    kUdpErrorMsg = "";
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-
-        static bool DidUdpRequestHaveErrors(UnityWebRequest request)
-        {
-            return request.error != null || !request.IsResponseCodeOk() || request.result == UnityWebRequest.Result.ConnectionError;
-        }
-
-        static bool IsUdpBackendDeprecated(UnityWebRequest request)
-        {
-            return request.responseCode == 410 || request.result == UnityWebRequest.Result.ConnectionError;
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        void TryParseErrorAsJson(string downloadedRawJson, long responseCode)
-        {
-            try
-            {
-                var response = JsonUtility.FromJson<ErrorResponse>(downloadedRawJson);
-                kUdpErrorMsg = response?.message != null && response.details != null && response.details.Length != 0
-                    ? string.Format("{0} : {1}", response.details[0].field, response.message)
-                    : response?.message != null ? response.message : $"Unknown Error, Please try again. Error code: {responseCode}";
-            }
-            catch (ArgumentException)
-            {
-                kUdpErrorMsg = $"Unable to parse Error as JSON, Please try again. Error code: {responseCode}";
-            }
-        }
-
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
-        /// <summary>
-        /// Get userId, orgId of the developer. Make prepare for syncing
-        /// </summary>
-        void PrepareDeveloperInfo()
-        {
-            // Get Client ID
-            var udpAppStoreSettings = AppStoreSettingsInterface.GetClassType();
-            if (udpAppStoreSettings != null)
-            {
-                var assetPathProp = AppStoreSettingsInterface.GetAssetPathField();
-                var clientIDProp = AppStoreSettingsInterface.GetClientIDField();
-
-                kAppStoreSettings = AssetDatabase.LoadAssetAtPath((string)assetPathProp.GetValue(null), udpAppStoreSettings);
-
-                if (kAppStoreSettings == null || clientIDProp.GetValue(kAppStoreSettings) == null)
-                {
-                    kUdpErrorMsg = "Please create and sync GameSettings.asset first.";
-                    kValidConfig = false;
-                    return;
-                }
-            }
-
-            try
-            {
-                UnityOAuth.GetAuthorizationCodeAsync(UdpSynchronizationApi.kOAuthClientId, GetAuthCode);
-            }
-            catch (TargetInvocationException ex)
-            {
-                if (ex.InnerException is InvalidOperationException)
-                {
-                    kUdpErrorMsg = "To sync UDP catalog, you must login with Unity ID first.";
-                    kValidLogin = false;
-                    kIsPreparing = false;
-                }
-            }
-        }
-
-        [Obsolete("API to be removed with UDP deprecation.")]
-        /// <summary>
-        /// Gets the authenticate code of a web response.
-        /// </summary>
-        /// <typeparam name="T"> Type of the web response passed. </typeparam>
-        /// <param name="response"> The web response from which to extract the auth code </param>
-        public void GetAuthCode<T>(T response)
-        {
-            var authCodePropertyInfo = response.GetType().GetProperty("AuthCode");
-            var exceptionPropertyInfo = response.GetType().GetProperty("Exception");
-            var authCode = (string)authCodePropertyInfo.GetValue(response, null);
-            var exception = (Exception)exceptionPropertyInfo.GetValue(response, null);
-
-            if (authCode != null)
-            {
-                var request = UdpSynchronizationApi.CreateGetAccessTokenRequest(authCode);
-                var tokenInfoResp = new TokenInfo();
-                var reqStruct = new ReqStruct { request = request, resp = tokenInfoResp };
-                requestQueue.Enqueue(reqStruct);
-            }
-            else
-            {
-                kUdpErrorMsg = exception.ToString();
-                kIsPreparing = false;
-            }
-        }
-
-        #endregion
-
-        /// <summary>
         /// Inner class for displaying and editing the contents of a single entry in the ProductCatalog.
         /// </summary>
         public class ProductCatalogItemEditor
         {
-            private const float k_DuplicateIDFieldWidth = 90f;
+            const float k_DuplicateIDFieldWidth = 90f;
 
             /// <summary>
             /// Property which gets the <c>ProductCatalogItem</c> instance being edited.
             /// </summary>
             public ProductCatalogItem Item { get; private set; }
 
-            private ExporterValidationResults validation;
+            ExporterValidationResults validation;
 
-            private readonly bool editorSupportsPayouts = false;
+            readonly bool editorSupportsPayouts;
 
-            private bool advancedVisible = true;
-            private bool descriptionVisible = true;
-            private bool storeIDsVisible = false;
-            private bool payoutsVisible = false;
-            private bool googleVisible = false;
-            private bool appleVisible = false;
+            bool advancedVisible = true;
+            bool descriptionVisible = true;
+            bool storeIDsVisible;
+            bool payoutsVisible;
 
-            [Obsolete("Internal API to be removed with UDP deprecation.")]
-            private bool udpVisible = false;
+            bool idDuplicate;
+            bool idInvalid;
+            bool shouldBeMarked = true;
 
-            private bool idDuplicate = false;
-            private bool idInvalid = false;
-            private bool shouldBeMarked = true;
-
-            [Obsolete("API to be removed with UDP deprecation.")]
-            /// <summary>
-            /// Whether or not this item is syncing a UDP item.
-            /// </summary>
-            public Boolean udpItemSyncing = false;
-
-            [Obsolete("API to be removed with UDP deprecation.")]
-            /// <summary>
-            /// The Error message of the UDP sync, if applicable.
-            /// </summary>
-            public string udpSyncErrorMsg = "";
-
-            private readonly List<LocalizedProductDescription> descriptionsToRemove = new List<LocalizedProductDescription>();
-            private readonly List<ProductCatalogPayout> payoutsToRemove = new List<ProductCatalogPayout>();
+            readonly List<LocalizedProductDescription> descriptionsToRemove = new List<LocalizedProductDescription>();
+            readonly List<ProductCatalogPayout> payoutsToRemove = new List<ProductCatalogPayout>();
 
             /// <summary>
             /// Default constructor. Creates a new <c>ProductCatalogItem</c> to edit.
@@ -832,6 +466,8 @@ namespace UnityEditor.Purchasing
                     {
                         EditorGUI.indentLevel++;
 
+                        ShowAndProcessGooglePrice();
+
                         DescriptionEditorGUI(Item.defaultDescription, false, "defaultDescription");
 
                         var translationBox = EditorGUILayout.BeginVertical();
@@ -861,6 +497,7 @@ namespace UnityEditor.Purchasing
                         }
 
                         EditorGUI.indentLevel--;
+
                         EditorGUILayout.EndVertical();
 
                         if (descriptionsToRemove.Count > 0)
@@ -942,173 +579,15 @@ namespace UnityEditor.Purchasing
                         EditorGUI.indentLevel--;
                     }
 
-                    EditorGUILayout.Separator();
-
-                    googleVisible = CompatibleGUI.Foldout(googleVisible, "Google Configuration", true, style);
-                    if (googleVisible)
-                    {
-                        EditorGUI.indentLevel++;
-
-                        ShowAndProcessGoogleConfigGui();
-
-                        EditorGUI.indentLevel--;
-                    }
-
-                    EditorGUILayout.Separator();
-
-                    appleVisible = CompatibleGUI.Foldout(appleVisible, "Apple Configuration", true, style);
-                    if (appleVisible)
-                    {
-                        EditorGUI.indentLevel++;
-
-                        ShowAndProcessAppleConfigGui();
-
-                        EditorGUI.indentLevel--;
-                    }
-
-                    EditorGUILayout.Separator();
-
-                    OnUdpGui(style);
-
                     EditorGUI.indentLevel--;
                 }
 
                 EditorGUILayout.EndVertical();
             }
 
-            [Obsolete("Internal API to be removed with UDP deprecation.")]
-            void OnUdpGui(GUIStyle style)
-            {
-                if (s_udpAvailable && IsUdpInstalled())
-                {
-                    EditorGUILayout.Separator();
-                    udpVisible = CompatibleGUI.Foldout(udpVisible, "Unity Distribution Portal Configuration",
-                        true, style);
-
-                    if (udpVisible)
-                    {
-                        EditorGUI.indentLevel++;
-
-                        if (!string.IsNullOrEmpty(udpSyncErrorMsg))
-                        {
-                            var errStyle = new GUIStyle();
-                            errStyle.normal.textColor = Color.red;
-                            EditorGUILayout.LabelField(udpSyncErrorMsg, errStyle);
-                        }
-
-                        var udpFieldsDisabled = (kIsPreparing || udpItemSyncing || !kValidLogin || !kValidConfig) && !udpOfflineMode;
-
-                        //If everything appears ok, check UDP compatibility and warn user if there's a problem
-                        //This should not stop the user from doing some UDP sync work, as there is no current blocker for those features.
-                        if (!udpFieldsDisabled && string.IsNullOrEmpty(kUdpErrorMsg) && !UdpSynchronizationApi.CheckUdpCompatibility())
-                        {
-                            kUdpErrorMsg = "Please update your UDP package. Transaction features will no longer work at runtime with your current UDP version";
-                        }
-
-                        if (!string.IsNullOrEmpty(kUdpErrorMsg))
-                        {
-                            var errStyle = new GUIStyle();
-                            errStyle.normal.textColor = Color.red;
-                            errStyle.wordWrap = true;
-
-                            EditorGUILayout.BeginVertical();
-                            EditorGUILayout.LabelField(kUdpErrorMsg, errStyle);
-                            EditorGUILayout.EndVertical();
-                        }
-
-                        EditorGUI.BeginDisabledGroup(udpFieldsDisabled);
-
-                        BeginErrorBlock(validation, "udpPrice");
-                        EditorGUILayout.LabelField(
-                            "Please provide a price in USD, other currencies can be edited on UDP console.");
-
-                        var priceStr = EditorGUILayout.TextField("Price:",
-                            Item.udpPrice == null || Item.udpPrice.value == 0
-                                ? string.Empty
-                                : Item.udpPrice.value.ToString());
-
-                        Item.udpPrice.value = decimal.TryParse(priceStr, out var priceDecimal) ? priceDecimal : 0;
-
-                        EndErrorBlock(validation, "udpPrice");
-
-                        OnSyncToUdpGui();
-
-                        EditorGUI.EndDisabledGroup();
-
-                        EditorGUI.indentLevel--;
-                    }
-                }
-            }
-
-            [Obsolete("Internal API to be removed with UDP deprecation.")]
-            void OnSyncToUdpGui()
-            {
-                if (!udpOfflineMode)
-                {
-                    if (GUILayout.Button("Sync to UDP"))
-                    {
-                        udpSyncErrorMsg = "";
-                        var iapItem = new IapItem
-                        {
-                            consumable = Item.type == ProductType.Consumable,
-                            slug = Item.GetStoreID(UDP.Name) ?? Item.id,
-                            name = Item.defaultDescription.Title
-                        };
-                        iapItem.properties.description = Item.defaultDescription.Description;
-                        iapItem.priceSets.PurchaseFee.priceMap.DEFAULT.Add(new PriceDetail
-                        {
-                            price = Item.udpPrice.value.ToString()
-                        });
-
-                        if (kAppStoreSettings != null)
-                        {
-                            var appSlug = AppStoreSettingsInterface.GetAppSlugField();
-                            iapItem.masterItemSlug = (string)appSlug.GetValue(kAppStoreSettings);
-                        }
-
-                        iapItem.ownerId = kOrgId;
-
-                        if (iapItem.ValidationCheck() == "")
-                        {
-                            if (kIapItems.ContainsKey(iapItem.slug)) // Update
-                            {
-                                iapItem.id = kIapItems[iapItem.slug].id;
-                                requestQueue.Enqueue(new ReqStruct
-                                {
-                                    resp = new IapItemResponse(),
-                                    itemEditor = this,
-                                    request = UdpSynchronizationApi.CreateUpdateStoreItemRequest(kTokenInfo.access_token,
-                                        iapItem),
-                                    iapItem = iapItem,
-                                });
-                            }
-                            else // Create
-                            {
-                                requestQueue.Enqueue(new ReqStruct
-                                {
-                                    request = UdpSynchronizationApi.CreateAddStoreItemRequest(kTokenInfo.access_token,
-                                        kOrgId, iapItem),
-                                    resp = new IapItemResponse(),
-                                    itemEditor = this,
-                                    iapItem = iapItem,
-                                });
-                            }
-
-                            udpItemSyncing = true;
-
-                            GenericEditorButtonClickEventSenderHelpers.SendCatalogSyncToUdpEvent();
-                        }
-                        else
-                        {
-                            EditorUtility.DisplayDialog("Sync Error", iapItem.ValidationCheck(), "OK");
-                        }
-                    }
-                }
-            }
-
             void ShowAndProcessProductIDBlockGui(Rect idRect)
             {
-                BeginErrorBlock(validation, "id");
+                BeginErrorBlock();
 
                 var oldID = Item.id;
 
@@ -1131,7 +610,7 @@ namespace UnityEditor.Purchasing
 
             void ShowAndProcessProductTypeBlockGui(float width)
             {
-                BeginErrorBlock(validation, "type");
+                BeginErrorBlock();
 
                 var oldType = Item.type;
 
@@ -1163,55 +642,15 @@ namespace UnityEditor.Purchasing
                 payout.data = TruncateString(ShowEditTextFieldGuiAndGetValue("payoutData", "Data", payout.data), ProductCatalogPayout.MaxDataLength);
             }
 
-            void ShowAndProcessGoogleConfigGui()
+            void ShowAndProcessGooglePrice()
             {
-                EditorGUILayout.LabelField("Provide either a price or an ID for a pricing template created in Google Play");
-
                 var fieldName = "googlePrice";
-                BeginErrorBlock(validation, fieldName);
+                BeginErrorBlock();
                 var priceStr = ShowEditTextFieldGuiAndGetValue(fieldName, "Price:", Item.googlePrice == null || Item.googlePrice.value == 0 ? string.Empty : Item.googlePrice.value.ToString());
 
                 Item.googlePrice.value = decimal.TryParse(priceStr, out var priceDecimal) ? priceDecimal : 0;
 
-                Item.pricingTemplateID = ShowEditTextFieldGuiAndGetValue("googlePriceTemplate", "Pricing Template:", Item.pricingTemplateID);
                 EndErrorBlock(validation, fieldName);
-            }
-
-            void ShowAndProcessAppleConfigGui()
-            {
-                BeginErrorBlock(validation, "applePriceTier");
-
-                var oldTier = Item.applePriceTier;
-
-                Item.applePriceTier = EditorGUILayout.Popup("Price Tier:", Item.applePriceTier, ApplePriceTiers.Strings);
-                EndErrorBlock(validation, "applePriceTier");
-
-                if ((oldTier != Item.applePriceTier) && (Item.applePriceTier < ApplePriceTiers.Strings.Length))
-                {
-                    GenericEditorDropdownSelectEventSenderHelpers.SendCatalogSetApplePriceTierEvent(ApplePriceTiers.Strings[Item.applePriceTier]);
-                }
-
-                BeginErrorBlock(validation, "screenshotPath");
-                EditorGUILayout.LabelField("Screenshot path:", Item.screenshotPath);
-                EndErrorBlock(validation, "screenshotPath");
-                var screenshotButtonBox = EditorGUILayout.BeginVertical();
-
-                var screenshotButtonRect = new Rect(screenshotButtonBox.xMax - ProductCatalogExportWindow.kWidth,
-                    screenshotButtonBox.yMin,
-                    ProductCatalogExportWindow.kWidth,
-                    EditorGUIUtility.singleLineHeight);
-                if (GUI.Button(screenshotButtonRect, new GUIContent("Select a screenshot", "Required for Apple XML Delivery.")))
-                {
-                    var selectedPath = EditorUtility.OpenFilePanel("Select a screenshot", "", "");
-                    if (selectedPath != null)
-                    {
-                        Item.screenshotPath = selectedPath;
-                    }
-
-                    GenericEditorButtonClickEventSenderHelpers.SendCatalogSelectAppleScreenshotEvent();
-                }
-
-                EditorGUILayout.EndVertical();
             }
 
             /// <summary>
@@ -1226,9 +665,6 @@ namespace UnityEditor.Purchasing
                     advancedVisible = true;
                     descriptionVisible = true;
                     storeIDsVisible = true;
-                    googleVisible = true;
-                    appleVisible = true;
-                    udpVisible = true;
                 }
             }
 
@@ -1259,7 +695,7 @@ namespace UnityEditor.Purchasing
                 shouldBeMarked = marked;
             }
 
-            private bool DescriptionEditorGUI(LocalizedProductDescription description, bool showRemoveButton, string fieldValidationPrefix)
+            bool DescriptionEditorGUI(LocalizedProductDescription description, bool showRemoveButton, string fieldValidationPrefix)
             {
                 var box = EditorGUILayout.BeginVertical();
                 var removeButtonWidth = EditorGUIUtility.singleLineHeight + 2;
@@ -1288,7 +724,7 @@ namespace UnityEditor.Purchasing
 
             void ShowAndProcessLocaleBlockGui(LocalizedProductDescription description, string fieldValidationPrefix, Rect rect)
             {
-                BeginErrorBlock(validation, fieldValidationPrefix + ".googleLocale");
+                BeginErrorBlock();
 
                 var oldLocale = description.googleLocale;
                 description.googleLocale = (TranslationLocale)EditorGUI.Popup(rect, "Locale:", (int)description.googleLocale, LocaleExtensions.GetLabelsWithSupportedPlatforms());
@@ -1303,7 +739,7 @@ namespace UnityEditor.Purchasing
 
             string ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue(string fieldName, string label, string oldText)
             {
-                BeginErrorBlock(validation, fieldName);
+                BeginErrorBlock();
                 var newText = ShowEditTextFieldGuiAndGetValue(fieldName, label, oldText);
                 EndErrorBlock(validation, fieldName);
 
@@ -1334,7 +770,7 @@ namespace UnityEditor.Purchasing
                 return newAmount;
             }
 
-            private static string TruncateString(string s, int len)
+            static string TruncateString(string s, int len)
             {
                 if (string.IsNullOrEmpty(s))
                 {
@@ -1347,275 +783,6 @@ namespace UnityEditor.Purchasing
                 }
 
                 return s.Substring(0, Math.Min(s.Length, len));
-            }
-        }
-
-        /// <summary>
-        /// A popup window that shows a list of exporters and kicks off an export from the ProductCatalogEditor.
-        /// </summary>
-        public class ProductCatalogExportWindow : PopupWindowContent
-        {
-            /// <summary>
-            /// The default width of the export window.
-            /// </summary>
-            public const float kWidth = 200f;
-
-            private readonly ProductCatalogEditor editor;
-            private readonly List<IProductCatalogExporter> exporters = new List<IProductCatalogExporter>();
-
-            /// <summary>
-            /// Constructor taking an instance of <c>ProductCatalogEditor</c> to export contents from.
-            /// </summary>
-            /// <param name="editor_"> The product catalog editor from which the catalog will be exported. </param>
-            public ProductCatalogExportWindow(ProductCatalogEditor editor_)
-            {
-                editor = editor_;
-
-                exporters.Add(new AppleXMLProductCatalogExporter());
-                exporters.Add(new GooglePlayProductCatalogExporter());
-            }
-
-            /// <summary>
-            /// Gets the dimensions of the window.
-            /// </summary>
-            /// <returns>The size of the window as a 2D vector.</returns>
-            public override Vector2 GetWindowSize()
-            {
-                return new Vector2(kWidth, EditorGUIUtility.singleLineHeight * (exporters.Count + 1));
-            }
-
-            /// <summary>
-            /// Function called when the GUI updates.
-            /// </summary>
-            /// <param name="rect">The current draw rectangle of the Window's GUI.</param>
-            public override void OnGUI(Rect rect)
-            {
-                if (editor == null)
-                {
-                    editorWindow.Close();
-                    return;
-                }
-
-                EditorGUILayout.BeginVertical();
-                foreach (var exporter in exporters)
-                {
-                    if (GUILayout.Button(exporter.DisplayName))
-                    {
-                        editorWindow.Close();
-                        Export(exporter);
-                        GenericEditorButtonClickEventSenderHelpers.SendCatalogAppStoreExportEvent(exporter.DisplayName);
-                    }
-                }
-
-                EditorGUILayout.EndVertical();
-            }
-
-            private bool Validate(IProductCatalogExporter exporter, out ExporterValidationResults catalogValidation,
-                out List<ExporterValidationResults> itemValidation, bool debug = false)
-            {
-                var valid = true;
-                catalogValidation = exporter.Validate(editor.Catalog);
-                valid = valid && catalogValidation.Valid;
-                itemValidation = new List<ExporterValidationResults>();
-
-                foreach (var item in editor.Catalog.allProducts)
-                {
-                    var v = exporter.Validate(item);
-                    valid = valid && v.Valid;
-                    itemValidation.Add(v);
-                }
-
-                if (debug)
-                {
-                    void DebugResults(string name, ExporterValidationResults r)
-                    {
-                        if (!r.Valid || r.warnings.Count != 0)
-                        {
-                            Debug.LogWarning(name + ", Valid = " + r.Valid);
-                        }
-
-                        foreach (var m in r.errors)
-                        {
-                            Debug.LogWarning("errors " + m);
-                        }
-
-                        foreach (var m in r.fieldErrors)
-                        {
-                            Debug.LogWarning("fieldErrors " + m);
-                        }
-
-                        foreach (var m in r.warnings)
-                        {
-                            Debug.LogWarning("warnings " + m);
-                        }
-                    }
-
-                    if (!valid)
-                    {
-                        Debug.LogWarning("Product Catalog Export Overall Result: valid " + valid);
-                    }
-
-                    DebugResults("CatalogValidation", catalogValidation);
-                    foreach (var r in itemValidation)
-                    {
-                        DebugResults("ItemValidation", r);
-                    }
-                }
-
-                return valid;
-            }
-
-            private void Export(IProductCatalogExporter exporter)
-            {
-
-                var valid = Validate(exporter, out var catalogValidation, out var itemValidation, kValidateDebugLog);
-                editor.SetCatalogValidationResults(catalogValidation, itemValidation);
-
-                if (valid)
-                {
-                    string nonInteractivePath = null;
-
-                    // Special case for exporters that need to export an entire package with a given name, not just a file.
-                    if (exporter.SaveCompletePackage && !string.IsNullOrEmpty(exporter.MandatoryExportFolder))
-                    {
-                        // Choose the location of the final directory
-                        var directoryPath = EditorUtility.SaveFolderPanel("Export to folder", "", "");
-                        directoryPath = Path.Combine(directoryPath, exporter.MandatoryExportFolder);
-
-                        // Replace any existing directory
-                        if (Directory.Exists(directoryPath))
-                        {
-                            Directory.Delete(directoryPath, true);
-                        }
-
-                        Directory.CreateDirectory(directoryPath);
-
-                        // ExportHelper needs a single file, let it create the main file and save the auxilliary files.
-                        var mainFilePath = Path.Combine(directoryPath,
-                            string.Format("{0}.{1}", exporter.DefaultFileName, exporter.FileExtension));
-                        ExportHelper(exporter, mainFilePath);
-                        EditorUtility.DisplayDialog(
-                            "Exported Successfully",
-                            string.Format("Exported {0} to \"{1}\".",
-                                exporter.MandatoryExportFolder, directoryPath),
-                            "OK");
-                    }
-                    else
-                    {
-                        // Export manually
-                        var path = EditorUtility.SaveFilePanel("Export Product Catalog", "", exporter.DefaultFileName,
-                            exporter.FileExtension);
-                        ExportHelper(exporter, path);
-
-                        // Export automatically, conditionally
-                        if (!string.IsNullOrEmpty(exporter.MandatoryExportFolder))
-                        {
-                            // Always save a copy to the mandatory folder
-                            if (!Directory.Exists(exporter.MandatoryExportFolder))
-                            {
-                                Directory.CreateDirectory(exporter.MandatoryExportFolder);
-                            }
-
-                            nonInteractivePath = Path.Combine(exporter.MandatoryExportFolder,
-                                string.Format("{0}.{1}", exporter.DefaultFileName, exporter.FileExtension));
-                            ExportHelper(exporter, nonInteractivePath);
-                        }
-
-                        if (nonInteractivePath != null)
-                        {
-                            EditorUtility.DisplayDialog(
-                                "Exported Successfully",
-                                string.Format("Exported {0} to \"{2}\".\n\n" +
-                                    "Also saved copy into project at \"{1}\".",
-                                    exporter.DisplayName, nonInteractivePath, path),
-                                "OK");
-                        }
-                    }
-                }
-            }
-
-            private void ExportHelper(IProductCatalogExporter exporter, string path)
-            {
-                if (string.IsNullOrEmpty(path))
-                {
-                    return;
-                }
-
-                File.WriteAllText(path, exporter.Export(editor.Catalog));
-
-                if (exporter.FilesToCopy != null)
-                {
-                    foreach (var fileToCopy in exporter.FilesToCopy)
-                    {
-                        var targetPath = Path.Combine(Path.GetDirectoryName(path), Path.GetFileName(fileToCopy));
-                        var fileInfo = new FileInfo(fileToCopy);
-                        fileInfo.CopyTo(targetPath, true);
-                    }
-                }
-            }
-
-            /// <summary>
-            /// Not user-facing. Use to generate a catalog without asking the user. Make a best-effort
-            /// to fix issues.
-            /// </summary>
-            /// <param name="storeName"></param>
-            /// <param name="folder"></param>
-            /// <param name="justEraseExport"></param>
-            /// <returns></returns>
-            internal bool Export(string storeName, string folder, bool justEraseExport)
-            {
-                var catalog = editor.Catalog; // This may be normalized before export
-
-                var exporter = exporters.Single(e => e.StoreName == storeName);
-                if (exporter == null)
-                {
-                    Debug.LogErrorFormat("Unable to export {0} Product Catalog. Export is unsupported for this store.",
-                        storeName);
-                    return false;
-                }
-
-                if (!Directory.Exists(folder))
-                {
-                    Directory.CreateDirectory(folder);
-                }
-
-                var path = Path.Combine(folder,
-                    string.Format("{0}.{1}", exporter.DefaultFileName, exporter.FileExtension));
-
-                if (justEraseExport)
-                {
-                    File.Delete(path);
-                    return false;
-                }
-
-                var valid = Validate(exporter, out var catalogValidation, out var itemValidation, kValidateDebugLog);
-
-                if (!valid)
-                {
-                    Debug.LogWarningFormat(
-                        "{0} Product Catalog is invalid. Automatically fixing for export. Manually fix Catalog errors by opening IAP Catalog editor window with {1} menu, performing App Store Export for this store, and resolving reported issues.",
-                        storeName, ProductCatalogEditorMenuPath);
-                    catalog = exporter.NormalizeToType(catalog);
-                }
-
-                var wrote = false;
-
-                if (!string.IsNullOrEmpty(path))
-                {
-                    var cat = exporter.Export(catalog);
-
-                    // Write the path
-                    File.WriteAllText(path, cat);
-                    AssetDatabase.ImportAsset(path);
-
-                    wrote = true;
-                }
-                else
-                {
-                    Debug.LogErrorFormat("Unable to export {0} Product Catalog. Path {1} is invalid.", storeName, path);
-                }
-
-                return wrote;
             }
         }
 
@@ -1644,79 +811,6 @@ namespace UnityEditor.Purchasing
             /// The dictionary of field errors.
             /// </summary>
             public Dictionary<string, string> fieldErrors = new Dictionary<string, string>();
-        }
-
-        /// <summary>
-        /// Product catalog exporters implement this interface to provide validation and export of a ProductCatalog.
-        /// </summary>
-        public interface IProductCatalogExporter
-        {
-            /// <summary>
-            /// The display name of the catalog.
-            /// </summary>
-            string DisplayName { get; }
-
-            /// <summary>
-            /// The default file name of the catalog export.
-            /// </summary>
-            string DefaultFileName { get; }
-
-            /// <summary>
-            /// The file extension of the catalog export.
-            /// </summary>
-            string FileExtension { get; }
-
-            /// <summary>
-            /// The name of the store to be exported.
-            /// </summary>
-            string StoreName { get; }
-
-            /// <summary>
-            /// Required specific path for output file. Is optional whether user will be permitted to save a copy
-            /// to a separate path in addition to this required path.
-            /// </summary>
-            string MandatoryExportFolder { get; }
-
-            /// <summary>
-            /// Exports the product catalog.
-            /// </summary>
-            /// <param name="catalog"> The <c>ProductCatalog</c> to be exported. </param>
-            /// <returns> The exported catalog as raw text. </returns>
-            string Export(ProductCatalog catalog);
-
-            /// <summary>
-            /// Validates the product catalog for export.
-            /// </summary>
-            /// <param name="catalog"> The <c>ProductCatalog</c> to be exported. </param>
-            /// <returns> The results of the validation. </returns>
-            ExporterValidationResults Validate(ProductCatalog catalog);
-
-            /// <summary>
-            /// Validates the product catalog item for export.
-            /// </summary>
-            /// <param name="item"> The <c>ProductCataloItemg</c> to be exported. </param>
-            /// <returns> The results of the validation. </returns>
-            ExporterValidationResults Validate(ProductCatalogItem item);
-
-            /// <summary>
-            /// Normalizes the product catalog for export to the base type.
-            /// Fixes issues targeting this exporter's implempentation.
-            /// </summary>
-            /// <param name="catalog"> The <c>ProductCatalog</c> to be normalized. </param>
-            /// <returns> The normalized <c>ProductCatalog</c>. </returns>
-            ProductCatalog NormalizeToType(ProductCatalog catalog);
-
-            /// <summary>
-            /// Files to copy to the final directory, ex. screenshots on iOS
-            /// </summary>
-            List<string> FilesToCopy { get; }
-
-            /// <summary>
-            /// True if the exporter should save an entire package/folder (specified by MandatoryExportFolder and FilesToCopy,
-            /// not just a single file. This will present a Directory picker, not a File picker. The DefaultFileName will be
-            /// used for the main file in the MandatoryExportFolder, and any FilesToCopy will be placed in that folder as well.
-            /// </summary>
-            bool SaveCompletePackage { get; }
         }
 
         /// <summary>

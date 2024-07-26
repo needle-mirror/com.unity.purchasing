@@ -57,7 +57,7 @@ public void OnTransactionsRestored(bool success, string? error)
 }
 ```
 
-When a user selects this button at run time, the button calls the purchase restoration API for the current store. This functionality works on the iOS App Store, the Mac App Store and the Windows Store. You may want to hide the __Restore__ button on other platforms.
+When a user selects this button at run time, the button calls the purchase restoration API for the current store. This functionality works on the iOS App Store, the Mac App Store. You may want to hide the __Restore__ button on other platforms.
 
 Unity IAP will always invoke the __On Transactions Restored (Boolean, String)__ function on the __Restore IAP Button__  with the result and the associated error message if the restore fails.
 If the restore succeeds, Unity IAP invokes the __On Purchase Complete (Product)__ function on the __IAP Button__ associated with that Product.

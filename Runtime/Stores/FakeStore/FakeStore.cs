@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
         DeveloperUser
     }
 
-    internal class FakeStore : JSONStore, IFakeExtensions, INativeStore
+    internal class FakeStore : JsonStore, INativeStore
     {
         protected enum DialogType
         {
@@ -38,25 +38,29 @@ namespace UnityEngine.Purchasing
         }
 
         public const string Name = "fake";
-        private IStoreCallback m_Biller;
-        private readonly List<string> m_PurchasedProducts = new List<string>();
-        public bool purchaseCalled;
-        public bool restoreCalled;
+        readonly List<ConfirmedOrder> m_ConfirmedOrders = new List<ConfirmedOrder>();
         public string unavailableProductId { get; set; }
         public FakeStoreUIMode UIMode = FakeStoreUIMode.Default; // Requires UIFakeStore
+        public bool purchaseCalled;
+        public bool restoreCalled;
 
-        public override void Initialize(IStoreCallback biller)
+
+        public FakeStore(ICartValidator cartValidator, ILogger logger) : base(cartValidator, logger, FakeAppStore.Name)
         {
-            m_Biller = biller;
-            base.Initialize(biller);
             SetNativeStore(this);
+        }
+
+        // Hard override of JSONStore. Don't call base, or you'll get an infinite recursive loop/stack overflow
+        public override void Connect()
+        {
+            OnStoreConnectionSucceeded();
         }
 
         // INativeStore
         public void RetrieveProducts(string json)
         {
             var jsonList = (List<object>)MiniJson.JsonDecode(json);
-            var productDefinitions = jsonList.DecodeJSON(Name);
+            var productDefinitions = jsonList.DecodeJSON(FakeAppStore.Name);
             StoreRetrieveProducts(new ReadOnlyCollection<ProductDefinition>(productDefinitions.ToList()));
         }
 
@@ -68,78 +72,100 @@ namespace UnityEngine.Purchasing
             {
                 if (unavailableProductId != product.id)
                 {
-                    var metadata = new ProductMetadata("$0.01", "Fake title for " + product.id, "Fake description", "USD", 0.01m);
-                    var catalog = ProductCatalog.LoadDefaultCatalog();
-                    if (catalog != null)
-                    {
-                        foreach (var item in catalog.allProducts)
-                        {
-                            if (item.id == product.id)
-                            {
-                                metadata = new ProductMetadata(item.googlePrice.value.ToString(), item.defaultDescription.Title, item.defaultDescription.Description, "USD", item.googlePrice.value);
-                            }
-                        }
-                    }
-                    products.Add(new ProductDescription(product.storeSpecificId, metadata));
+                    products.Add(new ProductDescription(product.storeSpecificId, GetOrCreateProductMetadata(product.id)));
                 }
             }
 
-            void handleAllowInitializeOrRetrieveProducts(bool allow, InitializationFailureReason failureReason)
+            void handleAllowInitializeOrRetrieveProducts(bool allow, ProductFetchFailureDescription failureReason)
             {
                 if (allow)
                 {
-                    m_Biller.OnProductsRetrieved(products);
+                    ProductsCallback?.OnProductsRetrieved(products);
                 }
                 else
                 {
-                    m_Biller.OnSetupFailed(failureReason, null);
+                    ProductsCallback?.OnProductsRetrieveFailed(failureReason);
                 }
             }
 
             // To mimic typical store behavior, only display RetrieveProducts dialog for developers
             if (!(UIMode == FakeStoreUIMode.DeveloperUser &&
-                StartUI<InitializationFailureReason>(productDefinitions, DialogType.RetrieveProducts, handleAllowInitializeOrRetrieveProducts)))
+                StartUI<ProductFetchFailureDescription>(productDefinitions, DialogType.RetrieveProducts, handleAllowInitializeOrRetrieveProducts)))
             {
-                // Default non-UI FakeStore RetrieveProducts behavior is to succeed
-                handleAllowInitializeOrRetrieveProducts(true, InitializationFailureReason.AppNotKnown);
+                ProductsCallback?.OnProductsRetrieved(products);
             }
+        }
+
+        ProductMetadata GetOrCreateProductMetadata(string productId)
+        {
+            var metadata = new ProductMetadata("$0.01", "Fake title for " + productId, "Fake description", "USD", 0.01m); ;
+            var catalog = ProductCatalog.LoadDefaultCatalog();
+            if (catalog != null)
+            {
+                foreach (var item in catalog.allProducts)
+                {
+                    if (item.id == productId)
+                    {
+                        metadata = new ProductMetadata(item.googlePrice.value.ToString(), item.defaultDescription.Title, item.defaultDescription.Description, "USD", item.googlePrice.value);
+                    }
+                }
+            }
+
+            return metadata;
+        }
+
+        //INativeStore
+        public void FetchExistingPurchases()
+        {
+            PurchaseFetchCallback?.OnAllPurchasesRetrieved(m_ConfirmedOrders);
         }
 
         // INativeStore
         public void Purchase(string productJSON, string developerPayload)
         {
-            var dic = (Dictionary<string, object>)MiniJson.JsonDecode(productJSON);
-            string id, storeId, type;
-            ProductType itemType;
-
-            dic.TryGetValue("id", out var obj);
-            id = obj.ToString();
-            dic.TryGetValue("storeSpecificId", out obj);
-            storeId = obj.ToString();
-            dic.TryGetValue("type", out obj);
-            type = obj.ToString();
-            itemType = Enum.IsDefined(typeof(ProductType), type) ? (ProductType)Enum.Parse(typeof(ProductType), type) : ProductType.Consumable;
-
-            // This doesn't currently deal with "enabled" and "payouts" that could be included in the JSON
-            var product = new ProductDefinition(id, storeId, itemType);
-
-            FakePurchase(product, developerPayload);
+            FakePurchase(ParseProductDefinition(productJSON), developerPayload);
         }
 
-        void FakePurchase(ProductDefinition product, string developerPayload)
+        ProductDefinition ParseProductDefinition(string productJSON)
         {
-            purchaseCalled = true;
+            var dictionary = (Dictionary<string, object>)MiniJson.JsonDecode(productJSON);
+
+            string id, storeId;
+
+            dictionary.TryGetValue("id", out var obj);
+            id = obj.ToString();
+
+            dictionary.TryGetValue("storeSpecificId", out obj);
+            storeId = obj.ToString();
+
+            // This doesn't currently deal with "enabled" and "payouts" that could be included in the JSON
+            return new ProductDefinition(id, storeId, ParseProductType(dictionary));
+        }
+
+        ProductType ParseProductType(Dictionary<string, object> dictionary)
+        {
+            dictionary.TryGetValue("type", out var obj);
+
+            var type = obj.ToString();
+
+            var itemType = Enum.IsDefined(typeof(ProductType), type) ? (ProductType)Enum.Parse(typeof(ProductType), type) : ProductType.Consumable;
+            return itemType;
+        }
+
+        void FakePurchase(ProductDefinition productDefinition, string developerPayload)
+        {
             // Our billing systems should only keep track of non consumables.
-            if (product.type != ProductType.Consumable)
+            if (productDefinition.type != ProductType.Consumable)
             {
-                m_PurchasedProducts.Add(product.storeSpecificId);
+                var order = new ConfirmedOrder(new Cart(new Product(productDefinition, GetOrCreateProductMetadata(productDefinition.id))), new OrderInfo("", "", ""));
+                m_ConfirmedOrders.Add(order);
             }
 
             void handleAllowPurchase(bool allow, PurchaseFailureReason failureReason)
             {
                 if (allow)
                 {
-                    base.OnPurchaseSucceeded(product.storeSpecificId, "ThisIsFakeReceiptData", Guid.NewGuid().ToString());
+                    base.OnPurchaseSucceeded(productDefinition.storeSpecificId, "ThisIsFakeReceiptData", Guid.NewGuid().ToString());
                 }
                 else
                 {
@@ -148,26 +174,46 @@ namespace UnityEngine.Purchasing
                         failureReason = PurchaseFailureReason.UserCancelled;
                     }
 
+                    var product = ProductCache.FindOrDefault(productDefinition.storeSpecificId);
                     var failureDescription =
-                        new PurchaseFailureDescription(product.storeSpecificId, failureReason, "failed a fake store purchase");
+                        new PurchaseFailureDescription(product, failureReason, "failed a fake store purchase");
 
                     OnPurchaseFailed(failureDescription);
                 }
             }
 
-            if (!StartUI<PurchaseFailureReason>(product, DialogType.Purchase, handleAllowPurchase))
+            if (!StartUI<PurchaseFailureReason>(productDefinition, DialogType.Purchase, handleAllowPurchase))
             {
                 // Default non-UI FakeStore purchase behavior is to succeed
                 handleAllowPurchase(true, (PurchaseFailureReason)Enum.Parse(typeof(PurchaseFailureReason), "Unknown"));
             }
         }
 
+        public bool CheckEntitlement(string productJSON)
+        {
+            // TODO: IAP-3242 Add more purchase flows to Fake Store, including deferred purchases and subscriptions.
+            var definition = ParseProductDefinition(productJSON);
+
+            var entitled = CheckIfProductEntitled(definition);
+
+            var entitlementStatus = entitled ? EntitlementStatus.FullyEntitled : EntitlementStatus.NotEntitled;
+            EntitlementCallback?.OnCheckEntitlementSucceeded(definition, entitlementStatus);
+
+            return entitled;
+        }
+
+        bool CheckIfProductEntitled(ProductDefinition definition)
+        {
+            var purchasedProducts = m_ConfirmedOrders.SelectMany(order => order.CartOrdered.Items()).Select(item => item.Product);
+            return purchasedProducts.Any(product => product.definition.id == definition.id);
+        }
+
         public void RestoreTransactions(Action<bool, string> callback)
         {
-            restoreCalled = true;
-            foreach (var product in m_PurchasedProducts)
+            foreach (var confirmedOrder in m_ConfirmedOrders)
             {
-                m_Biller.OnPurchaseSucceeded(product, /*lang=json,strict*/ "{ \"this\" : \"is a fake receipt\" }", "1");
+                var order = new PendingOrder(confirmedOrder.CartOrdered, confirmedOrder.Info);
+                PurchaseCallback?.OnPurchaseSucceeded(order);
             }
 
             callback?.Invoke(true, null);
@@ -178,15 +224,6 @@ namespace UnityEngine.Purchasing
         public void FinishTransaction(string productJSON, string transactionID)
         {
             // we need this for INativeStore but won't be using
-        }
-
-        public override void FinishTransaction(ProductDefinition product, string transactionId)
-        {
-        }
-
-        public void RegisterPurchaseForRestore(string productId)
-        {
-            m_PurchasedProducts.Add(productId);
         }
 
         /// <summary>
