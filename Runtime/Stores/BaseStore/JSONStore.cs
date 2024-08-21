@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     class JsonStore : InternalStore, IUnityCallback
     {
-        ICartValidator m_CartValidator;
+        protected ICartValidator m_CartValidator;
         protected string? m_storeName;
 
         INativeStore? m_Store;
@@ -49,6 +49,7 @@ namespace UnityEngine.Purchasing
 
         public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
+            ProductCache.AddStoreSpecificIds(products);
             m_Store?.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
@@ -93,14 +94,14 @@ namespace UnityEngine.Purchasing
             PurchaseFetchCallback?.OnPurchasesRetrievalFailed(description);
         }
 
-        public void OnPurchasesFetched(string json)
+        public virtual void OnPurchasesFetched(string json)
         {
             var productDescriptions = JSONSerializer.DeserializeProductDescriptions(json);
             var orders = CreateOrdersFromFetchedPurchases(productDescriptions);
             PurchaseFetchCallback?.OnAllPurchasesRetrieved(orders);
         }
 
-        List<Order> CreateOrdersFromFetchedPurchases(List<ProductDescription> productDescriptions)
+        internal List<Order> CreateOrdersFromFetchedPurchases(List<ProductDescription> productDescriptions)
         {
             var orders = new List<Order>();
             foreach (var product in productDescriptions)
@@ -221,10 +222,16 @@ namespace UnityEngine.Purchasing
             PurchaseCallback?.OnPurchaseFailed(failure.ConvertToFailedOrder());
         }
 
-        protected void OnPurchaseDeferred(string id, string receipt, string transactionID)
+        public virtual void OnPurchaseDeferred(string productDetails)
         {
-            var deferredOrder = GenerateDeferredOrder(id, receipt, transactionID);
-            PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
+            // NB: AppleStoreImpl overrides this completely and does not call the base.
+            var productDescriptions = JSONSerializer.DeserializeProductDescriptions(productDetails);
+            var productDescription = productDescriptions.FirstOrDefault();
+            if (productDescription != null)
+            {
+                var deferredOrder = GenerateDeferredOrder(productDescription.storeSpecificId, productDescription.receipt, productDescription.transactionId);
+                PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
+            }
         }
 
         public PurchaseFailureDescription? GetLastPurchaseFailureDescription()

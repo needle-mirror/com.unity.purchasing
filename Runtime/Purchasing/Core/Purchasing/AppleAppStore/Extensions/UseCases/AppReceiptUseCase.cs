@@ -8,17 +8,17 @@ namespace UnityEngine.Purchasing.UseCases
 {
     class AppReceiptUseCase : IAppReceiptUseCase
     {
-        readonly IAppleStoreCallbacks m_AppleStoreCallbacks;
+        readonly IAppleAppReceiptViewer m_AppleAppReceiptViewer;
 
         [Preserve]
-        internal AppReceiptUseCase(IAppleStoreCallbacks appleStoreCallbacks)
+        internal AppReceiptUseCase(IAppleAppReceiptViewer appleAppReceiptViewer)
         {
-            m_AppleStoreCallbacks = appleStoreCallbacks;
+            m_AppleAppReceiptViewer = appleAppReceiptViewer;
         }
 
         public string? AppReceipt()
         {
-            return m_AppleStoreCallbacks.GetAppReceipt();
+            return m_AppleAppReceiptViewer.AppReceipt();
         }
     }
 }

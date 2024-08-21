@@ -121,9 +121,9 @@ namespace UnityEngine.Purchasing
         }
 
         // INativeStore
-        public void Purchase(string productJSON, string developerPayload)
+        public void Purchase(string productJson, string optionsJson)
         {
-            FakePurchase(ParseProductDefinition(productJSON), developerPayload);
+            FakePurchase(ParseProductDefinition(productJson), optionsJson);
         }
 
         ProductDefinition ParseProductDefinition(string productJSON)

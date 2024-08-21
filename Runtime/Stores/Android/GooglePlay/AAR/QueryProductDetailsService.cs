@@ -38,7 +38,7 @@ namespace UnityEngine.Purchasing
         public async Task<List<ProductDescription>> QueryProductDescriptions(IReadOnlyCollection<ProductDefinition> products)
         {
             var productDetails = await QueryProductDetails(products);
-            return m_ProductDetailsConverter.ConvertOnQueryProductDetailsResponse(productDetails);
+            return m_ProductDetailsConverter.ConvertOnQueryProductDetailsResponse(productDetails, products);
         }
 
         public virtual async Task<List<AndroidJavaObject>> QueryProductDetails(IReadOnlyCollection<ProductDefinition> products)

@@ -16,10 +16,7 @@ namespace UnityEngine.Purchasing
         {
             foreach (var cartItem in confirmedOrder.CartOrdered.Items())
             {
-                if (!cartItem.Product.appleProductIsRestored)
-                {
-                    m_Analytics.SendTransactionEvent(cartItem, confirmedOrder.Info.Receipt);
-                }
+                m_Analytics.SendTransactionEvent(cartItem, confirmedOrder.Info.Receipt);
             }
         }
 

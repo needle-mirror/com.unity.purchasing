@@ -94,6 +94,11 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool enabled { get; private set; }
 
+        public override string ToString()
+        {
+            return $"ProductDefinition: {id}, {storeSpecificId}, {type}, {enabled}";
+        }
+
         /// <summary>
         /// Check if this product definition is equal to another.
         /// </summary>

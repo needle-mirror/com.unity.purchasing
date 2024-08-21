@@ -23,6 +23,7 @@ namespace UnityEngine.Purchasing
 
         public void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
+            m_ProductCache?.AddStoreSpecificIds(products);
             m_GooglePlayStoreService.RetrieveProducts(products, OnProductsRetrieved, OnRetrieveProductsFailed);
         }
 

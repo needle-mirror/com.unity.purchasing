@@ -71,5 +71,10 @@ namespace UnityEngine.Purchasing
         /// indicated by <c>isoCurrencySymbol</c>.
         /// </summary>
         public decimal localizedPrice { get; internal set; }
+
+        public override string ToString()
+        {
+            return $"ProductMetaData: {localizedPriceString}, {localizedTitle}, {localizedDescription}, {isoCurrencyCode}, {localizedPrice}";
+        }
     }
 }

@@ -14,21 +14,41 @@ namespace UnityEngine.Purchasing.Utils
     [Preserve]
     class ProductDetailsConverter : IProductDetailsConverter
     {
-        public List<ProductDescription> ConvertOnQueryProductDetailsResponse(IEnumerable<AndroidJavaObject> productDetails)
+        public List<ProductDescription> ConvertOnQueryProductDetailsResponse(IEnumerable<AndroidJavaObject> productDetails, IReadOnlyCollection<ProductDefinition> productDefinitions)
         {
-            return productDetails.Select(ConvertToProductDescription).ToList();
+            var list = new List<ProductDescription>();
+            var productTypes = new Dictionary<string, ProductType>();
+
+            foreach (var definition in productDefinitions)
+            {
+                productTypes.Add(definition.storeSpecificId, definition.type);
+            }
+
+            foreach (var detail in productDetails)
+            {
+                try
+                {
+                    var productId = detail.Call<string>("getProductId");
+                    var productType = productTypes[productId];
+                    list.Add(ConvertToProductDescription(detail, productType));
+                }
+                catch (Exception e)
+                {
+                    Debug.unityLogger.LogIAPException(e);
+                }
+            }
+            return list;
         }
 
-        public ProductDescription ConvertToProductDescription(AndroidJavaObject productDetails)
+        public ProductDescription ConvertToProductDescription(AndroidJavaObject productDetails, ProductType productType)
         {
             try
             {
-                return BuildProductDescription(productDetails);
+                return BuildProductDescription(productDetails, productType);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                throw e;
             }
         }
 
@@ -38,7 +58,7 @@ namespace UnityEngine.Purchasing.Utils
         /// </summary>
         /// <param name="productDetails">`AndroidJavaObject` of ProductDetails</param>
         /// <returns>`ProductDescription` representation of a ProductDetails</returns>
-        internal static ProductDescription BuildProductDescription(AndroidJavaObject productDetails)
+        internal static ProductDescription BuildProductDescription(AndroidJavaObject productDetails, ProductType productType = ProductType.Unknown)
         {
             // TODO: IAP-2833 - Clean for one time vs subscription
             var productId = productDetails.Call<string>("getProductId");
@@ -132,7 +152,8 @@ namespace UnityEngine.Purchasing.Utils
                 productId,
                 productMetadata,
                 "",
-                ""
+                "",
+                productType
             );
 
             return product;

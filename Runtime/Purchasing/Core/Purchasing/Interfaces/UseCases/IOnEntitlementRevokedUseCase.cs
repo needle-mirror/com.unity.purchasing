@@ -11,6 +11,6 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Action called when entitlement is revoked
         /// </summary>
-        event Action<List<string>> RevokedEntitlementAction;
+        event Action<string> RevokedEntitlementAction;
     }
 }

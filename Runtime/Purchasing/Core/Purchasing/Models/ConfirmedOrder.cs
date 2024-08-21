@@ -18,16 +18,19 @@ namespace UnityEngine.Purchasing
         public ConfirmedOrder(ICart cart, IOrderInfo info)
             : base(cart, info)
         {
-            FillPurchasedProductInfo(info.PurchasedProductInfo);
+            info.PurchasedProductInfo = FillPurchasedProductInfo();
         }
 
-        void FillPurchasedProductInfo(List<IPurchasedProductInfo> purchasedProductInfo)
+        List<IPurchasedProductInfo> FillPurchasedProductInfo()
         {
+            var purchasedProductInfo = new List<IPurchasedProductInfo>();
             var productId = CartOrdered.Items().First().Product.definition.storeSpecificId;
             if (productId != null)
             {
                 purchasedProductInfo.Add(new PurchasedProductInfo(productId, Info.Receipt));
             }
+
+            return purchasedProductInfo;
         }
     }
 }

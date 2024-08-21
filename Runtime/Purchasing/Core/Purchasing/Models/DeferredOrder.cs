@@ -2,6 +2,8 @@ namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// A model representing a deferred order of a product.
+    ///
+    /// Deferred orders are not paid for so they do not have a `transactionID`.
     /// </summary>
     public class DeferredOrder : Order
     {

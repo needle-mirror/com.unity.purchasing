@@ -11,21 +11,6 @@ namespace UnityEditor.Purchasing
         const string m_GeneratedCredentialsTemplateFilename = "IAPGeneratedCredentials.cs.template";
         const string m_GeneratedCredentialsTemplateFilenameNoExtension = "IAPGeneratedCredentials.cs";
 
-        const string k_AppleCertPath = "Packages/com.unity.purchasing/Editor/AppleIncRootCertificate.cer";
-        const string k_AppleStoreKitTestCertPath = "Packages/com.unity.purchasing/Editor/StoreKitTestCertificate.cer";
-
-        const string k_AppleClassIncompleteErr = "Invalid Apple Root Certificate";
-        const string k_AppleStoreKitTestClassIncompleteErr = "Invalid Apple StoreKit Test Certificate";
-
-        internal static string ObfuscateAppleSecrets()
-        {
-            var appleError = WriteObfuscatedAppleClassAsAsset();
-
-            AssetDatabase.Refresh();
-
-            return appleError;
-        }
-
         internal static string ObfuscateGoogleSecrets(string googlePlayPublicKey)
         {
             var googleError = WriteObfuscatedGooglePlayClassAsAsset(googlePlayPublicKey);
@@ -38,13 +23,10 @@ namespace UnityEditor.Purchasing
         /// <summary>
         /// Generates specified obfuscated class files.
         /// </summary>
-        internal static void ObfuscateSecrets(bool includeGoogle, ref string appleError, ref string googleError, string googlePlayPublicKey)
+        internal static void ObfuscateSecrets(bool includeGoogle, ref string googleError, string googlePlayPublicKey)
         {
             try
             {
-                // First things first! Obfuscate! XHTLOA!
-                appleError = WriteObfuscatedAppleClassAsAsset();
-
                 if (includeGoogle)
                 {
                     googleError = WriteObfuscatedGooglePlayClassAsAsset(googlePlayPublicKey);
@@ -69,42 +51,6 @@ namespace UnityEditor.Purchasing
             }
 
             AssetDatabase.Refresh();
-        }
-
-        static string WriteObfuscatedAppleClassAsAsset()
-        {
-            var err = WriteObfuscatedAppleClassAsAsset(k_AppleCertPath, k_AppleClassIncompleteErr, TangleFileConsts.k_AppleClassPrefix);
-
-            err ??= WriteObfuscatedAppleClassAsAsset(k_AppleStoreKitTestCertPath, k_AppleStoreKitTestClassIncompleteErr, TangleFileConsts.k_AppleStoreKitTestClassPrefix);
-
-            return err;
-        }
-
-        static string WriteObfuscatedAppleClassAsAsset(string certPath, string classIncompleteErr, string classPrefix)
-        {
-            string appleError = null;
-            var key = 0;
-            var order = new int[0];
-            var tangled = new byte[0];
-            try
-            {
-                var bytes = File.ReadAllBytes(certPath);
-                order = new int[bytes.Length / 20 + 1];
-
-                // TODO: Integrate with upgraded Tangle!
-
-                tangled = TangleObfuscator.Obfuscate(bytes, order, out key);
-            }
-            catch (Exception e)
-            {
-                Debug.unityLogger.LogIAPWarning($"{classIncompleteErr}. Generating incomplete credentials " +
-                    "file. " + e);
-                appleError = $"  {classIncompleteErr}";
-            }
-
-            WriteObfuscatedClassAsAsset(classPrefix, key, order, tangled, tangled.Length != 0);
-
-            return appleError;
         }
 
         static string WriteObfuscatedGooglePlayClassAsAsset(string googlePlayPublicKey)
@@ -135,12 +81,6 @@ namespace UnityEditor.Purchasing
         static string FullPathForTangleClass(string classnamePrefix)
         {
             return Path.Combine(TangleFileConsts.k_OutputPath, string.Format($"{classnamePrefix}{TangleFileConsts.k_ObfuscationClassSuffix}"));
-        }
-
-        internal static bool DoesAppleTangleClassExist()
-        {
-            return ObfuscatedClassExists(TangleFileConsts.k_AppleClassPrefix) &&
-                ObfuscatedClassExists(TangleFileConsts.k_AppleStoreKitTestClassPrefix);
         }
 
         internal static bool DoesGooglePlayTangleClassExist()

@@ -12,20 +12,27 @@ namespace UnityEngine.Purchasing
         {
             throw new NotImplementedException();
         }
-        public void RefreshAppReceipt()
-        {
-            throw new NotImplementedException();
-        }
-        public void AddTransactionObserver()
-        {
-            throw new NotImplementedException();
-        }
         public void SetApplicationUsername(string applicationUsername)
         {
             throw new NotImplementedException();
         }
 
+        public void SetAppAccountToken(string token)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string AppReceipt()
+        {
+            throw new NotImplementedException();
+        }
+
         public void Connect()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddTransactionObserver()
         {
             throw new NotImplementedException();
         }
@@ -52,16 +59,7 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
-        public string appReceipt => throw new NotImplementedException();
-        public double appReceiptModificationDate => throw new NotImplementedException();
-
         public bool canMakePayments => throw new NotImplementedException();
-
-        public bool simulateAskToBuy
-        {
-            get => throw new NotImplementedException();
-            set => throw new NotImplementedException();
-        }
 
         public void FetchStorePromotionOrder()
         {
@@ -83,11 +81,6 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
-        public string GetTransactionReceiptForProductId(string productId)
-        {
-            throw new NotImplementedException();
-        }
-
         public void InterceptPromotionalPurchases()
         {
             throw new NotImplementedException();
@@ -99,6 +92,21 @@ namespace UnityEngine.Purchasing
         }
 
         public void PresentCodeRedemptionSheet()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void DeallocateMemory(IntPtr pointer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void FetchPurchases(string json)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Purchase(string productJson, string optionsJson, StorefrontChangeCallback callback)
         {
             throw new NotImplementedException();
         }

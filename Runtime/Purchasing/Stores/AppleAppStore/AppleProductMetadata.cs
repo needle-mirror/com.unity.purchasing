@@ -2,8 +2,8 @@ namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Product definition used by Apple App Store.
-    /// This is a representation of SKProduct
-    /// <a href="https://developer.apple.com/documentation/storekit/skproduct">Apple documentation</a>
+    /// This is a representation of Product
+    /// <a href="https://developer.apple.com/documentation/storekit/product">Apple documentation</a>
     /// </summary>
     public class AppleProductMetadata : ProductMetadata
     {
@@ -12,18 +12,16 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool isFamilyShareable { get; }
 
-        //With objective-C BOOL to json limitations the value for the [isFamilyShareable] key will be "true" or "false"
-        internal AppleProductMetadata(ProductMetadata baseProductMetadata, string isFamilyShareable)
+        internal AppleProductMetadata(ProductMetadata baseProductMetadata, bool isFamilyShareable)
             : base(baseProductMetadata)
         {
-            this.isFamilyShareable = isFamilyShareable == "true";
+            this.isFamilyShareable = isFamilyShareable;
         }
 
-        //With objective-C BOOL to json limitations the value for the [isFamilyShareable] key will be "true" or "false"
-        internal AppleProductMetadata(string priceString, string title, string description, string currencyCode, decimal localizedPrice, string isFamilyShareable)
+        internal AppleProductMetadata(string priceString, string title, string description, string currencyCode, decimal localizedPrice, bool isFamilyShareable)
             : base(priceString, title, description, currencyCode, localizedPrice)
         {
-            this.isFamilyShareable = isFamilyShareable == "true";
+            this.isFamilyShareable = isFamilyShareable;
         }
     }
 }

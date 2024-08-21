@@ -5,9 +5,9 @@ namespace UnityEngine.Purchasing
 {
     class AppleExtensions : IAppleExtensions
     {
-        public void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)
+        public void RefreshAppReceipt(Action<string> successCallback, Action<string> _)
         {
-            UnityIAPServices.DefaultPurchase().Apple?.RefreshAppReceipt(successCallback, errorCallback);
+            successCallback.Invoke(UnityIAPServices.DefaultPurchase().Apple?.appReceipt);
         }
 
         public void RestoreTransactions(Action<bool, string> callback)
@@ -35,9 +35,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public string GetTransactionReceiptForProduct(Product product)
+        public string GetTransactionReceiptForProduct(Product _)
         {
-            return UnityIAPServices.DefaultPurchase().Apple?.GetTransactionReceiptForProduct(product);
+            return UnityIAPServices.DefaultPurchase().Apple?.appReceipt;
         }
 
         public void SetApplicationUsername(string applicationUsername)
@@ -58,7 +58,7 @@ namespace UnityEngine.Purchasing
 
         public void ContinuePromotionalPurchases()
         {
-            UnityIAPServices.DefaultProduct().Apple?.ContinuePromotionalPurchases();
+            UnityIAPServices.DefaultPurchase().Apple?.ContinuePromotionalPurchases();
         }
 
         public void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visible)

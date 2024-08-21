@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEngine.Purchasing.Services;
 
 namespace UnityEngine.Purchasing
 {
@@ -10,8 +9,7 @@ namespace UnityEngine.Purchasing
     {
         public IAppleOrderInfo Apple => this as IAppleOrderInfo;
 
-        public List<IPurchasedProductInfo> PurchasedProductInfo { get; set; } = new List<IPurchasedProductInfo>();
-        List<IPurchasedProductInfo> IOrderInfo.PurchasedProductInfo => PurchasedProductInfo;
+        public List<IPurchasedProductInfo> PurchasedProductInfo { get; set; }
 
         public string TransactionID { get; }
 
@@ -25,7 +23,7 @@ namespace UnityEngine.Purchasing
         {
             if (Apple != null)
             {
-                return Apple.AppReceipt;
+                return CreateUnifiedReceipt(Apple.AppReceipt, TransactionID, Apple.StoreName);
             }
             return m_Receipt;
         }

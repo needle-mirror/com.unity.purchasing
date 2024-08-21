@@ -1,5 +1,23 @@
 # Changelog
 
+## [5.0.0-pre.3] - 2024-08-21
+
+### Added
+- Apple - Updated to [StoreKit 2](https://developer.apple.com/storekit/).
+  - All features previously in StoreKit 1 are still supported.
+  - New features from StoreKit 2 will be supported in a later release.
+  - StoreKit 1 is no longer supported and iOS devices will require iOS 15.0 or later.
+  - Added support for AppAccountToken, allowing associating purchases with an app-specific account identifier. It can be set using `SetAppAccountToken(Guid token)` on the StoreExtendedService (e.g., `IAppleStoreExtendedService.SetAppAccountToken`), and it is also exposed in the IAppleOrderInfo interface for better integration with order details. For more details, see [AppAccountToken documentation](https://developer.apple.com/documentation/storekit/transaction/appaccounttoken).
+- Apple - Updated PrivacyInfo.xcprivacy to reflect that IAP no longer uses required reason API.
+
+### Changed
+- Apple - CrossPlatformValidator is no longer used for receipt validation for Apple since StoreKit2 does it.
+- Apple - Receipt obfuscation for Apple has been removed.
+- Apple - `Product.appleProductIsRestored` is now obsolete since it's no longer used with StoreKit2.
+
+### Fixed
+- Fixed Non-Consumables being treated as Consumables (introduced by Unity IAP 5.0.0-pre.1)
+
 ## [5.0.0-pre.1] - 2024-07-26
 In-app purchasing 5.0.0 is a major overhaul of this package.
 Consult the `Coded IAP 5.0.0 Sample` for a complete example of how to use this new version.
@@ -17,7 +35,6 @@ Consult the `Coded IAP 5.0.0 Sample` for a complete example of how to use this n
 ### Fixed:
 - Apple - Fixed `SubscriptionPeriodUnit` to return the correct values: Week = 1, Month = 2 (previously Month = 1, Week = 2)
 - Apple - Fixed isFamilyShareable on tvOS to be only available on supported versions (14.0 and above).
-- Apple - Error codes when a purchase fails now always returns the code from Apple instead of defaulting to `SKErrorUnknown`.
 
 ### Changed
 - IAP logs are prefixed with `InAppPurchasing`.

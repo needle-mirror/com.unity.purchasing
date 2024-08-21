@@ -9,6 +9,7 @@ namespace UnityEngine.Purchasing.Security
     ///
     /// This class will validate the Apple receipt is signed with the correct certificate.
     /// </summary>
+    [Obsolete]
     public class AppleValidator
     {
         /// <summary>

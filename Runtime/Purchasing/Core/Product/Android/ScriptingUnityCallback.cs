@@ -48,6 +48,11 @@ namespace UnityEngine.Purchasing
             util.RunOnMainThread(() => forwardTo.OnPurchaseFailed(json));
         }
 
+        public void OnPurchaseDeferred(string json)
+        {
+            util.RunOnMainThread(() => forwardTo.OnPurchaseDeferred(json));
+        }
+
         public void OnStoreConnectionSucceeded()
         {
             util.RunOnMainThread(() => forwardTo.OnStoreConnectionSucceeded());

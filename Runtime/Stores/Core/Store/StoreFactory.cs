@@ -140,7 +140,6 @@ namespace UnityEngine.Purchasing
 
         void AddMetricizedAppleStoreDependencies(IDependencyInjectionService di)
         {
-            di.AddService<AppleReceiptConverter>();
             di.AddService<AppleRetrieveProductsService>();
             di.AddService<MetricizedAppleStoreImpl>();
             di.AddInstance(BuildTransactionLog(di));

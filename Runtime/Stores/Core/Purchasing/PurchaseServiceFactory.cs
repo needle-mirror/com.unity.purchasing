@@ -117,9 +117,8 @@ namespace UnityEngine.Purchasing
 
             di.AddInstance(appleNativeStore);
             di.AddService<AppReceiptUseCase>();
-            di.AddService<GetTransactionReceiptForProductUseCase>();
+            di.AddService<ContinuePromotionalPurchasesUseCase>();
             di.AddService<PresentCodeRedemptionSheetUseCase>();
-            di.AddService<RefreshAppReceiptUseCase>();
             di.AddService<AppleRestoreTransactionsUseCase>();
             di.AddService<SetPromotionalPurchaseInterceptorCallbackUseCase>();
             di.AddService<SimulateAskToBuyUseCase>();

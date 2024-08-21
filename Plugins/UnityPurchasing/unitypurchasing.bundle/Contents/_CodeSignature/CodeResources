@@ -6,27 +6,7 @@
 	<dict>
 		<key>Resources/PrivacyInfo.xcprivacy</key>
 		<data>
-		Eklzmn2Hnx2RFvCy/gA8oIKafF0=
-		</data>
-		<key>Resources/PrivacyInfo.xcprivacy.meta</key>
-		<data>
-		bCyL3ax1sexnFly8E7ZSF2f25fk=
-		</data>
-		<key>Resources/UnityEarlyTransactionObserver.h.meta</key>
-		<data>
-		jgLrIGptM4cvZEv1kfThehqYi+o=
-		</data>
-		<key>Resources/UnityEarlyTransactionObserver.mm.meta</key>
-		<data>
-		rJaiJAv7Q08HJdNm+ldpTxaMf9s=
-		</data>
-		<key>Resources/UnityPurchasing.h.meta</key>
-		<data>
-		VOJV9BapDNaa+8qc3A85FZei4qo=
-		</data>
-		<key>Resources/UnityPurchasing.m.meta</key>
-		<data>
-		mCF66a6CXJ1ELzOR7IhxtJ/xq0E=
+		/LX0ZlwxwIAIhjZaDB8EiH5KpXA=
 		</data>
 		<key>Resources/en.lproj/InfoPlist.strings</key>
 		<dict>
@@ -44,42 +24,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			ccyIYOnWkld1srV/Doq03CFdlZxMzos3QxjXqeKeaiY=
-			</data>
-		</dict>
-		<key>Resources/PrivacyInfo.xcprivacy.meta</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			43Zz4PFU4KAD8vXh6hMiAY60NJa/mvUPATu9Jn+j1C0=
-			</data>
-		</dict>
-		<key>Resources/UnityEarlyTransactionObserver.h.meta</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			jEQZzKkgQo6srjFb0EXPkB73yIFrscP1oed4MLUWNjs=
-			</data>
-		</dict>
-		<key>Resources/UnityEarlyTransactionObserver.mm.meta</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			GrH3G0mPHata2za5lCxo+mBJjgt8rgwHmBnLabgmYQs=
-			</data>
-		</dict>
-		<key>Resources/UnityPurchasing.h.meta</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			e4OJ40bgmeLg9kFDU7/dUlr28RMI8E2WXeYN6JirufM=
-			</data>
-		</dict>
-		<key>Resources/UnityPurchasing.m.meta</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			En9NPCAADdDebE8qEOFIIiLoPcx7ZOhILD3dE+ZmTFg=
+			bS2g2NkwIn1CjB2TY7CtbjoS4sm2jFzilxWKdBL8jDE=
 			</data>
 		</dict>
 		<key>Resources/en.lproj/InfoPlist.strings</key>

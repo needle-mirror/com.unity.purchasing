@@ -6,9 +6,9 @@ using System.Security.Cryptography;
 
 namespace UnityEngine.Purchasing.Security
 {
-    internal class PKCS7
+    class PKCS7
     {
-        private Asn1Node root;
+        Asn1Node root;
         public Asn1Node data { get; private set; }
         public List<SignerInfo> sinfos { get; private set; }
         public List<X509Cert> certChain { get; private set; }
@@ -128,7 +128,7 @@ namespace UnityEngine.Purchasing.Security
             return false;
         }
 
-        private void CheckStructure()
+        void CheckStructure()
         {
             validStructure = false;
             if ((root.Tag & Asn1Tag.TAG_MASK) == Asn1Tag.SEQUENCE &&
@@ -186,12 +186,13 @@ namespace UnityEngine.Purchasing.Security
                 {
                     sinfos.Add(new SignerInfo(tt2.GetChildNode(i)));
                 }
+
                 validStructure = true;
             }
         }
     }
 
-    internal class SignerInfo
+    class SignerInfo
     {
         public int Version { get; private set; }
         public string IssuerSerialNumber { get; private set; }

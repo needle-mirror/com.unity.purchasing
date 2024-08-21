@@ -8,9 +8,10 @@ namespace UnityEngine.Purchasing
     {
         internal override ProductMetadata DeserializeMetadata(Dictionary<string, object> data)
         {
+            var isFamilyShareable = Convert.ToBoolean(data.TryGetString("isFamilyShareable"));
             return new AppleProductMetadata(
-                baseProductMetadata: base.DeserializeMetadata(data),
-                isFamilyShareable: data.TryGetString("isFamilyShareable"));
+                base.DeserializeMetadata(data),
+                isFamilyShareable);
         }
     }
 }

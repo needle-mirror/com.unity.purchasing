@@ -15,5 +15,6 @@ namespace UnityEngine.Purchasing
         void OnPurchasesFetched(string json);
         void OnPurchaseSucceeded(string id, string receipt, string transactionID);
         void OnPurchaseFailed(string json);
+        void OnPurchaseDeferred(string json);
     }
 }

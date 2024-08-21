@@ -5,9 +5,10 @@ using System.Security.Cryptography;
 
 namespace UnityEngine.Purchasing.Security
 {
-    internal class GooglePlayValidator
+    class GooglePlayValidator
     {
-        private RSAKey key;
+        RSAKey key;
+
         public GooglePlayValidator(byte[] rsaKey)
         {
             key = new RSAKey(rsaKey);

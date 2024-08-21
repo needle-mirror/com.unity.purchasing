@@ -84,5 +84,10 @@ namespace UnityEngine.Purchasing.Extension
         /// The transaction id of the purchase of this product.
         /// </summary>
         public string transactionId { get; set; }
+
+        public override string ToString()
+        {
+            return $"ProductDescription: {storeSpecificId}, {type}, {receipt}, {transactionId}, {metadata} \n --------------------------";
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace UnityEngine.Purchasing
         MacAppStore,
 
         /// <summary>
-        /// iOS or tvOS App Stores.
+        /// iOS, tvOS or visionOS App Stores.
         /// </summary>
         AppleAppStore,
 

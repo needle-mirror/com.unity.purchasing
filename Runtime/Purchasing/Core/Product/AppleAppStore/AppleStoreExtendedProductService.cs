@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.UseCases.Interfaces;
 using UnityEngine.Scripting;
 
@@ -10,7 +9,6 @@ namespace UnityEngine.Purchasing.Services
 {
     class AppleStoreExtendedProductService : ProductService, IAppleStoreExtendedProductService
     {
-        readonly IContinuePromotionalPurchasesUseCase m_ContinuePromotionalPurchasesUseCase;
         readonly IFetchStorePromotionOrderUseCase m_FetchStorePromotionOrderUseCase;
         readonly IFetchStorePromotionVisibilityUseCase m_FetchStorePromotionVisibilityUseCase;
         readonly IGetIntroductoryPriceDictionaryUseCase m_GetIntroductoryPriceDictionaryUseCase;
@@ -20,7 +18,6 @@ namespace UnityEngine.Purchasing.Services
 
         [Preserve]
         internal AppleStoreExtendedProductService(
-            IContinuePromotionalPurchasesUseCase continuePromotionalPurchasesUseCase,
             IFetchStorePromotionOrderUseCase fetchStorePromotionOrderUseCase,
             IFetchStorePromotionVisibilityUseCase fetchStorePromotionVisibilityUseCase,
             IGetIntroductoryPriceDictionaryUseCase getIntroductoryPriceDictionaryUseCase,
@@ -31,18 +28,12 @@ namespace UnityEngine.Purchasing.Services
             IStoreWrapper storeWrapper)
             : base(fetchProductsUseCase, storeWrapper)
         {
-            m_ContinuePromotionalPurchasesUseCase = continuePromotionalPurchasesUseCase;
             m_FetchStorePromotionOrderUseCase = fetchStorePromotionOrderUseCase;
             m_FetchStorePromotionVisibilityUseCase = fetchStorePromotionVisibilityUseCase;
             m_GetIntroductoryPriceDictionaryUseCase = getIntroductoryPriceDictionaryUseCase;
             m_GetProductDetailsUseCase = getProductDetailsUseCase;
             m_SetStorePromotionOrderUseCase = setStorePromotionOrderUseCase;
             m_SetStorePromotionVisibilityUseCase = setStorePromotionVisibilityUseCase;
-        }
-
-        public void ContinuePromotionalPurchases()
-        {
-            m_ContinuePromotionalPurchasesUseCase.ContinuePromotionalPurchases();
         }
 
         public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)

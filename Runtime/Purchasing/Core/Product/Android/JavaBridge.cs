@@ -53,6 +53,11 @@ namespace UnityEngine.Purchasing
             forwardTo.OnPurchaseFailed(json);
         }
 
+        public void OnPurchaseDeferred(string json)
+        {
+            forwardTo.OnPurchaseDeferred(json);
+        }
+
         public void OnStoreConnectionSucceeded()
         {
             forwardTo.OnStoreConnectionSucceeded();

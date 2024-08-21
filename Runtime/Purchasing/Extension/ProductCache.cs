@@ -8,6 +8,7 @@ namespace UnityEngine.Purchasing.Extension
     {
         public Dictionary<string, Product> productsById { get; } = new Dictionary<string, Product>();
         public Dictionary<string, Product> productsByStoreSpecificId { get; } = new Dictionary<string, Product>();
+        public Dictionary<string, string> storeSpecificProductIds { get; } = new Dictionary<string, string>();
 
         public void Add(List<ProductDescription> productDescriptions)
         {
@@ -19,7 +20,8 @@ namespace UnityEngine.Purchasing.Extension
 
         public void Add(ProductDescription productDescription)
         {
-            var definition = new ProductDefinition(productDescription.storeSpecificId,
+            storeSpecificProductIds.TryGetValue(productDescription.storeSpecificId, out var productId);
+            var definition = new ProductDefinition(string.IsNullOrEmpty(productId) ? productDescription.storeSpecificId : productId,
                 productDescription.storeSpecificId, productDescription.type);
             var product = new Product(definition, productDescription.metadata) { availableToPurchase = true };
             Add(product);
@@ -42,6 +44,14 @@ namespace UnityEngine.Purchasing.Extension
 
             productsById[product.definition.id] = product;
             productsByStoreSpecificId[product.definition.storeSpecificId] = product;
+        }
+
+        public void AddStoreSpecificIds(IReadOnlyCollection<ProductDefinition> products)
+        {
+            foreach (var product in products)
+            {
+                storeSpecificProductIds[product.storeSpecificId] = product.id;
+            }
         }
 
         public void Remove(Product product)

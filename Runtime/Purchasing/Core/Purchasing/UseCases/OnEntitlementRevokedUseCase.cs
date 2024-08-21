@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
 {
     class OnEntitlementRevokedUseCase : IOnEntitlementRevokedUseCase, IOnEntitlementRevokedCallback
     {
-        public event Action<List<string>> RevokedEntitlementAction;
+        public event Action<string> RevokedEntitlementAction;
 
         /// <summary>
         /// Create the use case object for a store.
@@ -19,9 +19,9 @@ namespace UnityEngine.Purchasing
             storeResponsible.SetOnRevokedEntitlementCallback(this);
         }
 
-        public void OnEntitlementsRevoked(List<string> productIds)
+        public void onEntitlementRevoked(string productId)
         {
-            RevokedEntitlementAction?.Invoke(productIds);
+            RevokedEntitlementAction?.Invoke(productId);
         }
     }
 }

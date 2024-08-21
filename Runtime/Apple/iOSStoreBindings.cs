@@ -7,192 +7,187 @@ namespace UnityEngine.Purchasing
     internal class iOSStoreBindings : INativeAppleStore
     {
         [DllImport("__Internal")]
-        private static extern void unityPurchasingRetrieveProducts(string json);
+        static extern void unityPurchasing_SetNativeCallback(UnityPurchasingCallback callbackDelegate);
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingPurchase(string json, string developerPayload);
+        static extern void unityPurchasing_AddTransactionObserver();
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingFinishTransaction(string productJSON, string transactionId);
+        static extern void unityPurchasing_FetchProducts(string json);
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingRestoreTransactions();
+        static extern void unityPurchasing_PurchaseProduct(string productJson, string optionsJson, StorefrontChangeCallback storefrontCallbackDelegate);
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingRefreshAppReceipt();
+        static extern IntPtr unityPurchasing_FetchAppReceipt();
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingAddTransactionObserver();
+        static extern void unityPurchasing_DeallocateMemory(IntPtr pointer);
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingSetApplicationUsername(string username);
+        static extern void unityPurchasing_FetchPurchases();
+
+        // TODO: IAP-3857
+        [DllImport("__Internal")]
+        static extern string unityPurchasing_FetchTransactionForProductId(string productId);
 
         [DllImport("__Internal")]
-        private static extern void setUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback);
+        static extern void unityPurchasing_FinishTransaction(string transactionId, bool logFinishTransaction);
 
         [DllImport("__Internal")]
-        private static extern string getUnityPurchasingAppReceipt();
+        static extern bool unityPurchasing_checkEntitlement(string productId);
 
         [DllImport("__Internal")]
-        private static extern double getUnityPurchasingAppReceiptModificationDate();
+        private static extern void unityPurchasing_RestoreTransactions();
+
+        // TODO: IAP-3834
+        // [DllImport("__Internal")]
+        // private static extern void unityPurchasing_SetApplicationUsername(string username);
+        //
 
         [DllImport("__Internal")]
-        private static extern string getUnityPurchasingTransactionReceiptForProductId(string productId);
+        private static extern bool unityPurchasing_CanMakePayments();
 
         [DllImport("__Internal")]
-        private static extern bool getUnityPurchasingCanMakePayments();
+        private static extern void unityPurchasing_FetchStorePromotionOrder();
 
         [DllImport("__Internal")]
-        private static extern void setSimulateAskToBuy(bool enabled);
+        private static extern void unityPurchasing_UpdateStorePromotionOrder(string json);
 
         [DllImport("__Internal")]
-        private static extern bool getSimulateAskToBuy();
+        private static extern void unityPurchasing_FetchStorePromotionVisibility(string productId);
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingFetchStorePromotionOrder();
+        private static extern void unityPurchasing_UpdateStorePromotionVisibility(string productId, string visibility);
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingUpdateStorePromotionOrder(string json);
+        private static extern void unityPurchasing_InterceptPromotionalPurchases();
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingFetchStorePromotionVisibility(string productId);
+        private static extern void unityPurchasing_ContinuePromotionalPurchases();
 
         [DllImport("__Internal")]
-        private static extern void unityPurchasingUpdateStorePromotionVisibility(string productId, string visibility);
-
-        [DllImport("__Internal")]
-        private static extern void unityPurchasingInterceptPromotionalPurchases();
-
-        [DllImport("__Internal")]
-        private static extern void unityPurchasingContinuePromotionalPurchases();
-
-        [DllImport("__Internal")]
-        private static extern void unityPurchasingPresentCodeRedemptionSheet();
+        private static extern void unityPurchasing_PresentCodeRedemptionSheet();
 
         public void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback)
         {
-            setUnityPurchasingCallback(AsyncCallback);
+            unityPurchasing_SetNativeCallback(AsyncCallback);
         }
 
-        public string appReceipt
+        public string AppReceipt()
         {
-            get
+            // Fetch the receipt pointer from Swift
+            IntPtr receiptPointer = unityPurchasing_FetchAppReceipt();
+            string res = "";
+            if (receiptPointer != IntPtr.Zero)
             {
-                return getUnityPurchasingAppReceipt();
+                res = Marshal.PtrToStringAuto(receiptPointer);
+
+                // Deallocate the memory when done
+                DeallocateMemory(receiptPointer);
             }
+
+            return res;
         }
 
-        public double appReceiptModificationDate
+        public void DeallocateMemory(IntPtr pointer)
         {
-            get
-            {
-                return getUnityPurchasingAppReceiptModificationDate();
-            }
+            unityPurchasing_DeallocateMemory(pointer);
         }
 
         public bool canMakePayments
         {
             get
             {
-                return getUnityPurchasingCanMakePayments();
+                return unityPurchasing_CanMakePayments();
             }
         }
 
         public void Connect()
         {
-            unityPurchasingAddTransactionObserver();
+            // Moved AddTransactionObserver to after we fetched the products to avoid Unknown ProductType errors
+            // No need to connect on Apple as it is automatically done
         }
 
-        public bool simulateAskToBuy
+        public void AddTransactionObserver()
         {
-            get
-            {
-                return getSimulateAskToBuy();
-            }
-            set
-            {
-                setSimulateAskToBuy(value);
-            }
+            unityPurchasing_AddTransactionObserver();
         }
 
         public void RetrieveProducts(string json)
         {
-            unityPurchasingRetrieveProducts(json);
+            unityPurchasing_FetchProducts(json);
         }
 
         public void FetchExistingPurchases()
         {
-            throw new NotImplementedException();
+            unityPurchasing_FetchPurchases();
         }
 
         public void Purchase(string productJSON, string developerPayload)
         {
-            unityPurchasingPurchase(productJSON, developerPayload);
+            Purchase(productJSON, developerPayload, null);
         }
 
-        public void FinishTransaction(string productJSON, string transactionId)
+        public void FinishTransaction(string productDescription, string transactionId)
         {
-            unityPurchasingFinishTransaction(productJSON, transactionId);
+            unityPurchasing_FinishTransaction(transactionId, !string.IsNullOrEmpty(productDescription));
         }
 
-        public bool CheckEntitlement(string productJSON)
+        public bool CheckEntitlement(string productId)
         {
-            throw new NotImplementedException();
+            return unityPurchasing_checkEntitlement(productId);
         }
 
         public void RestoreTransactions()
         {
-            unityPurchasingRestoreTransactions();
+            unityPurchasing_RestoreTransactions();
         }
 
-        public void RefreshAppReceipt()
-        {
-            unityPurchasingRefreshAppReceipt();
-        }
-
+        // TODO: IAP-3834
         public void SetApplicationUsername(string applicationUsername)
         {
-            unityPurchasingSetApplicationUsername(applicationUsername);
+            //unityPurchasing_SetApplicationUsername(applicationUsername);
         }
 
         public void FetchStorePromotionOrder()
         {
-            unityPurchasingFetchStorePromotionOrder();
+            unityPurchasing_FetchStorePromotionOrder();
         }
 
         public void SetStorePromotionOrder(string json)
         {
-            unityPurchasingUpdateStorePromotionOrder(json);
+            unityPurchasing_UpdateStorePromotionOrder(json);
         }
 
         public void FetchStorePromotionVisibility(string productId)
         {
-            unityPurchasingFetchStorePromotionVisibility(productId);
+            unityPurchasing_FetchStorePromotionVisibility(productId);
         }
 
         public void SetStorePromotionVisibility(string productId, string visibility)
         {
-            unityPurchasingUpdateStorePromotionVisibility(productId, visibility);
-        }
-
-        public string GetTransactionReceiptForProductId(string productId)
-        {
-            return getUnityPurchasingTransactionReceiptForProductId(productId);
+            unityPurchasing_UpdateStorePromotionVisibility(productId, visibility);
         }
 
         public void InterceptPromotionalPurchases()
         {
-            unityPurchasingInterceptPromotionalPurchases();
+            unityPurchasing_InterceptPromotionalPurchases();
         }
 
         public void ContinuePromotionalPurchases()
         {
-            unityPurchasingContinuePromotionalPurchases();
+            unityPurchasing_ContinuePromotionalPurchases();
         }
 
         public void PresentCodeRedemptionSheet()
         {
-            unityPurchasingPresentCodeRedemptionSheet();
+            unityPurchasing_PresentCodeRedemptionSheet();
+        }
+
+        public void Purchase(string productJson, string optionsJson, StorefrontChangeCallback callback)
+        {
+            unityPurchasing_PurchaseProduct(productJson, optionsJson, callback);
         }
     }
 }

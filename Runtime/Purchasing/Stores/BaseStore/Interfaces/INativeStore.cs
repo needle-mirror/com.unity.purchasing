@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
         /// Call the Store to retrieve the store products. The `IStoreCallback` will be call with the retrieved products.
         /// </summary>
         /// <param name="json">The catalog of products to retrieve the store information from in JSON format.</param>
-        void RetrieveProducts(String json);
+        void RetrieveProducts(string json);
 
         /// <summary>
         /// Call the Store to retrieve existing purchases.
@@ -29,9 +29,9 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Call the Store to purchase a product. The `IStoreCallback` will be call when the purchase is successful.
         /// </summary>
-        /// <param name="productJSON">The product to buy in JSON format.</param>
-        /// <param name="developerPayload">A string used by some stores to fight fraudulent transactions.</param>
-        void Purchase(string productJSON, string developerPayload);
+        /// <param name="productJson">The product to buy in JSON format.</param>
+        /// <param name="optionsJson">A string used by some stores to fight fraudulent transactions.</param>
+        void Purchase(string productJson, string optionsJson);
 
         /// <summary>
         /// Call the Store to consume a product.
@@ -45,11 +45,11 @@ namespace UnityEngine.Purchasing
         /// For Consumable Products, this will only be true for those whose transactions are not completed.
         /// For Subscriptions, this will check that the subscription is still active, according to the store it is purchased from.
         /// </summary>
-        /// <param name="product">The Product to check for Entitlement, in JSON format.</param>
+        /// <param name="productJSON">The Product to check for Entitlement, in JSON format.</param>
         /// <returns>Whether the product is entitled or not.</returns>
         bool CheckEntitlement(string productJSON);
     }
 
-    delegate void UnityPurchasingCallback(string subject, string payload, string receipt, string transactionId,
-        string originalTransactionId, bool isRestored);
+    delegate void UnityPurchasingCallback(string subject, string payload, int entitlementStatus, IntPtr pointer);
+    delegate bool StorefrontChangeCallback(string storefrontCountryCode, string storefrontId);
 }

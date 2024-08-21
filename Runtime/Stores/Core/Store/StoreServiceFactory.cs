@@ -112,6 +112,7 @@ namespace UnityEngine.Purchasing
             di.AddInstance((AppleStoreImpl)store.instance);
             di.AddService<CanMakePaymentsUseCase>();
             di.AddService<SetApplicationUsernameUseCase>();
+            di.AddService<SetAppAccountTokenUseCase>();
             di.AddService<ClearAppleTransactionLogsUseCase>();
 
             AddStoreServiceDependencies(di, retryPolicy, store);

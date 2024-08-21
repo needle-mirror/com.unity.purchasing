@@ -15,9 +15,9 @@
       "Android",
       "iOS"
     ],
-    "changelog": "In-app purchasing 5.0.0 is a major overhaul of this package.\nConsult the `Coded IAP 5.0.0 Sample` for a complete example of how to use this new version.\n\n### Added\n- Retry Policies:\n  - Add `StoreService.Connect` method which initiates the connection to the store.\n  - Add `IRetryPolicy` interface that can be implemented to provide a custom retry\n    policy. `IRetryPolicy.ShouldRetry(IRetryPolicyInformation)` determines if the request should retried and can wait\n    before retrying.\n  - Add basic implementations of the `IRetryPolicy` such as `ExponentialRetryPolicy`\n    , `MaximumNumberOfAttemptsRetryPolicy`, `NoRetriesPolicy` and `TimeLimitRetryPolicy`.\n- New callbacks on IAP Button and IAP Listener for all the events\n\n### Fixed:\n- Apple - Fixed `SubscriptionPeriodUnit` to return the correct values: Week = 1, Month = 2 (previously Month = 1, Week = 2)\n- Apple - Fixed isFamilyShareable on tvOS to be only available on supported versions (14.0 and above).\n- Apple - Error codes when a purchase fails now always returns the code from Apple instead of defaulting to `SKErrorUnknown`.\n\n### Changed\n- IAP logs are prefixed with `InAppPurchasing`.\n- IAP Catalog\n  - Removed `Apple Configuration`, `Google Configuration` and `Catalog Export` from IAP Catalog since this is no longer supported by the stores.\n  - Moved the Google Configuration `Price` under `Descriptions` which is displayed when products havn't been retrieved yet or in Fake Store\n- Assemblies starting with `UnityEngine.Purchasing` have been renamed to `Unity.Purchasing`\n\n### Removed\n- Support for Windows Store (Universal Windows Platform)\n- Support for the Unity 2020 Editor and Engine. Please upgrade to Unity 2021.3 or later.\n- Android - Support for the Unity Distribution Portal via the In-App Purchasing package. You may still use the Unity Distribution Portal in older versions of In-App Purchasing, or by writing your own implementation of the Unity Distribution Portal SDK directly, or as a custom store.\n- Support for Legacy Analytics (com.unity.modules.unityanalytics). Please use Unity Game Services Analytics instead (com.unity.services.analytics)."
+    "changelog": "### Added\n- Apple - Updated to [StoreKit 2](https://developer.apple.com/storekit/).\n  - All features previously in StoreKit 1 are still supported.\n  - New features from StoreKit 2 will be supported in a later release.\n  - StoreKit 1 is no longer supported and iOS devices will require iOS 15.0 or later.\n  - Added support for AppAccountToken, allowing associating purchases with an app-specific account identifier. It can be set using `SetAppAccountToken(Guid token)` on the StoreExtendedService (e.g., `IAppleStoreExtendedService.SetAppAccountToken`), and it is also exposed in the IAppleOrderInfo interface for better integration with order details. For more details, see [AppAccountToken documentation](https://developer.apple.com/documentation/storekit/transaction/appaccounttoken).\n- Apple - Updated PrivacyInfo.xcprivacy to reflect that IAP no longer uses required reason API.\n\n### Changed\n- Apple - CrossPlatformValidator is no longer used for receipt validation for Apple since StoreKit2 does it.\n- Apple - Receipt obfuscation for Apple has been removed.\n- Apple - `Product.appleProductIsRestored` is now obsolete since it's no longer used with StoreKit2.\n\n### Fixed\n- Fixed Non-Consumables being treated as Consumables (introduced by Unity IAP 5.0.0-pre.1)"
   },
-  "version": "5.0.0-pre.1",
+  "version": "5.0.0-pre.3",
   "description": "IMPORTANT UPGRADE NOTES:\n\nThis is a major overhaul of the IAP package. Consult the included sample for a complete example on how to use this new version.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS and Google Play.\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.0.0-pre.1"
+    "com.unity.purchasing.tests": "5.0.0-pre.3"
   },
   "upmCi": {
-    "footprint": "c53eaea36db91b23f2ddb31582039d36a1453dea"
+    "footprint": "99c06194db1df8e602b70012c1aee812ed209c22"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.0/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "373373ea8a4145b9b68c3f0d9edc120e1abb46d3"
+    "revision": "c429982af1800a2ae232bfeb1cab3a3c3f3dae1d"
   },
   "samples": [
     {

@@ -86,13 +86,7 @@ namespace UnityEngine.Purchasing
             /// <returns>An List&lt;object&gt;, a Dictionary&lt;string, object&gt;, a double, an integer,a string, null, true, or false</returns>
             public static object Deserialize(string json)
             {
-                // save the string for debug information
-                if (json == null)
-                {
-                    return null;
-                }
-
-                return Parser.Parse(json);
+                return string.IsNullOrEmpty(json) ? null : Parser.Parse(json);
             }
 
             sealed class Parser : IDisposable

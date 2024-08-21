@@ -17,7 +17,7 @@ If updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versi
 1. Move IAPProductCatalog.json and BillingMode.json
     FROM: Assets/Plugins/UnityPurchasing/Resources/
     TO: Assets/Resources/
-2. Move AppleTangle.cs and GooglePlayTangle.cs
+2. Move GooglePlayTangle.cs
     FROM: Assets/Plugins/UnityPurchasing/generated
     TO: Assets/Scripts/UnityPurchasing/generated
 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.

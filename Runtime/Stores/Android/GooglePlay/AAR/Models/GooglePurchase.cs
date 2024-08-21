@@ -43,7 +43,7 @@ namespace UnityEngine.Purchasing.Models
             var accountIdentifiers = purchase.Call<AndroidJavaObject>("getAccountIdentifiers");
             obfuscatedAccountId = accountIdentifiers.Call<string>("getObfuscatedAccountId");
             obfuscatedProfileId = accountIdentifiers.Call<string>("getObfuscatedProfileId");
-            productDescriptions = productDetailsEnum.Select(ProductDetailsConverter.BuildProductDescription);
+            productDescriptions = productDetailsEnum.Select(productDetails => ProductDetailsConverter.BuildProductDescription(productDetails));
 
             var productDetailsJson = productDescriptions.Select(productDescription => productDescription.metadata.GetGoogleProductMetadata().originalJson).ToList();
             receipt = GoogleReceiptEncoder.EncodeReceipt(

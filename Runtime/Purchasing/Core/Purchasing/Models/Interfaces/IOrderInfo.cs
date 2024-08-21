@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Additional information for purchased products found in a `ConfirmedOrder`.
         /// </summary>
-        List<IPurchasedProductInfo> PurchasedProductInfo { get; }
+        List<IPurchasedProductInfo> PurchasedProductInfo { get; set; }
 
         /// <summary>
         /// The purchase receipt, in JSON format. Read only.

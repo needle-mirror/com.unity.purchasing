@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Inform whenever an entitlement is revoked.
         /// </summary>
-        /// <param name="productIds">The product ids being revoked.</param>
-        void OnEntitlementsRevoked(List<string> productIds);
+        /// <param name="productId">The product id being revoked.</param>
+        void onEntitlementRevoked(string productId);
     }
 }

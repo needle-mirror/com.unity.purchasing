@@ -11,10 +11,11 @@ namespace UnityEngine.Purchasing.Security
     /// <summary>
     /// This class will validate the Apple receipt is signed with the correct certificate.
     /// </summary>
+    [Obsolete]
     public class AppleValidator
     {
-        private X509Cert cert;
-        private AppleReceiptParser parser = new AppleReceiptParser();
+        X509Cert cert;
+        AppleReceiptParser parser = new AppleReceiptParser();
 
         /// <summary>
         /// Constructs an instance with Apple Certificate.
@@ -49,10 +50,10 @@ namespace UnityEngine.Purchasing.Security
     public class AppleReceiptParser
     {
         // Cache the AppleReceipt object, PKCS7, and raw data for the most recently parsed data.
-        private static Dictionary<string, object> _mostRecentReceiptData = new Dictionary<string, object>();
-        private const string k_AppleReceiptKey = "k_AppleReceiptKey";
-        private const string k_PKCS7Key = "k_PKCS7Key";
-        private const string k_ReceiptBytesKey = "k_ReceiptBytesKey";
+        static Dictionary<string, object> _mostRecentReceiptData = new Dictionary<string, object>();
+        const string k_AppleReceiptKey = "k_AppleReceiptKey";
+        const string k_PKCS7Key = "k_PKCS7Key";
+        const string k_ReceiptBytesKey = "k_ReceiptBytesKey";
 
         /// <summary>
         /// Parse the Apple receipt data into a AppleReceipt object
@@ -110,7 +111,7 @@ namespace UnityEngine.Purchasing.Security
         /// (unity/il2cpp@5d3712f).
         /// </summary>
         /// <returns></returns>
-        private static CultureInfo PushInvariantCultureOnThread()
+        static CultureInfo PushInvariantCultureOnThread()
         {
             var originalCulture = Thread.CurrentThread.CurrentCulture;
 
@@ -123,13 +124,13 @@ namespace UnityEngine.Purchasing.Security
         /// Restores the original culture to this thread.
         /// </summary>
         /// <param name="originalCulture"></param>
-        private static void PopCultureOffThread(CultureInfo originalCulture)
+        static void PopCultureOffThread(CultureInfo originalCulture)
         {
             // Undo our parser Culture-preparations, safely
             Thread.CurrentThread.CurrentCulture = originalCulture;
         }
 
-        private AppleReceipt ParseReceipt(Asn1Node data)
+        AppleReceipt ParseReceipt(Asn1Node data)
         {
             if (data == null || data.ChildNodeCount != 1)
             {
@@ -199,7 +200,7 @@ namespace UnityEngine.Purchasing.Security
             }
         }
 
-        private AppleInAppPurchaseReceipt ParseInAppReceipt(Asn1Node inApp)
+        AppleInAppPurchaseReceipt ParseInAppReceipt(Asn1Node inApp)
         {
             var result = new AppleInAppPurchaseReceipt();
             for (int t = 0; t < inApp.ChildNodeCount; t++)
@@ -264,7 +265,7 @@ namespace UnityEngine.Purchasing.Security
         /// <summary>
         /// Try and parse a DateTime, returning the minimum DateTime on failure.
         /// </summary>
-        private static DateTime TryParseDateTimeNode(Asn1Node node)
+        static DateTime TryParseDateTimeNode(Asn1Node node)
         {
             var dateString = Encoding.UTF8.GetString(node.GetChildNode(0).Data);
             if (!string.IsNullOrEmpty(dateString))

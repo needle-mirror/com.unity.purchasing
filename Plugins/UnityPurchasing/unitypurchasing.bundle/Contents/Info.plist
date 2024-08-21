@@ -61,7 +61,7 @@
 	<key>DTXcodeBuild</key>
 	<string>15A240d</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>10.13</string>
+	<string>13.5.2</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2017 Unity Technologies. All rights reserved.</string>
 </dict>

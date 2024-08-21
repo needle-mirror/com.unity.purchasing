@@ -1,22 +1,22 @@
+using System;
+
 namespace UnityEngine.Purchasing
 {
-    internal interface INativeAppleStore : INativeStore
+    interface INativeAppleStore : INativeStore
     {
-        void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback);
+        void SetUnityPurchasingCallback(UnityPurchasingCallback asyncCallback);
         void RestoreTransactions();
-        void RefreshAppReceipt();
+        void AddTransactionObserver();
         void SetApplicationUsername(string applicationUsername);
-        string appReceipt { get; }
-        double appReceiptModificationDate { get; }
+        string AppReceipt();
         bool canMakePayments { get; }
-        bool simulateAskToBuy { get; set; }
         void FetchStorePromotionOrder();
         void SetStorePromotionOrder(string json);
         void FetchStorePromotionVisibility(string productId);
         void SetStorePromotionVisibility(string productId, string visibility);
-        string GetTransactionReceiptForProductId(string productId);
         void InterceptPromotionalPurchases();
         void ContinuePromotionalPurchases();
         void PresentCodeRedemptionSheet();
+        void DeallocateMemory(IntPtr pointer);
     }
 }

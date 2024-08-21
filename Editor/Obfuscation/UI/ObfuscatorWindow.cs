@@ -138,8 +138,7 @@ namespace UnityEditor.Purchasing
         void ObfuscateSecrets(bool includeGoogle)
         {
             ObfuscationGenerator.ObfuscateSecrets(includeGoogle: includeGoogle,
-                appleError: ref m_AppleError, googleError: ref m_GoogleError,
-                googlePlayPublicKey: m_GooglePlayPublicKey);
+                googleError: ref m_GoogleError, googlePlayPublicKey: m_GooglePlayPublicKey);
         }
     }
 }

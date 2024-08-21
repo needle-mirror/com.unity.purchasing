@@ -84,12 +84,10 @@ namespace UnityEngine.Purchasing
 
             di.AddInstance(appleNativeStore);
             di.AddInstance(store);
-            di.AddService<ContinuePromotionalPurchasesUseCase>();
             di.AddService<FetchStorePromotionOrderUseCase>();
             di.AddService<FetchStorePromotionVisibilityUseCase>();
             di.AddInstance(StoreFactory.Instance().TelemetryDiagnosticsInstanceWrapper);
             di.AddService<TelemetryDiagnostics>();
-            di.AddService<AppleReceiptConverter>();
             di.AddService<AppleRetrieveProductsService>();
             di.AddService<GetIntroductoryPriceDictionaryUseCase>();
             di.AddService<GetProductDetailsUseCase>();

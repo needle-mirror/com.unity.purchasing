@@ -1,27 +1,30 @@
 namespace UnityEngine.Purchasing
 {
     /// <summary>
-    /// This enum is a C# representation of the Apple object `SKProductStorePromotionVisibility`.
-    /// https://developer.apple.com/documentation/storekit/skproductstorepromotionvisibility?changes=latest__7
+    /// This enum is a C# representation of the Apple object `Product.PromotionInfo.Visibility`.
+    /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility
     ///
     /// Converted to a string (ToString) to pass to Apple native code, so do not change these names.
     /// </summary>
     public enum AppleStorePromotionVisibility
     {
         /// <summary>
-        /// C# representation of Apple's object `SKProductStorePromotionVisibility.default`
-        /// https://developer.apple.com/documentation/storekit/skproductstorepromotionvisibility/default?changes=latest__7
+        /// C# representation of Apple's object `Product.PromotionInfo.Visibility.appStoreConnectDefault`
+        /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/appstoreconnectdefault
         /// </summary>
-        Default,
+        AppStoreConnectDefault = 0,
+        Default = 0,
         /// <summary>
-        /// C# representation of Apple's object `SKProductStorePromotionVisibility.hide`
-        /// https://developer.apple.com/documentation/storekit/skproductstorepromotionvisibility/hide?changes=latest__7
+        /// C# representation of Apple's object `Product.PromotionInfo.Visibility.visible`
+        /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/visible
         /// </summary>
-        Hide,
+        Visible = 1,
+        Show = 1,
         /// <summary>
-        /// C# representation of Apple's object `SKProductStorePromotionVisibility.show`
-        /// https://developer.apple.com/documentation/storekit/skproductstorepromotionvisibility/show?changes=latest__7
+        /// C# representation of Apple's object `Product.PromotionInfo.Visibility.hidden`
+        /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/hidden
         /// </summary>
-        Show
+        Hidden = 2,
+        Hide = 2
     }
 }

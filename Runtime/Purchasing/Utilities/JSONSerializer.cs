@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,7 +23,7 @@ namespace UnityEngine.Purchasing
         }
     }
 
-    internal class JSONSerializer
+    class JSONSerializer
     {
         public static string SerializeProductDef(ProductDefinition product)
         {
@@ -37,6 +38,15 @@ namespace UnityEngine.Purchasing
                 result.Add(EncodeProductDef(product));
             }
 
+
+            return MiniJson.JsonEncode(result);
+        }
+
+        public static string SerializeProductStoreSpecificIds(IEnumerable<ProductDefinition> products)
+        {
+            var result = new Dictionary<string, object>();
+            var productList = products.Select(product => product.storeSpecificId).ToList();
+            result.Add("products", productList);
             return MiniJson.JsonEncode(result);
         }
 
@@ -56,6 +66,26 @@ namespace UnityEngine.Purchasing
             return MiniJson.JsonEncode(result);
         }
 
+        public static Dictionary<string, Dictionary<string, object>> DeserializeFetchedPurchases(string json)
+        {
+            var result = new Dictionary<string, Dictionary<string, object>>();
+
+            try
+            {
+                var decodedJson = MiniJson.JsonDecode(json);
+                foreach (var val in (Dictionary<string, object>)decodedJson)
+                {
+                    result[val.Key] = (Dictionary<string, object>)val.Value;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.unityLogger.LogIAPError($"DeserializeFetchedPurchases - Error decoding json: {e}");
+            }
+
+            return result;
+        }
+
         public static List<ProductDescription> DeserializeProductDescriptions(string json)
         {
             var objects = (List<object>)MiniJson.JsonDecode(json);
@@ -71,6 +101,68 @@ namespace UnityEngine.Purchasing
                     ProductType.NonConsumable);
                 result.Add(product);
             }
+
+            return result;
+        }
+
+        public static List<ProductDescription> DeserializeProductDescriptionsFromFetchProductsSk2(string json)
+        {
+            var results = new List<ProductDescription>();
+            var dict = MiniJson.JsonDecode(json) as Dictionary<string, object>;
+            if (dict?["products"] is List<object> products)
+            {
+                foreach (var product in products)
+                {
+                    var productDetail = product as Dictionary<string, object>;
+                    if (productDetail == null)
+                    {
+                        break;
+                    }
+
+                    var id = productDetail["id"] as string;
+                    var priceString = productDetail.TryGetString("displayPrice");
+                    var title = productDetail.TryGetString("displayName");
+                    var description = productDetail.TryGetString("description");
+                    var currencyCode = productDetail.TryGetString("currencyCode");
+                    decimal localizedPrice;
+                    try
+                    {
+                        localizedPrice = Convert.ToDecimal(productDetail["price"]);
+                    }
+                    catch
+                    {
+                        localizedPrice = 0.0m;
+                    }
+                    var isFamilyShareable = Convert.ToBoolean(productDetail.TryGetString("isFamilyShareable"));
+                    var metadata = new AppleProductMetadata(priceString, title, description, currencyCode,
+                        localizedPrice, isFamilyShareable);
+                    var type = productDetail.TryGetString("type").ToProductType();
+                    var productDescription = new ProductDescription(id, metadata, "", "", type);
+
+                    results.Add(productDescription);
+                }
+            }
+
+            return results;
+        }
+
+        public static Dictionary<string, object> DeserializePurchaseDetails(string purchaseDetailJson)
+        {
+            var result = new Dictionary<string, object>();
+
+            try
+            {
+                var decodedJson = MiniJson.JsonDecode(purchaseDetailJson);
+                foreach (var (key, value) in (Dictionary<string, object>)decodedJson)
+                {
+                    result[key] = value;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.unityLogger.LogIAPError($"DeserializePurchaseDetails - Error decoding json: {e}");
+            }
+
             return result;
         }
 
@@ -122,7 +214,6 @@ namespace UnityEngine.Purchasing
             var result = new Dictionary<string, string>();
             foreach (var obj in objects.Cast<Dictionary<string, object>>())
             {
-
                 var details = new Dictionary<string, string>();
                 if (obj.TryGetValue("metadata", out var metadata))
                 {
@@ -198,7 +289,7 @@ namespace UnityEngine.Purchasing
             return new PurchaseFailureDescription(Product.CreateUnknownProduct("Unknown ProductID"), reason, BuildPurchaseFailureDescriptionMessage(dic));
         }
 
-        private static ProductMetadata DeserializeMetadata(Dictionary<string, object> data)
+        static ProductMetadata DeserializeMetadata(Dictionary<string, object> data)
         {
             // We are seeing an occasional exception when converting a string to a decimal here. It may be related to
             // a mono bug with certain cultures' number formatters: https://bugzilla.xamarin.com/show_bug.cgi?id=4814
@@ -242,7 +333,7 @@ namespace UnityEngine.Purchasing
             return message + storeSpecificErrorCode;
         }
 
-        private static Dictionary<string, object> EncodeProductDef(ProductDefinition product)
+        static Dictionary<string, object> EncodeProductDef(ProductDefinition product)
         {
             var prod = new Dictionary<string, object> { { "id", product.id }, { "storeSpecificId", product.storeSpecificId }, { "type", product.type.ToString() } };
 
@@ -288,7 +379,7 @@ namespace UnityEngine.Purchasing
             return prod;
         }
 
-        private static Dictionary<string, object> EncodeProductDesc(ProductDescription product)
+        static Dictionary<string, object> EncodeProductDesc(ProductDescription product)
         {
             var prod = new Dictionary<string, object> { { "storeSpecificId", product.storeSpecificId } };
 
@@ -308,7 +399,7 @@ namespace UnityEngine.Purchasing
             return prod;
         }
 
-        private static Dictionary<string, object> EncodeProductMeta(ProductMetadata product)
+        static Dictionary<string, object> EncodeProductMeta(ProductMetadata product)
         {
             var prod = new Dictionary<string, object>
             {

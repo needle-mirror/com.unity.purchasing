@@ -24,7 +24,6 @@ namespace UnityEngine.Purchasing.Security
     /// </summary>
     public class InvalidBundleIdException : IAPSecurityException { }
 
-
     /// <summary>
     /// Security exception for invalid receipt Data.
     /// </summary>
@@ -79,8 +78,30 @@ namespace UnityEngine.Purchasing.Security
     public class CrossPlatformValidator
     {
         private GooglePlayValidator google;
-        private AppleValidator apple;
-        private string googleBundleId, appleBundleId;
+        private string googleBundleId;
+
+        /// <summary>
+        /// Constructs an instance and checks the validity of the certification keys for GooglePlay.
+        /// </summary>
+        /// <param name="googlePublicKey"> The GooglePlay public key. </param>
+        /// <param name="googleBundleId"> The GooglePlay bundle ID. </param>
+        public CrossPlatformValidator(byte[] googlePublicKey, string googleBundleId)
+        {
+            try
+            {
+                if (googlePublicKey != null)
+                {
+                    google = new GooglePlayValidator(googlePublicKey);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidPublicKeyException("Cannot instantiate self with an invalid public key. (" +
+                    ex.ToString() + ")");
+            }
+
+            this.googleBundleId = googleBundleId;
+        }
 
         /// <summary>
         /// Constructs an instance and checks the validity of the certification keys
@@ -89,8 +110,9 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="googlePublicKey"> The GooglePlay public key. </param>
         /// <param name="appleRootCert"> The Apple certification key. </param>
         /// <param name="appBundleId"> The bundle ID for all platforms. </param>
+        [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
         public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert,
-            string appBundleId) : this(googlePublicKey, appleRootCert, null, appBundleId, appBundleId, null)
+            string appBundleId) : this(googlePublicKey, appBundleId)
         {
         }
 
@@ -102,9 +124,10 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="appleRootCert"> The Apple certification key. </param>
         /// <param name="unityChannelPublicKey_not_used"> The Unity Channel public key. Not used because Unity Channel is no longer supported. </param>
         /// <param name="appBundleId"> The bundle ID for all platforms. </param>
+        [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
         public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert, byte[] unityChannelPublicKey_not_used,
             string appBundleId)
-            : this(googlePublicKey, appleRootCert, null, appBundleId, appBundleId, appBundleId)
+            : this(googlePublicKey, appBundleId)
         {
         }
 
@@ -116,9 +139,10 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="appleRootCert"> The Apple certification key. </param>
         /// <param name="googleBundleId"> The GooglePlay bundle ID. </param>
         /// <param name="appleBundleId"> The Apple bundle ID. </param>
+        [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
         public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert,
             string googleBundleId, string appleBundleId)
-            : this(googlePublicKey, appleRootCert, null, googleBundleId, appleBundleId, null)
+            : this(googlePublicKey, googleBundleId)
         {
         }
 
@@ -131,29 +155,10 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="googleBundleId"> The GooglePlay bundle ID. </param>
         /// <param name="appleBundleId"> The Apple bundle ID. </param>
         /// <param name="xiaomiBundleId_not_used"> The Xiaomi bundle ID. Not used because Xiaomi is no longer supported. </param>
+        [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
         public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert, byte[] unityChannelPublicKey_not_used,
-            string googleBundleId, string appleBundleId, string xiaomiBundleId_not_used)
+            string googleBundleId, string appleBundleId, string xiaomiBundleId_not_used) : this(googlePublicKey, googleBundleId)
         {
-            try
-            {
-                if (null != googlePublicKey)
-                {
-                    google = new GooglePlayValidator(googlePublicKey);
-                }
-
-                if (null != appleRootCert)
-                {
-                    apple = new AppleValidator(appleRootCert);
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new InvalidPublicKeyException("Cannot instantiate self with an invalid public key. (" +
-                    ex.ToString() + ")");
-            }
-
-            this.googleBundleId = googleBundleId;
-            this.appleBundleId = appleBundleId;
         }
 
         /// <summary>
@@ -201,17 +206,7 @@ namespace UnityEngine.Purchasing.Security
                     case "AppleAppStore":
                     case "MacAppStore":
                     {
-                        if (null == apple)
-                        {
-                            throw new MissingStoreSecretException(
-                                "Cannot validate an Apple receipt without supplying an Apple root certificate");
-                        }
-                        var r = apple.Validate(Convert.FromBase64String(payload));
-                        if (!appleBundleId.Equals(r.bundleID))
-                        {
-                            throw new InvalidBundleIdException();
-                        }
-                        return r.inAppPurchaseReceipts.ToArray();
+                        return new IPurchaseReceipt[] { };
                     }
                     default:
                     {

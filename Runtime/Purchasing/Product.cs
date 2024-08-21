@@ -72,6 +72,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Indicates if this Apple product is restored.
         /// </summary>
+        [Obsolete]
         public bool appleProductIsRestored { get; internal set; }
 
         /// <summary>
@@ -120,6 +121,11 @@ namespace UnityEngine.Purchasing
         public override int GetHashCode()
         {
             return definition.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"Product: {definition}, {metadata}, {receipt}";
         }
     }
 }

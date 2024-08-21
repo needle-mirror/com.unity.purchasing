@@ -96,7 +96,7 @@ namespace UnityEngine.Purchasing
         Dictionary<string, string> GetProductDetails();
 
         /// <summary>
-        /// Initiate Apple iOS 14 Subscription Offer Code redemption API, presentCodeRedemptionSheet
+        /// Initiate Apple Subscription Offer Code redemption API, presentCodeRedemptionSheet
         /// </summary>
         void PresentCodeRedemptionSheet();
     }

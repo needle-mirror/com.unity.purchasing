@@ -1,3 +1,5 @@
+using System;
+
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -17,8 +19,19 @@ namespace UnityEngine.Purchasing
         string OriginalTransactionID { get; set; }
 
         /// <summary>
-        /// Indicates whether the purchase is restored.
+        /// The ownership type of the purchase.
         /// </summary>
-        bool IsRestored { get; set; }
+        OwnershipType OwnershipType { get; set; }
+
+        /// <summary>
+        /// Indicates name of the store.
+        /// </summary>
+        string StoreName { get; set; }
+
+        /// <summary>
+        /// The app-specific account token associated with the purchase.
+        /// This is used to link transactions to a specific app account for additional validation.
+        /// </summary>
+        Guid? AppAccountToken { get; set; }
     }
 }

@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace UnityEngine.Purchasing.Security
 {
-    internal class RSAKey
+    class RSAKey
     {
         public RSACryptoServiceProvider rsa { get; private set; }
 
@@ -50,7 +50,7 @@ namespace UnityEngine.Purchasing.Security
          * Parses an DER encoded RSA public key:
          * It will only try to get the mod and the exponent
          */
-        private RSACryptoServiceProvider ParseNode(Asn1Node n)
+        RSACryptoServiceProvider ParseNode(Asn1Node n)
         {
             if ((n.Tag & Asn1Tag.TAG_MASK) == Asn1Tag.SEQUENCE &&
                 n.ChildNodeCount == 2 &&
@@ -74,10 +74,11 @@ namespace UnityEngine.Purchasing.Security
                     return result;
                 }
             }
+
             throw new InvalidRSAData();
         }
 
-        private string ToXML(string modulus, string exponent)
+        string ToXML(string modulus, string exponent)
         {
             return "<RSAKeyValue><Modulus>" + modulus + "</Modulus>" +
                 "<Exponent>" + exponent + "</Exponent></RSAKeyValue>";
