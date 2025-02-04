@@ -51,9 +51,10 @@ namespace UnityEngine.Purchasing.Extension
         /// <summary>
         /// Add multiple products to the configuration builder.
         /// </summary>
-        /// <param name="products"> The enumerator of the product definitions to be added. </param>
+        /// <param name="products"> The enumerator of the product definitions to be added.
+        /// The ProductDefinition.storeSpecificId will not be used since the catalog can be the same for multiple stores. Use the storeIDsByProductId instead. </param>
         /// <param name="storeIDsByProductId"> The object representing store IDs for each product id. </param>
-        public void AddProducts(IEnumerable<ProductDefinition> products, Dictionary<string, StoreSpecificIds>? storeIDsByProductId);
+        public void AddProducts(IEnumerable<ProductDefinition> products, Dictionary<string, StoreSpecificIds>? storeIDsByProductId = null);
 
         /// <summary>
         /// Fetch all the products in the catalog, asynchronously.

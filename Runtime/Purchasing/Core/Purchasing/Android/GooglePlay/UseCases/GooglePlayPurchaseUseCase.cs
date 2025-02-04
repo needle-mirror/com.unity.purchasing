@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing
     internal class GooglePlayPurchaseUseCase : PurchaseUseCase, IGooglePlayChangeSubscriptionUseCase,
         IGooglePlayChangeSubscriptionCallback
     {
-        readonly List<SubscriptionChangeRequest> m_PendingRequests = new List<SubscriptionChangeRequest>();
+        readonly List<SubscriptionChangeRequest> m_PendingRequests = new();
         public event Action<DeferredPaymentUntilRenewalDateOrder>? OnPurchaseDeferredUntilRenewalAction;
 
         internal GooglePlayPurchaseUseCase(IGooglePlayStore storeResponsible)
@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
         }
 
         public void ChangeSubscription(Product previousSubscription, Product newSubscription,
-            GooglePlayProrationMode prorationMode)
+            GooglePlayReplacementMode replacementMode)
         {
             if (!IsSubscriptionChangeValid(previousSubscription, newSubscription))
             {
@@ -35,12 +35,9 @@ namespace UnityEngine.Purchasing
             else
             {
                 var subscriptionChangeRequest = new SubscriptionChangeRequest(previousSubscription, newSubscription,
-                    prorationMode);
+                    replacementMode);
                 AddAndSendSubscriptionChangeRequest(subscriptionChangeRequest);
             }
-
-            GooglePlayStore()?.ChangeSubscription(newSubscription.definition,
-                previousSubscription, prorationMode);
         }
 
         bool IsSubscriptionChangeValid(Product previousSubscription, Product newSubscription)
@@ -61,15 +58,15 @@ namespace UnityEngine.Purchasing
                 request.NewSubscription.Equals(newSubscription));
         }
 
-        private void AddAndSendSubscriptionChangeRequest(SubscriptionChangeRequest subscriptionChangeRequest)
+        void AddAndSendSubscriptionChangeRequest(SubscriptionChangeRequest subscriptionChangeRequest)
         {
             m_PendingRequests.Add(subscriptionChangeRequest);
 
             GooglePlayStore()?.ChangeSubscription(subscriptionChangeRequest.NewSubscription.definition,
-                subscriptionChangeRequest.PreviousSubscription, subscriptionChangeRequest.ProrationMode);
+                subscriptionChangeRequest.PreviousSubscription, subscriptionChangeRequest.ReplacementMode);
         }
 
-        private IGooglePlayStore? GooglePlayStore()
+        IGooglePlayStore? GooglePlayStore()
         {
             return m_Store as IGooglePlayStore;
         }
@@ -101,6 +98,36 @@ namespace UnityEngine.Purchasing
                 }
 
                 OnPurchaseDeferredUntilRenewalAction?.Invoke(pendingPurchase);
+            }
+            catch (InvalidOperationException)
+            {
+                throw new PurchaseException(
+                    $"The product with sku id: {storeSpecificId} was successfully purchased. The request list may be corrupt. No callbacks will be sent for this call.");
+            }
+        }
+
+        public void OnSubscriptionChange(string storeSpecificId)
+        {
+            try
+            {
+                HandleSubscriptionChange(storeSpecificId);
+            }
+            catch (InvalidOperationException)
+            {
+                ThrowUnknownProductException(storeSpecificId);
+            }
+        }
+
+        void HandleSubscriptionChange(string storeSpecificId)
+        {
+            try
+            {
+                var request = GetMatchingRequest(storeSpecificId);
+
+                if (request != null)
+                {
+                    m_PendingRequests.Remove(request);
+                }
             }
             catch (InvalidOperationException)
             {

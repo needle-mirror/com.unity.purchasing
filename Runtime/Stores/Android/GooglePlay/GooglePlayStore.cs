@@ -81,11 +81,11 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">The new subscription to buy</param>
         /// <param name="oldProduct">The previous subscription to be unsubscribed to</param>
-        /// <param name="desiredProrationMode">The desired proration mode for the subscription change</param>
+        /// <param name="desiredReplacementMode">The desired proration mode for the subscription change</param>
         public void ChangeSubscription(ProductDefinition product, Product oldProduct,
-            GooglePlayProrationMode? desiredProrationMode)
+            GooglePlayReplacementMode? desiredReplacementMode)
         {
-            m_ChangeSubscriptionService.ChangeSubscription(product, oldProduct, desiredProrationMode);
+            m_ChangeSubscriptionService.ChangeSubscription(product, oldProduct, desiredReplacementMode);
         }
 
         public override void FinishTransaction(PendingOrder pendingOrder)

@@ -69,7 +69,7 @@ namespace UnityEditor.Purchasing
         // Notice: Multiple files per target supported. While Key must be unique, Value can be duplicated!
         static readonly Dictionary<string, AppStore> StoreSpecificFiles = new Dictionary<string, AppStore>()
         {
-            {"billing-6.2.1.aar", AppStore.GooglePlay},
+            {"billing-7.1.1.aar", AppStore.GooglePlay},
             {"AmazonAppStore.aar", AppStore.AmazonAppStore}
         };
 

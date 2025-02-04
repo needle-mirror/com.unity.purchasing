@@ -112,7 +112,7 @@ namespace UnityEngine.Purchasing
                             m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
                             Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
                             PurchaseFailureReason.Unknown,
-                            billingResult.debugMessage + " {M: GPUL.HEC} - Google BillingResponseCode = " + billingResult.responseCode
+                            billingResult.debugMessage + " {M: GPUL.HEC} - onPurchasesUpdated: purchases list is empty - Google BillingResponseCode = " + billingResult.responseCode
                         )
                     );
                     break;
@@ -180,23 +180,33 @@ namespace UnityEngine.Purchasing
             }
             else
             {
+                if (!string.IsNullOrEmpty(m_LastKnownProductService.LastKnownOldProductId) && m_LastKnownProductService.LastKnownOldProductId != m_LastKnownProductService.LastKnownProductId)
+                {
+                    m_GooglePurchaseCallback.NotifyUpgradeDowngradeSubscription(m_LastKnownProductService.LastKnownProductId);
+                }
+
                 m_GooglePurchaseCallback.OnPurchaseSuccessful(googlePurchase);
             }
         }
 
         bool IsDeferredSubscriptionChange(IGooglePurchase googlePurchase)
         {
-            return IsLastProrationModeDeferred() &&
+            return IsLastReplacementModeDeferred() &&
                 googlePurchase.sku == m_LastKnownProductService.LastKnownOldProductId;
         }
 
-        bool IsLastProrationModeDeferred()
+        bool IsLastReplacementModeDeferred()
         {
-            return m_LastKnownProductService.LastKnownProrationMode == GooglePlayProrationMode.Deferred;
+            return m_LastKnownProductService.LastKnownReplacementMode == GooglePlayReplacementMode.Deferred;
         }
 
         void OnPurchaseCancelled(IGoogleBillingResult billingResult)
         {
+            if (!string.IsNullOrEmpty(m_LastKnownProductService.LastKnownOldProductId) && m_LastKnownProductService.LastKnownOldProductId != m_LastKnownProductService.LastKnownProductId)
+            {
+                m_GooglePurchaseCallback.NotifyUpgradeDowngradeSubscription(m_LastKnownProductService.LastKnownProductId);
+            }
+
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
                     m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??

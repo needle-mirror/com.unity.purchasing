@@ -209,7 +209,6 @@ namespace UnityEngine.Purchasing
             var productCache = di.GetInstance<GooglePlayStore>().ProductCache;
             di.GetInstance<IGooglePlayStoreFetchPurchasesService>().SetProductCache(productCache);
             di.GetInstance<IGooglePlayStoreFinishTransactionService>().SetProductCache(productCache);
-            di.GetInstance<IGooglePlayStoreRetrieveProductsService>().SetProductCache(productCache);
             di.GetInstance<IGooglePurchaseService>().SetProductCache(productCache);
             di.GetInstance<IGooglePurchasesUpdatedHandler>().SetProductCache(productCache);
             di.GetInstance<GooglePlayPurchaseCallback>().SetProductCache(productCache);

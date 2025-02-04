@@ -33,7 +33,10 @@ namespace UnityEngine.Purchasing
                     FinishTransactionForPurchase(purchase, product, purchaseToken, onTransactionFinished);
                 }
             }
-            catch (InvalidOperationException) { }
+            catch (InvalidOperationException e)
+            {
+                Debug.unityLogger.LogIAPError($"FinishTransaction exception: {e}");
+            }
         }
 
         private void FinishTransactionForPurchase(IGooglePurchase purchase, ProductDefinition? product,

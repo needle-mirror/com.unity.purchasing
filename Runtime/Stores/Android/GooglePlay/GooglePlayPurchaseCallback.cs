@@ -79,5 +79,10 @@ namespace UnityEngine.Purchasing
         {
             m_ChangeSubscriptionCallback?.OnSubscriptionChangeDeferredUntilRenewal(sku);
         }
+
+        public void NotifyUpgradeDowngradeSubscription(string sku)
+        {
+            m_ChangeSubscriptionCallback?.OnSubscriptionChange(sku);
+        }
     }
 }

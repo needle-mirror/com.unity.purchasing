@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing.Interfaces
             Action<GoogleRetrieveProductException> onRetrieveProductsFailed);
 
         void Purchase(ProductDefinition product);
-        void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode);
+        void Purchase(ProductDefinition product, Product oldProduct, GooglePlayReplacementMode? desiredReplacementMode);
         void FinishTransaction(ProductDefinition? product, string? purchaseToken, Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished);
         void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed);
         void CheckEntitlement(ProductDefinition product, Action<ProductDefinition, EntitlementStatus> onEntitlementChecked);

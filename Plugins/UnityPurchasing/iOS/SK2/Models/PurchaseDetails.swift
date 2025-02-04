@@ -14,6 +14,7 @@ public struct PurchaseDetails: Codable {
     var verificationError: String?
     var verified: Bool?
     var appAccountToken: UUID?
+    var reason: Int?
 
     enum CodingKeys: String, CodingKey {
         case error
@@ -27,6 +28,7 @@ public struct PurchaseDetails: Codable {
         case verificationError
         case verified
         case appAccountToken
+        case reason
     }
 
     init(verificationResult: VerificationResult<Transaction>) {
@@ -60,5 +62,12 @@ public struct PurchaseDetails: Codable {
         if let appAccountToken = nativeTransaction?.appAccountToken {
             self.appAccountToken = appAccountToken
         }
+    }
+
+    init(productId: String, verificationError: String, reason: Int) {
+        self.productId = productId
+        self.verificationError = verificationError
+        self.reason = reason
+        error = true
     }
 }

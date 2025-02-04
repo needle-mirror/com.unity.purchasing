@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing
         public string? LastKnownOldProductId { get; set; }
         public string? LastKnownProductId { get; set; }
 
-        public GooglePlayProrationMode? LastKnownProrationMode { get; set; } =
-            GooglePlayProrationMode.UnknownSubscriptionUpgradeDowngradePolicy;
+        public GooglePlayReplacementMode? LastKnownReplacementMode { get; set; } =
+            GooglePlayReplacementMode.UnknownReplacementMode;
     }
 }

@@ -8,14 +8,14 @@ namespace UnityEngine.Purchasing
 
         internal Product PreviousSubscription { get; }
         internal Product NewSubscription { get; }
-        internal GooglePlayProrationMode ProrationMode { get; }
+        internal GooglePlayReplacementMode ReplacementMode { get; }
 
         internal SubscriptionChangeRequest(Product previousSubscription, Product newSubscription,
-            GooglePlayProrationMode prorationMode)
+            GooglePlayReplacementMode replacementMode)
         {
             PreviousSubscription = previousSubscription;
             NewSubscription = newSubscription;
-            ProrationMode = prorationMode;
+            ReplacementMode = replacementMode;
         }
     }
 }

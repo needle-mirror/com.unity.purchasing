@@ -12,10 +12,6 @@ namespace UnityEngine.Purchasing
         {
             throw new NotImplementedException();
         }
-        public void SetApplicationUsername(string applicationUsername)
-        {
-            throw new NotImplementedException();
-        }
 
         public void SetAppAccountToken(string token)
         {

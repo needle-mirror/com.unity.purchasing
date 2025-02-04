@@ -25,17 +25,17 @@ namespace UnityEngine.Purchasing
             m_Logger = logger;
         }
 
-        public async void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        public async void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
         {
             var productDetailsList = await m_QueryProductDetailsService.QueryProductDetails(product);
-            OnQueryProductDetailsResponse(productDetailsList, product, oldProduct, desiredProrationMode);
+            OnQueryProductDetailsResponse(productDetailsList, product, oldProduct, desiredReplacementMode);
         }
 
-        void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
         {
             if (ValidateQueryProductDetailsResponseParams(productDetailsList, productToBuy, oldProduct))
             {
-                LaunchGoogleBillingFlow(productDetailsList[0], oldProduct, desiredProrationMode);
+                LaunchGoogleBillingFlow(productDetailsList[0], oldProduct, desiredReplacementMode);
             }
         }
 
@@ -99,10 +99,9 @@ namespace UnityEngine.Purchasing
             );
         }
 
-        [System.Obsolete]
-        void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
         {
-            var billingResult = m_BillingClient.LaunchBillingFlow(productToPurchase, oldProduct?.transactionID, desiredProrationMode);
+            var billingResult = m_BillingClient.LaunchBillingFlow(productToPurchase, oldProduct?.transactionID, desiredReplacementMode);
             HandleBillingFlowResult(new GoogleBillingResult(billingResult), productToPurchase);
         }
 

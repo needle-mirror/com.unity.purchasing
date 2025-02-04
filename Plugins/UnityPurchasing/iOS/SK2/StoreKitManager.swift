@@ -13,9 +13,9 @@ public enum StoreError: Error {
 public protocol StoreKitManagerProtocol {
     func canMakePayment() -> Bool
     func addTransactionObserver()
-    func fetchProducts(for productIds: [String]) async
+    func fetchProducts(productJson: String) async
     func fetchSubscriptionInfo(for productId: String) async
-    func purchase(productId: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async
+    func purchase(productJson: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async
     func fetchAppReceipt() -> String
     func fetchPurchasedProducts() async
     func fetchTransactions(for productIds: [String]) async
@@ -63,13 +63,22 @@ public class StoreKitManager: StoreKitManagerProtocol {
      - Parameter options: purchase options
      - Parameter storefrontChangeCallback: handler for result
      */
-    public func purchase(productId: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async {
-        guard let purchaseDetail = await purchaseUseCase.purchaseProduct(productId: productId, options: options, storefrontChangeCallback: storefrontChangeCallback) else {
-            return
+    public func purchase(productJson: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async {
+        var productId = ""
+        do {
+            let product = try decodeJSONToType(productJson, ProductDefinition.self)
+            productId = product.storeSpecificId
+            guard let purchaseDetail = await purchaseUseCase.purchaseProduct(productId: productId, options: options, storefrontChangeCallback: storefrontChangeCallback)
+            else {
+                return
+            }
+            let jsonString = encodeToJSON(purchaseDetail)
+            await storeKitCallback.callback(subject: "OnPurchaseSucceeded", payload: jsonString, entitlementStatus: 0)
+        } catch {
+            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: error.localizedDescription, reason: 7 /* 7 = Unknown */)
+            let jsonString = encodeToJSON(purchaseDetail)
+            await self.storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
         }
-
-        let jsonString = encodeToJSON(purchaseDetail)
-        await storeKitCallback.callback(subject: "OnPurchaseSucceeded", payload: jsonString, entitlementStatus: 0)
     }
 
     // MARK: Products
@@ -78,11 +87,20 @@ public class StoreKitManager: StoreKitManagerProtocol {
         Fetch products using productId as as specified in App Store Connect and call the delegate when it received a response from the API.
         - Parameter productIds: A list of productId
      */
-    public func fetchProducts(for productIds: [String]) async {
-        let response = await productUseCase.fetchProducts(for: productIds)
-        products = response.products
-        let jsonString = encodeToJSON( ["products": products])
-        await storeKitCallback.callback(subject: "OnProductsRetrieved", payload: jsonString, entitlementStatus: 0)
+    public func fetchProducts(productJson: String) async {
+        do {
+            let product = try decodeJSONToType(productJson, [ProductDefinition].self)
+            let storeSpecificIds = product.map { $0.storeSpecificId }
+
+            let response = await productUseCase.fetchProducts(for: storeSpecificIds)
+            products = response.products
+            let jsonString = encodeToJSON( ["products": products])
+            await storeKitCallback.callback(subject: "OnProductsRetrieved", payload: jsonString, entitlementStatus: 0)
+        } catch {
+            Task(priority: .background, operation: {
+                await self.storeKitCallback.callback(subject: "OnProductsRetrieveFailed", payload: "JSONDecoder An error occurred - \(error.localizedDescription)", entitlementStatus: 0)
+            })
+        }
     }
 
     // MARK: Subscriptions
@@ -257,10 +275,10 @@ public class StoreKitManager: StoreKitManagerProtocol {
                 await self.storeKitCallback.callback(subject: "OnFetchStorePromotionOrderFailed", payload: error.localizedDescription, entitlementStatus: 0)
             }
         } else {
-            printLog("Fetch store promotion order is only available on iOS 16.4 and above")
+            await self.storeKitCallback.callback(subject: "OnFetchStorePromotionOrderFailed", payload: "Fetch store promotion order is only available on iOS 16.4 and above", entitlementStatus: 0)
         }
 #else
-        printLog("Fetch store promotion order is only available on iOS 16.4 and above")
+        await self.storeKitCallback.callback(subject: "OnFetchStorePromotionOrderFailed", payload: "Fetch store promotion order is only available on iOS 16.4 and above", entitlementStatus: 0)
 #endif
     }
 
@@ -296,14 +314,13 @@ public class StoreKitManager: StoreKitManagerProtocol {
                 await storeKitCallback.callback(subject: "OnFetchStorePromotionVisibilitySucceeded", payload: jsonString, entitlementStatus: 0)
             }
             catch {
-                printLog("Fetch store promotion visibility error: \(error.localizedDescription)")
-                await storeKitCallback.callback(subject: "OnFetchStorePromotionVisibilityFailed", payload: "", entitlementStatus: 0)
+                await storeKitCallback.callback(subject: "OnFetchStorePromotionVisibilityFailed", payload: "Fetch store promotion visibility error: \(error.localizedDescription)", entitlementStatus: 0)
             }
         } else {
-            printLog("Fetch store promotion visibility is only available on iOS 16.4 and above")
+            await storeKitCallback.callback(subject: "OnFetchStorePromotionVisibilityFailed", payload: "Fetch store promotion visibility is only available on iOS 16.4 and above", entitlementStatus: 0)
         }
 #else
-        printLog("Fetch store promotion visibility is only available on iOS 16.4 and above")
+        await storeKitCallback.callback(subject: "OnFetchStorePromotionVisibilityFailed", payload: "Fetch store promotion visibility is only available on iOS 16.4 and above", entitlementStatus: 0)
 #endif
     }
 

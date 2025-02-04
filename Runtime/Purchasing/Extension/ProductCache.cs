@@ -1,37 +1,29 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace UnityEngine.Purchasing.Extension
 {
     class ProductCache : IProductCache
     {
-        public Dictionary<string, Product> productsById { get; } = new Dictionary<string, Product>();
-        public Dictionary<string, Product> productsByStoreSpecificId { get; } = new Dictionary<string, Product>();
-        public Dictionary<string, string> storeSpecificProductIds { get; } = new Dictionary<string, string>();
+        ObservableCollection<Product> m_Products = new();
+        readonly ReadOnlyObservableCollection<Product> m_ProductsReadOnly;
 
-        public void Add(List<ProductDescription> productDescriptions)
+        public Dictionary<string, Product> productsById { get; } = new();
+        Dictionary<string, Product> productsByStoreSpecificId { get; } = new();
+        Dictionary<string, string> storeSpecificProductIds { get; } = new();
+
+        internal ProductCache()
         {
-            foreach (var productDescription in productDescriptions)
-            {
-                Add(productDescription);
-            }
+            m_ProductsReadOnly = new ReadOnlyObservableCollection<Product>(m_Products);
         }
 
-        public void Add(ProductDescription productDescription)
+        public void Add(List<Product> products)
         {
-            storeSpecificProductIds.TryGetValue(productDescription.storeSpecificId, out var productId);
-            var definition = new ProductDefinition(string.IsNullOrEmpty(productId) ? productDescription.storeSpecificId : productId,
-                productDescription.storeSpecificId, productDescription.type);
-            var product = new Product(definition, productDescription.metadata) { availableToPurchase = true };
-            Add(product);
-        }
-
-        public void Add(IReadOnlyCollection<ProductDefinition> productDefinitions)
-        {
-            foreach (var productDefinition in productDefinitions)
+            foreach (var product in products)
             {
-                Add(new Product(productDefinition, new ProductMetadata()));
+                Add(product);
             }
         }
 
@@ -44,20 +36,19 @@ namespace UnityEngine.Purchasing.Extension
 
             productsById[product.definition.id] = product;
             productsByStoreSpecificId[product.definition.storeSpecificId] = product;
+            m_Products.Add(product);
         }
 
-        public void AddStoreSpecificIds(IReadOnlyCollection<ProductDefinition> products)
+        public ReadOnlyObservableCollection<Product> GetProducts()
         {
-            foreach (var product in products)
-            {
-                storeSpecificProductIds[product.storeSpecificId] = product.id;
-            }
+            return m_ProductsReadOnly;
         }
 
         public void Remove(Product product)
         {
             productsById.Remove(product.definition.id);
             productsByStoreSpecificId.Remove(product.definition.storeSpecificId);
+            m_Products.Remove(product);
         }
 
         public Product FindOrDefault(string? productId)

@@ -36,15 +36,9 @@ func unityPurchasing_AddTransactionObserver() {
 @_cdecl("unityPurchasing_FetchProducts")
 func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CChar>) {
     let productJson = String(cString: productJsonCString)
-    do {
-        let product = try decodeJSONToType(productJson, [ProductDefinition].self)
-        let storeSpecificIds = product.map { $0.storeSpecificId }
-        Task.detached(priority: .background, operation: {
-            await StoreKitManager.instance.fetchProducts(for: storeSpecificIds)
-        })
-    } catch {
-        printLog("JSONDecoder An error occurred - \(error.localizedDescription)")
-    }
+    Task.detached(priority: .background, operation: {
+        await StoreKitManager.instance.fetchProducts(productJson: productJson)
+    })
 }
 
 /**
@@ -55,15 +49,9 @@ func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CChar>) {
 func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<CChar>, optionsJsonCString: UnsafePointer<CChar>) {
     let productJson = String(cString: productJsonCString)
     let optionsDict = dictionaryFromJSONCstr(optionsJsonCString) ?? [:]
-
-    do {
-        let product = try decodeJSONToType(productJson, ProductDefinition.self)
-        Task.detached(priority: .background, operation: {
-            await StoreKitManager.instance.purchase(productId: product.storeSpecificId, options: optionsDict, storefrontChangeCallback: nil)
-        })
-    } catch {
-        printLog("JSONDecoder: An error occurred - \(error.localizedDescription)")
-    }
+    Task.detached(priority: .background, operation: {
+        await StoreKitManager.instance.purchase(productJson: productJson, options: optionsDict, storefrontChangeCallback: nil)
+    })
 }
 
 /**

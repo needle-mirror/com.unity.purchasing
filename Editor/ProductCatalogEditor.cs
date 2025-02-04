@@ -616,7 +616,7 @@ namespace UnityEditor.Purchasing
 
                 var typeRect = EditorGUILayout.GetControlRect(true);
                 typeRect.width = width;
-                Item.type = (ProductType)EditorGUI.EnumPopup(typeRect, "Type:", Item.type);
+                Item.type = (ProductType)EditorGUI.EnumPopup(typeRect, "Type:", (CatalogPopupProductType)Item.type);
 
                 if (oldType != Item.type)
                 {

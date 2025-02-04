@@ -40,11 +40,6 @@ namespace UnityEngine.Purchasing
         [DllImport("__Internal")]
         private static extern void unityPurchasing_RestoreTransactions();
 
-        // TODO: IAP-3834
-        // [DllImport("__Internal")]
-        // private static extern void unityPurchasing_SetApplicationUsername(string username);
-        //
-
         [DllImport("__Internal")]
         private static extern bool unityPurchasing_CanMakePayments();
 
@@ -90,7 +85,7 @@ namespace UnityEngine.Purchasing
             return res;
         }
 
-        void DeallocateMemory(IntPtr pointer)
+        public void DeallocateMemory(IntPtr pointer)
         {
             unityPurchasing_DeallocateMemory(pointer);
         }
@@ -140,12 +135,6 @@ namespace UnityEngine.Purchasing
         public void RestoreTransactions()
         {
             unityPurchasing_RestoreTransactions();
-        }
-
-        // TODO: IAP-3834
-        public void SetApplicationUsername(string applicationUsername)
-        {
-            //unityPurchasing_SetApplicationUsername(applicationUsername);
         }
 
         public void FetchStorePromotionOrder()

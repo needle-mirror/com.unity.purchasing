@@ -49,10 +49,10 @@ namespace UnityEngine.Purchasing
         }
 
         public override void Purchase(ProductDefinition product, Product? oldProduct,
-            GooglePlayProrationMode? desiredProrationMode)
+            GooglePlayReplacementMode? desiredReplacementMode)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.Purchase(product, oldProduct, desiredProrationMode),
+                () => base.Purchase(product, oldProduct, desiredReplacementMode),
                 TelemetryMetricDefinitions.initPurchaseName);
         }
     }

@@ -111,7 +111,6 @@ namespace UnityEngine.Purchasing
             di.AddInstance(appleNativeStore);
             di.AddInstance((AppleStoreImpl)store.instance);
             di.AddService<CanMakePaymentsUseCase>();
-            di.AddService<SetApplicationUsernameUseCase>();
             di.AddService<SetAppAccountTokenUseCase>();
             di.AddService<ClearAppleTransactionLogsUseCase>();
 

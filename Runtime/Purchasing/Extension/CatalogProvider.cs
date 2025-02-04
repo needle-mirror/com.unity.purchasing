@@ -10,9 +10,8 @@ namespace UnityEngine.Purchasing
 
     public class CatalogProvider : ICatalogProvider
     {
-        Dictionary<string?, storeSpecificIDsByProductID> m_StoreSpecificIds =
-            new Dictionary<string?, storeSpecificIDsByProductID>();
-        List<ProductDefinition> m_Products = new List<ProductDefinition>();
+        Dictionary<string?, storeSpecificIDsByProductID> m_StoreSpecificIds = new();
+        List<ProductDefinition> m_Products = new();
 
         public List<ProductDefinition> GetProducts(string? storeName = null)
         {

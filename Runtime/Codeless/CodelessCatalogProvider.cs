@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace UnityEngine.Purchasing
@@ -27,7 +28,13 @@ namespace UnityEngine.Purchasing
                     storeSpecificIds.Add(storeSpecificId.id, storeSpecificId.store);
                 }
 
-                catalogProvider.AddProduct(product.id, product.type, storeSpecificIds);
+                var payoutDefinitions = new List<PayoutDefinition>();
+                foreach (var payout in product.Payouts)
+                {
+                    payoutDefinitions.Add(new PayoutDefinition(payout.typeString, payout.subtype, payout.quantity, payout.data));
+                }
+
+                catalogProvider.AddProduct(product.id, product.type, storeSpecificIds, payoutDefinitions);
             }
 
             return catalogProvider;

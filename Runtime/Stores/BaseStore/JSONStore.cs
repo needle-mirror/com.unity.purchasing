@@ -49,7 +49,6 @@ namespace UnityEngine.Purchasing
 
         public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
-            ProductCache.AddStoreSpecificIds(products);
             m_Store?.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
@@ -172,7 +171,6 @@ namespace UnityEngine.Purchasing
         {
             // NB: AppleStoreImpl overrides this completely and does not call the base.
             var productDescriptions = JSONSerializer.DeserializeProductDescriptions(json);
-            ProductCache.Add(productDescriptions);
 
             ProductsCallback?.OnProductsRetrieved(productDescriptions);
         }
@@ -211,7 +209,21 @@ namespace UnityEngine.Purchasing
 
         public void OnPurchaseFailed(string json)
         {
-            OnPurchaseFailed(JSONSerializer.DeserializeFailureReason(json, ProductCache), json);
+            try
+            {
+                var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(json);
+
+                var productId = purchaseDetails.TryGetString("productId");
+                var verificationError = purchaseDetails.TryGetString("verificationError");
+                PurchaseFailureReason reason = (PurchaseFailureReason)Convert.ToInt32(purchaseDetails.TryGetString("reason"));
+
+                var description = new PurchaseFailureDescription(ProductCache.FindOrDefault(productId), reason, verificationError);
+                OnPurchaseFailed(description);
+            }
+            catch
+            {
+                OnPurchaseFailed(new PurchaseFailureDescription(Product.CreateUnknownProduct("Unknown ProductID"), PurchaseFailureReason.Unknown, "Unable to parse purchase failure details"));
+            }
         }
 
         public void OnPurchaseFailed(PurchaseFailureDescription failure, string? json = null)

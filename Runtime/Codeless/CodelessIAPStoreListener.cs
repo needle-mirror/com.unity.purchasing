@@ -120,6 +120,7 @@ namespace UnityEngine.Purchasing
         async Task InitializePurchasing()
         {
             m_Builder = new ConfigurationBuilder();
+            extensions = new ExtensionProvider();
             CreateServices();
             InitCatalog();
 

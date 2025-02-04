@@ -27,9 +27,24 @@ namespace UnityEngine.Purchasing
 
         public void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode)
         {
-            var product = UnityPurchasing.m_PurchasingManager.products.WithStoreSpecificID(newSku);
-            var oldProduct = UnityPurchasing.m_PurchasingManager.products.WithStoreSpecificID(oldSku);
-            UnityIAPServices.Purchase(GooglePlay.Name).Google?.UpgradeDowngradeSubscription(oldProduct, product, desiredProrationMode);
+            var purchaseService = UnityIAPServices.Purchase(GooglePlay.Name);
+            var productService = UnityIAPServices.Product(GooglePlay.Name);
+
+            var candidateOrders = purchaseService.GetPurchases();
+            Product oldProduct = null;
+            foreach (var candidateOrder in candidateOrders)
+            {
+                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.storeSpecificId == oldSku);
+                if (foundProduct != null)
+                {
+                    oldProduct = foundProduct.Product;
+                    break;
+                }
+            }
+
+            var newProduct = productService.GetProducts().FirstOrDefault(product => product.definition.storeSpecificId == newSku);
+
+            UnityIAPServices.Purchase(GooglePlay.Name).Google?.UpgradeDowngradeSubscription(oldProduct, newProduct, desiredProrationMode);
         }
 
         public bool IsPurchasedProductDeferred(Product product)

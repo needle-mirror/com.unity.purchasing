@@ -55,12 +55,12 @@ namespace UnityEngine.Purchasing
             Purchase(product, null, null);
         }
 
-        public virtual void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        public virtual void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
         {
             m_GoogleLastKnownProductService.LastKnownOldProductId = oldProduct?.definition.storeSpecificId;
             m_GoogleLastKnownProductService.LastKnownProductId = product.storeSpecificId;
-            m_GoogleLastKnownProductService.LastKnownProrationMode = desiredProrationMode;
-            m_GooglePurchaseService.Purchase(product, oldProduct, desiredProrationMode);
+            m_GoogleLastKnownProductService.LastKnownReplacementMode = desiredReplacementMode;
+            m_GooglePurchaseService.Purchase(product, oldProduct, desiredReplacementMode);
         }
 
         public void FinishTransaction(ProductDefinition? product, string? purchaseToken, Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished)

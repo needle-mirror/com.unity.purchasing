@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -11,11 +12,10 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class ProductService : IProductService
     {
-        private static readonly IRetryPolicy DefaultRetryPolicy = new ExponentialBackOffRetryPolicy();
+        static readonly IRetryPolicy k_DefaultRetryPolicy = new ExponentialBackOffRetryPolicy();
         readonly IFetchProductsUseCase m_FetchProductsUseCase;
-        readonly ObservableCollection<Product> m_Products = new ObservableCollection<Product>();
-        readonly ReadOnlyObservableCollection<Product> m_ProductsReadOnly;
         readonly IStoreWrapper m_StoreWrapper;
+        readonly IProductCache m_ProductCache;
 
         event Action<List<Product>>? OnProductsUpdated;
         event Action<ProductFetchFailed>? OnProductsFetchFailed;
@@ -23,8 +23,8 @@ namespace UnityEngine.Purchasing
         internal ProductService(IFetchProductsUseCase fetchProductsUseCase, IStoreWrapper storeWrapper)
         {
             m_FetchProductsUseCase = fetchProductsUseCase;
-            m_ProductsReadOnly = new ReadOnlyObservableCollection<Product>(m_Products);
             m_StoreWrapper = storeWrapper;
+            m_ProductCache = storeWrapper.instance.ProductCache;
         }
 
         public IAppleStoreExtendedProductService? Apple => this as IAppleStoreExtendedProductService;
@@ -49,7 +49,7 @@ namespace UnityEngine.Purchasing
                 throw new ProductFetchException("No Products Fetch Failed actions set. No error callbacks will be sent for this Fetch. Please set an action via `AddProductsFetchFailedAction()`");
             }
 
-            m_FetchProductsUseCase.FetchProducts(productDefinitions, HandleProductsFetched, HandleProductsFetchFailed, retryPolicy ?? DefaultRetryPolicy);
+            m_FetchProductsUseCase.FetchProducts(productDefinitions, HandleProductsFetched, HandleProductsFetchFailed, retryPolicy ?? k_DefaultRetryPolicy);
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace UnityEngine.Purchasing
         public ReadOnlyObservableCollection<Product> GetProducts()
         {
             CheckStoreConnectionState();
-            return m_ProductsReadOnly;
+            return m_ProductCache.GetProducts();
         }
 
         void HandleProductsFetched(List<Product>? fetchedProducts)
@@ -67,10 +67,7 @@ namespace UnityEngine.Purchasing
             CheckStoreConnectionState();
             fetchedProducts ??= new List<Product>();
 
-            foreach (var fetchedProduct in fetchedProducts)
-            {
-                m_Products.Add(fetchedProduct);
-            }
+            m_ProductCache.Add(fetchedProducts);
 
             OnProductsUpdated?.Invoke(fetchedProducts);
         }

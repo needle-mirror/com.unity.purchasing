@@ -52,6 +52,17 @@ namespace UnityEngine.Purchasing
         /// Parametrized constructor
         /// </summary>
         /// <param name="id"> The product id. </param>
+        /// <param name="type"> The product type. </param>
+        /// <param name="enabled"> Whether the product is enabled for purchase or not. </param>
+        /// <param name="payout"> The payout definition for the product once purchased. </param>
+        public ProductDefinition(string id, ProductType type, bool enabled, PayoutDefinition payout) : this(id, id, type, enabled, new List<PayoutDefinition> { payout })
+        {
+        }
+
+        /// <summary>
+        /// Parametrized constructor
+        /// </summary>
+        /// <param name="id"> The product id. </param>
         /// <param name="storeSpecificId"> The product's id for a specific store. </param>
         /// <param name="type"> The product type. </param>
         /// <param name="enabled"> Whether the product is enabled for purchase or not. </param>

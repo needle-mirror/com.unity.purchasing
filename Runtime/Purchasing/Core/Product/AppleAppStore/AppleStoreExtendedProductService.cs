@@ -36,12 +36,12 @@ namespace UnityEngine.Purchasing.Services
             m_SetStorePromotionVisibilityUseCase = setStorePromotionVisibilityUseCase;
         }
 
-        public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)
+        public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action<string> errorCallback)
         {
             m_FetchStorePromotionOrderUseCase.FetchStorePromotionOrder(successCallback, errorCallback);
         }
 
-        public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
+        public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)
         {
             m_FetchStorePromotionVisibilityUseCase.FetchStorePromotionVisibility(product, successCallback, errorCallback);
         }

@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Use case that fetched products from its provider
     /// </summary>
-    internal class FetchProductsUseCase : IFetchProductsUseCase, IStoreProductsCallback
+    class FetchProductsUseCase : IFetchProductsUseCase, IStoreProductsCallback
     {
         readonly IStore m_Store;
         readonly IRetryService m_RetryService;

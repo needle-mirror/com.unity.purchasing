@@ -14,9 +14,9 @@ namespace UnityEngine.Purchasing
         }
 
         public void ChangeSubscription(ProductDefinition product, Product oldProduct,
-            GooglePlayProrationMode? desiredProrationMode)
+            GooglePlayReplacementMode? desiredReplacementMode)
         {
-            m_GooglePlayStoreService.Purchase(product, oldProduct, desiredProrationMode);
+            m_GooglePlayStoreService.Purchase(product, oldProduct, desiredReplacementMode);
         }
     }
 }

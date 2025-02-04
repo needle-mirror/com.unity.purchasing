@@ -33,7 +33,8 @@ namespace UnityEngine.Purchasing
         /// Fetches products matching the set of definitions passed as input.
         /// </summary>
         /// <param name="productDefinitions">The definitions of the products to be fetched.</param>
-        /// <param name="retryPolicy">A custom retry policy that can be used for the fetch products query.</param>
+        /// <param name="retryPolicy">A custom retry policy that can be used for the fetch products query.
+        /// If unspecified, an exponential backoff retry policy will be used.</param>
         void FetchProducts(List<ProductDefinition>? productDefinitions, IRetryPolicy? retryPolicy);
 
         /// <summary>

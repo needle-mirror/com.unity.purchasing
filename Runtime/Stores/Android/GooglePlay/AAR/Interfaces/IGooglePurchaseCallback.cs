@@ -13,5 +13,6 @@ namespace UnityEngine.Purchasing.Interfaces
         void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription);
         void NotifyDeferredPurchase(IGooglePurchase purchase);
         void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku);
+        void NotifyUpgradeDowngradeSubscription(string sku);
     }
 }

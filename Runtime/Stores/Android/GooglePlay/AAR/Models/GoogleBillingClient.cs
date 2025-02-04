@@ -164,7 +164,7 @@ namespace UnityEngine.Purchasing.Models
             return queryProductDetailsParamsProduct;
         }
 
-        public AndroidJavaObject LaunchBillingFlow(AndroidJavaObject productDetails, string oldPurchaseToken, GooglePlayProrationMode? prorationMode)
+        public AndroidJavaObject LaunchBillingFlow(AndroidJavaObject productDetails, string oldPurchaseToken, GooglePlayReplacementMode? replacementMode)
         {
             // We currently only support 1 base plan so we can safely get the first one. Once we support multiple, this will need to be updated.
             using var subscriptionOfferDetails = productDetails.Call<AndroidJavaObject>("getSubscriptionOfferDetails");
@@ -180,10 +180,10 @@ namespace UnityEngine.Purchasing.Models
             using var productDetailsParams = productDetailsParamsBuilder.Call<AndroidJavaObject>("build");
             var productDetailsParamsList = new List<AndroidJavaObject> { productDetailsParams }.ToJava();
 
-            return m_BillingClient.Call<AndroidJavaObject>("launchBillingFlow", UnityActivity.GetCurrentActivity(), MakeBillingFlowParams(productDetailsParamsList, oldPurchaseToken, prorationMode));
+            return m_BillingClient.Call<AndroidJavaObject>("launchBillingFlow", UnityActivity.GetCurrentActivity(), MakeBillingFlowParams(productDetailsParamsList, oldPurchaseToken, replacementMode));
         }
 
-        AndroidJavaObject MakeBillingFlowParams(AndroidJavaObject productDetailsParamsList, string oldPurchaseToken, GooglePlayProrationMode? prorationMode)
+        AndroidJavaObject MakeBillingFlowParams(AndroidJavaObject productDetailsParamsList, string oldPurchaseToken, GooglePlayReplacementMode? replacementMode)
         {
             var billingFlowParams = GetBillingFlowParamClass().CallStatic<AndroidJavaObject>("newBuilder");
 
@@ -192,9 +192,9 @@ namespace UnityEngine.Purchasing.Models
 
             billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setProductDetailsParamsList", productDetailsParamsList);
 
-            if (oldPurchaseToken != null && prorationMode != null)
+            if (oldPurchaseToken != null && replacementMode != null)
             {
-                var subscriptionUpdateParams = BuildSubscriptionUpdateParams(oldPurchaseToken, prorationMode.Value);
+                var subscriptionUpdateParams = BuildSubscriptionUpdateParams(oldPurchaseToken, replacementMode.Value);
                 billingFlowParams = billingFlowParams.Call<AndroidJavaObject>("setSubscriptionUpdateParams", subscriptionUpdateParams);
             }
 
@@ -202,12 +202,12 @@ namespace UnityEngine.Purchasing.Models
             return billingFlowParams;
         }
 
-        static AndroidJavaObject BuildSubscriptionUpdateParams(string oldPurchaseToken, GooglePlayProrationMode prorationMode)
+        static AndroidJavaObject BuildSubscriptionUpdateParams(string oldPurchaseToken, GooglePlayReplacementMode replacementMode)
         {
             var subscriptionUpdateParams = GetSubscriptionUpdateParamClass().CallStatic<AndroidJavaObject>("newBuilder");
 
-            subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("setReplaceSkusProrationMode", (int)prorationMode);
-            subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("setOldSkuPurchaseToken", oldPurchaseToken);
+            subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("setSubscriptionReplacementMode", (int)replacementMode);
+            subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("setOldPurchaseToken", oldPurchaseToken);
 
             subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("build");
             return subscriptionUpdateParams;

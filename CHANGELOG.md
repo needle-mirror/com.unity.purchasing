@@ -1,7 +1,19 @@
 # Changelog
 
-## [5.0.0-pre.3] - 2024-08-21
+## [5.0.0-pre.4] - 2025-02-04
+### Changed
+- GooglePlay - Billing Library updated to 7.1.1 (was previously 6.2.1). No new feature support was added.
+- GooglePlay - `GooglePlayProrationMode` has been replaced with `GooglePlayReplacementMode` to match the Google Play Billing Library.
+  - `GooglePlayReplacementMode.Deferred` has been changed from `4` to `6` to match the Google Play Billing Library. This change was also applied to `GooglePlayProrationMode.Deferred`.
+  - `GooglePlayProrationMode` has been marked `[Obsolete]`
 
+### Fixed
+- Apple - Added missing callbacks for StoreKit 2.
+- Codeless - Fixed an issue where `PayoutDefinition` defined in the IAP Catalog was not being used.
+- IAP Catalog - Fixed an issue where `CatalogPopupProductType` was on the wrong namespace (`Editor` instead of `UnityEditor.Purchasing`).
+- IAP Catalog - Fixed an issue where the `Unknown` product type was available in the catalog.
+
+## [5.0.0-pre.3] - 2024-12-16
 ### Added
 - Apple - Updated to [StoreKit 2](https://developer.apple.com/storekit/).
   - All features previously in StoreKit 1 are still supported.

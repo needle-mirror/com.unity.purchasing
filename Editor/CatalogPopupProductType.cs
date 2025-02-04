@@ -1,6 +1,6 @@
 using UnityEngine.Purchasing;
 
-namespace Editor
+namespace UnityEditor.Purchasing
 {
     public enum CatalogPopupProductType
     {

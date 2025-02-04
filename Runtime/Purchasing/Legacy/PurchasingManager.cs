@@ -10,7 +10,7 @@ namespace UnityEngine.Purchasing
     [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
     class PurchasingManager : IStoreController
     {
-        public ProductCollection products => new(ProductServiceProvider.GetDefaultProductService()?.GetProducts().ToArray());
+        public ProductCollection products { get; } = new();
 
         public void InitiatePurchase(Product product, string payload)
         {

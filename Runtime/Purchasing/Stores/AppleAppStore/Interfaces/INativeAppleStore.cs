@@ -7,7 +7,6 @@ namespace UnityEngine.Purchasing
         void SetUnityPurchasingCallback(UnityPurchasingCallback asyncCallback);
         void RestoreTransactions();
         void AddTransactionObserver();
-        void SetApplicationUsername(string applicationUsername);
         string AppReceipt();
         bool canMakePayments { get; }
         void FetchStorePromotionOrder();

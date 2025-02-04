@@ -35,13 +35,25 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
 
     public func purchaseProduct(productId: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async -> PurchaseDetails? {
         guard let product = await fetchProductsUseCase.fetchProduct(for: productId) else {
+            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: "Failed to find the product", reason: 2 /* 2 = ProductUnavailable */)
+            let jsonString = encodeToJSON(purchaseDetail)
+            await storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
             return nil
         }
 
-        return await purchaseProduct(product: product, options: options, storefrontChangeCallback: storefrontChangeCallback)
+        do {
+            return try await purchaseProduct(product: product, options: options, storefrontChangeCallback: storefrontChangeCallback)
+        } catch let error as Product.PurchaseError{
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 3 /* 3 = PurchaseFailed */)
+        } catch let error as StoreKitError {
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 3 /* 3 = PurchaseFailed */)
+        } catch {
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 7 /* 7 = Unknown */)
+        }
+        return nil
     }
 
-    private func purchaseProduct(product: Product, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async -> PurchaseDetails? {
+    private func purchaseProduct(product: Product, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async throws -> PurchaseDetails? {
         let purchaseProductOptions = PurchaseProductOptionsConverter.makePurchaseOptions(purchaseOptionsRequestJson: options, storefrontChangeCallback: storefrontChangeCallback)
         do {
 #if os(visionOS)
@@ -52,24 +64,27 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
                 _ = try transactionObserver.checkVerified(verification)
                 return verification.purchaseDetails()
             case .userCancelled:
+                purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: 4 /* 4 = UserCancelled */)
                 return nil
             case .pending:
                 let jsonString = encodeToJSON( ["products": [product]])
                 await storeKitCallback.callback(subject: "OnPurchaseDeferred", payload: jsonString, entitlementStatus: 0)
                 return nil
             default:
+                purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
                 return nil
             }
 #else
             // This is a signed & verified transaction. StoreKit handle transaction verification for us.
             guard let purchaseDetail = try await purchase(product, options: purchaseProductOptions) else {
+                await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
                 return nil
             }
             return purchaseDetail
 #endif
         }
         catch {
-            printLog("Failed purchasing a product from the App Store server. \(error)")
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 7 /* 7 = Unknown */)
             return nil
         }
     }
@@ -87,16 +102,24 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             _ = try transactionObserver.checkVerified(verification)
             return verification.purchaseDetails()
         case .userCancelled:
+            await purchaseProductExceptionCallbacks(productID: product.id, error: "User cancelled", reason: 4 /* 4 = UserCanceled */)
             return nil
         case .pending:
             let jsonString = encodeToJSON( ["products": [product]])
             await storeKitCallback.callback(subject: "OnPurchaseDeferred", payload: jsonString, entitlementStatus: 0)
             return nil
         default:
+            await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
             return nil
         }
     }
 #endif
+
+    private func purchaseProductExceptionCallbacks(productID: String, error: String, reason : Int) async {
+        let purchaseDetail = PurchaseDetails(productId: productID, verificationError: error, reason: reason)
+        let jsonString = encodeToJSON(purchaseDetail)
+        await storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
+    }
 
     public func addPurchaseIntentListener() {
 #if os(iOS) || (os(macOS) && compiler(>=5.10))
@@ -126,7 +149,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
                         self.interceptedProductIds.append(purchaseIntent.id)
                     } else {
                         // Receive the purchase intent and then complete the purchase workflow.
-                        _ = await self.purchaseProduct(product: purchaseIntent.product, options: options, storefrontChangeCallback: nil)
+                        _ = await try self.purchaseProduct(product: purchaseIntent.product, options: options, storefrontChangeCallback: nil)
                     }
                 }
             }

@@ -20,10 +20,10 @@ namespace UnityEngine.Purchasing
     {
         Action<bool>? m_ObsoleteRestoreCallback;
         Action<bool, string?>? m_RestoreCallback;
-        Action? m_FetchStorePromotionOrderError;
+        Action<string>? m_FetchStorePromotionOrderError;
         Action<List<Product>>? m_FetchStorePromotionOrderSuccess;
         Action<Product>? m_PromotionalPurchaseCallback;
-        Action? m_FetchStorePromotionVisibilityError;
+        Action<string>? m_FetchStorePromotionVisibilityError;
         Action<string, AppleStorePromotionVisibility>? m_FetchStorePromotionVisibilitySuccess;
         INativeAppleStore? m_Native;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
@@ -93,7 +93,6 @@ namespace UnityEngine.Purchasing
         {
             var options = new Dictionary<string, object>
             {
-                //{ "applicationUsername", applicationUsername },
                 { "simulatesAskToBuyInSandbox", simulateAskToBuy },
                 { "appAccountToken", m_appAccountToken },
             };
@@ -110,9 +109,9 @@ namespace UnityEngine.Purchasing
         {
             try
             {
-                ProductCache.AddStoreSpecificIds(products);
                 var productDescriptions = await m_RetrieveProductsService.RetrieveProducts(products);
-                ProductCache.Add(productDescriptions);
+
+                ProductsCallback?.OnProductsRetrieved(productDescriptions);
 
                 if (!m_IsTransactionObserverEnabled)
                 {
@@ -125,8 +124,6 @@ namespace UnityEngine.Purchasing
                 {
                     m_Native?.InterceptPromotionalPurchases();
                 }
-
-                ProductsCallback?.OnProductsRetrieved(productDescriptions);
             }
             catch (RetrieveProductsException exception)
             {
@@ -139,13 +136,13 @@ namespace UnityEngine.Purchasing
             m_Native?.FetchExistingPurchases();
         }
 
-        public void SetFetchStorePromotionOrderCallbacks(Action<List<Product>> successCallback, Action errorCallback)
+        public void SetFetchStorePromotionOrderCallbacks(Action<List<Product>> successCallback, Action<string> errorCallback)
         {
             m_FetchStorePromotionOrderError = errorCallback;
             m_FetchStorePromotionOrderSuccess = successCallback;
         }
 
-        public void SetFetchStorePromotionVisibilityCallbacks(Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
+        public void SetFetchStorePromotionVisibilityCallbacks(Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)
         {
             m_FetchStorePromotionVisibilityError = errorCallback;
             m_FetchStorePromotionVisibilitySuccess = successCallback;
@@ -312,9 +309,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnFetchStorePromotionOrderFailed()
+        void OnFetchStorePromotionOrderFailed(string error)
         {
-            m_FetchStorePromotionOrderError?.Invoke();
+            m_FetchStorePromotionOrderError?.Invoke(error);
         }
 
         void OnFetchStorePromotionVisibilitySucceeded(string result)
@@ -332,9 +329,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnFetchStorePromotionVisibilityFailed()
+        void OnFetchStorePromotionVisibilityFailed(string error)
         {
-            m_FetchStorePromotionVisibilityError?.Invoke();
+            m_FetchStorePromotionVisibilityError?.Invoke(error);
         }
 
         [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
@@ -375,13 +372,13 @@ namespace UnityEngine.Purchasing
                     OnFetchStorePromotionOrderSucceeded(payload);
                     break;
                 case "OnFetchStorePromotionOrderFailed":
-                    OnFetchStorePromotionOrderFailed();
+                    OnFetchStorePromotionOrderFailed(payload);
                     break;
                 case "OnFetchStorePromotionVisibilitySucceeded":
                     OnFetchStorePromotionVisibilitySucceeded(payload);
                     break;
                 case "OnFetchStorePromotionVisibilityFailed":
-                    OnFetchStorePromotionVisibilityFailed();
+                    OnFetchStorePromotionVisibilityFailed(payload);
                     break;
                 case "OnTransactionsRestoredSuccess":
                     OnTransactionsRestoredSuccess();

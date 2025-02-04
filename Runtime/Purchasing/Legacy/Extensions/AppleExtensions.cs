@@ -42,7 +42,15 @@ namespace UnityEngine.Purchasing
 
         public void SetApplicationUsername(string applicationUsername)
         {
-            UnityIAPServices.DefaultStore().Apple?.SetApplicationUsername(applicationUsername);
+            try
+            {
+                var accountTokenGuid = new Guid(applicationUsername);
+                UnityIAPServices.DefaultStore().Apple?.SetAppAccountToken(accountTokenGuid);
+            }
+            catch (FormatException)
+            {
+                Debug.LogError($"SetApplicationUsername failed: '{applicationUsername}' is not a valid GUID.");
+            }
         }
 
         public Dictionary<string, string> GetIntroductoryPriceDictionary()
@@ -68,7 +76,11 @@ namespace UnityEngine.Purchasing
 
         public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
         {
-            UnityIAPServices.DefaultProduct().Apple?.FetchStorePromotionVisibility(product, successCallback, errorCallback);
+            void ErrorCallbackWrapper(string _)
+            {
+                errorCallback.Invoke();
+            }
+            UnityIAPServices.DefaultProduct().Apple?.FetchStorePromotionVisibility(product, successCallback, ErrorCallbackWrapper);
         }
 
         public void SetStorePromotionOrder(List<Product> products)
@@ -78,7 +90,11 @@ namespace UnityEngine.Purchasing
 
         public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)
         {
-            UnityIAPServices.DefaultProduct().Apple?.FetchStorePromotionOrder(successCallback, errorCallback);
+            void ErrorCallbackWrapper(string _)
+            {
+                errorCallback.Invoke();
+            }
+            UnityIAPServices.DefaultProduct().Apple?.FetchStorePromotionOrder(successCallback, ErrorCallbackWrapper);
         }
 
         public void PresentCodeRedemptionSheet()

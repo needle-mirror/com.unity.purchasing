@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using Uniject;
-using UnityEngine.Purchasing.Extension;
-using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Services;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.UseCases;
@@ -15,7 +13,7 @@ namespace UnityEngine.Purchasing
     {
         static ProductServiceFactory? s_Instance;
 
-        readonly Dictionary<string?, Func<IStoreWrapper, IProductService>> m_ProductServiceInstantiationByName = new Dictionary<string?, Func<IStoreWrapper, IProductService>>();
+        readonly Dictionary<string?, Func<IStoreWrapper, IProductService>> m_ProductServiceInstantiationByName = new();
 
         internal static ProductServiceFactory Instance()
         {

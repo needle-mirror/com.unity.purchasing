@@ -13,7 +13,6 @@ namespace UnityEngine.Purchasing
     {
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
         IStoreProductsCallback? m_ProductsCallback;
-        IProductCache? m_ProductCache;
 
         [Preserve]
         internal GooglePlayStoreRetrieveProductsService(IGooglePlayStoreService googlePlayStoreService)
@@ -23,13 +22,11 @@ namespace UnityEngine.Purchasing
 
         public void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
         {
-            m_ProductCache?.AddStoreSpecificIds(products);
             m_GooglePlayStoreService.RetrieveProducts(products, OnProductsRetrieved, OnRetrieveProductsFailed);
         }
 
         void OnProductsRetrieved(List<ProductDescription> retrievedProducts)
         {
-            m_ProductCache?.Add(retrievedProducts);
             m_ProductsCallback?.OnProductsRetrieved(retrievedProducts);
         }
 
@@ -56,11 +53,6 @@ namespace UnityEngine.Purchasing
             }
 
             return updatedProducts;
-        }
-
-        public void SetProductCache(IProductCache? productCache)
-        {
-            m_ProductCache = productCache;
         }
 
         public void SetProductsCallback(IStoreProductsCallback productsCallback)
