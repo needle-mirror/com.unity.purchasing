@@ -11,8 +11,9 @@ namespace UnityEngine.Purchasing
         public OwnershipType OwnershipType { get; set; }
         public string StoreName { get; set; }
         public Guid? AppAccountToken { get; set; }
+        public string? jwsRepresentation { get; set; }
 
-        public AppleOrderInfo(string transactionID, string? storeName, IAppleAppReceiptViewer appReceiptViewer, string? originalTransactionID, OwnershipType ownershipType, Guid? appAccountToken)
+        public AppleOrderInfo(string transactionID, string? storeName, IAppleAppReceiptViewer appReceiptViewer, string? originalTransactionID, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
             : base(string.Empty, transactionID, storeName)
         {
             m_ReceiptViewer = appReceiptViewer;
@@ -20,6 +21,7 @@ namespace UnityEngine.Purchasing
             StoreName = storeName ?? string.Empty;
             OwnershipType = ownershipType;
             AppAccountToken = appAccountToken;
+            jwsRepresentation = signatureJws;
         }
     }
 }

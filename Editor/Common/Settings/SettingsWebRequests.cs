@@ -1,14 +1,11 @@
 using System;
 using System.Threading.Tasks;
-using Common.Settings;
 using Unity.Services.Core.Editor;
-using UnityEditor;
-using UnityEditor.Purchasing;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Purchasing;
 
-namespace Editor.Common.Settings
+namespace UnityEditor.Purchasing
 {
     public class SettingsWebRequests
     {

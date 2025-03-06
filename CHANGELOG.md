@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.0.0-pre.5] - 2025-03-06
+### Fixed
+- Apple - Fixed an issue where transactions involving a consumable already purchased in the same session would result in them being finished without invoking the callback set with `IPurchaseServive.AddPendingOrderUpdatedAction`.
+- Fixed an issue where some versions of the Unity Editor compiler were stripping `EmptyAnalyticsAdapter` when Analytics wasn't used.
+- Implemented `jwsRepresentation` in `AppleOrderInfo` to support JWS representation handling. See [Apple StoreKit Documentation](https://developer.apple.com/documentation/storekit/verificationresult/jwsrepresentation-21vgo) for more details.
+
 ## [5.0.0-pre.4] - 2025-02-04
 ### Changed
 - GooglePlay - Billing Library updated to 7.1.1 (was previously 6.2.1). No new feature support was added.

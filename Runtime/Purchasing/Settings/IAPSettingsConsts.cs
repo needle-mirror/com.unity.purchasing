@@ -1,6 +1,6 @@
-namespace Common.Settings
+namespace UnityEngine.Purchasing
 {
-    public static class IapSettingsConsts
+    internal static class IapSettingsConsts
     {
         internal const string StagingPath = "https://staging.services.unity.com";
         internal const string ProductionPath = "https://services.unity.com";

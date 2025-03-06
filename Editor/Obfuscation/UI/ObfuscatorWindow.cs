@@ -1,8 +1,7 @@
 using System;
-using Common.Settings;
-using Editor.Common.Settings;
 using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine;
+using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {

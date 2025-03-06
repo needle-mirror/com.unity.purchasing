@@ -1,11 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using Editor;
-using UnityEditor.Connect;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing

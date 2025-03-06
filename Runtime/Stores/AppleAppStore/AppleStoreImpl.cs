@@ -171,7 +171,7 @@ namespace UnityEngine.Purchasing
             if (productDescription != null)
             {
                 Guid? appAccountToken = null; // passed as null as there is only a promise of a purchase
-                var deferredOrder = GenerateAppleDeferredOrder(productDescription.storeSpecificId, productDescription.transactionId, "", OwnershipType.Undefined, appAccountToken);
+                var deferredOrder = GenerateAppleDeferredOrder(productDescription.storeSpecificId, productDescription.transactionId, "", OwnershipType.Undefined, appAccountToken, null);
                 PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
             }
         }
@@ -236,6 +236,7 @@ namespace UnityEngine.Purchasing
 
                 var ownershipType = OwnershipTypeFromString(purchaseDetails.TryGetString("ownershipType"));
                 var appAccountTokenString = purchaseDetails.TryGetString("appAccountToken");
+                var signatureJws = purchaseDetails.TryGetString("signatureJws");
                 Guid? appAccountToken = null;
                 if (Guid.TryParse(appAccountTokenString, out Guid parsedToken))
                 {
@@ -244,11 +245,11 @@ namespace UnityEngine.Purchasing
 
                 if (isPending)
                 {
-                    orders.Add(GenerateApplePendingOrder(transaction.Key, transactionId, originalTransactionId, ownershipType, appAccountToken));
+                    orders.Add(GenerateApplePendingOrder(transaction.Key, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
                 }
                 else
                 {
-                    orders.Add(GenerateAppleConfirmedOrder(transaction.Key, transactionId, originalTransactionId, ownershipType, appAccountToken));
+                    orders.Add(GenerateAppleConfirmedOrder(transaction.Key, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
                 }
             }
 
@@ -430,6 +431,7 @@ namespace UnityEngine.Purchasing
             var expirationDate = purchaseDetails.TryGetString("expirationDate");
             var ownershipType = OwnershipTypeFromString(purchaseDetails.TryGetString("ownershipType"));
             var appAccountTokenString = purchaseDetails.TryGetString("appAccountToken");
+            var signatureJws = purchaseDetails.TryGetString("signatureJws");
 
             Guid? appAccountToken = null;
             if (Guid.TryParse(appAccountTokenString, out Guid parsedToken))
@@ -439,7 +441,7 @@ namespace UnityEngine.Purchasing
 
             if (IsValidPurchaseState(expirationDate, productId))
             {
-                ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken);
+                ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
             }
             else
             {
@@ -447,56 +449,60 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken)
+        void ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws)
         {
             if (!m_TransactionLog.HasRecordOf(transactionId))
             {
-                ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken);
+                ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
             }
             else
             {
-                ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken);
+                ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
             }
         }
 
-        void ProcessNewPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken)
+        void ProcessNewPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws)
         {
-            var pendingOrder = GenerateApplePendingOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken);
+            var pendingOrder = GenerateApplePendingOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws);
             PurchaseCallback?.OnPurchaseSucceeded(pendingOrder);
             AddSubscriptionDeduplicationData(id, expirationDate);
         }
 
-        void ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken)
+        void ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
         {
-            var confirmedOrder = GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken);
+            var confirmedOrder = GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws);
             EnsureConfirmedOrderIsFinished(confirmedOrder);
             AddSubscriptionDeduplicationData(id, expirationDate);
         }
 
-        static void AddSubscriptionDeduplicationData(string productId, string expirationDate)
+        void AddSubscriptionDeduplicationData(string productId, string expirationDate)
         {
-            s_SubscriptionDeduplicationData.Add(productId + "|" + expirationDate);
+            var product = FindProductById(productId);
+            if (product.definition.type == ProductType.Subscription)
+            {
+                s_SubscriptionDeduplicationData.Add(productId + "|" + expirationDate);
+            }
         }
 
-        DeferredOrder GenerateAppleDeferredOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken)
+        DeferredOrder GenerateAppleDeferredOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new DeferredOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, "", ownershipType, appAccountToken));
+            return new DeferredOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, "", ownershipType, appAccountToken, signatureJws));
         }
 
-        PendingOrder GenerateApplePendingOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken)
+        PendingOrder GenerateApplePendingOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new PendingOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, originalTransactionId, ownershipType, appAccountToken));
+            return new PendingOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
         }
 
-        ConfirmedOrder GenerateAppleConfirmedOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken)
+        ConfirmedOrder GenerateAppleConfirmedOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new ConfirmedOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, originalTransactionId, ownershipType, appAccountToken));
+            return new ConfirmedOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
         }
 
         void EnsureConfirmedOrderIsFinished(ConfirmedOrder confirmedOrder)
@@ -505,9 +511,15 @@ namespace UnityEngine.Purchasing
             base.FinishTransaction(productDefinition, confirmedOrder.Info.TransactionID);
         }
 
-        static bool IsValidPurchaseState(string expirationDate, string productId)
+        bool IsValidPurchaseState(string expirationDate, string productId)
         {
-            return !s_SubscriptionDeduplicationData.Contains(productId + "|" + expirationDate);
+            var product = FindProductById(productId);
+            if (product.definition.type == ProductType.Subscription)
+            {
+                return !s_SubscriptionDeduplicationData.Contains(productId + "|" + expirationDate);
+            }
+
+            return true;
         }
     }
 }

@@ -1,7 +1,6 @@
 using System;
-using Newtonsoft.Json;
 
-namespace Common.Settings
+namespace UnityEngine.Purchasing
 {
     [Serializable]
     public class GoogleIapSettings

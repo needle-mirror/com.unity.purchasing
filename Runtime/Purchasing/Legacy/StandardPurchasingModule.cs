@@ -23,7 +23,7 @@ namespace UnityEngine.Purchasing
             return instance;
         }
 
-        internal readonly string k_Version = "5.0.0-pre.4"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "5.0.0-pre.5"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
