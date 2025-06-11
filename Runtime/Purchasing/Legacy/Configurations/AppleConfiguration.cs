@@ -12,16 +12,24 @@ namespace UnityEngine.Purchasing
 
         public void SetApplePromotionalPurchaseInterceptorCallback(Action<Product> callback)
         {
-            UnityIAPServices.DefaultPurchase().Apple?.SetPromotionalPurchaseInterceptorCallback(callback);
+            var appleStoreExtendedPurchaseService = UnityIAPServices.DefaultPurchase().Apple;
+            if (appleStoreExtendedPurchaseService != null)
+            {
+                appleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += callback;
+            }
         }
 
         public void SetEntitlementsRevokedListener(Action<List<Product>> callback)
         {
-            UnityIAPServices.DefaultPurchase().Apple?.AddEntitlementsRevokedAction(productIds =>
+            var appleStoreExtendedPurchaseService = UnityIAPServices.DefaultPurchase().Apple;
+            if (appleStoreExtendedPurchaseService != null)
             {
-                var products = UnityIAPServices.DefaultProduct().GetProducts().Where(product => productIds.Contains(product.definition.storeSpecificId));
-                callback?.Invoke((List<Product>)products);
-            });
+                appleStoreExtendedPurchaseService.OnEntitlementRevoked += productIds =>
+                {
+                    var products = UnityIAPServices.DefaultProduct().GetProducts().Where(product => productIds.Contains(product.definition.storeSpecificId));
+                    callback?.Invoke((List<Product>)products);
+                };
+            }
         }
     }
 }

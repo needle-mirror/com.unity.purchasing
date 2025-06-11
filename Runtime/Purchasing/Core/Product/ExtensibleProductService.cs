@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,18 +26,14 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Apple Specific Product Extensions
         /// </summary>
-        public virtual IAppleStoreExtendedProductService Apple => m_BaseInternalProductService.Apple;
+        public virtual IAppleStoreExtendedProductService? Apple => m_BaseInternalProductService.Apple;
 
-        /// <summary>
-        /// Amazon Specific Product Extensions
-        /// </summary>
-        public virtual IAmazonAppsExtendedProductService Amazon => m_BaseInternalProductService.Amazon;
         public virtual void FetchProductsWithNoRetries(List<ProductDefinition> productDefinitions)
         {
             m_BaseInternalProductService.FetchProductsWithNoRetries(productDefinitions);
         }
 
-        public virtual void FetchProducts(List<ProductDefinition> productDefinitions, IRetryPolicy retryPolicy)
+        public virtual void FetchProducts(List<ProductDefinition> productDefinitions, IRetryPolicy? retryPolicy = null)
         {
             m_BaseInternalProductService.FetchProducts(productDefinitions, retryPolicy);
         }
@@ -46,24 +43,16 @@ namespace UnityEngine.Purchasing
             return m_BaseInternalProductService.GetProducts();
         }
 
-        public virtual void AddProductsUpdatedAction(Action<List<Product>> updatedAction)
+        public event Action<List<Product>>? OnProductsFetched
         {
-            m_BaseInternalProductService.AddProductsUpdatedAction(updatedAction);
+            add => m_BaseInternalProductService.OnProductsFetched += value;
+            remove => m_BaseInternalProductService.OnProductsFetched -= value;
         }
 
-        public virtual void AddProductsFetchFailedAction(Action<ProductFetchFailed> failedAction)
+        public event Action<ProductFetchFailed>? OnProductsFetchFailed
         {
-            m_BaseInternalProductService.AddProductsFetchFailedAction(failedAction);
-        }
-
-        public virtual void RemoveProductsUpdatedAction(Action<List<Product>> updatedAction)
-        {
-            m_BaseInternalProductService.RemoveProductsUpdatedAction(updatedAction);
-        }
-
-        public virtual void RemoveProductsFetchFailedAction(Action<ProductFetchFailed> failedAction)
-        {
-            m_BaseInternalProductService.RemoveProductsFetchFailedAction(failedAction);
+            add => m_BaseInternalProductService.OnProductsFetchFailed += value;
+            remove => m_BaseInternalProductService.OnProductsFetchFailed -= value;
         }
     }
 }

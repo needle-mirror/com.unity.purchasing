@@ -13,10 +13,10 @@ namespace UnityEngine.Purchasing
             m_GooglePlayStoreService = googlePlayStoreService;
         }
 
-        public void ChangeSubscription(ProductDefinition product, Product oldProduct,
+        public void ChangeSubscription(ProductDefinition product, Order currentOrder,
             GooglePlayReplacementMode? desiredReplacementMode)
         {
-            m_GooglePlayStoreService.Purchase(product, oldProduct, desiredReplacementMode);
+            m_GooglePlayStoreService.Purchase(product, currentOrder, desiredReplacementMode);
         }
     }
 }

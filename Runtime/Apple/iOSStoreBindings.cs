@@ -64,6 +64,10 @@ namespace UnityEngine.Purchasing
         [DllImport("__Internal")]
         private static extern void unityPurchasing_PresentCodeRedemptionSheet();
 
+        // TODO: IAP-3929
+        [DllImport("__Internal")]
+        private static extern void unityPurchasing_RefreshAppReceipt();
+
         public void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback)
         {
             unityPurchasing_SetNativeCallback(AsyncCallback);
@@ -109,7 +113,7 @@ namespace UnityEngine.Purchasing
             unityPurchasing_AddTransactionObserver();
         }
 
-        public void RetrieveProducts(string json)
+        public void FetchProducts(string json)
         {
             unityPurchasing_FetchProducts(json);
         }
@@ -177,6 +181,12 @@ namespace UnityEngine.Purchasing
         public void Purchase(string productJson, string optionsJson, StorefrontChangeCallback callback)
         {
             unityPurchasing_PurchaseProduct(productJson, optionsJson, callback);
+        }
+
+        // TODO: IAP-3929
+        public void RefreshAppReceipt()
+        {
+            unityPurchasing_RefreshAppReceipt();
         }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 namespace UnityEngine.Purchasing
 {
@@ -6,15 +7,15 @@ namespace UnityEngine.Purchasing
     {
         public void SetServiceDisconnectAtInitializeListener(Action action)
         {
-            UnityIAPServices.Store(GooglePlay.Name).AddOnStoreDisconnectedAction(_ =>
+            UnityIAPServices.Store(GooglePlay.Name).OnStoreDisconnected += _ =>
             {
                 action?.Invoke();
-            });
+            };
         }
 
         public void SetQueryProductDetailsFailedListener(Action<int> action)
         {
-            UnityIAPServices.Product(GooglePlay.Name).AddProductsFetchFailedAction(_ =>
+            UnityIAPServices.Product(GooglePlay.Name).OnProductsFetchFailed += (_ =>
             {
                 action.Invoke(0);
             });
@@ -22,12 +23,22 @@ namespace UnityEngine.Purchasing
 
         public void SetDeferredPurchaseListener(Action<Product> action)
         {
-            UnityIAPServices.Purchase(GooglePlay.Name).Google?.SetDeferredPurchaseListener(action);
+            UnityIAPServices.Purchase(GooglePlay.Name).OnPurchaseDeferred += order =>
+            {
+                action.Invoke(order.CartOrdered.Items().FirstOrDefault()?.Product);
+            };
         }
 
         public void SetDeferredProrationUpgradeDowngradeSubscriptionListener(Action<Product> action)
         {
-            UnityIAPServices.Purchase(GooglePlay.Name).Google?.SetDeferredProrationUpgradeDowngradeSubscriptionListener(action);
+            var googlePlayStoreExtendedPurchaseService = UnityIAPServices.Purchase(GooglePlay.Name).Google;
+            if (googlePlayStoreExtendedPurchaseService != null)
+            {
+                googlePlayStoreExtendedPurchaseService.OnDeferredPaymentUntilRenewalDate += order =>
+                {
+                    action.Invoke(order.SubscriptionOrdered);
+                };
+            }
         }
 
         public void SetObfuscatedAccountId(string accountId)

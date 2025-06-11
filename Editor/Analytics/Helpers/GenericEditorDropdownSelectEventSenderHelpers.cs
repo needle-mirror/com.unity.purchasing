@@ -22,6 +22,11 @@ namespace UnityEditor.Purchasing
             BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventTools.k_ToolCatalog, EventUINames.k_UINameTranslationLocale, value);
         }
 
+        internal static void SendCatalogSetApplePriceTierEvent(string value)
+        {
+            BuildAndSendEvent(EventComponents.k_ComponentCodeless, EventTools.k_ToolCatalog, EventUINames.k_UINameApplePriceTier, value);
+        }
+
         static void BuildAndSendEvent(string component, string tool, string name, string value)
         {
             var newEvent = new GenericEditorSelectDropdownEvent(component, tool, name, value);

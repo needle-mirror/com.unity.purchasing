@@ -1,7 +1,7 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
-using System.Threading;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -35,10 +35,24 @@ namespace UnityEngine.Purchasing
             m_ConfirmCallback = confirmCallback;
         }
 
-        public void FinishTransaction(ProductDefinition? product, string? purchaseToken)
+        public async void FinishTransaction(ProductDefinition? product, string purchaseToken)
         {
-            m_GooglePlayStoreService.FinishTransaction(product, purchaseToken,
+            try
+            {
+                await m_GooglePlayStoreService.FinishTransaction(product, purchaseToken,
                     (billingResult, googlePurchase) => HandleFinishTransaction(product, billingResult, googlePurchase));
+            }
+            catch (Exception e)
+            {
+                SendTransactionFailedCallback(
+                    new PurchaseFailureDescription(
+                        m_ProductCache?.FindOrDefault(product?.storeSpecificId) ??
+                        Product.CreateUnknownProduct(product?.storeSpecificId),
+                        PurchaseFailureReason.Unknown,
+                        e.Message
+                    ), purchaseToken
+                );
+            }
 
         }
 
@@ -71,10 +85,9 @@ namespace UnityEngine.Purchasing
             }
         }
 
-
-        public void SendTransactionFailedCallback(PurchaseFailureDescription purchaseFailureDescription, string? purchaseToken)
+        void SendTransactionFailedCallback(PurchaseFailureDescription purchaseFailureDescription, string? purchaseToken)
         {
-            m_ConfirmCallback?.OnConfirmOrderFailed(purchaseFailureDescription.ConvertToFailedOrder(), purchaseToken);
+            m_ConfirmCallback?.OnConfirmOrderFailed(purchaseFailureDescription.ConvertToFailedOrder(purchaseToken));
         }
 
         void CallPurchaseSucceededUpdateReceipt(IGooglePurchase googlePurchase)

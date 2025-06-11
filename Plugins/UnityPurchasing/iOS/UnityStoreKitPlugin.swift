@@ -125,6 +125,14 @@ func unityPurchasing_PresentCodeRedemptionSheet() {
 }
 
 @available(iOS 15.0, *)
+@_cdecl("unityPurchasing_RefreshAppReceipt")
+func unityPurchasing_RefreshAppReceipt() {
+    Task.detached(priority: .background, operation: {
+        await StoreKitManager.instance.refreshAppReceipt()
+    })
+}
+
+@available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FinishTransaction")
 func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar>, logFinishTransaction: Bool) {
     if let transactionIdUInt64 = UInt64(String(cString: transactionId))

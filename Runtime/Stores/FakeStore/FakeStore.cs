@@ -6,35 +6,13 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-    /// <summary>
-    /// The various kinds of Fake Store UI presentations.
-    /// Requires UIFakeStore variant of FakeStore to function.
-    /// </summary>
-    public enum FakeStoreUIMode
-    {
-        /// <summary>
-        /// FakeStore by default displays no dialogs.
-        /// </summary>
-        Default,
-
-        /// <summary>
-        /// Simple dialog is shown when Purchasing.
-        /// </summary>
-        StandardUser,
-
-        /// <summary>
-        /// Dialogs with failure reason code selection when
-        /// Initializing/Retrieving Products and when Purchasing.
-        /// </summary>
-        DeveloperUser
-    }
 
     internal class FakeStore : JsonStore, INativeStore
     {
         protected enum DialogType
         {
             Purchase,
-            RetrieveProducts,
+            FetchProducts,
         }
 
         public const string Name = "fake";
@@ -57,15 +35,15 @@ namespace UnityEngine.Purchasing
         }
 
         // INativeStore
-        public void RetrieveProducts(string json)
+        public void FetchProducts(string json)
         {
             var jsonList = (List<object>)MiniJson.JsonDecode(json);
             var productDefinitions = jsonList.DecodeJSON(FakeAppStore.Name);
-            StoreRetrieveProducts(new ReadOnlyCollection<ProductDefinition>(productDefinitions.ToList()));
+            StoreFetchProducts(new ReadOnlyCollection<ProductDefinition>(productDefinitions.ToList()));
         }
 
         // This is now being used by the INativeStore implementation
-        public void StoreRetrieveProducts(ReadOnlyCollection<ProductDefinition> productDefinitions)
+        public void StoreFetchProducts(ReadOnlyCollection<ProductDefinition> productDefinitions)
         {
             var products = new List<ProductDescription>();
             foreach (var product in productDefinitions)
@@ -76,23 +54,29 @@ namespace UnityEngine.Purchasing
                 }
             }
 
-            void handleAllowInitializeOrRetrieveProducts(bool allow, ProductFetchFailureDescription failureReason)
+            void handleAllowInitializeOrFetchProducts(bool allow, ProductFetchFailureReason failureReason)
             {
                 if (allow)
                 {
-                    ProductsCallback?.OnProductsRetrieved(products);
+                    ProductsCallback?.OnProductsFetched(products);
                 }
                 else
                 {
-                    ProductsCallback?.OnProductsRetrieveFailed(failureReason);
+                    ProductsCallback?.OnProductsFetchFailed(
+                        new ProductFetchFailureDescription(
+                            failureReason,
+                            "Fake store testing: failed to fetch products."
+                            )
+                        );
                 }
             }
 
-            // To mimic typical store behavior, only display RetrieveProducts dialog for developers
-            if (!(UIMode == FakeStoreUIMode.DeveloperUser &&
-                StartUI<ProductFetchFailureDescription>(productDefinitions, DialogType.RetrieveProducts, handleAllowInitializeOrRetrieveProducts)))
+            // To mimic typical store behavior, only display FetchProducts dialog for developers
+            var showingFetchProductDialog = (UIMode == FakeStoreUIMode.DeveloperUser) &&
+                                            StartUI<ProductFetchFailureReason>(productDefinitions, DialogType.FetchProducts, handleAllowInitializeOrFetchProducts);
+            if (!showingFetchProductDialog)
             {
-                ProductsCallback?.OnProductsRetrieved(products);
+                ProductsCallback?.OnProductsFetched(products);
             }
         }
 
@@ -197,7 +181,7 @@ namespace UnityEngine.Purchasing
             var entitled = CheckIfProductEntitled(definition);
 
             var entitlementStatus = entitled ? EntitlementStatus.FullyEntitled : EntitlementStatus.NotEntitled;
-            EntitlementCallback?.OnCheckEntitlementSucceeded(definition, entitlementStatus);
+            EntitlementCallback?.OnCheckEntitlement(definition, entitlementStatus);
 
             return entitled;
         }
@@ -229,8 +213,9 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Implemented by UIFakeStore derived class
         /// </summary>
+        /// <typeparam name="T">An enum of possible dropdown items.</typeparam>
         /// <returns><c>true</c>, if UI was started, <c>false</c> otherwise.</returns>
-        protected virtual bool StartUI<T>(object model, DialogType dialogType, Action<bool, T> callback)
+        protected virtual bool StartUI<T>(object model, DialogType dialogType, Action<bool, T> callback) where T : Enum
         {
             return false;
         }

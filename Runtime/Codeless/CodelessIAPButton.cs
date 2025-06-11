@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Linq;
 using UnityEngine.Events;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
@@ -65,6 +66,12 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Serializable]
         public class OnOrderDeferredEvent : UnityEvent<DeferredOrder> { }
+
+        [Serializable, Obsolete]
+        public class OnPurchaseCompletedLegacyEvent : UnityEvent<Product> { }
+
+        [Serializable, Obsolete]
+        public class OnPurchaseFailedLegacyEvent : UnityEvent<Product, PurchaseFailureDescription> { }
 
         /// <summary>
         /// Which product identifier to represent. Note this is not a store-specific identifier.
@@ -132,6 +139,17 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Tooltip("Event fired after the payment of a purchase was delayed or postponed for this product.")]
         public OnOrderDeferredEvent? onOrderDeferred;
+
+        [Header("Obsolete Events (for backward compatibility only)")]
+        [FormerlySerializedAs("onPurchaseComplete")]
+        [Tooltip("Event fired after a successful purchase of this product.")]
+        [Obsolete]
+        public OnPurchaseCompletedLegacyEvent? onPurchaseCompleteLegacy;
+
+        [FormerlySerializedAs("onPurchaseFailed")]
+        [Tooltip("Event fired after failing to purchase an order.")]
+        [Obsolete]
+        public OnPurchaseFailedLegacyEvent? onPurchaseFailedLegacy;
 
         [Tooltip("Button that triggers purchase.")]
         public Button? button;
@@ -258,6 +276,11 @@ namespace UnityEngine.Purchasing
         public void OnOrderPending(PendingOrder order)
         {
             onOrderPending?.Invoke(order);
+            var cartItem = order.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == productId);
+            if (cartItem != null)
+            {
+                onPurchaseCompleteLegacy?.Invoke(cartItem.Product);
+            }
         }
 
         /// <summary>
@@ -276,6 +299,11 @@ namespace UnityEngine.Purchasing
         public void OnPurchaseFailed(FailedOrder failedOrder)
         {
             onPurchaseFailed?.Invoke(failedOrder);
+            var cartItem = failedOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == productId);
+            if (cartItem != null)
+            {
+                onPurchaseFailedLegacy?.Invoke(cartItem.Product, new PurchaseFailureDescription(cartItem, failedOrder.FailureReason, failedOrder.Details));
+            }
         }
 
         /// <summary>

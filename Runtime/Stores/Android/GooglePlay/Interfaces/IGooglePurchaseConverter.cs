@@ -5,7 +5,7 @@ using UnityEngine.Purchasing.Interfaces;
 
 namespace UnityEngine.Purchasing
 {
-    internal interface IGooglePurchaseConverter
+    interface IGooglePurchaseConverter
     {
         Order CreateOrderFromPurchase(IGooglePurchase purchase, IProductCache? productCache);
         ICart CreateCartFromPurchase(IGooglePurchase purchase, IProductCache? productCache);

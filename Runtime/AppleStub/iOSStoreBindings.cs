@@ -33,7 +33,7 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
-        public void RetrieveProducts(string json)
+        public void FetchProducts(string json)
         {
             throw new NotImplementedException();
         }
@@ -93,6 +93,12 @@ namespace UnityEngine.Purchasing
         }
 
         public void DeallocateMemory(IntPtr pointer)
+        {
+            throw new NotImplementedException();
+        }
+
+        // TODO: IAP-3929
+        public void RefreshAppReceipt()
         {
             throw new NotImplementedException();
         }

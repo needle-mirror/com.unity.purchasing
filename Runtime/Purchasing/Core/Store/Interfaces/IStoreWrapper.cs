@@ -20,7 +20,7 @@ namespace UnityEngine.Purchasing
         /// Gets the name of the store.
         /// </summary>
         /// <returns> The store's name </returns>
-        string? name { get; }
+        string name { get; }
 
         /// <summary>
         /// Gets the connection state of the store

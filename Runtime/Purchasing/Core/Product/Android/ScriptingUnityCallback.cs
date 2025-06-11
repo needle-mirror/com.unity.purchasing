@@ -18,14 +18,14 @@ namespace UnityEngine.Purchasing
             this.util = util;
         }
 
-        public void OnProductsRetrieved(string json)
+        public void OnProductsFetched(string json)
         {
-            util.RunOnMainThread(() => forwardTo.OnProductsRetrieved(json));
+            util.RunOnMainThread(() => forwardTo.OnProductsFetched(json));
         }
 
-        public void OnProductsRetrieveFailed(string jsonFailureDescription)
+        public void OnProductsFetchFailed(string jsonFailureDescription)
         {
-            util.RunOnMainThread(() => forwardTo.OnProductsRetrieveFailed(jsonFailureDescription));
+            util.RunOnMainThread(() => forwardTo.OnProductsFetchFailed(jsonFailureDescription));
         }
 
         public void OnPurchasesRetrievalFailed(string jsonFailureDescription)

@@ -18,11 +18,6 @@ namespace UnityEngine.Purchasing
         GooglePlay, //<= Map to AndroidStore. First Android store. In AppStoreMeta.
 
         /// <summary>
-        /// Amazon App Store.
-        /// </summary>
-        AmazonAppStore, // Last Android store. Also in AppStoreMeta.
-
-        /// <summary>
         /// MacOS App Store.
         /// </summary>
         MacAppStore,
@@ -53,6 +48,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The last Android App Store.
         /// </summary>
-        AndroidStoreEnd = AppStore.AmazonAppStore
+        AndroidStoreEnd = AppStore.GooglePlay
+
     }
 }

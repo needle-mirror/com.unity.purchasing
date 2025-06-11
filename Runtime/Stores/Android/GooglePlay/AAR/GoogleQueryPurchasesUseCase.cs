@@ -44,7 +44,7 @@ namespace UnityEngine.Purchasing
         public async Task<IGooglePurchase?> GetPurchaseByToken(string? purchaseToken)
         {
             var purchases = await QueryPurchases();
-            var purchase = purchases.NonNull().First(purchase => purchase.purchaseToken == purchaseToken);
+            var purchase = purchases.NonNull().FirstOrDefault(purchase => purchase.purchaseToken == purchaseToken);
 
             return purchase;
         }

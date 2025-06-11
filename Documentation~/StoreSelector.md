@@ -26,5 +26,5 @@ This field is not modifiable shows the full list of supported stores for every o
 ## Using API
 In the code there is an option to change the targeted store. The call looks like this:
 ````
-UnityPurchasingEditor.TargetAndroidStore(AndroidStore.AmazonAppStore)
+UnityPurchasingEditor.TargetAndroidStore(AndroidStore.GooglePlay)
 ````

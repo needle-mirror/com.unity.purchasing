@@ -12,6 +12,17 @@ Previously initializing IAP would connect to the store, fetch products and purch
 
 Now for v5, we no longer require initializing. Connecting to the store, fetching products and fetching purchasing can all be done at will and asynchronously. To learn more see pages under the [Set up and integrating Unity IAP](Overview.md) section
 
+### Note on ConfigurationBuilder ###
+ConfigurationBuilder.Instance is now a singleton.
+This improves internal persistence but may cause "Same key" errors if UnityPurchasing.Initialize() is called more than once.
+If your project requires multiple initializations, you can instantiate a new ConfigurationBuilder manually:
+```csharp
+var builder = new ConfigurationBuilder(new PurchasingFactory());
+```
+Note: This constructor may not be exposed in future versions, so relying on this behavior is not recommended long term.
+Please evaluate whether multiple initializations are necessary in your use case.
+We recommend using a single initialization per session whenever possible.
+
 ### Extension / Configuration ###
 Previously extensions and configuration for stores were a separate flow and classes.
 

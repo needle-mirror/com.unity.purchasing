@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing.Models
     /// Values from Java Class BillingResponseCode
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingClient.BillingResponseCode">See more</a>
     /// </summary>
-    public enum GoogleBillingResponseCode
+    enum GoogleBillingResponseCode
     {
         ServiceTimeout = -3,
         FeatureNotSupported = -2,

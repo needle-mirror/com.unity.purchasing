@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
+using UnityEditor.Connect;
 using UnityEngine;
 using UnityEngine.Purchasing;
 
@@ -11,11 +14,12 @@ namespace UnityEditor.Purchasing
     /// </summary>
     public class ProductCatalogEditor : EditorWindow
     {
-        static readonly string[] kStoreKeys =
+        private const bool kValidateDebugLog = false;
+
+        private static readonly string[] kStoreKeys =
         {
             AppleAppStore.Name,
             GooglePlay.Name,
-            AmazonApps.Name,
             MacAppStore.Name
         };
 
@@ -36,13 +40,15 @@ namespace UnityEditor.Purchasing
             GameServicesEventSenderHelpers.SendTopMenuIapCatalogEvent();
         }
 
-        static readonly GUIContent windowTitle = new GUIContent("IAP Catalog");
-        static readonly List<ProductCatalogItemEditor> productEditors = new List<ProductCatalogItemEditor>();
-        static readonly List<ProductCatalogItemEditor> toRemove = new List<ProductCatalogItemEditor>();
+        private static readonly GUIContent windowTitle = new GUIContent("IAP Catalog");
+        private static readonly List<ProductCatalogItemEditor> productEditors = new List<ProductCatalogItemEditor>();
+        private static readonly List<ProductCatalogItemEditor> toRemove = new List<ProductCatalogItemEditor>();
+        private Rect exportButtonRect;
+        private ExporterValidationResults validation;
 
-        DateTime lastChanged;
-        bool dirty;
-        readonly TimeSpan kSaveDelay = new TimeSpan(0, 0, 0, 0, 500); // 500 milliseconds
+        private DateTime lastChanged;
+        private bool dirty;
+        private readonly TimeSpan kSaveDelay = new TimeSpan(0, 0, 0, 0, 500); // 500 milliseconds
 
         /// <summary>
         /// Since we are changing the product catalog's location, it may be necessary to migrate existing product
@@ -87,6 +93,25 @@ namespace UnityEditor.Purchasing
         /// </summary>
         public ProductCatalog Catalog { get; private set; }
 
+        /// <summary>
+        /// Sets the results of the validation of catalog items upon export.
+        /// </summary>
+        /// <param name="catalogResults"> Validation results of the exported catalog </param>
+        /// <param name="itemResults"> List of validation results of the exported items </param>
+        public void SetCatalogValidationResults(ExporterValidationResults catalogResults,
+            List<ExporterValidationResults> itemResults)
+        {
+            validation = catalogResults;
+
+            if (productEditors.Count == itemResults.Count)
+            {
+                for (var i = 0; i < productEditors.Count; ++i)
+                {
+                    productEditors[i].SetValidationResults(itemResults[i]);
+                }
+            }
+        }
+
         void Awake()
         {
             Catalog = ProductCatalog.LoadDefaultCatalog();
@@ -107,7 +132,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             if (dirty)
             {
@@ -115,7 +140,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void Update()
+        private void Update()
         {
             if (dirty && DateTime.Now.Subtract(lastChanged) > kSaveDelay)
             {
@@ -123,13 +148,13 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void SetDirtyFlag()
+        private void SetDirtyFlag()
         {
             lastChanged = DateTime.Now;
             dirty = true;
         }
 
-        void Save()
+        private void Save()
         {
             dirty = false;
             File.WriteAllText(ProductCatalog.kCatalogPath, ProductCatalog.Serialize(Catalog));
@@ -137,13 +162,14 @@ namespace UnityEditor.Purchasing
             AssetDatabase.ImportAsset(ProductCatalog.kCatalogPath);
         }
 
-        Vector2 scrollPosition;
+        private Vector2 scrollPosition = new Vector2();
 
         void OnGUI()
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, false, false, GUI.skin.horizontalScrollbar,
                 GUI.skin.verticalScrollbar, GUI.skin.box);
 
+            ShowValidationResultsGUI(validation);
             ValidateProductIds();
 
             EditorGUI.BeginChangeCheck();
@@ -180,10 +206,25 @@ namespace UnityEditor.Purchasing
             var exportBox = EditorGUILayout.BeginVertical();
             EditorGUIUtility.labelWidth = defaultLabelWidth;
 
+            EditorGUILayout.LabelField("Catalog Export");
+
+            Catalog.appleSKU = ShowEditTextFieldGuiAndGetValue("appleSKU", "Apple SKU:", Catalog.appleSKU);
+            Catalog.appleTeamID = ShowEditTextFieldGuiAndGetValue("appleTeamID", "Apple Team ID:", Catalog.appleTeamID);
+
             if (EditorGUI.EndChangeCheck())
             {
                 CheckForDuplicateIDs();
                 SetDirtyFlag();
+            }
+
+            exportButtonRect = new Rect(exportBox.xMax - ProductCatalogExportWindow.kWidth,
+                exportBox.yMin,
+                ProductCatalogExportWindow.kWidth,
+                EditorGUIUtility.singleLineHeight);
+            if (GUI.Button(exportButtonRect,
+                    new GUIContent("App Store Export", "Export products for bulk import into app store tools.")))
+            {
+                PopupWindow.Show(exportButtonRect, new ProductCatalogExportWindow(this));
             }
 
             EditorGUILayout.EndVertical();
@@ -201,7 +242,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void ShowAndProcessCodelessAutoInitToggleGuis()
+        private void ShowAndProcessCodelessAutoInitToggleGuis()
         {
             EditorGUILayout.Space();
 
@@ -214,17 +255,17 @@ namespace UnityEditor.Purchasing
             EditorGUILayout.Space();
         }
 
-        void ShowAndProcessIapAutoInitToggleGui()
+        private void ShowAndProcessIapAutoInitToggleGui()
         {
             var newValue = EditorGUILayout.Toggle(
-                new GUIContent("Automatically initialize UnityPurchasing (recommended)",
+                new GUIContent("Automatically initialize UnityIAPServices (recommended)",
                     "Automatically start Unity IAP if there are any products defined in this catalog. Uncheck this if you plan to initialize Unity IAP manually in your code."),
                 Catalog.enableCodelessAutoInitialization);
 
             UpdateIapAutoInitValue(newValue);
         }
 
-        void UpdateIapAutoInitValue(bool newValue)
+        private void UpdateIapAutoInitValue(bool newValue)
         {
             if (newValue != Catalog.enableCodelessAutoInitialization)
             {
@@ -234,7 +275,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void ShowAndProcessUgsAutoInitToggleGui()
+        private void ShowAndProcessUgsAutoInitToggleGui()
         {
             var newValue = EditorGUILayout.Toggle(new GUIContent(
                     "Automatically initialize Unity Gaming Services",
@@ -246,7 +287,7 @@ namespace UnityEditor.Purchasing
             UpdateUgsAutoInitValue(newValue);
         }
 
-        void UpdateUgsAutoInitValue(bool newValue)
+        private void UpdateUgsAutoInitValue(bool newValue)
         {
             if (newValue != Catalog.enableUnityGamingServicesAutoInitialization)
             {
@@ -256,12 +297,26 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        static bool IsNullOrWhiteSpace(string value)
+        string ShowEditTextFieldGuiAndGetValue(string fieldName, string label, string oldText)
+        {
+            BeginErrorBlock(validation, fieldName);
+            var newText = EditorGUILayout.TextField(label, oldText);
+            EndErrorBlock(validation, fieldName);
+
+            if (newText != oldText)
+            {
+                GenericEditorFieldEditEventSenderHelpers.SendCatalogEditEvent(fieldName);
+            }
+
+            return newText;
+        }
+
+        private static bool IsNullOrWhiteSpace(string value)
         {
             return string.IsNullOrEmpty(value?.Trim());
         }
 
-        void ValidateProductIds()
+        private void ValidateProductIds()
         {
             foreach (var productEditor in productEditors)
             {
@@ -272,7 +327,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        void AddNewProduct()
+        private void AddNewProduct()
         {
             // go through the previously created products and check if any of them has an empty id, thus we prevent the
             // creation of an empty product if the id is not filled.
@@ -299,7 +354,7 @@ namespace UnityEditor.Purchasing
             Catalog.Add(newEditor.Item);
         }
 
-        void CheckForDuplicateIDs()
+        private void CheckForDuplicateIDs()
         {
             var ids = new HashSet<string>();
             var duplicates = new HashSet<string>();
@@ -319,7 +374,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        static void ShowValidationResultsGUI(ExporterValidationResults results)
+        private static void ShowValidationResultsGUI(ExporterValidationResults results)
         {
             if (results != null)
             {
@@ -344,12 +399,12 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        static void BeginErrorBlock()
+        private static void BeginErrorBlock(ExporterValidationResults validation, string fieldName)
         {
             EditorGUI.BeginChangeCheck();
         }
 
-        static void EndErrorBlock(ExporterValidationResults validation, string fieldName)
+        private static void EndErrorBlock(ExporterValidationResults validation, string fieldName)
         {
             if (EditorGUI.EndChangeCheck() && validation != null)
             {
@@ -365,32 +420,47 @@ namespace UnityEditor.Purchasing
         }
 
         /// <summary>
+        /// Exports the Catalog to a file for a particular store, or erases an existing exported file.
+        /// </summary>
+        /// <param name="storeName"> The name of the store to be exported.</param>
+        /// <param name="folder"> The full path of the export file, including the file name.</param>
+        /// <param name="eraseExport"> If true, it will just erase the export file and do nothing else.</param>
+        /// <returns>Whether or not the export was succesful. Always returns false if eraseExport is true.</returns>
+        public static bool Export(string storeName, string folder, bool eraseExport)
+        {
+            var editor = CreateInstance(typeof(ProductCatalogEditor)) as ProductCatalogEditor;
+            return new ProductCatalogExportWindow(editor).Export(storeName, folder, eraseExport);
+        }
+
+        /// <summary>
         /// Inner class for displaying and editing the contents of a single entry in the ProductCatalog.
         /// </summary>
         public class ProductCatalogItemEditor
         {
-            const float k_DuplicateIDFieldWidth = 90f;
+            private const float k_DuplicateIDFieldWidth = 90f;
 
             /// <summary>
             /// Property which gets the <c>ProductCatalogItem</c> instance being edited.
             /// </summary>
             public ProductCatalogItem Item { get; private set; }
 
-            ExporterValidationResults validation;
+            private ExporterValidationResults validation;
 
-            readonly bool editorSupportsPayouts;
+            private readonly bool editorSupportsPayouts = false;
 
-            bool advancedVisible = true;
-            bool descriptionVisible = true;
-            bool storeIDsVisible;
-            bool payoutsVisible;
+            private bool advancedVisible = true;
+            private bool descriptionVisible = true;
+            private bool storeIDsVisible = false;
+            private bool payoutsVisible = false;
+            private bool googleVisible = false;
+            private bool appleVisible = false;
 
-            bool idDuplicate;
-            bool idInvalid;
-            bool shouldBeMarked = true;
+            private bool idDuplicate = false;
+            private bool idInvalid = false;
+            private bool shouldBeMarked = true;
 
-            readonly List<LocalizedProductDescription> descriptionsToRemove = new List<LocalizedProductDescription>();
-            readonly List<ProductCatalogPayout> payoutsToRemove = new List<ProductCatalogPayout>();
+            private readonly List<LocalizedProductDescription> descriptionsToRemove = new List<LocalizedProductDescription>();
+            private readonly List<ProductCatalogPayout> payoutsToRemove = new List<ProductCatalogPayout>();
 
             /// <summary>
             /// Default constructor. Creates a new <c>ProductCatalogItem</c> to edit.
@@ -462,8 +532,6 @@ namespace UnityEditor.Purchasing
                     {
                         EditorGUI.indentLevel++;
 
-                        ShowAndProcessGooglePrice();
-
                         DescriptionEditorGUI(Item.defaultDescription, false, "defaultDescription");
 
                         var translationBox = EditorGUILayout.BeginVertical();
@@ -493,7 +561,6 @@ namespace UnityEditor.Purchasing
                         }
 
                         EditorGUI.indentLevel--;
-
                         EditorGUILayout.EndVertical();
 
                         if (descriptionsToRemove.Count > 0)
@@ -575,6 +642,32 @@ namespace UnityEditor.Purchasing
                         EditorGUI.indentLevel--;
                     }
 
+                    EditorGUILayout.Separator();
+
+                    googleVisible = CompatibleGUI.Foldout(googleVisible, "Google Configuration", true, style);
+                    if (googleVisible)
+                    {
+                        EditorGUI.indentLevel++;
+
+                        ShowAndProcessGoogleConfigGui();
+
+                        EditorGUI.indentLevel--;
+                    }
+
+                    EditorGUILayout.Separator();
+
+                    appleVisible = CompatibleGUI.Foldout(appleVisible, "Apple Configuration", true, style);
+                    if (appleVisible)
+                    {
+                        EditorGUI.indentLevel++;
+
+                        ShowAndProcessAppleConfigGui();
+
+                        EditorGUI.indentLevel--;
+                    }
+
+                    EditorGUILayout.Separator();
+
                     EditorGUI.indentLevel--;
                 }
 
@@ -583,7 +676,7 @@ namespace UnityEditor.Purchasing
 
             void ShowAndProcessProductIDBlockGui(Rect idRect)
             {
-                BeginErrorBlock();
+                BeginErrorBlock(validation, "id");
 
                 var oldID = Item.id;
 
@@ -606,7 +699,7 @@ namespace UnityEditor.Purchasing
 
             void ShowAndProcessProductTypeBlockGui(float width)
             {
-                BeginErrorBlock();
+                BeginErrorBlock(validation, "type");
 
                 var oldType = Item.type;
 
@@ -638,15 +731,55 @@ namespace UnityEditor.Purchasing
                 payout.data = TruncateString(ShowEditTextFieldGuiAndGetValue("payoutData", "Data", payout.data), ProductCatalogPayout.MaxDataLength);
             }
 
-            void ShowAndProcessGooglePrice()
+            void ShowAndProcessGoogleConfigGui()
             {
+                EditorGUILayout.LabelField("Provide either a price or an ID for a pricing template created in Google Play");
+
                 var fieldName = "googlePrice";
-                BeginErrorBlock();
+                BeginErrorBlock(validation, fieldName);
                 var priceStr = ShowEditTextFieldGuiAndGetValue(fieldName, "Price:", Item.googlePrice == null || Item.googlePrice.value == 0 ? string.Empty : Item.googlePrice.value.ToString());
 
                 Item.googlePrice.value = decimal.TryParse(priceStr, out var priceDecimal) ? priceDecimal : 0;
 
+                Item.pricingTemplateID = ShowEditTextFieldGuiAndGetValue("googlePriceTemplate", "Pricing Template:", Item.pricingTemplateID);
                 EndErrorBlock(validation, fieldName);
+            }
+
+            void ShowAndProcessAppleConfigGui()
+            {
+                BeginErrorBlock(validation, "applePriceTier");
+
+                var oldTier = Item.applePriceTier;
+
+                Item.applePriceTier = EditorGUILayout.Popup("Price Tier:", Item.applePriceTier, ApplePriceTiers.Strings);
+                EndErrorBlock(validation, "applePriceTier");
+
+                if ((oldTier != Item.applePriceTier) && (Item.applePriceTier < ApplePriceTiers.Strings.Length))
+                {
+                    GenericEditorDropdownSelectEventSenderHelpers.SendCatalogSetApplePriceTierEvent(ApplePriceTiers.Strings[Item.applePriceTier]);
+                }
+
+                BeginErrorBlock(validation, "screenshotPath");
+                EditorGUILayout.LabelField("Screenshot path:", Item.screenshotPath);
+                EndErrorBlock(validation, "screenshotPath");
+                var screenshotButtonBox = EditorGUILayout.BeginVertical();
+
+                var screenshotButtonRect = new Rect(screenshotButtonBox.xMax - ProductCatalogExportWindow.kWidth,
+                    screenshotButtonBox.yMin,
+                    ProductCatalogExportWindow.kWidth,
+                    EditorGUIUtility.singleLineHeight);
+                if (GUI.Button(screenshotButtonRect, new GUIContent("Select a screenshot", "Required for Apple XML Delivery.")))
+                {
+                    var selectedPath = EditorUtility.OpenFilePanel("Select a screenshot", "", "");
+                    if (selectedPath != null)
+                    {
+                        Item.screenshotPath = selectedPath;
+                    }
+
+                    GenericEditorButtonClickEventSenderHelpers.SendCatalogSelectAppleScreenshotEvent();
+                }
+
+                EditorGUILayout.EndVertical();
             }
 
             /// <summary>
@@ -661,6 +794,8 @@ namespace UnityEditor.Purchasing
                     advancedVisible = true;
                     descriptionVisible = true;
                     storeIDsVisible = true;
+                    googleVisible = true;
+                    appleVisible = true;
                 }
             }
 
@@ -691,7 +826,7 @@ namespace UnityEditor.Purchasing
                 shouldBeMarked = marked;
             }
 
-            bool DescriptionEditorGUI(LocalizedProductDescription description, bool showRemoveButton, string fieldValidationPrefix)
+            private bool DescriptionEditorGUI(LocalizedProductDescription description, bool showRemoveButton, string fieldValidationPrefix)
             {
                 var box = EditorGUILayout.BeginVertical();
                 var removeButtonWidth = EditorGUIUtility.singleLineHeight + 2;
@@ -720,7 +855,7 @@ namespace UnityEditor.Purchasing
 
             void ShowAndProcessLocaleBlockGui(LocalizedProductDescription description, string fieldValidationPrefix, Rect rect)
             {
-                BeginErrorBlock();
+                BeginErrorBlock(validation, fieldValidationPrefix + ".googleLocale");
 
                 var oldLocale = description.googleLocale;
                 description.googleLocale = (TranslationLocale)EditorGUI.Popup(rect, "Locale:", (int)description.googleLocale, LocaleExtensions.GetLabelsWithSupportedPlatforms());
@@ -735,7 +870,7 @@ namespace UnityEditor.Purchasing
 
             string ShowEditTextFieldGuiWithValidationErrorBlockAndGetValue(string fieldName, string label, string oldText)
             {
-                BeginErrorBlock();
+                BeginErrorBlock(validation, fieldName);
                 var newText = ShowEditTextFieldGuiAndGetValue(fieldName, label, oldText);
                 EndErrorBlock(validation, fieldName);
 
@@ -766,7 +901,7 @@ namespace UnityEditor.Purchasing
                 return newAmount;
             }
 
-            static string TruncateString(string s, int len)
+            private static string TruncateString(string s, int len)
             {
                 if (string.IsNullOrEmpty(s))
                 {
@@ -779,6 +914,271 @@ namespace UnityEditor.Purchasing
                 }
 
                 return s.Substring(0, Math.Min(s.Length, len));
+            }
+        }
+
+        /// <summary>
+        /// A popup window that shows a list of exporters and kicks off an export from the ProductCatalogEditor.
+        /// </summary>
+        public class ProductCatalogExportWindow : PopupWindowContent
+        {
+            /// <summary>
+            /// The default width of the export window.
+            /// </summary>
+            public const float kWidth = 200f;
+
+            private readonly ProductCatalogEditor editor;
+            private readonly List<IProductCatalogExporter> exporters = new List<IProductCatalogExporter>();
+
+            /// <summary>
+            /// Constructor taking an instance of <c>ProductCatalogEditor</c> to export contents from.
+            /// </summary>
+            /// <param name="editor_"> The product catalog editor from which the catalog will be exported. </param>
+            public ProductCatalogExportWindow(ProductCatalogEditor editor_)
+            {
+                editor = editor_;
+
+                exporters.Add(new AppleXMLProductCatalogExporter());
+                exporters.Add(new GooglePlayProductCatalogExporter());
+            }
+
+            /// <summary>
+            /// Gets the dimensions of the window.
+            /// </summary>
+            /// <returns>The size of the window as a 2D vector.</returns>
+            public override Vector2 GetWindowSize()
+            {
+                return new Vector2(kWidth, EditorGUIUtility.singleLineHeight * (exporters.Count + 1));
+            }
+
+            /// <summary>
+            /// Function called when the GUI updates.
+            /// </summary>
+            /// <param name="rect">The current draw rectangle of the Window's GUI.</param>
+            public override void OnGUI(Rect rect)
+            {
+                if (editor == null)
+                {
+                    editorWindow.Close();
+                    return;
+                }
+
+                EditorGUILayout.BeginVertical();
+                foreach (var exporter in exporters)
+                {
+                    if (GUILayout.Button(exporter.DisplayName))
+                    {
+                        editorWindow.Close();
+                        Export(exporter);
+                        GenericEditorButtonClickEventSenderHelpers.SendCatalogAppStoreExportEvent(exporter.DisplayName);
+                    }
+                }
+
+                EditorGUILayout.EndVertical();
+            }
+
+            private bool Validate(IProductCatalogExporter exporter, out ExporterValidationResults catalogValidation,
+                out List<ExporterValidationResults> itemValidation, bool debug = false)
+            {
+                var valid = true;
+                catalogValidation = exporter.Validate(editor.Catalog);
+                valid = valid && catalogValidation.Valid;
+                itemValidation = new List<ExporterValidationResults>();
+
+                foreach (var item in editor.Catalog.allProducts)
+                {
+                    var v = exporter.Validate(item);
+                    valid = valid && v.Valid;
+                    itemValidation.Add(v);
+                }
+
+                if (debug)
+                {
+                    void DebugResults(string name, ExporterValidationResults r)
+                    {
+                        if (!r.Valid || r.warnings.Count != 0)
+                        {
+                            Debug.unityLogger.LogIAPWarning(name + ", Valid = " + r.Valid);
+                        }
+
+                        foreach (var m in r.errors)
+                        {
+                            Debug.unityLogger.LogIAPWarning("errors " + m);
+                        }
+
+                        foreach (var m in r.fieldErrors)
+                        {
+                            Debug.unityLogger.LogIAPWarning("fieldErrors " + m);
+                        }
+
+                        foreach (var m in r.warnings)
+                        {
+                            Debug.unityLogger.LogIAPWarning("warnings " + m);
+                        }
+                    }
+
+                    if (!valid)
+                    {
+                        Debug.unityLogger.LogIAPWarning("Product Catalog Export Overall Result: invalid");
+                    }
+
+                    DebugResults("CatalogValidation", catalogValidation);
+                    foreach (var r in itemValidation)
+                    {
+                        DebugResults("ItemValidation", r);
+                    }
+                }
+
+                return valid;
+            }
+
+            private void Export(IProductCatalogExporter exporter)
+            {
+
+                var valid = Validate(exporter, out var catalogValidation, out var itemValidation, kValidateDebugLog);
+                editor.SetCatalogValidationResults(catalogValidation, itemValidation);
+
+                if (valid)
+                {
+                    string nonInteractivePath = null;
+
+                    // Special case for exporters that need to export an entire package with a given name, not just a file.
+                    if (exporter.SaveCompletePackage && !string.IsNullOrEmpty(exporter.MandatoryExportFolder))
+                    {
+                        // Choose the location of the final directory
+                        var directoryPath = EditorUtility.SaveFolderPanel("Export to folder", "", "");
+                        directoryPath = Path.Combine(directoryPath, exporter.MandatoryExportFolder);
+
+                        // Replace any existing directory
+                        if (Directory.Exists(directoryPath))
+                        {
+                            Directory.Delete(directoryPath, true);
+                        }
+
+                        Directory.CreateDirectory(directoryPath);
+
+                        // ExportHelper needs a single file, let it create the main file and save the auxilliary files.
+                        var mainFilePath = Path.Combine(directoryPath,
+                            string.Format("{0}.{1}", exporter.DefaultFileName, exporter.FileExtension));
+                        ExportHelper(exporter, mainFilePath);
+                        EditorUtility.DisplayDialog(
+                            "Exported Successfully",
+                            string.Format("Exported {0} to \"{1}\".",
+                                exporter.MandatoryExportFolder, directoryPath),
+                            "OK");
+                    }
+                    else
+                    {
+                        // Export manually
+                        var path = EditorUtility.SaveFilePanel("Export Product Catalog", "", exporter.DefaultFileName,
+                            exporter.FileExtension);
+                        ExportHelper(exporter, path);
+
+                        // Export automatically, conditionally
+                        if (!string.IsNullOrEmpty(exporter.MandatoryExportFolder))
+                        {
+                            // Always save a copy to the mandatory folder
+                            if (!Directory.Exists(exporter.MandatoryExportFolder))
+                            {
+                                Directory.CreateDirectory(exporter.MandatoryExportFolder);
+                            }
+
+                            nonInteractivePath = Path.Combine(exporter.MandatoryExportFolder,
+                                string.Format("{0}.{1}", exporter.DefaultFileName, exporter.FileExtension));
+                            ExportHelper(exporter, nonInteractivePath);
+                        }
+
+                        if (nonInteractivePath != null)
+                        {
+                            EditorUtility.DisplayDialog(
+                                "Exported Successfully",
+                                string.Format("Exported {0} to \"{2}\".\n\n" +
+                                    "Also saved copy into project at \"{1}\".",
+                                    exporter.DisplayName, nonInteractivePath, path),
+                                "OK");
+                        }
+                    }
+                }
+            }
+
+            private void ExportHelper(IProductCatalogExporter exporter, string path)
+            {
+                if (string.IsNullOrEmpty(path))
+                {
+                    return;
+                }
+
+                File.WriteAllText(path, exporter.Export(editor.Catalog));
+
+                if (exporter.FilesToCopy != null)
+                {
+                    foreach (var fileToCopy in exporter.FilesToCopy)
+                    {
+                        var targetPath = Path.Combine(Path.GetDirectoryName(path), Path.GetFileName(fileToCopy));
+                        var fileInfo = new FileInfo(fileToCopy);
+                        fileInfo.CopyTo(targetPath, true);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Not user-facing. Use to generate a catalog without asking the user. Make a best-effort
+            /// to fix issues.
+            /// </summary>
+            /// <param name="storeName"></param>
+            /// <param name="folder"></param>
+            /// <param name="justEraseExport"></param>
+            /// <returns></returns>
+            internal bool Export(string storeName, string folder, bool justEraseExport)
+            {
+                var catalog = editor.Catalog; // This may be normalized before export
+
+                var exporter = exporters.Single(e => e.StoreName == storeName);
+
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                var path = Path.Combine(folder,
+                    string.Format("{0}.{1}", exporter.DefaultFileName, exporter.FileExtension));
+
+                if (justEraseExport)
+                {
+                    File.Delete(path);
+                    return false;
+                }
+
+                var valid = Validate(exporter, out var catalogValidation, out var itemValidation, kValidateDebugLog);
+
+                if (!valid)
+                {
+                    Debug.unityLogger.LogIAPWarning($"{storeName} Product Catalog is invalid. Automatically " +
+                        "fixing for export. Manually fix Catalog errors by opening IAP Catalog editor window with " +
+                        $"{ProductCatalogEditorMenuPath} menu, performing App Store Export for this store, and " +
+                        "resolving reported issues.");
+                    catalog = exporter.NormalizeToType(catalog);
+                }
+
+                var wrote = false;
+
+                if (!string.IsNullOrEmpty(path))
+                {
+                    var cat = exporter.Export(catalog);
+
+                    // Write the path
+                    File.WriteAllText(path, cat);
+                    AssetDatabase.ImportAsset(path);
+
+                    wrote = true;
+                }
+                else
+                {
+                    Debug.unityLogger.LogIAPError($"Unable to export {storeName} Product Catalog. Path " +
+                        $"{path} is invalid.");
+                }
+
+                return wrote;
             }
         }
 
@@ -807,6 +1207,79 @@ namespace UnityEditor.Purchasing
             /// The dictionary of field errors.
             /// </summary>
             public Dictionary<string, string> fieldErrors = new Dictionary<string, string>();
+        }
+
+        /// <summary>
+        /// Product catalog exporters implement this interface to provide validation and export of a ProductCatalog.
+        /// </summary>
+        public interface IProductCatalogExporter
+        {
+            /// <summary>
+            /// The display name of the catalog.
+            /// </summary>
+            string DisplayName { get; }
+
+            /// <summary>
+            /// The default file name of the catalog export.
+            /// </summary>
+            string DefaultFileName { get; }
+
+            /// <summary>
+            /// The file extension of the catalog export.
+            /// </summary>
+            string FileExtension { get; }
+
+            /// <summary>
+            /// The name of the store to be exported.
+            /// </summary>
+            string StoreName { get; }
+
+            /// <summary>
+            /// Required specific path for output file. Is optional whether user will be permitted to save a copy
+            /// to a separate path in addition to this required path.
+            /// </summary>
+            string MandatoryExportFolder { get; }
+
+            /// <summary>
+            /// Exports the product catalog.
+            /// </summary>
+            /// <param name="catalog"> The <c>ProductCatalog</c> to be exported. </param>
+            /// <returns> The exported catalog as raw text. </returns>
+            string Export(ProductCatalog catalog);
+
+            /// <summary>
+            /// Validates the product catalog for export.
+            /// </summary>
+            /// <param name="catalog"> The <c>ProductCatalog</c> to be exported. </param>
+            /// <returns> The results of the validation. </returns>
+            ExporterValidationResults Validate(ProductCatalog catalog);
+
+            /// <summary>
+            /// Validates the product catalog item for export.
+            /// </summary>
+            /// <param name="item"> The <c>ProductCataloItemg</c> to be exported. </param>
+            /// <returns> The results of the validation. </returns>
+            ExporterValidationResults Validate(ProductCatalogItem item);
+
+            /// <summary>
+            /// Normalizes the product catalog for export to the base type.
+            /// Fixes issues targeting this exporter's implempentation.
+            /// </summary>
+            /// <param name="catalog"> The <c>ProductCatalog</c> to be normalized. </param>
+            /// <returns> The normalized <c>ProductCatalog</c>. </returns>
+            ProductCatalog NormalizeToType(ProductCatalog catalog);
+
+            /// <summary>
+            /// Files to copy to the final directory, ex. screenshots on iOS
+            /// </summary>
+            List<string> FilesToCopy { get; }
+
+            /// <summary>
+            /// True if the exporter should save an entire package/folder (specified by MandatoryExportFolder and FilesToCopy,
+            /// not just a single file. This will present a Directory picker, not a File picker. The DefaultFileName will be
+            /// used for the main file in the MandatoryExportFolder, and any FilesToCopy will be placed in that folder as well.
+            /// </summary>
+            bool SaveCompletePackage { get; }
         }
 
         /// <summary>

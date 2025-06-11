@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -8,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Manages instantiation of specific store services based on provided <c>IPurchasingModule</c>s.
     /// </summary>
-    [Obsolete]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     internal class PurchasingFactory
     {
         private IStore m_Store;

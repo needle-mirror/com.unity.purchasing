@@ -28,7 +28,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The user opted to cancel rather than proceed with the purchase.
         /// This is not specified on platforms that do not distinguish
-        /// cancellation from other failure (Amazon).
+        /// cancellation from other failure.
         /// </summary>
         UserCancelled,
 
@@ -47,10 +47,27 @@ namespace UnityEngine.Purchasing
         DuplicateTransaction,
 
         /// <summary>
+        /// Transaction failed verification performed by the TX Verifier service.
+        /// </summary>
+        ValidationFailure,
+
+        /// <summary>
+        /// The purchase couldn't be initiated because the store is not connected.
+        /// Use IStoreService.Connect() to initialize the connection to the store.
+        /// </summary>
+        StoreNotConnected,
+
+        /// <summary>
+        /// The billing client responded with OK without including the purchase.
+        /// This is unique to the Google Play Store.
+        /// </summary>
+        PurchaseMissing,
+
+        /// <summary>
         /// A catch all for remaining purchase problems.
         /// Note: Use Enum.Parse to use this named constant if targeting Unity 5.3
         /// or 5.4. Its value differs for 5.5+ which introduced DuplicateTransaction.
         /// </summary>
-        Unknown
+        Unknown,
     }
 }

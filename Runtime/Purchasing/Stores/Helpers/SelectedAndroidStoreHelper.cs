@@ -14,8 +14,6 @@ namespace UnityEngine.Purchasing
             {
                 case AppStore.GooglePlay:
                     return GooglePlay.Name;
-                case AppStore.AmazonAppStore:
-                    return AmazonApps.Name;
                 default:
                     return FakeAppStore.Name;
             }

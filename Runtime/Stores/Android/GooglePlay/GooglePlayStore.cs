@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
     class GooglePlayStore : InternalStore, IGooglePlayStore
     {
         readonly IGooglePlayStoreConnectionService m_ConnectionService;
-        readonly IGooglePlayStoreRetrieveProductsService m_RetrieveProductsService;
+        readonly IGooglePlayStoreFetchProductsService m_FetchProductsService;
         readonly IGooglePlayStorePurchaseService m_StorePurchaseService;
         readonly IGooglePlayStoreFetchPurchasesService m_PlayStoreFetchPurchasesService;
         readonly IGooglePlayStoreCheckEntitlementService m_CheckEntitlementsService;
@@ -20,9 +20,10 @@ namespace UnityEngine.Purchasing
         readonly IGooglePlayStoreChangeSubscriptionService m_ChangeSubscriptionService;
         readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
         readonly ICartValidator m_CartValidator;
+        internal IGoogleBillingClient m_BillingClient;
 
         [Preserve]
-        internal GooglePlayStore(IGooglePlayStoreRetrieveProductsService retrieveProductsService,
+        internal GooglePlayStore(IGooglePlayStoreFetchProductsService fetchProductsService,
             IGooglePlayStorePurchaseService storePurchaseService,
             IGooglePlayStoreFetchPurchasesService playStoreFetchPurchasesService,
             IGooglePlayStoreFinishTransactionService transactionService,
@@ -30,9 +31,10 @@ namespace UnityEngine.Purchasing
             IGooglePlayStoreCheckEntitlementService checkEntitlementsService,
             IGooglePurchaseCallback googlePurchaseCallback,
             ICartValidator cartValidator,
-            IGooglePlayStoreConnectionService connectionService)
+            IGooglePlayStoreConnectionService connectionService,
+            IGoogleBillingClient billingClient)
         {
-            m_RetrieveProductsService = retrieveProductsService;
+            m_FetchProductsService = fetchProductsService;
             m_StorePurchaseService = storePurchaseService;
             m_PlayStoreFetchPurchasesService = playStoreFetchPurchasesService;
             m_CheckEntitlementsService = checkEntitlementsService;
@@ -41,15 +43,16 @@ namespace UnityEngine.Purchasing
             m_GooglePurchaseCallback = googlePurchaseCallback;
             m_CartValidator = cartValidator;
             m_ConnectionService = connectionService;
+            m_BillingClient = billingClient;
         }
 
         /// <summary>
         /// Call the Google Play Store to retrieve the store products. The `IStoreCallback` will be call with the retrieved products.
         /// </summary>
         /// <param name="products">The catalog of products to retrieve the store information from</param>
-        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
+        public override void FetchProducts(IReadOnlyCollection<ProductDefinition> products)
         {
-            m_RetrieveProductsService.RetrieveProducts(products);
+            m_FetchProductsService.FetchProducts(products);
         }
 
         /// <summary>
@@ -80,12 +83,12 @@ namespace UnityEngine.Purchasing
         /// Call the Google Play Store to change a subscription. The `IStorePurchaseCallback` will be called.
         /// </summary>
         /// <param name="product">The new subscription to buy</param>
-        /// <param name="oldProduct">The previous subscription to be unsubscribed to</param>
+        /// <param name="currentOrder">The current order containing the subscription to be unsubscribed to</param>
         /// <param name="desiredReplacementMode">The desired proration mode for the subscription change</param>
-        public void ChangeSubscription(ProductDefinition product, Product oldProduct,
+        public void ChangeSubscription(ProductDefinition product, Order currentOrder,
             GooglePlayReplacementMode? desiredReplacementMode)
         {
-            m_ChangeSubscriptionService.ChangeSubscription(product, oldProduct, desiredReplacementMode);
+            m_ChangeSubscriptionService.ChangeSubscription(product, currentOrder, desiredReplacementMode);
         }
 
         public override void FinishTransaction(PendingOrder pendingOrder)
@@ -132,7 +135,7 @@ namespace UnityEngine.Purchasing
 
         public override void SetProductsCallback(IStoreProductsCallback productsCallback)
         {
-            m_RetrieveProductsService.SetProductsCallback(productsCallback);
+            m_FetchProductsService.SetProductsCallback(productsCallback);
         }
 
         public override void SetEntitlementCheckCallback(IStoreCheckEntitlementCallback entitlementCallback)

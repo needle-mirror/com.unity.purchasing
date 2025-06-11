@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -13,7 +14,7 @@ namespace UnityEngine.Purchasing
         /// Further metadata may be populated following retrieval from the
         /// store system.
         /// </summary>
-        [Obsolete]
+        [Obsolete("This constructor is obsolete and should not be used. Use the Product(ProductDefinition, ProductMetadata) constructor and assign the receipt separately if needed.")]
         internal Product(ProductDefinition definition, ProductMetadata metadata, string receipt) : this(definition, metadata)
         {
             this.receipt = receipt;
@@ -59,7 +60,7 @@ namespace UnityEngine.Purchasing
         /// Consumable's transactionID are not set between app restarts unless it has a pending transaction.
         /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `transactionID` is removed.
         /// </summary>
-        [Obsolete]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public string transactionID { get; internal set; }
 
         /// <summary>
@@ -67,12 +68,13 @@ namespace UnityEngine.Purchasing
         ///
         /// This will only be set when the Apple product was purchased during this session.
         /// </summary>
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public string appleOriginalTransactionID { get; internal set; }
 
         /// <summary>
         /// Indicates if this Apple product is restored.
         /// </summary>
-        [Obsolete]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public bool appleProductIsRestored { get; internal set; }
 
         /// <summary>
@@ -80,7 +82,7 @@ namespace UnityEngine.Purchasing
         /// Consumable's receipts are not persisted between App restarts unless it has a pending transaction.
         /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `receipt` is removed.
         /// </summary>
-        [Obsolete]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public bool hasReceipt => !string.IsNullOrEmpty(receipt);
 
         /// <summary>
@@ -90,8 +92,41 @@ namespace UnityEngine.Purchasing
         /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `receipt` is removed.
         /// Receipts is in JSON format.
         /// </summary>
-        [Obsolete]
-        public string receipt { get; internal set; }
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        public string receipt
+        {
+            get => GetReceipt();
+            internal set => SetReceipt(value);
+        }
+
+        string GetReceipt()
+        {
+            var defaultStore = DefaultStoreHelper.GetDefaultBuiltInAppStore();
+            if (defaultStore == AppStore.AppleAppStore || defaultStore == AppStore.MacAppStore)
+            {
+                var curReceipt = UnityIAPServices.DefaultPurchase().Apple?.appReceipt;
+                return CreateUnifiedReceipt(curReceipt, transactionID, defaultStore == AppStore.AppleAppStore ? AppleAppStore.Name : MacAppStore.Name);
+            }
+
+            return m_Receipt;
+        }
+
+
+        static string CreateUnifiedReceipt(string rawReceipt, string transactionId, string storeName)
+        {
+            return UnifiedReceiptFormatter.FormatUnifiedReceipt(rawReceipt, transactionId, storeName);
+        }
+
+        void SetReceipt(string curReceipt)
+        {
+            var defaultStore = DefaultStoreHelper.GetDefaultBuiltInAppStore();
+            if (defaultStore != AppStore.AppleAppStore && defaultStore != AppStore.MacAppStore)
+            {
+                m_Receipt = curReceipt;
+            }
+        }
+
+        string m_Receipt;
 
         /// <summary>
         /// Check if this product is equal to another.

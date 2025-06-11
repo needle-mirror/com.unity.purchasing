@@ -9,8 +9,8 @@ namespace UnityEngine.Purchasing
     {
         void OnStoreConnectionSucceeded();
         void OnStoreConnectionFailed(string jsonFailureDescription);
-        void OnProductsRetrieved(string json);
-        void OnProductsRetrieveFailed(string jsonFailureDescription);
+        void OnProductsFetched(string json);
+        void OnProductsFetchFailed(string jsonFailureDescription);
         void OnPurchasesRetrievalFailed(string jsonFailureDescription);
         void OnPurchasesFetched(string json);
         void OnPurchaseSucceeded(string id, string receipt, string transactionID);

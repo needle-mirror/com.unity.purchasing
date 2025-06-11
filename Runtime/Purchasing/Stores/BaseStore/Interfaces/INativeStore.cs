@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
         /// Call the Store to retrieve the store products. The `IStoreCallback` will be call with the retrieved products.
         /// </summary>
         /// <param name="json">The catalog of products to retrieve the store information from in JSON format.</param>
-        void RetrieveProducts(string json);
+        void FetchProducts(string json);
 
         /// <summary>
         /// Call the Store to retrieve existing purchases.

@@ -3,16 +3,15 @@ using System;
 namespace UnityEngine.Purchasing
 {
     /// <summary>
-    /// Public Interface for the confirmation of pending orders.
+    /// Interface for the confirmation of pending orders.
     /// </summary>
-    public interface IConfirmOrderUseCase
+    interface IConfirmOrderUseCase
     {
         /// <summary>
-        /// Confirm a pending order, usually asynchronously. Success or failure is signalled via the actions passed.
+        /// Confirm a pending order, usually asynchronously. Success or failure is signalled via the action passed.
         /// </summary>
         /// <param name="order">The pending order to be confirmed.</param>
-        /// <param name="confirmationSuccessAction">The event called when the confirmation is successful.</param>
-        /// <param name="confirmationFailedAction">The event called when the confirmation fails.</param>
-        void ConfirmOrder(PendingOrder order, Action<PendingOrder, ConfirmedOrder> confirmationSuccessAction, Action<PendingOrder, FailedOrder> confirmationFailedAction);
+        /// <param name="action">The event called when the confirmation is received.</param>
+        void ConfirmOrder(PendingOrder order, Action<PendingOrder, Order> action);
     }
 }

@@ -13,7 +13,7 @@ using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing
 {
-    public class StoreServiceFactory : IStoreServiceFactory
+    class StoreServiceFactory : IStoreServiceFactory
     {
         static StoreServiceFactory? s_Instance;
 
@@ -29,7 +29,6 @@ namespace UnityEngine.Purchasing
             m_StoreServiceInstantiationByName.Add(GooglePlay.Name, CreateGoogleStoreService);
             m_StoreServiceInstantiationByName.Add(AppleAppStore.Name, CreateAppleStoreService);
             m_StoreServiceInstantiationByName.Add(MacAppStore.Name, CreateAppleStoreService);
-            m_StoreServiceInstantiationByName.Add(AmazonApps.Name, CreateAmazonStoreService);
         }
 
         public void RegisterNewService(string name, Func<IStoreService> createFunction)
@@ -83,14 +82,10 @@ namespace UnityEngine.Purchasing
             IDependencyInjectionService di = new DependencyInjectionService();
 
             di.AddInstance(Debug.unityLogger);
-            di.AddService<GoogleCachedQueryProductDetailsService>();
-            di.AddService<GooglePurchaseBuilder>();
-            di.AddService<GooglePurchasesUpdatedListener>();
-            di.AddInstance(StoreFactory.Instance().TelemetryDiagnosticsInstanceWrapper);
-            di.AddService<TelemetryDiagnostics>();
-            di.AddService<GoogleBillingClient>();
+            di.AddInstance(((GooglePlayStore)store.instance).m_BillingClient);
             di.AddService<GooglePlayStoreSetObfuscatedIdUseCase>();
             di.AddService<GoogleQueryPurchasesUseCase>();
+            di.AddService<GooglePlayStoreConnectionUseCase>();
 
             AddStoreServiceDependencies(di, retryPolicy, store);
             di.AddService<GooglePlayStoreExtendedService>();
@@ -120,26 +115,5 @@ namespace UnityEngine.Purchasing
             return di.GetInstance<AppleStoreExtendedService>();
         }
 
-        static AmazonAppsStoreExtendedService CreateAmazonStoreService(IRetryPolicy? retryPolicy, IStoreWrapper store)
-        {
-            IDependencyInjectionService di = new DependencyInjectionService();
-
-            AddStoreServiceDependencies(di, retryPolicy, store);
-            di.AddService<AmazonStoreCartValidator>();
-            di.AddInstance(Debug.unityLogger);
-            di.AddInstance(AmazonApps.Name);
-            di.AddInstance(StoreFactory.Instance().TelemetryMetricsInstanceWrapper);
-            di.AddService<MetricizedJsonStore>();
-
-            IUnityCallback callback = di.GetInstance<MetricizedJsonStore>();
-            var util = di.GetInstance<IUtil>();
-            var amazonJavaStore = new AmazonNativeStoreBuilder().GetAmazonStore(callback, util);
-            di.AddInstance(callback);
-            di.AddInstance(amazonJavaStore);
-
-            di.AddService<AmazonAppsStoreExtendedService>();
-
-            return di.GetInstance<AmazonAppsStoreExtendedService>();
-        }
     }
 }

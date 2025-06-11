@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
     public enum EntitlementStatus
     {
         /// <summary>
-        /// Entitlement Status is no known.
+        /// Entitlement Status is not known.
         /// </summary>
         Unknown,
         /// <summary>
@@ -16,12 +16,12 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The Consumable is entitled until it is consumed and awarded.
         /// Often the case for crashes mid-transaction or consumables obtained via voucher codes
-        /// If it has an associated PendingOrder, it can be consumed via ConfirmOrder
+        /// If it has an associated PendingOrder, it can be consumed via ConfirmPurchase
         /// </summary>
         EntitledUntilConsumed,
         /// <summary>
         /// The Non-Consumable or Subscription has a valid entitlement, but its transaction has not been fully completed.
-        /// If it has an associated PendingOrder, it can be completed via ConfirmOrder
+        /// If it has an associated PendingOrder, it can be completed via ConfirmPurchase
         /// </summary>
         EntitledButNotFinished,
         /// <summary>

@@ -1,3 +1,4 @@
+#nullable enable
 using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
@@ -10,7 +11,12 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Apple specific OrderInfo class
         /// </summary>
-        IAppleOrderInfo Apple { get; }
+        IAppleOrderInfo? Apple { get; }
+
+        /// <summary>
+        /// Google specific OrderInfo class
+        /// </summary>
+        IGoogleOrderInfo? Google { get; }
 
         /// <summary>
         /// Additional information for purchased products found in a `ConfirmedOrder`.
@@ -18,10 +24,12 @@ namespace UnityEngine.Purchasing
         List<IPurchasedProductInfo> PurchasedProductInfo { get; set; }
 
         /// <summary>
-        /// The purchase receipt, in JSON format. Read only.
+        /// The receipt, in JSON format. Read only.
         ///
-        /// Consumable's `Receipt` are not set between app restarts unless it is a pending order.
-        /// Once a consumable has been acknowledged (ConfirmOrder) the `Receipt` is removed.
+        /// For an order containing only consumable products, the `Receipt` will be only be available if it is
+        /// a `PendingOrder`.
+        /// Once it has been confirmed (`ConfirmedOrder`), the `Receipt` is empty as it is no longer returned
+        /// from the store.
         ///
         /// The receipt provided while on the Apple App Store will be the full receipt of every purchase so far.
         /// </summary>
@@ -30,8 +38,9 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The transaction ID of the purchase. Read only.
         ///
-        /// Consumable's transactionID are not set between app restarts unless it is a pending order.
-        /// Once a consumable has been acknowledged (ConfirmOrder) the `transactionID` is removed.
+        /// Consumable's transactionID are not set between app restarts unless it is a `PendingOrder`.
+        /// Once it has been confirmed (`ConfirmedOrder`), the `TransactionID` is empty as it is no longer returned
+        /// from the store.
         /// </summary>
         string TransactionID { get; }
     }

@@ -1,7 +1,6 @@
 #nullable enable
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -9,7 +8,7 @@ using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
-    public class GoogleFinishTransactionUseCase : IGoogleFinishTransactionUseCase
+    class GoogleFinishTransactionUseCase : IGoogleFinishTransactionUseCase
     {
         readonly IGoogleBillingClient m_BillingClient;
         readonly IGoogleQueryPurchasesUseCase m_GoogleQueryPurchasesUseCase;
@@ -22,24 +21,21 @@ namespace UnityEngine.Purchasing
             m_GoogleQueryPurchasesUseCase = googleQueryPurchasesUseCase;
         }
 
-        public async void FinishTransaction(ProductDefinition? product, string? purchaseToken,
+        public async Task FinishTransaction(ProductDefinition? product, string? purchaseToken,
             Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished)
         {
-            try
+            var purchase = await m_GoogleQueryPurchasesUseCase.GetPurchaseByToken(purchaseToken);
+            if (purchase != null && purchase.IsPurchased())
             {
-                var purchase = await m_GoogleQueryPurchasesUseCase.GetPurchaseByToken(purchaseToken);
-                if (purchase != null && purchase.IsPurchased())
-                {
-                    FinishTransactionForPurchase(purchase, product, purchaseToken, onTransactionFinished);
-                }
+                FinishTransactionForPurchase(purchase, product, purchaseToken, onTransactionFinished);
             }
-            catch (InvalidOperationException e)
+            else
             {
-                Debug.unityLogger.LogIAPError($"FinishTransaction exception: {e}");
+                throw new Exception($"Purchase not found for Product: {product?.storeSpecificId}, Purchase Token: {purchaseToken}");
             }
         }
 
-        private void FinishTransactionForPurchase(IGooglePurchase purchase, ProductDefinition? product,
+        void FinishTransactionForPurchase(IGooglePurchase purchase, ProductDefinition? product,
             string? purchaseToken,
             Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished)
         {

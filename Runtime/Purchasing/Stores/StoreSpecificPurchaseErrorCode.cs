@@ -154,26 +154,6 @@ namespace UnityEngine.Purchasing
         IABHELPER_INVALID_CONSUMPTION,
 
         /// <summary>
-        /// Indicates that the customer already owns the provided SKU. (Amazon only)
-        /// </summary>
-        Amazon_ALREADY_PURCHASED,
-
-        /// <summary>
-        /// Indicates that the purchase failed. (Amazon only)
-        /// </summary>
-        Amazon_FAILED,
-
-        /// <summary>
-        /// Indicates that the SKU originally provided to the PurchasingService.purchase(String) method is not valid. (Amazon only)
-        /// </summary>
-        Amazon_INVALID_SKU,
-
-        /// <summary>
-        /// Indicates this call is not supported. (Amazon only)
-        /// </summary>
-        Amazon_NOT_SUPPORTED,
-
-        /// <summary>
         /// A catch-all for remaining purchase problems.
         /// </summary>
         Unknown

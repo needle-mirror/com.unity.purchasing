@@ -5,7 +5,7 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing.Interfaces
 {
-    public interface IGooglePurchase
+    interface IGooglePurchase
     {
         int purchaseState { get; }
         List<string> skus { get; }
@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing.Interfaces
         string? obfuscatedAccountId { get; }
         string? obfuscatedProfileId { get; }
         string originalJson { get; }
-        string? purchaseToken { get; }
+        string purchaseToken { get; }
         public IEnumerable<ProductDescription> productDescriptions { get; }
         string? sku { get; }
         bool IsAcknowledged();

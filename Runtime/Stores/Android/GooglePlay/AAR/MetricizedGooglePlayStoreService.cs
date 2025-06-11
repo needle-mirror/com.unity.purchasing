@@ -39,20 +39,20 @@ namespace UnityEngine.Purchasing
             m_TelemetryMetricsService = telemetryMetricsService;
         }
 
-        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products,
+        public override void FetchProducts(IReadOnlyCollection<ProductDefinition> products,
             Action<List<ProductDescription>> onProductsReceived,
-            Action<GoogleRetrieveProductException> onRetrieveProductsFailed)
+            Action<GoogleFetchProductException> onFetchProductsFailed)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.RetrieveProducts(products, onProductsReceived, onRetrieveProductsFailed),
-                TelemetryMetricDefinitions.retrieveProductsName);
+                () => base.FetchProducts(products, onProductsReceived, onFetchProductsFailed),
+                TelemetryMetricDefinitions.fetchProductsName);
         }
 
-        public override void Purchase(ProductDefinition product, Product? oldProduct,
+        public override void Purchase(ProductDefinition product, Order? currentOrder,
             GooglePlayReplacementMode? desiredReplacementMode)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.Purchase(product, oldProduct, desiredReplacementMode),
+                () => base.Purchase(product, currentOrder, desiredReplacementMode),
                 TelemetryMetricDefinitions.initPurchaseName);
         }
     }

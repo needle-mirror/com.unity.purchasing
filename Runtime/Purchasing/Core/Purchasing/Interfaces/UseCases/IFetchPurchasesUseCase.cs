@@ -4,9 +4,9 @@ using System.Collections.Generic;
 namespace UnityEngine.Purchasing
 {
     /// <summary>
-    /// Public interface for the fetching of pre-existing product purchases.
+    /// Interface for the fetching of pre-existing product purchases.
     /// </summary>
-    public interface IFetchPurchasesUseCase
+    interface IFetchPurchasesUseCase
     {
         /// <summary>
         /// Fetch all purchases that have been made, usually asynchronously. Success or failure is signalled via the actions passed.

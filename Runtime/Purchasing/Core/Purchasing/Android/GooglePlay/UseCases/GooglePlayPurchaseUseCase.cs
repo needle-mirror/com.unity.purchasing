@@ -3,58 +3,69 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-    internal class GooglePlayPurchaseUseCase : PurchaseUseCase, IGooglePlayChangeSubscriptionUseCase,
+    class GooglePlayPurchaseUseCase : PurchaseUseCase, IGooglePlayChangeSubscriptionUseCase,
         IGooglePlayChangeSubscriptionCallback
     {
         readonly List<SubscriptionChangeRequest> m_PendingRequests = new();
-        public event Action<DeferredPaymentUntilRenewalDateOrder>? OnPurchaseDeferredUntilRenewalAction;
+        IProductCache m_ProductCache;
+        public event Action<DeferredPaymentUntilRenewalDateOrder>? OnDeferredPaymentUntilRenewalDate;
 
-        internal GooglePlayPurchaseUseCase(IGooglePlayStore storeResponsible)
+        internal GooglePlayPurchaseUseCase(IGooglePlayStore storeResponsible, IProductCache productCache)
             : base(storeResponsible)
         {
             storeResponsible.SetChangeSubscriptionCallback(this);
+            m_ProductCache = productCache;
+            OnPurchaseFail += OnSubscriptionChangeFailed;
         }
 
-        public void ChangeSubscription(Product previousSubscription, Product newSubscription,
+        public void ChangeSubscription(Order currentOrder, Product newSubscription,
             GooglePlayReplacementMode replacementMode)
         {
-            if (!IsSubscriptionChangeValid(previousSubscription, newSubscription))
+            if (!IsSubscriptionChangeValid(currentOrder, newSubscription))
             {
-                throw new PurchaseException(
-                    "Invalid SubscriptionProducts requested for purchase. No callbacks will be sent for this call. Please pass a valid `SubscriptionProduct` object.");
+                OnPurchaseFailed(new FailedOrder(new Cart(new CartItem(newSubscription)), PurchaseFailureReason.Unknown,
+                    "Invalid SubscriptionProducts requested for purchase. Please pass a valid `SubscriptionProduct` object."));
+                return;
             }
 
             if (FindExistingPurchaseRequest(newSubscription) ||
-                ConflictingSubscriptionChangeRequestExists(previousSubscription, newSubscription))
+                ConflictingSubscriptionChangeRequestExists(currentOrder, newSubscription))
             {
                 RejectPurchaseDueToPendingDuplicate(newSubscription);
             }
             else
             {
-                var subscriptionChangeRequest = new SubscriptionChangeRequest(previousSubscription, newSubscription,
+                var subscriptionChangeRequest = new SubscriptionChangeRequest(currentOrder, newSubscription,
                     replacementMode);
                 AddAndSendSubscriptionChangeRequest(subscriptionChangeRequest);
             }
         }
 
-        bool IsSubscriptionChangeValid(Product previousSubscription, Product newSubscription)
+        bool IsSubscriptionChangeValid(Order currentOrder, Product newSubscription)
         {
-            return IsSubscriptionProductValid(newSubscription) && IsSubscriptionProductValid(previousSubscription) &&
-                !previousSubscription.Equals(newSubscription);
+            var currentProduct = currentOrder.CartOrdered.Items().FirstOrDefault()?.Product;
+            if (currentProduct == null)
+            {
+                return false;
+            }
+
+            return IsSubscriptionProductValid(newSubscription) && IsSubscriptionProductValid(currentProduct) &&
+                !currentProduct.Equals(newSubscription);
         }
 
-        bool IsSubscriptionProductValid(Product? subscription)
+        static bool IsSubscriptionProductValid(Product? subscription)
         {
             return subscription?.definition != null;
         }
 
-        bool ConflictingSubscriptionChangeRequestExists(Product previousSubscription, Product newSubscription)
+        bool ConflictingSubscriptionChangeRequestExists(Order currentOrder, Product newSubscription)
         {
             return m_PendingRequests.Exists(request =>
-                request.PreviousSubscription.Equals(previousSubscription) ||
+                request.CurrentOrder.Equals(currentOrder) ||
                 request.NewSubscription.Equals(newSubscription));
         }
 
@@ -63,7 +74,7 @@ namespace UnityEngine.Purchasing
             m_PendingRequests.Add(subscriptionChangeRequest);
 
             GooglePlayStore()?.ChangeSubscription(subscriptionChangeRequest.NewSubscription.definition,
-                subscriptionChangeRequest.PreviousSubscription, subscriptionChangeRequest.ReplacementMode);
+                subscriptionChangeRequest.CurrentOrder, subscriptionChangeRequest.ReplacementMode);
         }
 
         IGooglePlayStore? GooglePlayStore()
@@ -71,25 +82,30 @@ namespace UnityEngine.Purchasing
             return m_Store as IGooglePlayStore;
         }
 
-        public void OnSubscriptionChangeDeferredUntilRenewal(string storeSpecificId)
+        void OnSubscriptionChangeFailed(FailedOrder order)
         {
             try
             {
-                HandleSubscriptionChangeDeferredUntilRenewal(storeSpecificId);
+                var request = GetMatchingRequest(order.CartOrdered.Items().First().Product.definition.storeSpecificId);
+
+                if (request != null)
+                {
+                    m_PendingRequests.Remove(request);
+                }
             }
-            catch (InvalidOperationException)
+            catch (Exception)
             {
-                ThrowUnknownProductException(storeSpecificId);
+                // ignored
             }
         }
 
-        void HandleSubscriptionChangeDeferredUntilRenewal(string storeSpecificId)
+        public void OnSubscriptionChangeDeferredUntilRenewal(string storeSpecificId)
         {
             try
             {
                 var request = GetMatchingRequest(storeSpecificId);
                 var pendingPurchase =
-                    new DeferredPaymentUntilRenewalDateOrder(request?.PreviousSubscription,
+                    new DeferredPaymentUntilRenewalDateOrder(request?.CurrentOrder,
                         request?.NewSubscription);
 
                 if (request != null)
@@ -97,28 +113,22 @@ namespace UnityEngine.Purchasing
                     m_PendingRequests.Remove(request);
                 }
 
-                OnPurchaseDeferredUntilRenewalAction?.Invoke(pendingPurchase);
+                InvokeOnDeferredPaymentUntilRenewalDate(pendingPurchase);
             }
-            catch (InvalidOperationException)
+            catch (Exception)
             {
-                throw new PurchaseException(
-                    $"The product with sku id: {storeSpecificId} was successfully purchased. The request list may be corrupt. No callbacks will be sent for this call.");
+                var product = m_ProductCache.FindOrDefault(storeSpecificId);
+                OnPurchaseFailed(new FailedOrder(new Cart(new CartItem(product)), PurchaseFailureReason.Unknown,
+                    $"The product with sku id: {storeSpecificId}, was successfully purchased. The request list may be corrupt."));
             }
+        }
+
+        internal void InvokeOnDeferredPaymentUntilRenewalDate(DeferredPaymentUntilRenewalDateOrder pendingPurchase)
+        {
+            OnDeferredPaymentUntilRenewalDate?.Invoke(pendingPurchase);
         }
 
         public void OnSubscriptionChange(string storeSpecificId)
-        {
-            try
-            {
-                HandleSubscriptionChange(storeSpecificId);
-            }
-            catch (InvalidOperationException)
-            {
-                ThrowUnknownProductException(storeSpecificId);
-            }
-        }
-
-        void HandleSubscriptionChange(string storeSpecificId)
         {
             try
             {
@@ -129,10 +139,11 @@ namespace UnityEngine.Purchasing
                     m_PendingRequests.Remove(request);
                 }
             }
-            catch (InvalidOperationException)
+            catch (Exception)
             {
-                throw new PurchaseException(
-                    $"The product with sku id: {storeSpecificId} was successfully purchased. The request list may be corrupt. No callbacks will be sent for this call.");
+                var product = m_ProductCache.FindOrDefault(storeSpecificId);
+                OnPurchaseFailed(new FailedOrder(new Cart(new CartItem(product)), PurchaseFailureReason.Unknown,
+                    $"The product with sku id: {storeSpecificId}, was successfully purchased. The request list may be corrupt."));
             }
         }
 
@@ -147,18 +158,11 @@ namespace UnityEngine.Purchasing
             return m_PendingRequests.Exists(request => request.NewSubscription.Equals(productToCheckFor));
         }
 
-        static void ThrowUnknownProductException(string storeSpecificId)
-        {
-            throw new PurchaseException(
-                $"An unknown Product, sku id: {storeSpecificId}, was successfully purchased. The request list may be corrupt. No callbacks will be sent for this call.");
-        }
-
         void RejectPurchaseDueToPendingDuplicate(Product product)
         {
             var cart = new Cart(new CartItem(product));
-            var failedOrder = new FailedOrder(cart, PurchaseFailureReason.Unknown,
-                "Cannot Attempt to purchase a Product that has an existing pending purchase request");
-
+            var failedOrder = new FailedOrder(cart, PurchaseFailureReason.DuplicateTransaction,
+                "Cannot attempt to purchase a Product that has an existing pending purchase request");
             OnPurchaseFailed(failedOrder);
         }
     }

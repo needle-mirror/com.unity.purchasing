@@ -9,18 +9,14 @@ namespace UnityEngine.Purchasing
 {
     class GooglePurchaseConverter : IGooglePurchaseConverter
     {
-        readonly IProductDetailsConverter m_ProductDetailsConverter;
-
         [Preserve]
         internal GooglePurchaseConverter(IProductDetailsConverter productDetailsConverter)
-        {
-            m_ProductDetailsConverter = productDetailsConverter;
-        }
+        { }
 
         public Order CreateOrderFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
         {
             var cart = CreateCartFromPurchase(purchase, productCache);
-            var orderInfo = new OrderInfo(purchase.receipt, purchase.purchaseToken, GooglePlay.Name);
+            var orderInfo = new GoogleOrderInfo(purchase.receipt, purchase.purchaseToken, GooglePlay.Name, purchase.obfuscatedAccountId, purchase.obfuscatedProfileId);
 
             if (purchase.IsPending())
             {

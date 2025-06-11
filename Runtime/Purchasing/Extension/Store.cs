@@ -28,7 +28,7 @@ namespace UnityEngine.Purchasing.Extension
         }
 
         public abstract void Connect();
-        public abstract void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products);
+        public abstract void FetchProducts(IReadOnlyCollection<ProductDefinition> products);
         public abstract void FetchPurchases();
         public abstract void Purchase(ICart cart);
 

@@ -15,19 +15,19 @@ namespace UnityEngine.Purchasing
 
         [Preserve]
         internal MetricizedAppleStoreImpl(ICartValidator cartValidator,
-            IAppleRetrieveProductsService retrieveProductsService,
+            IAppleFetchProductsService fetchProductsService,
             ITransactionLog transactionLog, IUtil util, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics,
             ITelemetryMetricsService telemetryMetricsService)
-            : base(cartValidator, retrieveProductsService, transactionLog, util, logger, telemetryDiagnostics)
+            : base(cartValidator, fetchProductsService, transactionLog, util, logger, telemetryDiagnostics)
         {
             m_TelemetryMetricsService = telemetryMetricsService;
         }
 
-        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
+        public override void FetchProducts(IReadOnlyCollection<ProductDefinition> products)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.RetrieveProducts(products),
-                TelemetryMetricDefinitions.retrieveProductsName);
+                () => base.FetchProducts(products),
+                TelemetryMetricDefinitions.fetchProductsName);
         }
 
         public override void Purchase(ICart cart)

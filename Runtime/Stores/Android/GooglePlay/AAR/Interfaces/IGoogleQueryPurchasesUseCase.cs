@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace UnityEngine.Purchasing.Interfaces
 {
-    public interface IGoogleQueryPurchasesUseCase
+    interface IGoogleQueryPurchasesUseCase
     {
         Task<List<IGooglePurchase>> QueryPurchases();
         Task<IGooglePurchase?> GetPurchaseByToken(string? purchaseToken);

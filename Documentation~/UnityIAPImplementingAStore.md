@@ -14,9 +14,9 @@ public class MyStore : IStore
         this.callback = callback;
     }
 
-    public void RetrieveProducts (System.Collections.ObjectModel.ReadOnlyCollection<UnityEngine.Purchasing.ProductDefinition> products)
+    public void FetchProducts (System.Collections.ObjectModel.ReadOnlyCollection<UnityEngine.Purchasing.ProductDefinition> products)
     {
-        // Fetch product information and invoke callback.OnProductsRetrieved();
+        // Fetch product information and invoke callback.OnProductsFetched();
     }
 
     public void Purchase (UnityEngine.Purchasing.ProductDefinition product, string developerPayload)

@@ -26,14 +26,29 @@ namespace UnityEngine.Purchasing
 
         public Task Connect()
         {
-            (m_Store as IInternalStore)?.SetStoreConnectionState(ConnectionState.Connecting);
-            if (m_CurrentConnectionCompletion == null || m_CurrentConnectionCompletion.Task.IsCompleted)
+            try
             {
-                m_CurrentConnectionCompletion = new TaskCompletionSource<object?>();
-                InitializeRequest();
-            }
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+                if (OnStoreDisconnection == null)
+                {
+                    Debug.unityLogger.LogIAPWarning("IStoreService.Connect called without a callback defined for IStoreService.OnStoreDisconnected.");
+                }
+#endif
 
-            return m_CurrentConnectionCompletion.Task;
+                (m_Store as IInternalStore)?.SetStoreConnectionState(ConnectionState.Connecting);
+                if (m_CurrentConnectionCompletion == null || m_CurrentConnectionCompletion.Task.IsCompleted)
+                {
+                    m_CurrentConnectionCompletion = new TaskCompletionSource<object?>();
+                    InitializeRequest();
+                }
+
+                return m_CurrentConnectionCompletion.Task;
+            }
+            catch (Exception e)
+            {
+                OnStoreDisconnection?.Invoke(new StoreConnectionFailureDescription(e.Message));
+                return Task.CompletedTask;
+            }
         }
 
         void InitializeRequest()
@@ -63,10 +78,9 @@ namespace UnityEngine.Purchasing
         void SendDisconnectionEvent(StoreConnectionFailureDescription connectionFailureDescription)
         {
             (m_Store as IInternalStore)?.SetStoreConnectionState(ConnectionState.Disconnected);
-            var exception = new StoreConnectionException(connectionFailureDescription);
-            m_CurrentConnectionCompletion?.TrySetException(exception);
-
             OnStoreDisconnection?.Invoke(connectionFailureDescription);
+            m_CurrentConnectionCompletion?.TrySetResult(null);
+
         }
 
         public void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy retryPolicy)

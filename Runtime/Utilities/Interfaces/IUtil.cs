@@ -8,7 +8,7 @@ namespace Uniject
     /// An interface allowing Engine APIs to be stubbed out
     /// because unit tests do not have access to Engine APIs.
     /// </summary>
-    public interface IUtil
+    interface IUtil
     {
         RuntimePlatform platform { get; }
         bool isEditor { get; }

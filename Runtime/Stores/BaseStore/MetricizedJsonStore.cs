@@ -13,11 +13,11 @@ namespace UnityEngine.Purchasing
             m_TelemetryMetricsService = telemetryMetricsService;
         }
 
-        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
+        public override void FetchProducts(IReadOnlyCollection<ProductDefinition> products)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.RetrieveProducts(products),
-                TelemetryMetricDefinitions.retrieveProductsName);
+                () => base.FetchProducts(products),
+                TelemetryMetricDefinitions.fetchProductsName);
         }
 
         public override void Purchase(ICart cart)

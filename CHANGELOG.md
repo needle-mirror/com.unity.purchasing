@@ -1,10 +1,86 @@
 # Changelog
 
+## [5.0.0-pre.6] - 2025-06-11
+### Added
+- Added `UnityIAPServies.StoreController` as a wrapper around the other services obtained through UnityIAPServices.
+  - Added `StoreController.PurchaseProduct(string productId)` to initiate a purchase using only the productId.
+- Added messages to `[Obsolete]` attributes on deprecated APIs, test methods, and internal classes.
+- Samples - Added Minimal Coded IAP 5.0.0 Sample to demonstrate a very basic implementation of Coded IAP.
+- Added documentation note in `UpgradeV5.md` clarifying the singleton behavior of `ConfigurationBuilder.Instance` and the use of its constructor as a workaround for scenarios requiring multiple initializations.
+- Added backwards compatibility support for `IAPListener` and `CodelessIAPButton` callbacks. When updating from an older IAP version, your scripts will continue to work without modification.
+- Apple - Added `IAppleStoreExtendedPurchaseService.SetRefreshAppReceipt` to refresh the receipt when a purchase succeeds (true by default). This is useful if are using a backwards compatible implementation or if you use `IOrderInfo.PurchasedProductInfo.subscriptionInfo`.
+- Added `IOrderInfo.Google` to provide access to information specific to orders coming from the Google Play Store.
+- Added `Orders.DeferredOrders` to provide access to deferred orders fetched from the store.
+- Added back `useFakeStoreUIMode` and `useFakeStoreAlways` variables to `StandardPurchasingModule` for backwards compatibility.
+  - Important: neither setting is respected by the FakeStore. Functionality has not been reimplemented.
+- Added back `Instance(AppStore androidStore)` call to `StandardPurchasingModule` for backwards compatibility. Calling `Instance(AppStore androidStore)` will return the same results as `Instance()` regardless of the provided AppStore.
+
+### Changed
+- IAP Catalog - Renamed `Automatically initialize UnityPurchasing (recommended)` to `Automatically initialize UnityIAPServices (recommended)`.
+  - Brought back `Apple Configuration`, `Google Configuration` and `Catalog Export` in IAP Catalog.
+  - Updated translation locales for Google Play Store and Apple App Store
+- Renamed APIs introduced since 5.0.0-pre.1 to improve consistency:
+  - `IStoreService.ConnectAsync` to `IStoreService.Connect`
+  - `IPurchaseService.ConfirmOrder` to `IPurchaseService.ConfirmPurchase`
+  - `IPurchaseService.IsProductEntitled` to `IPurchaseService.CheckEntitlement`
+  - `Entitlement.ProductChecked` to `Entitlement.Product`
+  - `Entitlement.EntitlementOrder` to `Entitlement.Order`
+  - `ConfirmOrderException` to `ConfirmPurchaseException`
+  - `INativeStore.RetrieveProducts` to `INativeStore.FetchProducts`
+- Callbacks introduced since 5.0.0-pre.1 were changed to events:
+  - `IProductService.AddProductsUpdatedAction` and `IProductService.RemoveProductsUpdatedAction` were replaced with `IProductService.OnProductsUpdated`
+  - `IProductService.AddProductsFetchFailedAction` and `IProductService.RemoveProductsFetchFailedAction` were replaced with `IProductService.OnProductsFetchFailed`
+  - `IPurchaseService.AddPendingOrderUpdatedAction` and `IPurchaseService.RemovePendingOrderUpdatedAction` were replaced with `IPurchaseService.OnPurchasePending`
+  - `IPurchaseService.AddConfirmedOrderUpdatedAction` and `IPurchaseService.RemoveConfirmedOrderUpdatedAction` were replaced with `IPurchaseService.OnPurchaseConfirmed`
+  - `IPurchaseService.AddPurchaseFailedAction` and `IPurchaseService.RemovePurchaseFailedAction` were replaced with `IPurchaseService.OnPurchaseFailed`
+  - `IPurchaseService.AddPurchaseDeferredAction` and `IPurchaseService.RemovePurchaseDeferredAction` were replaced with `IPurchaseService.OnPurchaseDeferred`
+  - `IPurchaseService.AddFetchedPurchasesAction` and `IPurchaseService.RemoveFetchedPurchasesAction` were replaced with `IPurchaseService.OnPurchasesFetched`
+  - `IPurchaseService.AddFetchPurchasesFailedAction` and `IPurchaseService.RemoveFetchPurchasesFailedAction` were replaced with `IPurchaseService.OnPurchasesFetchFailed`
+  - `IPurchaseService.AddCheckEntitlementAction` and `IPurchaseService.RemoveCheckEntitlementAction` were replaced with `IPurchaseService.OnCheckEntitlement`
+  - `IPurchaseService.RestoreTransactions` callback was moved from parameter to `IPurchaseService.OnRestoreTransactions`
+  - `IStoreService.AddOnStoreDisconnectedAction` and `IStoreService.RemoveOnStoreDisconnectedAction` were replaced with `IStoreService.OnStoreDisconnected`
+  - `IAppleStoreExtendedPurchaseService.AddEntitlementsRevokedAction` and `IAppleStoreExtendedPurchaseService.RemoveEntitlementsRevokedAction` were replaced with `IAppleStoreExtendedPurchaseService.OnEntitlementRevoked`
+  - `IAppleStoreExtendedPurchaseService.SetPromotionalPurchaseInterceptorCallback` was replaced with `IAppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted`
+  - `IGooglePlayStoreExtendedPurchaseService.SetDeferredProrationUpgradeDowngradeSubscriptionListener` was replaced with `IGooglePlayStoreExtendedPurchaseService.OnDeferredPaymentUntilRenewalDate`
+  - `IStoreProductsCallback.OnProductsUpdated` was replaced with `IStoreProductsCallback.OnProductsFetched`
+  - `IOnEntitlementRevokedUseCase.RevokedEntitlementAction` was replaced with `IOnEntitlementRevokedUseCase.OnEntitlementRevoked`
+- Callbacks are now optional, but will output a warning in debug mode if not set.
+  - `IPurchaseService.OnPurchasePending` is the only callback that should be present to handle a new purchase.
+- Exceptions are no longer thrown, instead, the failure callback associated with the function will be invoked.
+  - GooglePlay - The edge case where the Billing Client invokes the [onPurchasesUpdated](https://developer.android.com/reference/com/android/billingclient/api/PurchasesUpdatedListener#onPurchasesUpdated) with a `GoogleBillingResponseCode.Ok` and no purchase will now invoke the OnPurchaseFailed callback with `PurchaseFailureReason.PurchaseMissing` (previously `PurchaseFailureReason.Unknown`).
+- Introduced a single callback for `CheckEntitlement` results via `OnCheckEntitlement`. The `Entitlement` model now carries status and optional error messages for consistent handling.
+- GooglePlay- Added `IPurchaseService.Google.UpgradeDowngradeSubscription(Order, Product, GooglePlayReplacementMode)`. The other UpgradeDowngradeSubscription have been marked `[Obsolete]`.
+- Unified purchase confirmation handling through a simplified Order hierarchy:
+  - `FailedOrder` now inherits from `Order` base class for consistent error handling so all order types now share common base functionality
+  - `IPurchaseService.OnPurchaseConfirmed` callback now returns `Order` type instead of `ConfirmedOrder`
+  - `IPurchaseService.OnPurchaseFailed` is no longer invoked when `IPurchaseService.ConfirmPurchase` fails
+
+### Removed
+- `IGooglePlayStoreExtendedPurchaseService.SetDeferredPurchaseListener` was removed as it was unused. Instead use `IPurchaseService.OnPurchaseDeferred`.
+- Exceptions introduced since 5.0.0-pre.1 that are no longer used have been removed:
+  - `CheckEntitlementException`
+  - `ConfirmPurchaseException`
+  - `ProductFetchException`
+  - `PurchaseFetchException`
+  - `RestoreTransactionException`
+  - `StoreConnectionException`
+- Removed Amazon Appstore support, including related store implementations and references. Amazon store users should now implement their own custom store integration.
+
+### Fixed
+- Fixed an edge case where PendingOrder was not being returned when no ConfirmedOrder existed
+- Apple - Fixed an issue where a crash could occur when closing the application while a StoreKit callback is being invoked.
+- Apple - Fixed an issue where the receipt wasn't accurate (introduced by Unity IAP 5.0.0-pre.1)
+- Google - Fixed an issue where ConfirmPurchase would throw an exception if there was no purchase to confirm. The `IPurchaseService.OnPurchaseConfirmed` callback will now be invoked with a clear error message.
+- CancelButtonClicked in UIFakeStore returns `PurchaseFailureReason.UserCancelled` instead of `PurchasingUnavailable` when simulating a canceled purchase.
+- Fixed `Entitlement.Order.Info` not returning the correct `OrderInfo`
+- Fixed an issue where `IProduceService.FetchProducts` could remain in a blocked state and prevent fetching products
+
 ## [5.0.0-pre.5] - 2025-03-06
 ### Fixed
 - Apple - Fixed an issue where transactions involving a consumable already purchased in the same session would result in them being finished without invoking the callback set with `IPurchaseServive.AddPendingOrderUpdatedAction`.
 - Fixed an issue where some versions of the Unity Editor compiler were stripping `EmptyAnalyticsAdapter` when Analytics wasn't used.
 - Implemented `jwsRepresentation` in `AppleOrderInfo` to support JWS representation handling. See [Apple StoreKit Documentation](https://developer.apple.com/documentation/storekit/verificationresult/jwsrepresentation-21vgo) for more details.
+- Fixed namespaces causing this error: `Editor is a namespace but is used like a type`
 
 ## [5.0.0-pre.4] - 2025-02-04
 ### Changed
@@ -12,12 +88,19 @@
 - GooglePlay - `GooglePlayProrationMode` has been replaced with `GooglePlayReplacementMode` to match the Google Play Billing Library.
   - `GooglePlayReplacementMode.Deferred` has been changed from `4` to `6` to match the Google Play Billing Library. This change was also applied to `GooglePlayProrationMode.Deferred`.
   - `GooglePlayProrationMode` has been marked `[Obsolete]`
+  - `GooglePlayProrationMode.UnknownSubscriptionUpgradeDowngradePolicy` has been replaced with `GooglePlayReplacementMode.UnknownReplacementMode`
+  - `GooglePlayProrationMode.ImmediateWithTimeProration` has been replaced with `GooglePlayReplacementMode.WithTimeProration`
+  - `GooglePlayProrationMode.ImmediateAndChargeProratedPrice` has been replaced with `GooglePlayReplacementMode.ChargeProratedPrice`
+  - `GooglePlayProrationMode.ImmediateWithoutProration` has been replaced with `GooglePlayReplacementMode.WithoutProration`
+  - `GooglePlayProrationMode.ImmediateAndChargeFullPrice` has been replaced with `GooglePlayReplacementMode.ChargeFullPrice`
+  - `GooglePlayProrationMode.Deferred`has been replaced with `GooglePlayReplacementMode.Deferred`
 
 ### Fixed
 - Apple - Added missing callbacks for StoreKit 2.
 - Codeless - Fixed an issue where `PayoutDefinition` defined in the IAP Catalog was not being used.
 - IAP Catalog - Fixed an issue where `CatalogPopupProductType` was on the wrong namespace (`Editor` instead of `UnityEditor.Purchasing`).
 - IAP Catalog - Fixed an issue where the `Unknown` product type was available in the catalog.
+- Fake Store - Fixed error caused by adding transform component to `UIFakeStore`.
 
 ## [5.0.0-pre.3] - 2024-12-16
 ### Added
@@ -57,7 +140,7 @@ Consult the `Coded IAP 5.0.0 Sample` for a complete example of how to use this n
 ### Changed
 - IAP logs are prefixed with `InAppPurchasing`.
 - IAP Catalog
-  - Removed `Apple Configuration`, `Google Configuration` and `Catalog Export` from IAP Catalog since this is no longer supported by the stores.
+  - Removed `Apple Configuration`, `Google Configuration` and `Catalog Export` from IAP Catalog.
   - Moved the Google Configuration `Price` under `Descriptions` which is displayed when products havn't been retrieved yet or in Fake Store
 - Assemblies starting with `UnityEngine.Purchasing` have been renamed to `Unity.Purchasing`
 

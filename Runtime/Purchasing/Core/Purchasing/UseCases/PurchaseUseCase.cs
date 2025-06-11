@@ -3,7 +3,7 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-    internal class PurchaseUseCase : IPurchaseUseCase, IStorePurchaseCallback
+    class PurchaseUseCase : IPurchaseUseCase, IStorePurchaseCallback
     {
         protected IStore m_Store { get; }
 

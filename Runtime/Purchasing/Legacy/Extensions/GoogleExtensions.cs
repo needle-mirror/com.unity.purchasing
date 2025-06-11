@@ -68,7 +68,7 @@ namespace UnityEngine.Purchasing
             var purchaseService = UnityIAPServices.Purchase(GooglePlay.Name);
             if (purchaseService.Google == null)
             {
-                throw new PurchaseException("Google purchase service unavailable");
+                throw new Exception("Google purchase service unavailable");
             }
 
             var candidateOrders = purchaseService.GetPurchases();
@@ -77,11 +77,15 @@ namespace UnityEngine.Purchasing
                 var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == product.definition.id);
                 if (foundProduct != null)
                 {
-                    return purchaseService.Google!.GetPurchaseState(candidateOrder);
+                    var purchaseState = purchaseService.Google!.GetPurchaseState(candidateOrder);
+                    if (purchaseState != null)
+                    {
+                        return (GooglePurchaseState)purchaseState;
+                    }
                 }
             }
 
-            throw new PurchaseException($"Product {product.definition.id} was not purchased.");
+            throw new Exception($"Product {product.definition.id} was not purchased.");
         }
 
         public string GetObfuscatedAccountId(Product product)

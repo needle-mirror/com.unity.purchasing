@@ -1,6 +1,9 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using Unity.Services.Authentication.Internal;
+using Unity.Services.Core.Configuration.Internal;
+using Unity.Services.Core.Internal;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Services;
 using UnityEngine.Purchasing.Telemetry;
@@ -11,7 +14,7 @@ using Unity.Services.Analytics;
 
 namespace UnityEngine.Purchasing
 {
-    public class PurchaseServiceFactory : IPurchaseServiceFactory
+    class PurchaseServiceFactory : IPurchaseServiceFactory
     {
         static PurchaseServiceFactory? s_Instance;
 
@@ -67,11 +70,31 @@ namespace UnityEngine.Purchasing
             di.AddInstance(store);
             di.AddInstance(store.instance);
             di.AddService<FetchPurchasesUseCase>();
-            di.AddInstance(PurchaseUseCaseFactory.Create(store.instance));
+            di.AddInstance(PurchaseUseCaseFactory.Create(store.instance, store.instance.ProductCache));
             di.AddService<ConfirmOrderUseCase>();
             di.AddService<CheckEntitlementUseCase>();
             di.AddService<OnEntitlementRevokedUseCase>();
             di.AddService<AnalyticsClient>();
+            di.AddService<AppleRefreshAppReceiptUseCase>();
+
+#if IAP_TX_VERIFIER_ENABLED
+            string? projectId = null;
+            string? environmentId = null;
+
+            try
+            {
+                var registry = CoreRegistry.Instance;
+                projectId = registry.GetServiceComponent<ICloudProjectId>().GetCloudProjectId();
+                environmentId = registry.GetServiceComponent<IEnvironmentId>().EnvironmentId;
+            }
+            catch (Exception)
+            {
+                // The fields will return null, but TransactionVerifier handles it.
+            }
+            var transactionVerifier = new TransactionVerifier.TransactionVerifier(store.name, projectId, environmentId);
+            di.AddInstance(transactionVerifier);
+#endif
+
             di.AddInstance(Debug.unityLogger);
             AddAnalyticsDependencies(di);
         }
@@ -93,9 +116,7 @@ namespace UnityEngine.Purchasing
         {
             IDependencyInjectionService di = new DependencyInjectionService();
 
-            di.AddService<ProductCache>();
             di.AddService<GooglePlayRestoreTransactionUseCase>();
-            di.AddService<GooglePlayGetGooglePurchaseUseCase>();
             di.AddInstance(StoreFactory.Instance().TelemetryDiagnosticsInstanceWrapper);
             di.AddService<TelemetryDiagnostics>();
 

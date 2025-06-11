@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 
 namespace UnityEngine.Purchasing
@@ -42,6 +44,16 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="storeName"> The name of the store for which to get the service. </param>
         public static IProductService Product(string storeName) { return ProductServiceProvider.GetProductService(storeName); }
+
+        /// <summary>
+        /// Used by Applications to control Unity In-App Purchasing.
+        /// This is a wrapper over the services meant to be used a single point of entry for the application.
+        /// </summary>
+        /// <param name="storeName">The name of the store for which to get the store controller. When null, the default store will be used.</param>
+        public static StoreController StoreController(string? storeName = null)
+        {
+            return new StoreController(storeName);
+        }
 
         /// <summary>
         /// Sets a different store as the default. Useful for using custom stores.

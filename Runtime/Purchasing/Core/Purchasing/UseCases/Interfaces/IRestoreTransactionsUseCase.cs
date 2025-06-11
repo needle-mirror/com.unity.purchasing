@@ -14,6 +14,6 @@ namespace UnityEngine.Purchasing.Interfaces
         /// </summary>
         /// <param name="callback">Action will be called when the request to the store comes back.
         /// The bool will be true if it was successful or false if it was not. The string is an optional error message</param>
-        void RestoreTransactions(Action<bool, string?> callback);
+        void RestoreTransactions(Action<bool, string?>? callback);
     }
 }

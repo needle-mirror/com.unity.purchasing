@@ -106,13 +106,33 @@ namespace UnityEngine.Purchasing
                         )
                     );
                     break;
+                case GoogleBillingResponseCode.ItemAlreadyOwned:
+                    m_GooglePurchaseCallback.OnPurchaseFailed(
+                        new PurchaseFailureDescription(
+                            m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
+                            Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
+                            PurchaseFailureReason.DuplicateTransaction,
+                            billingResult.debugMessage + " - Google BillingResponseCode = " + billingResult.responseCode
+                        )
+                    );
+                    break;
+                case GoogleBillingResponseCode.Ok:
+                    m_GooglePurchaseCallback.OnPurchaseFailed(
+                        new PurchaseFailureDescription(
+                            m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
+                            Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
+                            PurchaseFailureReason.PurchaseMissing,
+                            billingResult.debugMessage + " - onPurchasesUpdated: purchases list is empty - Google BillingResponseCode = " + billingResult.responseCode
+                        )
+                    );
+                    break;
                 default:
                     m_GooglePurchaseCallback.OnPurchaseFailed(
                         new PurchaseFailureDescription(
                             m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
                             Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
                             PurchaseFailureReason.Unknown,
-                            billingResult.debugMessage + " {M: GPUL.HEC} - onPurchasesUpdated: purchases list is empty - Google BillingResponseCode = " + billingResult.responseCode
+                            billingResult.debugMessage + " {M: GPUL.HEC} - Google BillingResponseCode = " + billingResult.responseCode
                         )
                     );
                     break;

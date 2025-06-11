@@ -17,8 +17,8 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The main initialization call for Unity Purchasing.
         /// </summary>
-        /// <param name="listener"> The <c>IDetailedStoreListener</c> to receive callbacks for future transactions </param>
-        /// <param name="builder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
+        /// <param name="storeListener"> The <c>IDetailedStoreListener</c> to receive callbacks for future transactions </param>
+        /// <param name="configurationBuilder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
         public static void Initialize(IStoreListener storeListener, ConfigurationBuilder configurationBuilder)
         {
             m_StoreListener = storeListener;
@@ -35,31 +35,24 @@ namespace UnityEngine.Purchasing
 
         static void AddProductServiceListeners(IStoreListener storeListener, IProductService productService)
         {
-            productService.AddProductsUpdatedAction(list =>
+            productService.OnProductsFetched += _ =>
             {
                 storeListener.OnInitialized(m_PurchasingManager, new ExtensionProvider());
-            });
+            };
 
-            productService.AddProductsFetchFailedAction(failed =>
+            productService.OnProductsFetchFailed += failed =>
             {
                 storeListener.OnInitializeFailed(InitializationFailureReason.PurchasingUnavailable, failed.FailureReason);
-            });
+            };
         }
 
         static async void ConnectToStoreAndFetchProducts()
         {
-            try
+            var storeService = StoreServiceProvider.GetDefaultStoreService();
+            await storeService.Connect();
+            if (shouldFetchProductsAtInit)
             {
-                var storeService = StoreServiceProvider.GetDefaultStoreService();
-                await storeService.ConnectAsync();
-                if (shouldFetchProductsAtInit)
-                {
-                    FetchProducts(m_StoreListener, m_ConfigurationBuilder);
-                }
-            }
-            catch (StoreConnectionException exception)
-            {
-                Debug.Log(exception);
+                FetchProducts(m_StoreListener, m_ConfigurationBuilder);
             }
         }
     }

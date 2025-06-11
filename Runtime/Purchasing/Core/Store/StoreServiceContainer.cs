@@ -18,12 +18,12 @@ namespace UnityEngine.Purchasing
             return s_Instance ??= new StoreServiceContainer();
         }
 
-        internal IStoreService? FindService(string? storeName)
+        internal IStoreService? FindService(string storeName)
         {
             return !m_InstantiatedServices.ContainsKey(storeName) ? null : m_InstantiatedServices[storeName];
         }
 
-        internal void SetService(string? storeName, IStoreService service)
+        internal void SetService(string storeName, IStoreService service)
         {
             if (m_InstantiatedServices.ContainsKey(storeName))
             {

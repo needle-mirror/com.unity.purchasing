@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing
     class CheckEntitlementUseCase : ICheckEntitlementUseCase, IStoreCheckEntitlementCallback
     {
         readonly IStore m_Store;
-        readonly List<CheckEntitlementRequest> m_OngoingRequests = new List<CheckEntitlementRequest>();
+        readonly List<CheckEntitlementRequest> m_OngoingRequests = new();
 
         [Preserve]
         internal CheckEntitlementUseCase(IStore storeResponsible)
@@ -18,21 +18,28 @@ namespace UnityEngine.Purchasing
             m_Store.SetEntitlementCheckCallback(this);
         }
 
-        public void IsProductEntitled(Product product, Action<Entitlement> onCheckComplete)
+        public void IsProductEntitled(Product product, Action<Entitlement> onResult)
         {
             if (product == null)
             {
-                throw new CheckEntitlementException("Invalid Product requested for entitlement check. Please pass a valid `Product` object.");
+                var entitlement = new Entitlement(null, null, EntitlementStatus.Unknown, "Invalid product: null");
+                onResult?.Invoke(entitlement);
+                return;
             }
 
+            var productId = product.definition?.id ?? "unknown";
             if (FindExistingEntitlementRequest(product))
             {
-                throw new CheckEntitlementException("Duplicate product requested for entitlement. No callbacks will be sent for this call. Please refrain from passing the same `Product` multiple times.");
+                var entitlement = new Entitlement(
+                    product: null,
+                    order: null,
+                    status: EntitlementStatus.Unknown,
+                    message: $"Duplicate CheckEntitlement request detected for product id: {productId}");
+                onResult?.Invoke(entitlement);
+                return;
             }
-            else
-            {
-                AddAndSendCheckEntitlementRequest(product, onCheckComplete);
-            }
+
+            AddAndSendCheckEntitlementRequest(product, onResult);
         }
 
         bool FindExistingEntitlementRequest(Product productToCheckFor)
@@ -40,41 +47,42 @@ namespace UnityEngine.Purchasing
             return m_OngoingRequests.Exists(request => request.ProductToCheck.Equals(productToCheckFor));
         }
 
-        void AddAndSendCheckEntitlementRequest(Product product, Action<Entitlement> checkCompleteAction)
+        void AddAndSendCheckEntitlementRequest(Product product, Action<Entitlement> onCheckComplete)
         {
-            m_OngoingRequests.Add(new CheckEntitlementRequest(product, checkCompleteAction));
+            var request = new CheckEntitlementRequest(product, onCheckComplete);
+            m_OngoingRequests.Add(request);
 
-            m_Store.CheckEntitlement(product.definition);
+            try
+            {
+                m_Store.CheckEntitlement(product.definition);
+            }
+            catch (Exception e)
+            {
+                m_OngoingRequests.Remove(request);
+                var fallbackEntitlement = new Entitlement(
+                    product: product,
+                    order: null,
+                    status: EntitlementStatus.Unknown,
+                    message: $"Exception during CheckEntitlement: {e.Message}"
+                );
+                onCheckComplete?.Invoke(fallbackEntitlement);
+            }
         }
 
-        public void OnCheckEntitlementSucceeded(ProductDefinition productDefinition, EntitlementStatus status)
+        public void OnCheckEntitlement(ProductDefinition productDefinition, EntitlementStatus status,
+            string message = null)
         {
             var matchingRequest = GetMatchingRequest(productDefinition);
-
             if (matchingRequest != null)
             {
-                var cart = new Cart(matchingRequest.ProductToCheck);
-                var orderInfo = new OrderInfo(String.Empty, String.Empty, String.Empty);
-
-                Order order = null;
-                if (status == EntitlementStatus.FullyEntitled)
-                {
-                    order = new ConfirmedOrder(cart, orderInfo);
-                }
-                else if (status == EntitlementStatus.EntitledUntilConsumed || status == EntitlementStatus.EntitledButNotFinished)
-                {
-                    order = new PendingOrder(cart, orderInfo);
-                }
-
-                var entitlement = new Entitlement(matchingRequest.ProductToCheck, order, status);
-
+                var entitlement = new Entitlement(matchingRequest.ProductToCheck, null, status);
                 matchingRequest.OnChecked?.Invoke(entitlement);
-
                 m_OngoingRequests.Remove(matchingRequest);
             }
             else
             {
-                throw new ConfirmOrderException($"Cannot find matching confirmation request for Product SKU: {productDefinition.storeSpecificId}. The List of orders may have become corrupt. No callbacks will be sent for this call. Entitlement status would be {status}.");
+                Debug.unityLogger.LogIAPWarning($"[CheckEntitlement] Missing request for productDefinition: {productDefinition.storeSpecificId}. " +
+                                                $"Callback will not be invoked. Status: {status}. Message: {message ?? "none"}");
             }
         }
 

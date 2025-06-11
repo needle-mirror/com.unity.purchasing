@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 
 namespace UnityEngine.Purchasing
@@ -44,10 +45,22 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public string message { get; private set; }
 
-        internal FailedOrder ConvertToFailedOrder()
+        /// <summary>
+        /// Converts a purchase failure description to a FailedOrder object.
+        /// </summary>
+        /// <param name="transactionId">The transaction ID (e.g., purchase token in Google Play)
+        /// associated with this failed order. If null, an empty order info will be created.</param>
+        /// <returns>A FailedOrder containing the purchase failure information and transaction ID if provided.</returns>
+        /// <remarks>
+        /// The transaction ID is crucial for matching failed orders with their original purchase requests,
+        /// especially in systems that need to track or confirm specific transactions.
+        /// </remarks>
+        internal FailedOrder ConvertToFailedOrder(string? transactionId = "")
         {
             var cart = new Cart(item);
-            return new FailedOrder(cart, reason, message);
+            var orderInfo = new OrderInfo(string.Empty, transactionId, string.Empty);
+            var pendingOrder = new PendingOrder(cart, orderInfo);
+            return new FailedOrder(pendingOrder, reason, message);
         }
     }
 }

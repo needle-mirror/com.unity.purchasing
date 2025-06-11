@@ -83,11 +83,70 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public enum TranslationLocale
     {
-        // Added for Google:
+        /// <summary>
+        /// Afrikaans.
+        /// </summary>
+        af_ZA,
+        /// <summary>
+        /// Albanian.
+        /// </summary>
+        sq_SQ,
+        /// <summary>
+        /// Amharic.
+        /// </summary>
+        am_ET,
+        /// <summary>
+        /// Arabic.
+        /// </summary>
+        ar_AE,
+        /// <summary>
+        /// Armenian.
+        /// </summary>
+        hy_AM,
+        /// <summary>
+        /// Azerbaijani.
+        /// </summary>
+        az_AZ,
+        /// <summary>
+        /// Bangla.
+        /// </summary>
+        bn_BD,
+        /// <summary>
+        /// Basque.
+        /// </summary>
+        eu_ES,
+        /// <summary>
+        /// Belarusian.
+        /// </summary>
+        be_BY,
+        /// <summary>
+        /// Bulgarian.
+        /// </summary>
+        bg_BG,
+        /// <summary>
+        /// Burmese.
+        /// </summary>
+        my_MM,
+        /// <summary>
+        /// Catalan.
+        /// </summary>
+        ca_CA,
+        /// <summary>
+        /// Chinese (Hong Kong).
+        /// </summary>
+        zh_HK,
+        /// <summary>
+        /// Chinese (Simplified).
+        /// </summary>
+        zh_CN,
         /// <summary>
         /// Chinese (Traditional).
         /// </summary>
         zh_TW,
+        /// <summary>
+        /// Croatian.
+        /// </summary>
+        hr_HR,
         /// <summary>
         /// Czech.
         /// </summary>
@@ -101,21 +160,73 @@ namespace UnityEngine.Purchasing
         /// </summary>
         nl_NL,
         /// <summary>
-        /// English (US).
+        /// English (Australia).
+        /// </summary>
+        en_AU,
+        /// <summary>
+        /// English (Canada).
+        /// </summary>
+        en_CA,
+        /// <summary>
+        /// English (United States).
         /// </summary>
         en_US,
         /// <summary>
-        /// French.
+        /// English (United Kingdom).
         /// </summary>
-        fr_FR,
+        en_GB,
+        /// <summary>
+        /// English.
+        /// </summary>
+        en_IN,
+        /// <summary>
+        /// English.
+        /// </summary>
+        en_SG,
+        /// <summary>
+        /// English.
+        /// </summary>
+        en_ZA,
+        /// <summary>
+        /// Estonian.
+        /// </summary>
+        et_EE,
+        /// <summary>
+        /// Filipino.
+        /// </summary>
+        fil_FIL,
         /// <summary>
         /// Finnish.
         /// </summary>
         fi_FI,
         /// <summary>
+        /// French (Canada).
+        /// </summary>
+        fr_CA,
+        /// <summary>
+        /// French (France).
+        /// </summary>
+        fr_FR,
+        /// <summary>
+        /// Galician.
+        /// </summary>
+        gl_ES,
+        /// <summary>
+        /// Georgian.
+        /// </summary>
+        ka_GE,
+        /// <summary>
         /// German.
         /// </summary>
         de_DE,
+        /// <summary>
+        /// Greek.
+        /// </summary>
+        el_GR,
+        /// <summary>
+        /// Gujarati.
+        /// </summary>
+        gu_IN,
         /// <summary>
         /// Hebrew.
         /// </summary>
@@ -125,6 +236,18 @@ namespace UnityEngine.Purchasing
         /// </summary>
         hi_IN,
         /// <summary>
+        /// Hungarian.
+        /// </summary>
+        hu_HU,
+        /// <summary>
+        /// Icelandic.
+        /// </summary>
+        is_IS,
+        /// <summary>
+        /// Indonesian.
+        /// </summary>
+        id_ID,
+        /// <summary>
         /// Italian.
         /// </summary>
         it_IT,
@@ -133,75 +256,161 @@ namespace UnityEngine.Purchasing
         /// </summary>
         ja_JP,
         /// <summary>
+        /// Kannada.
+        /// </summary>
+        kn_IN,
+        /// <summary>
+        /// Kazakh.
+        /// </summary>
+        kk_KZ,
+        /// <summary>
+        /// Khmer.
+        /// </summary>
+        km_KH,
+        /// <summary>
         /// Korean.
         /// </summary>
         ko_KR,
+        /// <summary>
+        /// Kyrgyz.
+        /// </summary>
+        ky_KG,
+        /// <summary>
+        /// Lao.
+        /// </summary>
+        lo_LA,
+        /// <summary>
+        /// Latvian.
+        /// </summary>
+        lv_LV,
+        /// <summary>
+        /// Lithuanian.
+        /// </summary>
+        lt_LT,
+        /// <summary>
+        /// Macedonian.
+        /// </summary>
+        mk_MK,
+        /// <summary>
+        /// Malay (Malaysia).
+        /// </summary>
+        ms_MY,
+        /// <summary>
+        /// Malay.
+        /// </summary>
+        ms_MS,
+        /// <summary>
+        /// Malayalam.
+        /// </summary>
+        ml_IN,
+        /// <summary>
+        /// Marathi.
+        /// </summary>
+        mr_IN,
+        /// <summary>
+        /// Mongolian.
+        /// </summary>
+        mn_MN,
+        /// <summary>
+        /// Nepali.
+        /// </summary>
+        ne_NP,
         /// <summary>
         /// Norwegian.
         /// </summary>
         no_NO,
         /// <summary>
+        /// Persian.
+        /// </summary>
+        fa_FA,
+        /// <summary>
+        /// Persian.
+        /// </summary>
+        fa_AE,
+        /// <summary>
+        /// Persian.
+        /// </summary>
+        fa_AF,
+        /// <summary>
+        /// Persian.
+        /// </summary>
+        fa_IR,
+        /// <summary>
         /// Polish.
         /// </summary>
         pl_PL,
-        /// <summary>
-        /// Portuguese.
-        /// </summary>
-        pt_PT,
-        /// <summary>
-        /// Russian.
-        /// </summary>
-        ru_RU,
-        /// <summary>
-        /// Spanish.
-        /// </summary>
-        es_ES,
-        /// <summary>
-        /// Swedish.
-        /// </summary>
-        sv_SE,
-        // Added for Xiaomi:
-        /// <summary>
-        /// Chinese (Simplified).
-        /// </summary>
-        zh_CN,
-        // Added for Apple:
-        /// <summary>
-        /// English (Australia).
-        /// </summary>
-        en_AU,
-        /// <summary>
-        /// English (Canada).
-        /// </summary>
-        en_CA,
-        /// <summary>
-        /// English (UK).
-        /// </summary>
-        en_GB,
-        /// <summary>
-        /// French (Canada).
-        /// </summary>
-        fr_CA,
-        /// <summary>
-        /// Greek.
-        /// </summary>
-        el_GR,
-        /// <summary>
-        /// Indonesian.
-        /// </summary>
-        id_ID,
-        /// <summary>
-        /// Malay.
-        /// </summary>
-        ms_MY,
         /// <summary>
         /// Portuguese (Brazil).
         /// </summary>
         pt_BR,
         /// <summary>
+        /// Portuguese (Portugal).
+        /// </summary>
+        pt_PT,
+        /// <summary>
+        /// Punjabi.
+        /// </summary>
+        pa_IN,
+        /// <summary>
+        /// Romanian.
+        /// </summary>
+        ro_RO,
+        /// <summary>
+        /// Romansh.
+        /// </summary>
+        rm_CH,
+        /// <summary>
+        /// Russian.
+        /// </summary>
+        ru_RU,
+        /// <summary>
+        /// Serbian.
+        /// </summary>
+        sr_RS,
+        /// <summary>
+        /// Sinhala.
+        /// </summary>
+        si_LK,
+        /// <summary>
+        /// Slovak.
+        /// </summary>
+        sk_SK,
+        /// <summary>
+        /// Slovenian.
+        /// </summary>
+        sl_SI,
+        /// <summary>
+        /// Spanish (Latin America).
+        /// </summary>
+        es_419,
+        /// <summary>
+        /// Spanish (Spain).
+        /// </summary>
+        es_ES,
+        /// <summary>
         /// Spanish (Mexico).
         /// </summary>
         es_MX,
+        /// <summary>
+        /// Spanish (United States).
+        /// </summary>
+        es_US,
+        /// <summary>
+        /// Swahili.
+        /// </summary>
+        sw_KE,
+        /// <summary>
+        /// Swedish.
+        /// </summary>
+        sv_SE,
+        /// <summary>
+        /// Tamil.
+        /// </summary>
+        ta_IN,
+        /// <summary>
+        /// Telugu.
+        /// </summary>
+        te_IN,
         /// <summary>
         /// Thai.
         /// </summary>
@@ -211,9 +420,21 @@ namespace UnityEngine.Purchasing
         /// </summary>
         tr_TR,
         /// <summary>
+        /// Ukrainian.
+        /// </summary>
+        uk_UA,
+        /// <summary>
+        /// Urdu.
+        /// </summary>
+        ur_UZ,
+        /// <summary>
         /// Vietnamese.
         /// </summary>
         vi_VN,
+        /// <summary>
+        /// Zulu.
+        /// </summary>
+        zu_ZA,
     }
 
     /// <summary>
@@ -221,72 +442,200 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public static class LocaleExtensions
     {
+
         /// <summary>
         /// Must match 1:1 "TranslationLocale"
         /// </summary>
         private static readonly string[] Labels =
         {
+            "Afrikaans",
+            "Albanian",
+            "Amharic",
+            "Arabic",
+            "Armenian",
+            "Azerbaijani",
+            "Bangla",
+            "Basque",
+            "Belarusian",
+            "Bulgarian",
+            "Burmese",
+            "Catalan",
+            "Chinese (Hong Kong)",
+            "Chinese (Simplified)",
             "Chinese (Traditional)",
+            "Croatian",
             "Czech",
             "Danish",
             "Dutch",
-            "English (U.S.)",
-            "French",
-            "Finnish",
-            "German",
-            "Hebrew",
-            "Hindi",
-            "Italian",
-            "Japanese",
-            "Korean",
-            "Norwegian",
-            "Polish",
-            "Portuguese (Portugal)",
-            "Russian",
-            "Spanish (Spain)",
-            "Swedish",
-            "Chinese (Simplified)",
             "English (Australia)",
             "English (Canada)",
-            "English (U.K.)",
+            "English (United States)",
+            "English (United Kingdom)",
+            "English",
+            "English",
+            "English",
+            "Estonian",
+            "Filipino",
+            "Finnish",
             "French (Canada)",
+            "French (France)",
+            "Galician",
+            "Georgian",
+            "German",
             "Greek",
+            "Gujarati",
+            "Hebrew",
+            "Hindi",
+            "Hungarian",
+            "Icelandic",
             "Indonesian",
+            "Italian",
+            "Japanese",
+            "Kannada",
+            "Kazakh",
+            "Khmer",
+            "Korean",
+            "Kyrgyz",
+            "Lao",
+            "Latvian",
+            "Lithuanian",
+            "Macedonian",
+            "Malay (Malaysia)",
             "Malay",
+            "Malayalam",
+            "Marathi",
+            "Mongolian",
+            "Nepali",
+            "Norwegian",
+            "Persian",
+            "Persian",
+            "Persian",
+            "Persian",
+            "Polish",
             "Portuguese (Brazil)",
+            "Portuguese (Portugal)",
+            "Punjabi",
+            "Romanian",
+            "Romansh",
+            "Russian",
+            "Serbian",
+            "Sinhala",
+            "Slovak",
+            "Slovenian",
+            "Spanish (Latin America)",
+            "Spanish (Spain)",
             "Spanish (Mexico)",
+            "Spanish (United States)",
+            "Swahili",
+            "Swedish",
+            "Tamil",
+            "Telugu",
             "Thai",
             "Turkish",
-            "Vietnamese"
+            "Ukrainian",
+            "Urdu",
+            "Vietnamese",
+            "Zulu",
         };
-
         private static readonly TranslationLocale[] GoogleLocales =
         {
+            TranslationLocale.af_ZA,
+            TranslationLocale.sq_SQ,
+            TranslationLocale.am_ET,
+            TranslationLocale.ar_AE,
+            TranslationLocale.hy_AM,
+            TranslationLocale.az_AZ,
+            TranslationLocale.bn_BD,
+            TranslationLocale.eu_ES,
+            TranslationLocale.be_BY,
+            TranslationLocale.bg_BG,
+            TranslationLocale.my_MM,
+            TranslationLocale.ca_CA,
+            TranslationLocale.zh_HK,
+            TranslationLocale.zh_CN,
             TranslationLocale.zh_TW,
+            TranslationLocale.hr_HR,
             TranslationLocale.cs_CZ,
             TranslationLocale.da_DK,
             TranslationLocale.nl_NL,
+            TranslationLocale.en_AU,
+            TranslationLocale.en_CA,
             TranslationLocale.en_US,
-            TranslationLocale.fr_FR,
+            TranslationLocale.en_GB,
+            TranslationLocale.en_IN,
+            TranslationLocale.en_SG,
+            TranslationLocale.en_ZA,
+            TranslationLocale.et_EE,
+            TranslationLocale.fil_FIL,
             TranslationLocale.fi_FI,
+            TranslationLocale.fr_CA,
+            TranslationLocale.fr_FR,
+            TranslationLocale.gl_ES,
+            TranslationLocale.ka_GE,
             TranslationLocale.de_DE,
+            TranslationLocale.el_GR,
+            TranslationLocale.gu_IN,
             TranslationLocale.iw_IL,
             TranslationLocale.hi_IN,
+            TranslationLocale.hu_HU,
+            TranslationLocale.is_IS,
+            TranslationLocale.id_ID,
             TranslationLocale.it_IT,
             TranslationLocale.ja_JP,
+            TranslationLocale.kn_IN,
+            TranslationLocale.kk_KZ,
+            TranslationLocale.km_KH,
             TranslationLocale.ko_KR,
+            TranslationLocale.ky_KG,
+            TranslationLocale.lo_LA,
+            TranslationLocale.lv_LV,
+            TranslationLocale.lt_LT,
+            TranslationLocale.mk_MK,
+            TranslationLocale.ms_MY,
+            TranslationLocale.ms_MS,
+            TranslationLocale.ml_IN,
+            TranslationLocale.mr_IN,
+            TranslationLocale.mn_MN,
+            TranslationLocale.ne_NP,
             TranslationLocale.no_NO,
+            TranslationLocale.fa_FA,
+            TranslationLocale.fa_AE,
+            TranslationLocale.fa_AF,
+            TranslationLocale.fa_IR,
             TranslationLocale.pl_PL,
+            TranslationLocale.pt_BR,
             TranslationLocale.pt_PT,
+            TranslationLocale.pa_IN,
+            TranslationLocale.ro_RO,
+            TranslationLocale.rm_CH,
             TranslationLocale.ru_RU,
+            TranslationLocale.sr_RS,
+            TranslationLocale.si_LK,
+            TranslationLocale.sk_SK,
+            TranslationLocale.sl_SI,
+            TranslationLocale.es_419,
             TranslationLocale.es_ES,
+            TranslationLocale.es_US,
+            TranslationLocale.sw_KE,
             TranslationLocale.sv_SE,
+            TranslationLocale.ta_IN,
+            TranslationLocale.te_IN,
+            TranslationLocale.th_TH,
+            TranslationLocale.tr_TR,
+            TranslationLocale.uk_UA,
+            TranslationLocale.ur_UZ,
+            TranslationLocale.vi_VN,
+            TranslationLocale.zu_ZA
         };
 
         private static readonly TranslationLocale[] AppleLocales =
         {
+            TranslationLocale.ar_AE, // Arabic
+            TranslationLocale.ca_CA, // Catalan
             TranslationLocale.zh_CN, // Chinese (Simplified)
             TranslationLocale.zh_TW, // Chinese (Traditional)
+            TranslationLocale.hr_HR, // Croatian
+            TranslationLocale.cs_CZ, // Czech
             TranslationLocale.da_DK, // Danish
             TranslationLocale.nl_NL, // Dutch
             TranslationLocale.en_AU, // English (Australia)
@@ -298,20 +647,26 @@ namespace UnityEngine.Purchasing
             TranslationLocale.fr_CA, // French (Canada)
             TranslationLocale.de_DE, // German
             TranslationLocale.el_GR, // Greek
+            TranslationLocale.iw_IL, // Hebrew
+            TranslationLocale.hi_IN, // Hindi
+            TranslationLocale.hu_HU, // Hungarian
             TranslationLocale.id_ID, // Indonesian
             TranslationLocale.it_IT, // Italian
             TranslationLocale.ja_JP, // Japanese
             TranslationLocale.ko_KR, // Korean
             TranslationLocale.ms_MY, // Malay
             TranslationLocale.no_NO, // Norwegian
+            TranslationLocale.pl_PL, // Polish
             TranslationLocale.pt_BR, // Portuguese (Brazil)
             TranslationLocale.pt_PT, // Portuguese (Portugal)
+            TranslationLocale.ro_RO, // Romanian
             TranslationLocale.ru_RU, // Russian
             TranslationLocale.es_MX, // Spanish (Mexico)
             TranslationLocale.es_ES, // Spanish (Spain)
             TranslationLocale.sv_SE, // Swedish
             TranslationLocale.th_TH, // Thai
             TranslationLocale.tr_TR, // Turkish
+            TranslationLocale.uk_UA, // Ukrainian
             TranslationLocale.vi_VN, // Vietnamese
         };
 
@@ -616,11 +971,27 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public LocalizedProductDescription defaultDescription = new LocalizedProductDescription();
 
+        // Apple configuration fields
+        /// <summary>
+        /// Screenshot path for Apple configuration.
+        /// </summary>
+        public string screenshotPath;
+
+        /// <summary>
+        /// The price tier for the Apple Store.
+        /// </summary>
+        public int applePriceTier = 0;
+
         // Google configuration fields
         /// <summary>
         /// The price for GooglePlay.
         /// </summary>
         public Price googlePrice = new Price();
+
+        /// <summary>
+        /// The price template for GooglePlay.
+        /// </summary>
+        public string pricingTemplateID;
 
         [SerializeField]
 #pragma warning disable IDE0044 //This field cannot be readonly because it will be set when deserialized.
@@ -669,7 +1040,10 @@ namespace UnityEngine.Purchasing
             };
             item.SetStoreIDs(allStoreIDs);
             item.defaultDescription = defaultDescription.Clone();
+            item.screenshotPath = screenshotPath;
+            item.applePriceTier = applePriceTier;
             item.googlePrice.value = googlePrice.value;
+            item.pricingTemplateID = pricingTemplateID;
             foreach (var desc in descriptions)
             {
                 item.descriptions.Add(desc.Clone());
@@ -812,6 +1186,16 @@ namespace UnityEngine.Purchasing
     public class ProductCatalog
     {
         private static IProductCatalogImpl instance;
+
+        /// <summary>
+        /// The apple SKU of the app.
+        /// </summary>
+        public string appleSKU;
+
+        /// <summary>
+        /// The apple team ID of the app.
+        /// </summary>
+        public string appleTeamID;
 
         /// <summary>
         /// Enables automatic initialization when using Codeless IAP.

@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing
         public Guid? AppAccountToken { get; set; }
         public string? jwsRepresentation { get; set; }
 
-        public AppleOrderInfo(string transactionID, string? storeName, IAppleAppReceiptViewer appReceiptViewer, string? originalTransactionID, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
+        public AppleOrderInfo(string transactionID, string storeName, IAppleAppReceiptViewer appReceiptViewer, string? originalTransactionID, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
             : base(string.Empty, transactionID, storeName)
         {
             m_ReceiptViewer = appReceiptViewer;

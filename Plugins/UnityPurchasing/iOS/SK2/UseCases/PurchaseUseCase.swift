@@ -77,7 +77,6 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
 #else
             // This is a signed & verified transaction. StoreKit handle transaction verification for us.
             guard let purchaseDetail = try await purchase(product, options: purchaseProductOptions) else {
-                await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
                 return nil
             }
             return purchaseDetail
@@ -149,7 +148,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
                         self.interceptedProductIds.append(purchaseIntent.id)
                     } else {
                         // Receive the purchase intent and then complete the purchase workflow.
-                        _ = await try self.purchaseProduct(product: purchaseIntent.product, options: options, storefrontChangeCallback: nil)
+                        _ = try await self.purchaseProduct(product: purchaseIntent.product, options: options, storefrontChangeCallback: nil)
                     }
                 }
             }

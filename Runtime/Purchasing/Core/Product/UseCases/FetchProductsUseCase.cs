@@ -60,7 +60,7 @@ namespace UnityEngine.Purchasing
         {
             m_ActiveRequest = request;
             m_ActiveRetryRequest =
-                m_RetryService.CreateRequest(() => m_Store.RetrieveProducts(request.RequestedProducts), retryPolicy);
+                m_RetryService.CreateRequest(() => m_Store.FetchProducts(request.RequestedProducts), retryPolicy);
             m_ActiveRetryRequest.Invoke();
         }
 
@@ -68,17 +68,15 @@ namespace UnityEngine.Purchasing
         /// Callback received when the call to retrieve products from the store is completed successfully.
         /// </summary>
         /// <param name="products"> The list of product descriptions retrieved. </param>
-        public void OnProductsRetrieved(IReadOnlyList<ProductDescription> products)
+        public void OnProductsFetched(IReadOnlyList<ProductDescription> products)
         {
             if (m_ActiveRequest != null)
             {
-                ProcessRetrievedProductsAndInvokeCallbacks(m_ActiveRequest, products);
-
-                m_ActiveRequest = null;
+                ProcessFetchedProductsAndInvokeCallbacks(m_ActiveRequest, products);
             }
         }
 
-        void ProcessRetrievedProductsAndInvokeCallbacks(ProductFetchRequest request, IReadOnlyList<ProductDescription> productsRetrieved)
+        void ProcessFetchedProductsAndInvokeCallbacks(ProductFetchRequest request, IReadOnlyList<ProductDescription> productsRetrieved)
         {
             var matchedDefinitions = new List<ProductDefinition>();
             var retrievedProducts = new List<Product>();
@@ -94,7 +92,11 @@ namespace UnityEngine.Purchasing
                 }
             }
 
-            InvokeSuccess(retrievedProducts);
+            var successCallback = m_ActiveRequest?.SuccessAction;
+            // Clear the active request before invoking the callbacks to avoid concurrency issues with retries
+            m_ActiveRequest = null;
+
+            InvokeSuccess(retrievedProducts, successCallback);
             InvokeFailureIfIncomplete(request, matchedDefinitions);
         }
 
@@ -115,12 +117,12 @@ namespace UnityEngine.Purchasing
             return matchedProduct;
         }
 
-        void InvokeSuccess(List<Product> fetchedProducts)
+        static void InvokeSuccess(List<Product> fetchedProducts, Action<List<Product>>? successCallback)
         {
-            m_ActiveRequest?.SuccessAction?.Invoke(fetchedProducts);
+            successCallback?.Invoke(fetchedProducts);
         }
 
-        void InvokeFailureIfIncomplete(ProductFetchRequest request, List<ProductDefinition> matchedDefinitions)
+        static void InvokeFailureIfIncomplete(ProductFetchRequest request, List<ProductDefinition> matchedDefinitions)
         {
             var unretrievedProducts = request.RequestedProducts.Where(def => !matchedDefinitions.Contains(def))
                 .ToList();
@@ -141,10 +143,10 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Callback received when a RetrieveProducts call could not be completed successfully.
+        /// Callback received when a FetchProducts call could not be completed successfully.
         /// </summary>
         /// <param name="failureDescription"> The reason the fetch failed. </param>
-        public async void OnProductsRetrieveFailed(ProductFetchFailureDescription failureDescription)
+        public async void OnProductsFetchFailed(ProductFetchFailureDescription failureDescription)
         {
             if (m_ActiveRequest == null)
             {
@@ -172,9 +174,10 @@ namespace UnityEngine.Purchasing
                 message = failureDescription.Reason.ToString();
             }
 
-            productFetchRequest.FailureAction.Invoke(productFetchRequest.RequestedProducts.ToList(), message);
-
+            // Clear the active request before invoking the callback to avoid concurrency issues with retries
             m_ActiveRequest = null;
+
+            productFetchRequest.FailureAction.Invoke(productFetchRequest.RequestedProducts.ToList(), message);
         }
     }
 }

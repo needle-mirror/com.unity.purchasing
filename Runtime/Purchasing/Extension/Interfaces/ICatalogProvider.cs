@@ -61,6 +61,6 @@ namespace UnityEngine.Purchasing.Extension
         /// </summary>
         /// <param name="callback"> Event containing the set of products upon completion. </param>
         /// <param name="storeName"> The name of the store the products are from. </param>
-        void FetchProducts(Action<List<ProductDefinition>> callback, string? storeName);
+        void FetchProducts(Action<List<ProductDefinition>> callback, string storeName);
     }
 }

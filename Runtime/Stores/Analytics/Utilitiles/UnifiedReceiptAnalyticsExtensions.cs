@@ -48,11 +48,6 @@ namespace UnityEngine.Purchasing
                 return TransactionServer.GOOGLE;
             }
 
-            if (store.Contains("amazon"))
-            {
-                return TransactionServer.AMAZON;
-            }
-
             return null;
         }
     }

@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing.Telemetry
             presentCodeRedemptionSheetName = "present_code_redemption_sheet",
             refreshAppReceiptName = "refresh_app_receipt",
             restoreTransactionName = "restore_transaction",
-            retrieveProductsName = "retrieve_products",
+            fetchProductsName = "fetch_products",
             setStorePromotionOrderName = "set_store_promotion_order",
             setStorePromotionVisibilityName = "set_store_promotion_visibility",
             upgradeDowngradeSubscriptionName = "upgrade_downgrade_subscription";

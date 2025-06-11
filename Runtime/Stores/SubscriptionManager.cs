@@ -1,18 +1,18 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Use to query in-app purchasing subscription product information, and upgrade subscription products.
-    /// Supports the Apple App Store, Google Play store, and Amazon AppStore.
-    /// Note Amazon support offers no subscription duration information.
+    /// Supports the Apple App Store, Google Play store.
     /// Note expiration dates may become invalid after updating subscriptions between two types of duration.
     /// </summary>
     /// <seealso cref="IAppleExtensions.GetIntroductoryPriceDictionary"/>
     /// <seealso cref="UpdateSubscription"/>
-    [Obsolete]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public class SubscriptionManager : SubscriptionInfoHelper
     {
         /// <summary>
@@ -120,7 +120,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Subscription to be inspected</param>
         /// <param name="intro_json">From <typeparamref name="IAppleExtensions.GetIntroductoryPriceDictionary"/></param>
-        [Obsolete]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public SubscriptionManager(Product product, string intro_json)
             : base(product, intro_json)
         {

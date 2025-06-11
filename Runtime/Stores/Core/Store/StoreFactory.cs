@@ -41,8 +41,7 @@ namespace UnityEngine.Purchasing
             {
                 var logger = Debug.unityLogger;
                 var util = UnityUtilContainer.Instance();
-                var amazonStoreFactory = new AmazonNativeStoreBuilder();
-                var nativeStoreProvider = new NativeStoreProvider(amazonStoreFactory);
+                var nativeStoreProvider = new NativeStoreProvider();
                 s_Instance = new StoreFactory(util, logger, nativeStoreProvider,
                     new TelemetryDiagnosticsInstanceWrapper(logger, util),
                     new TelemetryMetricsInstanceWrapper(logger, util));
@@ -53,19 +52,18 @@ namespace UnityEngine.Purchasing
 
         void RegisterBaseStores()
         {
-            RegisterStore(AmazonApps.Name, InstantiateAmazonStore);
             RegisterStore(AppleAppStore.Name, InstantiateAppleStore);
             RegisterStore(FakeAppStore.Name, InstantiateFakeStore);
             RegisterStore(MacAppStore.Name, InstantiateMacAppStore);
             RegisterStore(GooglePlay.Name, InstantiateGooglePlayStore);
         }
 
-        public void RegisterStore(string? storeName, Func<IStoreWrapper> function)
+        public void RegisterStore(string storeName, Func<IStoreWrapper> function)
         {
             m_StoreInstantiationByName[storeName] = function;
         }
 
-        public IStoreWrapper CreateStore(string? storeName)
+        public IStoreWrapper CreateStore(string storeName)
         {
             try
             {
@@ -75,19 +73,6 @@ namespace UnityEngine.Purchasing
             {
                 throw new StoreException($"An error has occured when attempting to create the store: {storeName}.", ex);
             }
-        }
-
-        IStoreWrapper InstantiateAmazonStore()
-        {
-            var di = CreateBaseDiService();
-
-            di.AddService<AmazonStoreCartValidator>();
-            di.AddService<MetricizedJsonStore>();
-            di.AddInstance(AmazonApps.Name);
-
-            var nativeStore = CreateAndAssignNativeAndroidStore(di.GetInstance<JsonStore>());
-
-            return new StoreWrapper(AmazonApps.Name, di.GetInstance<InternalStore>());
         }
 
         IDependencyInjectionService CreateBaseDiService()
@@ -112,13 +97,6 @@ namespace UnityEngine.Purchasing
             di.AddService<TelemetryMetricsService>();
         }
 
-        IAndroidJavaStore CreateAndAssignNativeAndroidStore(JsonStore store)
-        {
-            var nativeStore = m_NativeStoreProvider.GetAmazonStore(store, m_Util);
-            store.SetNativeStore(nativeStore);
-            return nativeStore;
-        }
-
         IStoreWrapper InstantiateAppleStore()
         {
             return InstantiateAppleAppStore(AppleAppStore.Name, AppleAppStore.DisplayName);
@@ -129,7 +107,7 @@ namespace UnityEngine.Purchasing
             return InstantiateAppleAppStore(MacAppStore.Name, MacAppStore.DisplayName);
         }
 
-        IStoreWrapper InstantiateAppleAppStore(string? storeName, string storeDisplayName)
+        IStoreWrapper InstantiateAppleAppStore(string storeName, string storeDisplayName)
         {
             var di = CreateBaseDiService();
             di.AddInstance(new AppleAppStoreCartValidator(storeDisplayName));
@@ -140,7 +118,7 @@ namespace UnityEngine.Purchasing
 
         void AddMetricizedAppleStoreDependencies(IDependencyInjectionService di)
         {
-            di.AddService<AppleRetrieveProductsService>();
+            di.AddService<AppleFetchProductsService>();
             di.AddService<MetricizedAppleStoreImpl>();
             di.AddInstance(BuildTransactionLog(di));
         }
@@ -192,7 +170,7 @@ namespace UnityEngine.Purchasing
             return CreateStoreWrapper(GooglePlay.Name, di);
         }
 
-        static IStoreWrapper CreateStoreWrapper(string? storeName, IDependencyInjectionService di)
+        static IStoreWrapper CreateStoreWrapper(string storeName, IDependencyInjectionService di)
         {
             return new StoreWrapper(storeName, di.GetInstance<InternalStore>());
         }
@@ -223,7 +201,7 @@ namespace UnityEngine.Purchasing
             di.AddService<GooglePlayStoreFinishTransactionService>();
             di.AddService<GooglePlayStoreFetchPurchasesService>();
             di.AddService<TelemetryMetricsInstanceWrapper>();
-            di.AddService<GooglePlayStoreRetrieveProductsService>();
+            di.AddService<GooglePlayStoreFetchProductsService>();
             di.AddService<GooglePlayStoreCheckEntitlementService>();
             di.AddService<GooglePlayStoreChangeSubscriptionService>();
             di.AddService<GooglePlayCartValidator>();

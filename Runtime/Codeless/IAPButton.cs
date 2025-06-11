@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing
     [RequireComponent(typeof(Button))]
     [AddComponentMenu("In-App Purchasing/IAP Button")]
     [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
-    [Obsolete]
+    [Obsolete("IAPButton is deprecated and will be removed in a future release. Use the Unity IAP scripting API or CodelessIAPStoreListener instead.")]
     public class IAPButton : MonoBehaviour
     {
         /// <summary>

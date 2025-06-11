@@ -51,7 +51,7 @@ namespace UnityEngine.Purchasing
                 var billingResponse = responses.GetRecoverableBillingResponseCode();
                 var description = new ProductFetchFailureDescription(ProductFetchFailureReason.ProviderUnavailable,
                     $"Could not retrieve all product details. GoogleBillingResponseCode : {billingResponse}", true);
-                throw new GoogleRetrieveProductException(GoogleRetrieveProductsFailureReason.Unknown, billingResponse, description);
+                throw new GoogleFetchProductException(GoogleFetchProductsFailureReason.Unknown, billingResponse, description);
             }
 
             return GetCachedProductDetails(products).ToList();

@@ -3,7 +3,7 @@
 namespace UnityEngine.Purchasing
 {
     /// <summary>
-    /// Provides access to the Purchase Service API by locating or creating an instance of an <c>IPurchaseService<c>
+    /// Provides access to the Purchase Service API by locating or creating an instance of an <c>IPurchaseService</c>
     /// </summary>
     static class PurchaseServiceProvider
     {
@@ -20,11 +20,11 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Get the <c>IPurchaseService<c> for the store specified.
+        /// Get the <c>IPurchaseService</c> for the store specified.
         /// </summary>
         /// <param name="storeName"> Name of the store for which to provide the Product Service. </param>
         /// <returns> The Purchase Service for the specified store. </returns>
-        public static IPurchaseService GetPurchaseService(string? storeName)
+        public static IPurchaseService GetPurchaseService(string storeName)
         {
             return GetPurchaseServiceInternal(StoreManager.Instance().GetStore(storeName));
         }

@@ -1,0 +1,5 @@
+{
+  "displayName": "Minimal Coded IAP 5.0.0 Sample",
+  "description": "This sample showcases how to do a minimal implementation of Coded IAP in 5.0.0.",
+  "createSeparatePackage": false
+}

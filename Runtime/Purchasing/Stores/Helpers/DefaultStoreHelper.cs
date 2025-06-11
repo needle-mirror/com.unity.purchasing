@@ -4,19 +4,19 @@ namespace UnityEngine.Purchasing
 {
     public static class DefaultStoreHelper
     {
-        static string? s_DefaultCustomStoreOverrideName = string.Empty;
+        static string s_DefaultCustomStoreOverrideName = string.Empty;
 
-        public static void OverrideDefaultStoreName(string? newDefaultStoreName)
+        public static void OverrideDefaultStoreName(string newDefaultStoreName)
         {
             s_DefaultCustomStoreOverrideName = newDefaultStoreName;
         }
 
-        public static string? GetDefaultStoreName()
+        public static string GetDefaultStoreName()
         {
             return string.IsNullOrEmpty(s_DefaultCustomStoreOverrideName) ? GetBuiltInDefaultStoreName() : s_DefaultCustomStoreOverrideName;
         }
 
-        static string? GetBuiltInDefaultStoreName()
+        static string GetBuiltInDefaultStoreName()
         {
             switch (Application.platform)
             {

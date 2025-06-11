@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
         /// Gets the name of the store.
         /// </summary>
         /// <returns> The store's name </returns>
-        public string? name { get; }
+        public string name { get; }
 
         /// <summary>
         /// Gets the instance of the store.
@@ -31,7 +31,7 @@ namespace UnityEngine.Purchasing
             return m_InternalStore.GetStoreConnectionState();
         }
 
-        public StoreWrapper(string? name, InternalStore instance)
+        public StoreWrapper(string name, InternalStore instance)
         {
             this.name = name;
             m_InternalStore = instance;

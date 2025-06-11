@@ -7,18 +7,18 @@ namespace UnityEngine.Purchasing
     public class DeferredPaymentUntilRenewalDateOrder
     {
         /// <summary>
-        /// The subscription currently owned by the player. Read only.
+        /// The Order containing the subscription currently owned by the player. Read only.
         /// </summary>
-        public Product CurrentSubscription { get; }
+        public Order CurrentOrder { get; }
 
         /// <summary>
         /// The subscription ordered. Read only.
         /// </summary>
         public Product SubscriptionOrdered { get; }
 
-        public DeferredPaymentUntilRenewalDateOrder(Product currentSubscription, Product subscriptionOrdered)
+        public DeferredPaymentUntilRenewalDateOrder(Order currentOrder, Product subscriptionOrdered)
         {
-            CurrentSubscription = currentSubscription;
+            CurrentOrder = currentOrder;
             SubscriptionOrdered = subscriptionOrdered;
         }
     }

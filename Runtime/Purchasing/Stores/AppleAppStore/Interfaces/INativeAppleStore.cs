@@ -17,5 +17,6 @@ namespace UnityEngine.Purchasing
         void ContinuePromotionalPurchases();
         void PresentCodeRedemptionSheet();
         void DeallocateMemory(IntPtr pointer);
+        void RefreshAppReceipt();
     }
 }

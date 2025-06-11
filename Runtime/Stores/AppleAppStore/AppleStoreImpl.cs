@@ -22,40 +22,50 @@ namespace UnityEngine.Purchasing
         Action<bool, string?>? m_RestoreCallback;
         Action<string>? m_FetchStorePromotionOrderError;
         Action<List<Product>>? m_FetchStorePromotionOrderSuccess;
-        Action<Product>? m_PromotionalPurchaseCallback;
         Action<string>? m_FetchStorePromotionVisibilityError;
         Action<string, AppleStorePromotionVisibility>? m_FetchStorePromotionVisibilitySuccess;
+
+        // TODO: IAP-3929
+        Action<string>? m_RefreshAppReceiptSuccessCallback;
+        Action<string>? m_RefreshAppReceiptErrorCallback;
+        bool m_RefreshAppReceipt = true;
+
         INativeAppleStore? m_Native;
-        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
-        readonly IAppleRetrieveProductsService m_RetrieveProductsService;
+        readonly IAppleFetchProductsService m_FetchProductsService;
         readonly ITransactionLog m_TransactionLog;
         static HashSet<string> s_SubscriptionDeduplicationData = new();
 
         static IUtil? s_Util;
         static AppleStoreImpl? s_Instance;
 
-        bool m_IsTransactionObserverEnabled;
-        Guid m_appAccountToken;
+        string? appReceipt;
 
-        protected AppleStoreImpl(ICartValidator cartValidator, IAppleRetrieveProductsService retrieveProductsService,
+        bool m_IsTransactionObserverEnabled;
+        Guid m_AppAccountToken;
+
+        public event Action<Product>? OnPromotionalPurchaseIntercepted;
+
+        protected AppleStoreImpl(ICartValidator cartValidator, IAppleFetchProductsService fetchProductsService,
             ITransactionLog transactionLog,
             IUtil util,
             ILogger logger,
             ITelemetryDiagnostics telemetryDiagnostics)
-            : base(cartValidator, logger, DefaultStoreHelper.GetDefaultStoreName())
+            : base(cartValidator, logger, AppleAppStore.Name)
         {
-            m_appAccountToken = Guid.Empty;
+            m_AppAccountToken = Guid.Empty;
             s_Util = util;
             s_Instance = this;
-            m_TelemetryDiagnostics = telemetryDiagnostics;
-            m_RetrieveProductsService = retrieveProductsService;
+            m_FetchProductsService = fetchProductsService;
             m_TransactionLog = transactionLog;
         }
         public void SetNativeStore(INativeAppleStore apple)
         {
             base.SetNativeStore(apple);
             m_Native = apple;
-            m_RetrieveProductsService.SetNativeStore(apple);
+            m_FetchProductsService.SetNativeStore(apple);
+
+            //TODO: IAP-4089: Add test
+            Application.quitting += () => apple.SetUnityPurchasingCallback(null);
             apple.SetUnityPurchasingCallback(MessageCallback);
         }
 
@@ -66,7 +76,7 @@ namespace UnityEngine.Purchasing
 
         public string? AppReceipt()
         {
-            return m_Native?.AppReceipt();
+            return appReceipt;
         }
 
         public override void Connect()
@@ -94,24 +104,19 @@ namespace UnityEngine.Purchasing
             var options = new Dictionary<string, object>
             {
                 { "simulatesAskToBuyInSandbox", simulateAskToBuy },
-                { "appAccountToken", m_appAccountToken },
+                { "appAccountToken", m_AppAccountToken },
             };
 
             return Json.Serialize(options);
         }
 
-        public void SetApplePromotionalPurchaseInterceptorCallback(Action<Product> callback)
-        {
-            m_PromotionalPurchaseCallback = callback;
-        }
-
-        public override async void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
+        public override async void FetchProducts(IReadOnlyCollection<ProductDefinition> products)
         {
             try
             {
-                var productDescriptions = await m_RetrieveProductsService.RetrieveProducts(products);
+                var productDescriptions = await m_FetchProductsService.FetchProducts(products);
 
-                ProductsCallback?.OnProductsRetrieved(productDescriptions);
+                ProductsCallback?.OnProductsFetched(productDescriptions);
 
                 if (!m_IsTransactionObserverEnabled)
                 {
@@ -120,14 +125,18 @@ namespace UnityEngine.Purchasing
                 }
 
                 // If there is a promotional purchase callback, tell the store to intercept those purchases.
-                if (m_PromotionalPurchaseCallback != null)
+                if (OnPromotionalPurchaseIntercepted != null)
                 {
                     m_Native?.InterceptPromotionalPurchases();
                 }
             }
-            catch (RetrieveProductsException exception)
+            catch (FetchProductsException exception)
             {
-                ProductsCallback?.OnProductsRetrieveFailed(exception.FailureDescription);
+                ProductsCallback?.OnProductsFetchFailed(exception.FailureDescription);
+            }
+            catch (Exception e)
+            {
+                ProductsCallback?.OnProductsFetchFailed(new ProductFetchFailureDescription(ProductFetchFailureReason.Unknown, e.Message));
             }
         }
 
@@ -148,7 +157,7 @@ namespace UnityEngine.Purchasing
             m_FetchStorePromotionVisibilitySuccess = successCallback;
         }
 
-        public void SetRestoreTransactionsCallback(Action<bool, string?> successCallback)
+        public void SetRestoreTransactionsCallback(Action<bool, string?>? successCallback)
         {
             m_RestoreCallback = successCallback;
         }
@@ -161,7 +170,7 @@ namespace UnityEngine.Purchasing
         public bool simulateAskToBuy { get; set; }
         public void SetAppAccountToken(Guid value)
         {
-            m_appAccountToken = value;
+            m_AppAccountToken = value;
         }
 
         public override void OnPurchaseDeferred(string productDetails)
@@ -187,12 +196,12 @@ namespace UnityEngine.Purchasing
                 m_Native?.DeallocateMemory(productIdPtr);
             }
 
-            if (null != m_PromotionalPurchaseCallback)
+            if (OnPromotionalPurchaseIntercepted != null)
             {
                 var product = ProductCache.Find(productId);
                 if (null != product)
                 {
-                    m_PromotionalPurchaseCallback(product);
+                    OnPromotionalPurchaseIntercepted(product);
                 }
             }
         }
@@ -271,7 +280,7 @@ namespace UnityEngine.Purchasing
             m_RestoreCallback?.Invoke(true, null);
         }
 
-        public void OnTransactionsRestoredFail(string error)
+        void OnTransactionsRestoredFail(string error)
         {
             m_RestoreCallback?.Invoke(false, error);
         }
@@ -348,11 +357,11 @@ namespace UnityEngine.Purchasing
         {
             switch (subject)
             {
-                case "OnProductsRetrieved":
-                    m_RetrieveProductsService.OnProductsRetrieved(payload);
+                case "OnProductsFetched":
+                    m_FetchProductsService.OnProductsFetched(payload);
                     break;
-                case "OnProductsRetrieveFailed":
-                    m_RetrieveProductsService.OnProductDetailsRetrieveFailed(payload);
+                case "OnProductsFetchFailed":
+                    m_FetchProductsService.OnProductDetailsRetrieveFailed(payload);
                     break;
                 case "OnPurchaseSucceeded":
                     OnPurchaseSucceeded(payload);
@@ -393,7 +402,41 @@ namespace UnityEngine.Purchasing
                 case "OnCheckEntitlement":
                     OnCheckEntitlement(payload, entitlementStatus);
                     break;
+                // TODO: IAP-3929
+                case "onAppReceiptRefreshed":
+                    OnAppReceiptRetrieved(payload);
+                    break;
+                // TODO: IAP-3929
+                case "onAppReceiptRefreshFailed":
+                    OnAppReceiptRefreshedFailed(payload);
+                    break;
             }
+        }
+
+        // TODO: IAP-3929
+        public void SetRefreshAppReceiptCallbacks(Action<string> successCallback, Action<string> errorCallback)
+        {
+            m_RefreshAppReceiptSuccessCallback = successCallback;
+            m_RefreshAppReceiptErrorCallback = errorCallback;
+        }
+
+        // TODO: IAP-3929
+        public void SetRefreshAppReceipt(bool refreshAppReceipt)
+        {
+            m_RefreshAppReceipt = refreshAppReceipt;
+        }
+
+        // TODO: IAP-3929
+        void OnAppReceiptRetrieved(string receipt)
+        {
+            appReceipt = receipt;
+            m_RefreshAppReceiptSuccessCallback?.Invoke(receipt);
+        }
+
+        // TODO: IAP-3929
+        void OnAppReceiptRefreshedFailed(string error)
+        {
+            m_RefreshAppReceiptErrorCallback?.Invoke(error);
         }
 
         public override void CheckEntitlement(ProductDefinition productDefinition)
@@ -409,20 +452,26 @@ namespace UnityEngine.Purchasing
                 switch (product.definition.type)
                 {
                     case ProductType.Consumable:
-                        EntitlementCallback?.OnCheckEntitlementSucceeded(product.definition, EntitlementStatus.EntitledUntilConsumed);
+                        EntitlementCallback?.OnCheckEntitlement(product.definition, EntitlementStatus.EntitledUntilConsumed);
                         return;
                     case ProductType.Subscription:
                     case ProductType.NonConsumable:
-                        EntitlementCallback?.OnCheckEntitlementSucceeded(product.definition, entitlementStatus == 1 ? EntitlementStatus.FullyEntitled : EntitlementStatus.EntitledButNotFinished);
+                        EntitlementCallback?.OnCheckEntitlement(product.definition, entitlementStatus == 1 ? EntitlementStatus.FullyEntitled : EntitlementStatus.EntitledButNotFinished);
                         return;
                 }
             }
 
-            EntitlementCallback?.OnCheckEntitlementSucceeded(product.definition, EntitlementStatus.NotEntitled);
+            EntitlementCallback?.OnCheckEntitlement(product.definition, EntitlementStatus.NotEntitled);
         }
 
         void OnPurchaseSucceeded(string purchaseDetailsJson)
         {
+            // TODO: IAP-3929 - Remove RefreshAppReceipt
+            if (m_RefreshAppReceipt)
+            {
+                m_Native?.RefreshAppReceipt();
+            }
+
             var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(purchaseDetailsJson);
 
             var productId = purchaseDetails.TryGetString("productId");
@@ -488,21 +537,21 @@ namespace UnityEngine.Purchasing
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new DeferredOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, "", ownershipType, appAccountToken, signatureJws));
+            return new DeferredOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
         }
 
         PendingOrder GenerateApplePendingOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new PendingOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+            return new PendingOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
         }
 
         ConfirmedOrder GenerateAppleConfirmedOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new ConfirmedOrder(cart, new AppleOrderInfo(transactionID, m_storeName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+            return new ConfirmedOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
         }
 
         void EnsureConfirmedOrderIsFinished(ConfirmedOrder confirmedOrder)

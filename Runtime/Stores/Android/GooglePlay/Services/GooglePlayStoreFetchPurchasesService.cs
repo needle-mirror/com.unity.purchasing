@@ -89,13 +89,6 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            var purchasedProducts = FillProductsWithPurchases(purchases);
-            if (!purchasedProducts.Any())
-            {
-                PurchaseRetrievalFailedForUnknownReasons();
-                return;
-            }
-
             var orders = purchases
                 .Select(purchase => m_PurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache))
                 .ToList();
@@ -107,7 +100,6 @@ namespace UnityEngine.Purchasing
             // OnAllPurchasesRetrieved is run on the main thread. In order to have UpdateDeferredProducts happen after
             // it, it needs to also be run on the main thread.
             m_Util.RunOnMainThread(() => UpdateDeferredProductsByPurchases(deferredPurchases));
-
         }
 
         void PurchaseRetrievalFailedForUnknownReasons()

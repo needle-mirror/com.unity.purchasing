@@ -1,0 +1,17 @@
+generatorName: csharp-unity
+outputDir: ./tmp-client
+inputSpec: ./spec.yaml
+packageName: com.unity.purchasing.transaction-verifier
+additionalProperties:
+  unityVersion: "2021.3"
+  packageVersion: "0.0.1-preview"
+  unityPackageNamespace: "UnityEngine.Purchasing.TransactionVerifier"
+  unityServiceName: "TransactionVerifier"
+  unityPackageDescription: Transaction Verifier Service
+  useUnityAuthentication: true
+  usePhpStyleQueryParams: false
+  publicAccess: []
+  releaseDate: 2025-02-24
+  generateMarkdownDocumentation: true
+  createClientInstances: true
+  outputFormat: code-only

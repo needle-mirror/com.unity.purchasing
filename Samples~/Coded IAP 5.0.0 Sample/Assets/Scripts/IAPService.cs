@@ -1,26 +1,28 @@
 using System;
 using Unity.Services.Core;
 using Unity.Services.Core.Environments;
-using UnityEngine;
 
-static class IAPService
+namespace Samples.Purchasing.IAP5.Demo
 {
-    const string k_Environment = "production";
-
-    public static async void Initialize(Action onSuccess, Action<string> onError)
+    static class IAPService
     {
-        try
-        {
-            var options = new InitializationOptions()
-                .SetEnvironmentName(k_Environment);
+        const string k_Environment = "production";
 
-            await UnityServices.InitializeAsync(options);
-
-            onSuccess();
-        }
-        catch (Exception exception)
+        public static async void Initialize(Action onSuccess, Action<string> onError)
         {
-            onError(exception.Message);
+            try
+            {
+                var options = new InitializationOptions()
+                    .SetEnvironmentName(k_Environment);
+
+                await UnityServices.InitializeAsync(options);
+
+                onSuccess();
+            }
+            catch (Exception exception)
+            {
+                onError(exception.Message);
+            }
         }
     }
 }

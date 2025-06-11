@@ -10,6 +10,7 @@
         "Unity.Purchasing.SecurityCore",
         "Unity.Purchasing.SecurityStub",
         "Unity.Purchasing.Utilities",
+        "Unity.Purchasing.TransactionVerifier",
         "Unity.Services.Core",
         "Unity.Services.Core.Internal",
         "Unity.Services.Analytics"

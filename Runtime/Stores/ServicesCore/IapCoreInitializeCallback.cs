@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.Services.Authentication.Internal;
 using Unity.Services.Core.Analytics.Internal;
+using Unity.Services.Core.Configuration.Internal;
 using Unity.Services.Core.Environments.Internal;
 using Unity.Services.Core.Internal;
 using Unity.Services.Core.Telemetry.Internal;
@@ -19,6 +21,8 @@ namespace UnityEngine.Purchasing.Registration
             CoreRegistry.Instance.RegisterPackage(new IapCoreInitializeCallback())
                 .DependsOn<IMetricsFactory>()
                 .DependsOn<IDiagnosticsFactory>()
+                .DependsOn<ICloudProjectId>()
+                .OptionallyDependsOn<IEnvironmentId>()
                 .OptionallyDependsOn<IAnalyticsStandardEventComponent>();
         }
 

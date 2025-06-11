@@ -1,9 +1,9 @@
 Retrieving products
 ===================
 
-When your store's ``RetrieveProducts`` method is called it should fetch the latest product metadata and, optionally, ownership status for the current user.
+When your store's ``FetchProducts`` method is called it should fetch the latest product metadata and, optionally, ownership status for the current user.
 
-When this process completes your store should call the ``OnProductsRetrieved`` method of the ``IStoreCallback`` supplied to your store upon initialisation, supplying a collection of ``ProductDescription`` that represent the items available for purchase.
+When this process completes your store should call the ``OnProductsFetched`` method of the ``IStoreCallback`` supplied to your store upon initialisation, supplying a collection of ``ProductDescription`` that represent the items available for purchase.
 
 Where products are owned by the user, your store may fill in the receipt and transaction ID fields of ``ProductDescription``; Unity IAP will invoke the application’s ``ProcessPurchase`` method for any transactions the application has not already processed.
 

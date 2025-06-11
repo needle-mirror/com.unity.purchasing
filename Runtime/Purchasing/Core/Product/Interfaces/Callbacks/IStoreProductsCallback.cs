@@ -8,15 +8,15 @@ namespace UnityEngine.Purchasing.Extension
     public interface IStoreProductsCallback
     {
         /// <summary>
-        /// Callback received when a RetrieveProducts call is completed successfully.
+        /// Callback received when a FetchProducts call is completed successfully.
         /// </summary>
         /// <param name="products"> The list of product descriptions retrieved. </param>
-        void OnProductsRetrieved(IReadOnlyList<ProductDescription> products);
+        void OnProductsFetched(IReadOnlyList<ProductDescription> products);
 
         /// <summary>
-        /// Callback received when a RetrieveProducts call could not be completed successfully.
+        /// Callback received when a FetchProducts call could not be completed successfully.
         /// </summary>
         /// <param name="failureDescription"> The reason the fetch failed. </param>
-        void OnProductsRetrieveFailed(ProductFetchFailureDescription failureDescription);
+        void OnProductsFetchFailed(ProductFetchFailureDescription failureDescription);
     }
 }

@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace UnityEngine.Purchasing.Security
 {
@@ -9,7 +7,7 @@ namespace UnityEngine.Purchasing.Security
     ///
     /// This class will validate the Apple receipt is signed with the correct certificate.
     /// </summary>
-    [Obsolete]
+    [Obsolete("AppleValidator is a stub and does not perform any validation. Do not use this class. Use UnityEngine.Purchasing.Security.CrossPlatformValidator with a valid Apple certificate for receipt validation.", false)]
     public class AppleValidator
     {
         /// <summary>

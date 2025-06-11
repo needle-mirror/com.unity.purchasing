@@ -44,7 +44,8 @@ namespace UnityEngine.Purchasing
         {
             var confirmedOrders = orders.OfType<ConfirmedOrder>().ToList().AsReadOnly();
             var pendingOrders = orders.OfType<PendingOrder>().ToList().AsReadOnly();
-            var filteredOrders = new Orders(confirmedOrders, pendingOrders);
+            var deferredOrders = orders.OfType<DeferredOrder>().ToList().AsReadOnly();
+            var filteredOrders = new Orders(confirmedOrders, pendingOrders, deferredOrders);
 
             FetchSuccessAction?.Invoke(filteredOrders);
         }

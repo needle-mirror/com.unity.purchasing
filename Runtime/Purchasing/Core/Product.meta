@@ -1,12 +1,8 @@
 fileFormatVersion: 2
-<<<<<<< HEAD:Test-Projects/2019/Assets/Plugins/Editor.meta
 guid: 7a4294d3eeaceb04385ceff5a702b65b
-=======
-guid: e6e25b02a2d8342b6905a45027b11eb0
->>>>>>> origin/develop:Packages/com.unity.purchasing/Runtime/Purchasing/Core/Product.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:
+  assetBundleName:
+  assetBundleVariant:

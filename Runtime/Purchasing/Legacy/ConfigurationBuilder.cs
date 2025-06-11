@@ -18,6 +18,17 @@ namespace UnityEngine.Purchasing
         /// <param name="first"> The first purchasing module. </param>
         /// <param name="rest"> The remaining purchasing modules, excluding the one passes as first. </param>
         /// <returns> The instance of the configuration builder as specified. </returns>
+        /// <remarks>
+        /// Starting from IAP 5.0.0, this is now a singleton.
+        /// This improves internal persistence across initializations, but repeated calls to
+        /// UnityPurchasing.Initialize() using the same builder instance may result in duplicate product registration errors ("Same key").
+        ///
+        /// If your use case requires a fresh configuration, consider using the public constructor:
+        ///     new ConfigurationBuilder(new PurchasingFactory());
+        ///
+        /// However, this constructor may not remain public in future versions.
+        /// It's recommended to avoid reinitializing IAP unless absolutely necessary.
+        /// </remarks>
         public static ConfigurationBuilder Instance(object ignored)
         {
             if (instance == null)

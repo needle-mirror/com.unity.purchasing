@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing.Security
     /// <summary>
     /// This class will validate the Apple receipt is signed with the correct certificate.
     /// </summary>
-    [Obsolete]
+    [Obsolete("This API is deprecated. Please upgrade to the new APIs introduced in IAP v5. For more information, visit the IAP upgrade guide: https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
     public class AppleValidator
     {
         X509Cert cert;

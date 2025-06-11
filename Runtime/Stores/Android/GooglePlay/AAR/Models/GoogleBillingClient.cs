@@ -4,7 +4,6 @@ using System.Linq;
 using Uniject;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Telemetry;
-using UnityEngine.Purchasing.Utils;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing.Models

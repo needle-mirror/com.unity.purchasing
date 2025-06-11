@@ -22,7 +22,7 @@ namespace UnityEngine.Purchasing.Extension
         /// asynchronously with results returned via <see cref="IStorePurchaseFetchCallback"/>.
         /// </summary>
         /// <param name="products"> The collection of products desired </param>
-        void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products);
+        void FetchProducts(IReadOnlyCollection<ProductDefinition> products);
 
         /// <summary>
         /// Fetch previously existing purchases.
@@ -55,7 +55,7 @@ namespace UnityEngine.Purchasing.Extension
         void CheckEntitlement(ProductDefinition product);
 
         /// <summary>
-        /// Add an additional callback for RetrieveProducts calls
+        /// Add an additional callback for FetchProducts calls
         /// </summary>
         /// <param name="productsCallback">Implementation of the products Callback Interface</param>
         void SetProductsCallback(IStoreProductsCallback productsCallback);
@@ -73,7 +73,7 @@ namespace UnityEngine.Purchasing.Extension
         void SetPurchaseCallback(IStorePurchaseCallback purchaseCallback);
 
         /// <summary>
-        /// Add an additional confirm Callback for ConfirmOrder calls
+        /// Add an additional confirm Callback for ConfirmPurchase calls
         /// </summary>
         /// <param name="confirmCallback">Implementation of the order confirm Callback Interface</param>
         void SetPurchaseConfirmCallback(IStorePurchaseConfirmCallback confirmCallback);

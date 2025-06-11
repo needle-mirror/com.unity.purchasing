@@ -151,27 +151,36 @@ namespace UnityEngine.Purchasing
 
         void ConfigureProductServiceCallbacks()
         {
-            m_ProductService?.AddProductsUpdatedAction(OnInitialProductsFetched);
-            m_ProductService?.AddProductsFetchFailedAction(OnInitialProductsFetchFailed);
+            if (m_ProductService != null)
+            {
+                m_ProductService.OnProductsFetched += OnInitialProductsFetched;
+                m_ProductService.OnProductsFetchFailed += OnInitialProductsFetchFailed;
+            }
         }
 
         void ChangeProductServiceCallbacks()
         {
-            m_ProductService?.RemoveProductsUpdatedAction(OnInitialProductsFetched);
-            m_ProductService?.RemoveProductsFetchFailedAction(OnInitialProductsFetchFailed);
+            if (m_ProductService != null)
+            {
+                m_ProductService.OnProductsFetched -= OnInitialProductsFetched;
+                m_ProductService.OnProductsFetchFailed -= OnInitialProductsFetchFailed;
 
-            m_ProductService?.AddProductsUpdatedAction(OnAdditionalProductsFetched);
-            m_ProductService?.AddProductsFetchFailedAction(OnAdditionalProductsFetchFailed);
+                m_ProductService.OnProductsFetched += OnAdditionalProductsFetched;
+                m_ProductService.OnProductsFetchFailed += OnAdditionalProductsFetchFailed;
+            }
         }
 
         void ConfigurePurchasingServiceCallbacks()
         {
-            m_PurchasingService?.AddFetchedPurchasesAction(OnPurchasesFetched);
-            m_PurchasingService?.AddFetchPurchasesFailedAction(OnPurchasesFetchFailure);
-            m_PurchasingService?.AddPendingOrderUpdatedAction(OnOrderPending);
-            m_PurchasingService?.AddConfirmedOrderUpdatedAction(OnOrderConfirmed);
-            m_PurchasingService?.AddPurchaseFailedAction(OnPurchaseFailed);
-            m_PurchasingService?.AddPurchaseDeferredAction(OnOrderDeferred);
+            if (m_PurchasingService != null)
+            {
+                m_PurchasingService.OnPurchasesFetched += OnPurchasesFetched;
+                m_PurchasingService.OnPurchasesFetchFailed += OnPurchasesFetchFailure;
+                m_PurchasingService.OnPurchasePending += OnOrderPending;
+                m_PurchasingService.OnPurchaseConfirmed += OnPurchaseConfirmed;
+                m_PurchasingService.OnPurchaseFailed += OnPurchaseFailed;
+                m_PurchasingService.OnPurchaseDeferred += OnOrderDeferred;
+            }
         }
 
         void OnInitialProductsFetched(List<Product> products)
@@ -196,14 +205,7 @@ namespace UnityEngine.Purchasing
 
         void FetchExistingPurchases()
         {
-            try
-            {
-                m_PurchasingService?.FetchPurchases();
-            }
-            catch (PurchaseFetchException exception)
-            {
-                Debug.LogError($"PurchaseFetchException: {exception}");
-            }
+            m_PurchasingService?.FetchPurchases();
         }
 
         void InvokeOnProductsFetched(List<Product> products)
@@ -271,6 +273,10 @@ namespace UnityEngine.Purchasing
         {
             InvokeListenersOnPurchasesFetched(existingOrders);
             InvokeButtonsOnPurchasesFetched(existingOrders);
+            foreach (var pendingOrder in existingOrders.PendingOrders)
+            {
+                OnOrderPending(pendingOrder);
+            }
         }
 
         void InvokeListenersOnPurchasesFetched(Orders existingOrders)
@@ -403,7 +409,23 @@ namespace UnityEngine.Purchasing
 
         void ConfirmOrder(PendingOrder pendingOrder)
         {
-            m_PurchasingService?.ConfirmOrder(pendingOrder);
+            m_PurchasingService?.ConfirmPurchase(pendingOrder);
+        }
+
+        void OnPurchaseConfirmed(Order order)
+        {
+            switch (order)
+            {
+                case ConfirmedOrder confirmedOrder:
+                    OnOrderConfirmed(confirmedOrder);
+                    break;
+                case FailedOrder failedOrder:
+                    OnPurchaseFailed(failedOrder);
+                    break;
+                default:
+                    Debug.unityLogger.LogIAPError($"CodelessIAPStoreListener OnPurchaseConfirmed invoked with an unexpected order type: : {order.GetType()}");
+                    break;
+            }
         }
 
         void OnOrderConfirmed(ConfirmedOrder order)
@@ -447,11 +469,14 @@ namespace UnityEngine.Purchasing
 
         void InvokeButtonsOnPurchaseFailed(FailedOrder failedOrder)
         {
-            foreach (var cartItem in failedOrder.CartOrdered.Items())
+            if (failedOrder.CartOrdered != null)
             {
-                foreach (var button in m_ActiveCodelessButtons.Where(button => button.productId == cartItem.Product.definition.id))
+                foreach (var cartItem in failedOrder.CartOrdered.Items())
                 {
-                    button.OnPurchaseFailed(failedOrder);
+                    foreach (var button in m_ActiveCodelessButtons.Where(button => button.productId == cartItem.Product.definition.id))
+                    {
+                        button.OnPurchaseFailed(failedOrder);
+                    }
                 }
             }
         }
@@ -484,29 +509,15 @@ namespace UnityEngine.Purchasing
 
         async Task ConnectToStore()
         {
-            try
-            {
-                await m_StoreService!.ConnectAsync();
-                FetchInitialProducts();
-            }
-            catch (StoreConnectionException exception)
-            {
-                Debug.LogError($"StoreConnectionException: {exception}");
-            }
+            await m_StoreService!.Connect();
+            FetchInitialProducts();
         }
 
         void FetchInitialProducts()
         {
-            try
+            if (m_ProductService != null)
             {
-                if (m_ProductService != null)
-                {
-                    m_CatalogProvider?.FetchProducts(m_ProductService.FetchProductsWithNoRetries, DefaultStoreHelper.GetDefaultStoreName());
-                }
-            }
-            catch (ProductFetchException exception)
-            {
-                Debug.LogError($"ProductFetchException: {exception}");
+                m_CatalogProvider?.FetchProducts(m_ProductService.FetchProductsWithNoRetries, DefaultStoreHelper.GetDefaultStoreName());
             }
         }
 

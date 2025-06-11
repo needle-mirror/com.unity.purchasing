@@ -11,11 +11,6 @@ namespace UnityEngine.Purchasing
         GooglePlay, //<= Map to AppStore
 
         /// <summary>
-        /// Amazon App Store.
-        /// </summary>
-        AmazonAppStore, //
-
-        /// <summary>
         /// No Android Store specified. Usually the case if not using Android.
         /// </summary>
         NotSpecified
@@ -31,11 +26,6 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The first Android App Store.
         /// </summary>
-        AndroidStoreStart = AndroidStore.GooglePlay,
-
-        /// <summary>
-        /// The last Android App Store.
-        /// </summary>
-        AndroidStoreEnd = AndroidStore.AmazonAppStore
+        AndroidStoreStart = AndroidStore.GooglePlay
     }
 }

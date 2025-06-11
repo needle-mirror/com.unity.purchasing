@@ -1,6 +1,6 @@
 namespace UnityEngine.Purchasing.Models
 {
-    public interface IGoogleBillingResult
+    interface IGoogleBillingResult
     {
         GoogleBillingResponseCode responseCode
         {

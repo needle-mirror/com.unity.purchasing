@@ -17,7 +17,6 @@ namespace UnityEngine.Purchasing
         /// Notify a failed order confirmation with associated details.
         /// </summary>
         /// <param name="failedOrder"> The object detailing the purchase failure </param>
-        /// <param name="transactionId"> The transaction id of the order that was to be confirmed </param>
-        void OnConfirmOrderFailed(FailedOrder failedOrder, string transactionId);
+        void OnConfirmOrderFailed(FailedOrder failedOrder);
     }
 }

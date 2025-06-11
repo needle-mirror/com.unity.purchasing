@@ -1,0 +1,24 @@
+{
+    "name": "Unity.Purchasing.TransactionVerifier",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Services.Core",
+        "Unity.Services.Core.Environments",
+        "Unity.Services.Core.Internal"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": ["IAP_TX_VERIFIER_ENABLED"],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.authentication",
+            "expression": "3.0.0",
+            "define": "IAP_UNITY_AUTH_ENABLED"
+        }
+    ],
+    "noEngineReferences": false
+}

@@ -94,13 +94,13 @@ namespace UnityEngine.Purchasing
             FetchProducts(callback, DefaultStoreHelper.GetDefaultStoreName());
         }
 
-        public void FetchProducts(Action<List<ProductDefinition>> callback, string? storeName)
+        public void FetchProducts(Action<List<ProductDefinition>> callback, string storeName)
         {
             var productDefinitions = GetProducts(storeName);
             callback(productDefinitions);
         }
 
-        void UpdateStoreSpecificIDs(string? storeName)
+        void UpdateStoreSpecificIDs(string storeName)
         {
             foreach (var product in m_Products)
             {

@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing
     class JsonStore : InternalStore, IUnityCallback
     {
         protected ICartValidator m_CartValidator;
-        protected string? m_storeName;
+        protected string m_StoreName;
 
         INativeStore? m_Store;
         bool m_IsRefreshing;
@@ -40,16 +40,16 @@ namespace UnityEngine.Purchasing
             m_Store = native;
         }
 
-        internal JsonStore(ICartValidator cartValidator, ILogger logger, string? storeName)
+        internal JsonStore(ICartValidator cartValidator, ILogger logger, string storeName)
         {
             m_CartValidator = cartValidator;
             Logger = logger;
-            m_storeName = storeName;
+            m_StoreName = storeName;
         }
 
-        public override void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products)
+        public override void FetchProducts(IReadOnlyCollection<ProductDefinition> products)
         {
-            m_Store?.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
+            m_Store?.FetchProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
         internal void ProcessManagedStoreResponse(List<ProductDefinition>? storeProducts)
@@ -73,7 +73,7 @@ namespace UnityEngine.Purchasing
                 products.UnionWith(storeProducts);
             }
 
-            m_Store?.RetrieveProducts(JSONSerializer.SerializeProductDefs(products));
+            m_Store?.FetchProducts(JSONSerializer.SerializeProductDefs(products));
         }
 
         public override void FetchPurchases()
@@ -81,10 +81,10 @@ namespace UnityEngine.Purchasing
             m_Store?.FetchExistingPurchases();
         }
 
-        public void OnProductsRetrieveFailed(string jsonFailureDescription)
+        public void OnProductsFetchFailed(string jsonFailureDescription)
         {
             var description = JSONSerializer.DeserializeProductFetchFailureDescription(jsonFailureDescription);
-            ProductsCallback?.OnProductsRetrieveFailed(description);
+            ProductsCallback?.OnProductsFetchFailed(description);
         }
 
         public void OnPurchasesRetrievalFailed(string jsonFailureDescription)
@@ -167,12 +167,12 @@ namespace UnityEngine.Purchasing
             m_Store?.CheckEntitlement(JSONSerializer.SerializeProductDef(product));
         }
 
-        public virtual void OnProductsRetrieved(string json)
+        public virtual void OnProductsFetched(string json)
         {
             // NB: AppleStoreImpl overrides this completely and does not call the base.
             var productDescriptions = JSONSerializer.DeserializeProductDescriptions(json);
 
-            ProductsCallback?.OnProductsRetrieved(productDescriptions);
+            ProductsCallback?.OnProductsFetched(productDescriptions);
         }
 
         public virtual void OnPurchaseSucceeded(string id, string receipt, string transactionID)
@@ -185,21 +185,21 @@ namespace UnityEngine.Purchasing
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new DeferredOrder(cart, new OrderInfo(receipt, transactionID, m_storeName));
+            return new DeferredOrder(cart, new OrderInfo(receipt, transactionID, m_StoreName));
         }
 
         protected PendingOrder GeneratePendingOrder(string id, string receipt, string transactionID)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new PendingOrder(cart, new OrderInfo(receipt, transactionID, m_storeName));
+            return new PendingOrder(cart, new OrderInfo(receipt, transactionID, m_StoreName));
         }
 
         protected ConfirmedOrder GenerateConfirmedOrder(string id, string receipt, string transactionID)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new ConfirmedOrder(cart, new OrderInfo(receipt, transactionID, m_storeName));
+            return new ConfirmedOrder(cart, new OrderInfo(receipt, transactionID, m_StoreName));
         }
 
         protected Product FindProductById(string productId)

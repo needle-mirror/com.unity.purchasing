@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -25,21 +26,21 @@ namespace UnityEngine.Purchasing
             m_Logger = logger;
         }
 
-        public async void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
+        public async void Purchase(ProductDefinition product, Order? currentOrder, GooglePlayReplacementMode? desiredReplacementMode)
         {
             var productDetailsList = await m_QueryProductDetailsService.QueryProductDetails(product);
-            OnQueryProductDetailsResponse(productDetailsList, product, oldProduct, desiredReplacementMode);
+            OnQueryProductDetailsResponse(productDetailsList, product, currentOrder, desiredReplacementMode);
         }
 
-        void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
+        void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Order? currentOrder, GooglePlayReplacementMode? desiredReplacementMode)
         {
-            if (ValidateQueryProductDetailsResponseParams(productDetailsList, productToBuy, oldProduct))
+            if (ValidateQueryProductDetailsResponseParams(productDetailsList, productToBuy, currentOrder))
             {
-                LaunchGoogleBillingFlow(productDetailsList[0], oldProduct, desiredReplacementMode);
+                LaunchGoogleBillingFlow(productDetailsList[0], currentOrder, desiredReplacementMode);
             }
         }
 
-        bool ValidateQueryProductDetailsResponseParams(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Product? oldProduct)
+        bool ValidateQueryProductDetailsResponseParams(List<AndroidJavaObject> skus, ProductDefinition productToBuy, Order? currentOrder)
         {
             if (!ValidateSkus(skus))
             {
@@ -47,9 +48,9 @@ namespace UnityEngine.Purchasing
                 return false;
             }
 
-            if (!ValidateOldProduct(oldProduct))
+            if (currentOrder != null && !ValidateCurrentOrder(currentOrder))
             {
-                PurchaseFailedInvalidOldProduct(productToBuy, oldProduct);
+                PurchaseFailedInvalidOldProduct(productToBuy, currentOrder);
                 return false;
             }
 
@@ -82,26 +83,26 @@ namespace UnityEngine.Purchasing
             );
         }
 
-        [System.Obsolete]
-        bool ValidateOldProduct(Product? oldProduct)
+        static bool ValidateCurrentOrder(Order? currentOrder)
         {
-            return oldProduct?.transactionID != "";
+            return !string.IsNullOrEmpty(currentOrder?.Info.TransactionID);
         }
 
-        void PurchaseFailedInvalidOldProduct(ProductDefinition productToBuy, Product? oldProduct)
+        void PurchaseFailedInvalidOldProduct(ProductDefinition productToBuy, Order? currentOrder)
         {
+            var currentProduct = currentOrder?.CartOrdered.Items().FirstOrDefault()?.Product;
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
                     m_ProductCache?.FindOrDefault(productToBuy.id) ?? Product.CreateUnknownProduct(productToBuy.id),
                     PurchaseFailureReason.ProductUnavailable,
-                    "Invalid transaction id for old product: " + oldProduct?.definition.id
+                    "Invalid transaction id for old product: " + currentProduct?.definition.id
                 )
             );
         }
 
-        void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
+        void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Order? currentOrder, GooglePlayReplacementMode? desiredReplacementMode)
         {
-            var billingResult = m_BillingClient.LaunchBillingFlow(productToPurchase, oldProduct?.transactionID, desiredReplacementMode);
+            var billingResult = m_BillingClient.LaunchBillingFlow(productToPurchase, currentOrder?.Info.TransactionID, desiredReplacementMode);
             HandleBillingFlowResult(new GoogleBillingResult(billingResult), productToPurchase);
         }
 

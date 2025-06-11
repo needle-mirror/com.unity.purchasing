@@ -12,7 +12,7 @@ namespace UnityEditor.Purchasing
     public abstract class AbstractIAPButtonEditor : Editor
     {
         private static readonly string[] excludedFields = new string[] { "m_Script", "onTransactionsRestored" };
-        private static readonly string[] restoreButtonExcludedFields = new string[] { "m_Script", "automaticallyConfirmTransaction", "onPurchaseComplete", "onPurchaseFailed", "titleText", "descriptionText", "priceText" };
+        private static readonly string[] restoreButtonExcludedFields = new string[] { "m_Script", "automaticallyConfirmTransaction", "onPurchaseFetched", "onProductFetched", "onProductFetchFailed", "onOrderPending", "onOrderConfirmed", "onOrderDeferred", "onPurchaseFailed", "titleText", "descriptionText", "priceText" };
         private const string kNoProduct = "<None>";
 
         private readonly List<string> m_ValidIDs = new List<string>();

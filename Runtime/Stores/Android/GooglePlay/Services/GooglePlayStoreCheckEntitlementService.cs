@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
         {
             m_GooglePlayStoreService.CheckEntitlement(product, (checkedProduct, status) =>
             {
-                m_EntitlementCallback?.OnCheckEntitlementSucceeded(checkedProduct, status);
+                m_EntitlementCallback?.OnCheckEntitlement(checkedProduct, status);
             });
         }
 

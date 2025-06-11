@@ -1,6 +1,6 @@
 namespace UnityEngine.Purchasing
 {
-    public interface IStoreManagerFactoryInjectionPoint
+    interface IStoreManagerFactoryInjectionPoint
     {
         void SetStoreFactory(IStoreFactory storeFactory);
     }

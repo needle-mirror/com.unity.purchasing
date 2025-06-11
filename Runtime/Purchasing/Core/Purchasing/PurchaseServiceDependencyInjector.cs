@@ -3,7 +3,7 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-    internal class PurchaseServiceDependencyInjector
+    class PurchaseServiceDependencyInjector
     {
         IStoreWrapper m_storeWrapper;
         IPurchaseServiceFactoryManager m_ServiceFactoryManager;

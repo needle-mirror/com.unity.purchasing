@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
             return new StoreConnectUseCase(storeWrapper.instance, retryService, retryPolicy);
         }
 
-        static IRetryPolicy CreateRetryPolicy(string? storeName)
+        static IRetryPolicy CreateRetryPolicy(string storeName)
         {
             if (storeName == GooglePlay.Name)
             {

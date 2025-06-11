@@ -5,7 +5,7 @@ Unity In App Purchasing, setting up in-app purchases for your game across multip
 This package provides:
 - One common API to access all stores for free so you can fully understand and optimize your in-game economy
 - Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms
-- Support for iOS, Mac, tvOS, Google Play, Windows, and Amazon app stores
+- Support for iOS, Mac, tvOS, Google Play, and Windows app stores
 - *Obsolete to be deprecated soon -* Support to work with the Unity Distribution Portal to synchronize catalogs and transactions with other app stores
 - Client-side receipt validation for Apple App Store and Google Play
 

@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace UnityEngine.Purchasing
 {
     /// <summary>

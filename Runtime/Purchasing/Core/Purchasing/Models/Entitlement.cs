@@ -1,3 +1,5 @@
+#nullable enable
+
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -7,28 +9,41 @@ namespace UnityEngine.Purchasing
     {
 
         /// <summary>
-        /// The Product Checked for Entitlement
+        /// The product being checked for entitlement. May be <c>null</c> if the entitlement check failed early.
         /// </summary>
-        public Product ProductChecked { get; }
+        public Product? Product { get; }
 
         /// <summary>
-        /// The Order found for the Entitled Product
-        /// null is the Product is not entitled
-        /// A Pending Order if the entitlement needs to be Confirmed via ConfirmOrder
-        /// A Confirmed Order if th entitlement is complete
+        /// Returns the Order associated with the entitled product.
+        /// The Order will be a PendingOrder if the purchase needs to be confirmed via ConfirmPurchase,
+        /// otherwise, the Order will be a ConfirmedOrder if the purchase has been confirmed.
+        /// If the product is not entitled, the Order will be null.
         /// </summary>
-        public Order EntitlementOrder { get; }
+        public Order? Order { get; internal set; }
 
         /// <summary>
         /// The status of entitlement.
         /// </summary>
         public EntitlementStatus Status { get; }
 
-        internal Entitlement(Product product, Order order, EntitlementStatus status)
+        /// <summary>
+        /// Optional message describing the entitlement result. Can be <c>null</c> if no message is provided.
+        /// </summary>
+        public string? ErrorMessage { get; }
+
+        /// <summary>
+        /// Represents the entitlement state of a product, along with any associated order and message.
+        /// </summary>
+        /// <param name="product">The product being checked. Can be <c>null</c> in error scenarios.</param>
+        /// <param name="order">The associated order, if any.</param>
+        /// <param name="status">The entitlement status.</param>
+        /// <param name="message">Optional message providing context about the entitlement status.</param>
+        internal Entitlement(Product? product, Order? order, EntitlementStatus status, string? message = null)
         {
-            ProductChecked = product;
-            EntitlementOrder = order;
+            Product = product;
+            Order = order;
             Status = status;
+            ErrorMessage = message;
         }
     }
 }

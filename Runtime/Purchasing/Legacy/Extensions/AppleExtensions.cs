@@ -5,9 +5,9 @@ namespace UnityEngine.Purchasing
 {
     class AppleExtensions : IAppleExtensions
     {
-        public void RefreshAppReceipt(Action<string> successCallback, Action<string> _)
+        public void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)
         {
-            successCallback.Invoke(UnityIAPServices.DefaultPurchase().Apple?.appReceipt);
+            UnityIAPServices.DefaultPurchase().Apple?.RefreshAppReceipt(successCallback, errorCallback);
         }
 
         public void RestoreTransactions(Action<bool, string> callback)
@@ -17,13 +17,13 @@ namespace UnityEngine.Purchasing
 
         public void RegisterPurchaseDeferredListener(Action<Product> callback)
         {
-            UnityIAPServices.DefaultPurchase().AddPurchaseDeferredAction(deferredOrder =>
+            UnityIAPServices.DefaultPurchase().OnPurchaseDeferred += deferredOrder =>
             {
                 foreach (var cartItem in deferredOrder.CartOrdered.Items())
                 {
                     callback.Invoke(cartItem.Product);
                 }
-            });
+            };
         }
 
         public bool simulateAskToBuy

@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Events;
-using UnityEngine.Purchasing.Extension;
+using UnityEngine.Serialization;
 
 namespace UnityEngine.Purchasing
 {
@@ -60,6 +61,19 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Serializable]
         public class OnOrderDeferredEvent : UnityEvent<DeferredOrder> { }
+
+
+        [Serializable, Obsolete]
+        public class OnProductsFetchedLegacyEvent : UnityEvent<ProductCollection> { }
+
+        [Serializable, Obsolete]
+        public class OnPurchaseCompletedLegacyEvent : UnityEvent<Product> { }
+
+        [Serializable, Obsolete]
+        public class OnPurchaseFailedLegacyEvent : UnityEvent<Product, PurchaseFailureReason> { }
+
+        [Serializable, Obsolete]
+        public class OnPurchaseDetailedFailedLegacyEvent : UnityEvent<Product, PurchaseFailureDescription> { }
 
         /// <summary>
         /// Consume successful purchases immediately.
@@ -121,6 +135,27 @@ namespace UnityEngine.Purchasing
         [Tooltip("Event fired after the payment of a purchase was delayed or postponed.")]
         public OnOrderDeferredEvent onOrderDeferred;
 
+        [Header("Obsolete Events (for backward compatibility only)")]
+        [FormerlySerializedAs("onProductsFetched")]
+        [Tooltip("Event fired after a successful fetching the products from the store.")]
+        [Obsolete]
+        public OnProductsFetchedLegacyEvent onProductsFetchedLegacy;
+
+        [FormerlySerializedAs("onPurchaseComplete")]
+        [Tooltip("Event fired after a successful purchase of this product.")]
+        [Obsolete]
+        public OnPurchaseCompletedLegacyEvent onPurchaseCompleteLegacy;
+
+        [FormerlySerializedAs("onPurchaseFailed")]
+        [Tooltip("Event fired after failing to purchase an order.")]
+        [Obsolete]
+        public OnPurchaseFailedLegacyEvent onPurchaseFailedLegacy;
+
+        [FormerlySerializedAs("onPurchaseDetailedFailedEvent")]
+        [Tooltip("Event fired after failing to purchase an order.")]
+        [Obsolete]
+        public OnPurchaseDetailedFailedLegacyEvent onPurchaseDetailedFailedLegacy;
+
         void OnEnable()
         {
             if (dontDestroyOnLoad)
@@ -143,6 +178,7 @@ namespace UnityEngine.Purchasing
         public void OnProductsFetched(List<Product> products)
         {
             onProductsFetched.Invoke(products);
+            onProductsFetchedLegacy.Invoke(new ProductCollection());
         }
 
         /// <summary>
@@ -178,7 +214,8 @@ namespace UnityEngine.Purchasing
         /// <param name="pendingOrder">The <typeparamref name="PendingOrder"/> that was updated</param>
         public void OnOrderPending(PendingOrder pendingOrder)
         {
-            onOrderPending?.Invoke(pendingOrder);
+            onOrderPending.Invoke(pendingOrder);
+            onPurchaseCompleteLegacy.Invoke(pendingOrder.CartOrdered.Items().FirstOrDefault()?.Product);
         }
 
         /// <summary>
@@ -197,6 +234,10 @@ namespace UnityEngine.Purchasing
         public void OnPurchaseFailed(FailedOrder failedOrder)
         {
             onPurchaseFailed.Invoke(failedOrder);
+
+            var product = failedOrder.CartOrdered.Items().FirstOrDefault()?.Product;
+            onPurchaseFailedLegacy.Invoke(product, failedOrder.FailureReason);
+            onPurchaseDetailedFailedLegacy.Invoke(product, new PurchaseFailureDescription(failedOrder.CartOrdered.Items().FirstOrDefault(), failedOrder.FailureReason, failedOrder.Details));
         }
 
         /// <summary>

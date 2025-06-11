@@ -23,14 +23,14 @@ namespace UnityEngine.Purchasing
             this.forwardTo = forwardTo;
         }
 
-        public void OnProductsRetrieved(String json)
+        public void OnProductsFetched(String json)
         {
-            forwardTo.OnProductsRetrieved(json);
+            forwardTo.OnProductsFetched(json);
         }
 
-        public void OnProductsRetrieveFailed(string jsonFailureDescription)
+        public void OnProductsFetchFailed(string jsonFailureDescription)
         {
-            forwardTo.OnProductsRetrieveFailed(jsonFailureDescription);
+            forwardTo.OnProductsFetchFailed(jsonFailureDescription);
         }
 
         public void OnPurchasesRetrievalFailed(string jsonFailureDescription)

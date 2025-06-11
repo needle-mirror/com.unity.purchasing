@@ -1,0 +1,569 @@
+openapi: 3.0.0
+tags:
+  - name: IAP Transaction Verifier
+    description: IAP Transaction Verifier
+  - name: Purchases
+    description: Associated with player purchasing actions
+  - name: Google
+    description: Google Play Store endpoints
+  - name: Apple
+    description: Apple App Store endpoints
+info:
+  title: Transaction Verifier API
+  version: 1.0.0
+  description: |
+    # Introduction
+      This document outlines the API specification for the Transaction Verifier API.
+      The Transaction Verifier API is used to verify in-app purchases (IAP) made by players predominantly through the IAP SDK.
+    # Concepts
+      ## Apple
+      - Transaction: an Apple App Store transaction.
+
+      ## Google
+      - Transaction: A Google Play Store transaction. When interacting with this API, we expect the format that is provided by the IAP SDK. It might differ from the format of the Google Play Store API.
+
+  contact:
+    name: Creator Economy Team
+    x-slack-channel: '#ask-creator-economy'
+servers:
+  - url: 'https://transaction-verifier.services.api.unity.com'
+paths:
+  '/v1/projects/{projectId}/environments/{environmentId}/transactions/google':
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    post:
+      summary: Verify Google Play Store transaction
+      tags:
+        - Google
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google-transaction-dto'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      operationId: verifyGoogleTransaction
+      description: |-
+        Verifies a Google Play Store transaction that came from the Unity IAP SDK.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/verify-google-transaction-request'
+      security:
+        - Client: []
+
+  '/v1/projects/{projectId}/environments/{environmentId}/transactions/google/{orderId}/fulfilled':
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/orderId'
+    post:
+      summary: Mark a Google Play Store order/transaction as fulfilled
+      tags:
+        - Google
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google-transaction-dto'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '409':
+          $ref: '#/components/responses/error-response-conflict'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      operationId: fulfillGoogleTransaction
+      description: |-
+        Fulfills a Google Play Store transaction that came from the Unity IAP SDK.
+      security:
+        - Client: []
+
+  '/v1/projects/{projectId}/environments/{environmentId}/transactions/apple':
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    post:
+      summary: Verify Apple App Store transaction
+      tags:
+        - Apple
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/apple-transaction-dto'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      operationId: verifyAppleTransaction
+      description: |-
+        Verifies an Apple App Store transaction that came from the Unity IAP SDK.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/verify-apple-transaction-request'
+      security:
+        - Client: []
+
+  '/v1/projects/{projectId}/environments/{environmentId}/transactions/apple/{transactionId}/fulfilled':
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/transactionId'
+    post:
+      summary: Mark an Apple App Store transaction as fulfilled
+      tags:
+        - Apple
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google-transaction-dto'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '409':
+          $ref: '#/components/responses/error-response-conflict'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      operationId: fulfillAppleTransaction
+      description: |-
+        Fulfills an Apple App Store transaction that came from the Unity IAP SDK.
+      security:
+        - Client: []
+
+  '/v1/projects/{projectId}/environments/{environmentId}/transactions/apple/refund':
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    post:
+      summary: Mark an Apple App Store transaction as refunded
+      tags:
+        - Apple
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google-transaction-dto'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '409':
+          $ref: '#/components/responses/error-response-conflict'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/refund-apple-transaction-request'
+      operationId: refundAppleTransaction
+      description: |-
+        Marks an Apple App Store transaction that came from the Unity IAP SDK as refunded.
+      security:
+        - Client: []
+
+components:
+  schemas:
+    basic-error-response:
+      title: basic-error-response
+      description: |
+        Referenced from - https://tools.ietf.org/html/rfc7807#page-3 Consumers MUST use the 'type' string as the primary identifier for the problem type; the 'title' string is advisory and included only for users who are not aware of the semantics of the URI and do not have the ability to discover them (for example, offline log analysis). Consumers SHOULD NOT automatically dereference the type URI. The "status" member, if present, is only advisory; it conveys the HTTP status code used for the convenience of the consumer. Generators MUST use the same status code in the actual HTTP response, to assure that generic HTTP software that does not understand this format still behaves correctly.  See Section 5 for further caveats regarding its use. Consumers can use the status member to determine what the original status code used by the generator was, in cases where it has been changed (for example, by an intermediary or cache), and when message bodies persist without HTTP information.  Generic HTTP software still uses the HTTP status code. The "detail" member, if present, should focus on helping the client correct the problem, rather than giving debugging information.
+      type: object
+      x-examples:
+        example-1:
+          type: problems/basic
+          title: service unavailable
+          status: 500
+          code: 1000
+          detail: service unavailable
+          details:
+            - health:
+                - service health ping failed
+      properties:
+        type:
+          type: string
+          description: 'A URI reference [RFC3986] that identifies the problem type. This specification encourages that, when dereferenced, it provide human-readable documentation for the problem type (for example, using HTML [W3C.REC-html5-20141028]). When this member is not present, its value is assumed to be "about:blank".'
+        title:
+          type: string
+          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization (for example, using proactive content negotiation; see [RFC7231], Section 3.4).'
+        status:
+          type: integer
+          description: 'The HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.'
+        code:
+          description: Service specific error code.
+          type: integer
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.
+        details:
+          type: array
+          description: Machine readable service specific errors.
+          items:
+            type: object
+      required:
+        - type
+    validation-error-body:
+      title: validation-error-body
+      type: object
+      properties:
+        field:
+          type: string
+        messages:
+          type: array
+          items:
+            type: string
+      required:
+        - field
+        - messages
+      description: Single error in the Validation Error Response.
+      x-examples: {}
+    validation-error-response:
+      title: validation-error-response
+      type: object
+      description: |
+        Validation error response when a value provided from the client does not pass validation on server.
+      x-examples:
+        Validation Error Example:
+          type: problems/validation
+          title: validation error
+          status: 400
+          code: 1009
+          detail: See 'errors' for specific validation errors
+          errors:
+            - field: name
+              messages:
+                - Only alphanumeric characters allowed
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/validation-error-body'
+      required:
+        - type
+        - title
+        - status
+        - code
+        - detail
+        - errors
+
+    google-purchase-state:
+      type: string
+      enum:
+        - PURCHASED
+        - PENDING
+        - UNSPECIFIED_STATE
+      description: Purchase state of the transaction. Should match with the IAP SDK purchase state.
+
+    google-transaction-dto:
+      description: Object representing a Google Play Store transaction
+      type: object
+      properties:
+        hash:
+          type: string
+          description: Hash of the transaction. Should be unique.
+        player_id:
+          type: string
+          description: ID of the player.
+        project_id:
+          type: string
+          description: ID of the Unity project.
+        fulfilled:
+          type: boolean
+          description: Whether the transaction has been marked as fulfilled.
+        fulfilled_at:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. `null` if there is no associated value.
+          example: '2020-04-01T13:07:23Z'
+        order_id:
+          type: string
+          description: ID of the order/transaction/receipt from a Google Play Store receipt.
+        product_id:
+          type: string
+          description: ID of the product.
+        quantity:
+          type: integer
+          nullable: true
+          description: Quantity of the product.
+        transaction_type:
+          type: string
+          description: Type of the transaction.
+        validated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        purchase_state:
+          $ref: '#/components/schemas/google-purchase-state'
+
+    apple-transaction-dto:
+      description: Object representing an Apple App Store transaction
+      type: object
+      properties:
+        hash:
+          type: string
+          description: Hash of the transaction. Should be unique.
+        player_id:
+          type: string
+          description: ID of the player.
+        project_id:
+          type: string
+          description: ID of the Unity project.
+        fulfilled:
+          type: boolean
+          description: Whether the transaction has been marked as fulfilled.
+        fulfilled_at:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. `null` if there is no associated value.
+          example: '2020-04-01T13:07:23Z'
+        transaction_id:
+          type: string
+          description: ID of the order/transaction/receipt from a Google Play Store receipt.
+        product_id:
+          type: string
+          description: ID of the product.
+        quantity:
+          type: integer
+          nullable: true
+          description: Quantity of the product.
+        transaction_type:
+          type: string
+          description: Type of the transaction.
+        validated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        revoked_at:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. Null if the transaction is not revoked.
+          example: '2020-04-01T13:07:23Z'
+
+    refund-apple-transaction-request:
+      title: refund-apple-transaction-request
+      type: object
+      properties:
+        jwsTransaction:
+          type: string
+          description: JWS string of the Apple App Store transaction
+      required:
+        - jwsTransaction
+
+    verify-apple-transaction-request:
+      title: verify-apple-transaction-request
+      type: object
+      properties:
+        jwsTransaction:
+          type: string
+          description: JWS string of the Apple App Store transaction
+      required:
+        - jwsTransaction
+
+    verify-google-transaction-request:
+      title: verify-google-transaction-request
+      type: object
+      properties:
+        receipt:
+          type: string
+          description: Google receipt from the IAP SDK.
+
+  responses:
+    error-response-unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-bad-request:
+      description: |-
+        Bad Request. Returned code indicates one of:
+          - Request parameter validation failure
+          - Other
+        See the response schema for more details
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/basic-error-response'
+              - $ref: '#/components/schemas/validation-error-response'
+            discriminator:
+              propertyName: type
+              mapping:
+                'problems/basic': '#/components/schemas/basic-error-response'
+                'problems/validation': '#/components/schemas/validation-error-response'
+    error-response-forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-not-found:
+      description: Not Found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-service-unavailable:
+      description: Service Unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-too-many-requests:
+      description: Too Many Requests
+      headers:
+        Retry-After:
+          schema:
+            type: number
+          description: The number of seconds until a request is accepted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-internal-server-error:
+      description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+
+  parameters:
+    projectId:
+      name: projectId
+      in: path
+      description: ID of the Unity project.
+      required: true
+      schema:
+        type: string
+
+    environmentId:
+      name: environmentId
+      in: path
+      description: ID of the Unity environment.
+      required: true
+      schema:
+        type: string
+
+    playerId:
+      name: playerId
+      in: path
+      description: ID of the player.
+      required: true
+      schema:
+        type: string
+
+    orderId:
+      name: orderId
+      in: path
+      description: ID of the order/transaction/receipt from a Google Play Store receipt.
+      required: true
+      schema:
+        type: string
+
+    transactionId:
+      name: transactionId
+      in: path
+      description: ID of the transaction from an Apple App Store transaction.
+      required: true
+      schema:
+        type: string
+
+  securitySchemes:
+    Client:
+      type: http
+      scheme: bearer
+      description: |-
+        To get started with Authentication, please visit the [Client Authentication section](https://services.docs.unity.com/docs/client-auth).

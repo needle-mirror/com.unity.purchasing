@@ -26,7 +26,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="storeName"> The name of the store for which to obtain the service </param>
         /// <returns> The Store Service for the specified store. </returns>
-        public static IStoreService GetStoreService(string? storeName)
+        public static IStoreService GetStoreService(string storeName)
         {
             return GetStoreServiceInternal(StoreManager.Instance().GetStore(storeName));
         }

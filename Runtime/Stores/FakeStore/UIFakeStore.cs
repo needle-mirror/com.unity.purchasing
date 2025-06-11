@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
     {
         const string EnvironmentDescriptionPostfix = "\n\n[Environment: FakeStore]";
         const string SuccessString = "Success";
-        const int RetrieveProductsDescriptionCount = 2;
+        const int FetchProductsDescriptionCount = 2;
 
         DialogRequest m_CurrentDialog;
         int m_LastSelectedDropdownIndex;
@@ -84,9 +84,9 @@ namespace UnityEngine.Purchasing
                     okayButton = "Buy";
                 }
             }
-            else if (dialogType == DialogType.RetrieveProducts)
+            else if (dialogType == DialogType.FetchProducts)
             {
-                title = CreateRetrieveProductsQuestion((ReadOnlyCollection<ProductDefinition>)model);
+                title = CreateFetchProductsQuestion((ReadOnlyCollection<ProductDefinition>)model);
                 okayButton = "OK";
             }
             else
@@ -147,7 +147,7 @@ namespace UnityEngine.Purchasing
         {
             if (m_UIFakeStoreWindowObject == null)
             {
-                m_UIFakeStoreWindowObject = new GameObject("UIFakeStoreWindow", typeof(Transform));
+                m_UIFakeStoreWindowObject = new GameObject("UIFakeStoreWindow");
                 m_UIFakeStoreWindowObject.AddComponent<UIFakeStoreWindow>();
             }
 
@@ -216,11 +216,11 @@ namespace UnityEngine.Purchasing
             return "Do you want to Purchase " + definition.id + "?" + EnvironmentDescriptionPostfix;
         }
 
-        private string CreateRetrieveProductsQuestion(ReadOnlyCollection<ProductDefinition> definitions)
+        private string CreateFetchProductsQuestion(ReadOnlyCollection<ProductDefinition> definitions)
         {
             var title = "Do you want to initialize purchasing for products {";
-            title += string.Join(", ", definitions.Take(RetrieveProductsDescriptionCount).Select(pid => pid.id).ToArray());
-            if (definitions.Count > RetrieveProductsDescriptionCount)
+            title += string.Join(", ", definitions.Take(FetchProductsDescriptionCount).Select(pid => pid.id).ToArray());
+            if (definitions.Count > FetchProductsDescriptionCount)
             {
                 title += ", ...";
             }
@@ -257,10 +257,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         private void CancelButtonClicked()
         {
-            var codeValue = Math.Max(0, m_LastSelectedDropdownIndex - 1); // Pop SuccessString
-
-            // ASSUME: This is FakeStoreUIMode.StandardUser
-            m_CurrentDialog.Callback(false, codeValue);
+            m_CurrentDialog.Callback(false, (int)PurchaseFailureReason.UserCancelled);
             CloseDialog();
         }
 

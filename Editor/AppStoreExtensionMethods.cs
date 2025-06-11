@@ -8,7 +8,6 @@ namespace UnityEditor.Purchasing
     {
         static readonly Dictionary<AppStore, string> AppStoreDisplayNames = new Dictionary<AppStore, string>()
         {
-            {AppStore.AmazonAppStore, AmazonApps.DisplayName},
             {AppStore.AppleAppStore, AppleAppStore.DisplayName},
             {AppStore.GooglePlay, GooglePlay.DisplayName},
             {AppStore.MacAppStore, MacAppStore.DisplayName},

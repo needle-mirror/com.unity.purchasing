@@ -4,7 +4,7 @@ using UnityEngine.Purchasing.Models;
 
 namespace UnityEngine.Purchasing.Interfaces
 {
-    public interface IGoogleBillingClient
+    interface IGoogleBillingClient
     {
         void StartConnection(IBillingClientStateListener billingClientStateListener);
         void EndConnection();

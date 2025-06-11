@@ -6,56 +6,59 @@ namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Public Interface for a service responsible for ordering products, fetching previous purchases and validating product entitlements.
-    /// Tasks requiring a connection to Stores (Apple App Store or Google Play Store for example)
-    /// executed without ConnectionState.Connected will throw a StoreConnectionException.
     /// </summary>
     public interface IPurchaseService
     {
         /// <summary>
         /// Apple Specific Purchase Extensions
         /// </summary>
-        public IAppleStoreExtendedPurchaseService? Apple { get; }
+        IAppleStoreExtendedPurchaseService? Apple { get; }
 
         /// <summary>
         /// Google Specific Purchase Extensions
         /// </summary>
-        public IGooglePlayStoreExtendedPurchaseService? Google { get; }
+        IGooglePlayStoreExtendedPurchaseService? Google { get; }
 
         /// <summary>
         /// Purchase a product.
+        /// Be sure to first register callbacks via `AddPurchasePendingAction` and `AddPurchaseFailedAction`.
         /// </summary>
         /// <param name="product">The Product to purchase.</param>
         void PurchaseProduct(Product product);
 
         /// <summary>
         /// Purchase a cart.
+        /// Be sure to first register your callback via `OnPurchasePending` and `OnPurchaseFailed`.
         /// </summary>
         /// <param name="cart">The cart to purchase.</param>
         void Purchase(ICart cart);
 
         /// <summary>
         /// Confirm a pending order.
+        /// Be sure to first register your callbacks via `OnPurchaseConfirmed`.
         /// </summary>
         /// <param name="order">The pending order to confirm.</param>
-        void ConfirmOrder(PendingOrder order);
+        void ConfirmPurchase(PendingOrder order);
 
         /// <summary>
         /// Fetch pre-existing purchases.
+        /// Be sure to first register your callbacks via `OnPurchasesFetched` and `OnPurchasesFetchFailed`.
         /// </summary>
         void FetchPurchases();
 
         /// <summary>
         /// Check if a Product has been entitled.
+        /// Be sure to first register your callback via `OnCheckEntitlement`.
         /// </summary>
-        /// <param name="product">The Product to check for entitlements.</param>
-        void IsProductEntitled(Product product);
+        /// <param name="product">The Product to check for entitlement.</param>
+        void CheckEntitlement(Product product);
 
         /// <summary>
         /// Initiate a request to restore previously made purchases.
         /// </summary>
         /// <param name="callback">Action will be called when the request to restore transactions comes back. The bool will be true if it was successful or false if it was not.
         /// The string is an optional error message.</param>
-        void RestoreTransactions(Action<bool, string?> callback);
+        void RestoreTransactions(Action<bool, string?>? callback);
 
         /// <summary>
         /// Gets an observable collection of the purchases fetched, confirmed and ordered.
@@ -64,81 +67,39 @@ namespace UnityEngine.Purchasing
         ReadOnlyObservableCollection<Order> GetPurchases();
 
         /// <summary>
-        /// Add an action to be called when products are ordered.
+        /// Callback when a purchase has been paid, but hasn't been confirmed yet.
         /// </summary>
-        /// <param name="updatedAction">The action to be added to the list of callbacks.</param>
-        void AddPendingOrderUpdatedAction(Action<PendingOrder>? updatedAction);
+        event Action<PendingOrder>? OnPurchasePending;
 
         /// <summary>
-        /// Add an action to be called when product orders are confirmed.
+        /// Callback when a purchase has been confirmed.
         /// </summary>
-        /// <param name="updatedAction">The action to be added to the list of callbacks.</param>
-        void AddConfirmedOrderUpdatedAction(Action<ConfirmedOrder>? updatedAction);
+        /// <returns>`ConfirmedOrder` or `FailedOrder`</returns>
+        event Action<Order>? OnPurchaseConfirmed;
 
         /// <summary>
-        /// Add an action to be called when products orders fail.
+        /// Callback when products orders fail.
         /// </summary>
-        /// <param name="failedAction">The action to be added to the list of callbacks.</param>
-        void AddPurchaseFailedAction(Action<FailedOrder>? failedAction);
+        event Action<FailedOrder>? OnPurchaseFailed;
 
         /// <summary>
-        /// Add an action to be called when products orders are deferred.
+        /// Callback when products orders are deferred.
         /// </summary>
-        /// <param name="deferredAction">The action to be added to the list of callbacks.</param>
-        void AddPurchaseDeferredAction(Action<DeferredOrder>? deferredAction);
+        event Action<DeferredOrder>? OnPurchaseDeferred;
 
         /// <summary>
-        /// Add an action to be called when previous purchases are fetched.
+        /// Callback when previous purchases are fetched.
         /// </summary>
-        /// <param name="updatedAction">The action to be added to the list of callbacks.</param>
-        void AddFetchedPurchasesAction(Action<Orders>? updatedAction);
+        event Action<Orders>? OnPurchasesFetched;
 
         /// <summary>
-        /// Add an action to be called when an attempt to fetch previous purchases has failed.
+        /// Callback when an attempt to fetch previous purchases has failed.
         /// </summary>
-        /// <param name="failedAction">The action to be added to the list of callbacks.</param>
-        void AddFetchPurchasesFailedAction(Action<PurchasesFetchFailureDescription>? failedAction);
+        event Action<PurchasesFetchFailureDescription>? OnPurchasesFetchFailed;
 
         /// <summary>
-        /// Add an action to be called when a check for product entitlement is complete.
+        /// Callback when a check for product entitlement is complete.
         /// </summary>
-        /// <param name="checkEntitlementAction">The action to be added to the list of callbacks.</param>
-        void AddCheckEntitlementAction(Action<Entitlement>? checkEntitlementAction);
-
-        /// <summary>
-        /// Remove an action to be called when products are ordered.
-        /// </summary>
-        /// <param name="updatedAction">The action to be removed from the list of callbacks.</param>
-        void RemovePendingOrderUpdatedAction(Action<PendingOrder>? updatedAction);
-
-        /// <summary>
-        /// Remove an action to be called when product orders are confirmed.
-        /// </summary>
-        /// <param name="updatedAction">The action to be removed from the list of callbacks.</param>
-        void RemoveConfirmedOrderUpdatedAction(Action<ConfirmedOrder>? updatedAction);
-
-        /// <summary>
-        /// Remove an action to be called when products orders fail.
-        /// </summary>
-        /// <param name="failedAction">The action to be removed from the list of callbacks.</param>
-        void RemovePurchaseFailedAction(Action<FailedOrder>? failedAction);
-
-        /// <summary>
-        /// Remove an action to be called when previous purchases are fetched.
-        /// </summary>
-        /// <param name="updatedAction">The action to be removed from the list of callbacks.</param>
-        void RemoveFetchedPurchasesAction(Action<Orders>? updatedAction);
-
-        /// <summary>
-        /// Remove an action to be called when an attempt to fetch previous purchases has failed.
-        /// </summary>
-        /// <param name="failedAction">The action to be removed from the list of callbacks.</param>
-        void RemoveFetchPurchasesFailedAction(Action<PurchasesFetchFailureDescription>? failedAction);
-
-        /// <summary>
-        /// Remove an action to be called when a check for product entitlement is complete.
-        /// </summary>
-        /// <param name="checkEntitlementAction">The action to be added to the list of callbacks.</param>
-        void RemoveCheckEntitlementAction(Action<Entitlement>? checkEntitlementAction);
+        event Action<Entitlement>? OnCheckEntitlement;
     }
 }

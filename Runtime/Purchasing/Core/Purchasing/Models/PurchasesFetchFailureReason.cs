@@ -11,6 +11,12 @@ namespace UnityEngine.Purchasing
         PurchasingUnavailable,
 
         /// <summary>
+        /// The purchases couldn't be fetched because the store is not connected.
+        /// Use IStoreService.Connect() to initialize the connection to the store.
+        /// </summary>
+        StoreNotConnected,
+
+        /// <summary>
         /// A catch all for remaining purchase problems.
         /// </summary>
         Unknown

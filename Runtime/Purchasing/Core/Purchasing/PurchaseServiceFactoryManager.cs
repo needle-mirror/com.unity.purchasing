@@ -1,6 +1,6 @@
 namespace UnityEngine.Purchasing
 {
-    internal class PurchaseServiceFactoryManager : IPurchaseServiceFactoryManager, IPurchaseServiceFactoryManagerInjectionPoint
+    class PurchaseServiceFactoryManager : IPurchaseServiceFactoryManager, IPurchaseServiceFactoryManagerInjectionPoint
     {
         static PurchaseServiceFactoryManager s_Instance;
         IPurchaseServiceFactory m_Factory;

@@ -8,15 +8,17 @@ namespace UnityEngine.Purchasing
     {
         Action? m_InitializationConnectionListener;
         readonly IGooglePlayStoreSetObfuscatedIdUseCase m_GooglePlayStoreSetObfuscatedIdUseCase;
+        readonly IGooglePlayStoreConnectionUseCase m_GooglePlayStoreConnectionUseCase;
 
         [Preserve]
         internal GooglePlayStoreExtendedService(
             IGooglePlayStoreSetObfuscatedIdUseCase googlePlayStoreSetObfuscatedIdUseCase,
-            IStoreConnectUseCase connectUseCase,
-            IRetryPolicy? defaultConnectionRetryPolicy)
-            : base(connectUseCase, defaultConnectionRetryPolicy)
+            IGooglePlayStoreConnectionUseCase googlePlayStoreConnectionUseCase,
+            IStoreConnectUseCase connectUseCase)
+            : base(connectUseCase)
         {
             m_GooglePlayStoreSetObfuscatedIdUseCase = googlePlayStoreSetObfuscatedIdUseCase;
+            m_GooglePlayStoreConnectionUseCase = googlePlayStoreConnectionUseCase;
         }
 
         /// <summary>
@@ -53,6 +55,10 @@ namespace UnityEngine.Purchasing
         public void SetObfuscatedProfileId(string profileId)
         {
             m_GooglePlayStoreSetObfuscatedIdUseCase.SetObfuscatedProfileId(profileId);
+        }
+        public void EndConnection()
+        {
+            m_GooglePlayStoreConnectionUseCase.EndConnection();
         }
     }
 }

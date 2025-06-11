@@ -95,10 +95,10 @@ public class StoreKitManager: StoreKitManagerProtocol {
             let response = await productUseCase.fetchProducts(for: storeSpecificIds)
             products = response.products
             let jsonString = encodeToJSON( ["products": products])
-            await storeKitCallback.callback(subject: "OnProductsRetrieved", payload: jsonString, entitlementStatus: 0)
+            await storeKitCallback.callback(subject: "OnProductsFetched", payload: jsonString, entitlementStatus: 0)
         } catch {
             Task(priority: .background, operation: {
-                await self.storeKitCallback.callback(subject: "OnProductsRetrieveFailed", payload: "JSONDecoder An error occurred - \(error.localizedDescription)", entitlementStatus: 0)
+                await self.storeKitCallback.callback(subject: "OnProductsFetchFailed", payload: "JSONDecoder An error occurred - \(error.localizedDescription)", entitlementStatus: 0)
             })
         }
     }
@@ -141,6 +141,81 @@ public class StoreKitManager: StoreKitManagerProtocol {
             return ""
         }
     }
+
+    // TODO: IAP-3929 - Remove refreshAppReceipt
+    func refreshAppReceipt() async {
+        enum ReceiptRefreshError: Error {
+            case requestThrottled
+        }
+
+        do {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+
+                class RequestDelegate: NSObject, SKRequestDelegate {
+                    private let continuation: CheckedContinuation<Void, Error>
+                    private let request: SKRequest
+
+                    init(request: SKRequest, continuation: CheckedContinuation<Void, Error>) {
+                        self.request = request
+                        self.continuation = continuation
+                    }
+
+                    func requestDidFinish(_ request: SKRequest) {
+                        finish(success: true, error: nil)
+                    }
+
+                    func request(_ request: SKRequest, didFailWithError error: Error) {
+                        if let skerror = error as? SKError, skerror.code.rawValue == 603 {
+                            finish(success: false, error: ReceiptRefreshError.requestThrottled)
+                        } else {
+                            finish(success: false, error: error)
+                        }
+                    }
+
+                    private func finish(success: Bool, error: Error?) {
+                        request.cancel()
+
+                        objc_setAssociatedObject(request, &AssociatedKeys.delegateKey, nil, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+
+                        if success || (error as? ReceiptRefreshError == .requestThrottled) {
+                            continuation.resume()
+                        } else {
+                            continuation.resume(throwing: error!)
+                        }
+                    }
+                }
+
+                struct AssociatedKeys { static var delegateKey = 0 }
+
+                enum ReceiptRefreshError: Error {
+                    case requestThrottled
+                }
+
+                let request = SKReceiptRefreshRequest()
+                let delegate = RequestDelegate(request: request, continuation: continuation)
+                request.delegate = delegate
+
+                objc_setAssociatedObject(request, &AssociatedKeys.delegateKey, delegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+                request.start()
+            }
+
+            // Successful refresh or receipt throttled, (valid receipt either way explicitly stated):
+            await storeKitCallback.callback(
+                subject: "onAppReceiptRefreshed",
+                payload: fetchAppReceipt(),
+                entitlementStatus: 0
+            )
+
+        } catch {
+            // Error explicitly handled:
+            await storeKitCallback.callback(
+                subject: "onAppReceiptRefreshFailed",
+                payload: error.localizedDescription,
+                entitlementStatus: 0
+            )
+        }
+    }
+
 
     // MARK: Transaction
 

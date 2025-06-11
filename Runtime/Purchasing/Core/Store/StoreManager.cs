@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -23,7 +22,7 @@ namespace UnityEngine.Purchasing
             return s_Instance ??= new StoreManager();
         }
 
-        public IStoreWrapper GetStore(string? name)
+        public IStoreWrapper GetStore(string name)
         {
             if (!m_InstantiatedStores.ContainsKey(name))
             {

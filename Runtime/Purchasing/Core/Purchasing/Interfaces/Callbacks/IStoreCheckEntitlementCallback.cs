@@ -6,10 +6,13 @@ namespace UnityEngine.Purchasing
     public interface IStoreCheckEntitlementCallback
     {
         /// <summary>
-        /// Inform Unity Purchasing of a product's entitlement status.
+        /// Informs Unity Purchasing of a product's entitlement status result.
+        /// Always invoked, regardless of success or failure.
         /// </summary>
-        /// <param name="productDefinition">The product to check for.</param>
-        /// <param name="isEntitled">The entitlement status of the product.</param>
-        void OnCheckEntitlementSucceeded(ProductDefinition productDefinition, EntitlementStatus status);
+        /// <param name="productDefinition">The product being checked.</param>
+        /// <param name="status">The result of the entitlement check.</param>
+        /// <param name="message">Optional error or status detail message.</param>
+        void OnCheckEntitlement(ProductDefinition productDefinition, EntitlementStatus status, string message = null);
+
     }
 }

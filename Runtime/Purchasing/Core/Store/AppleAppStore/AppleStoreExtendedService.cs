@@ -17,9 +17,8 @@ namespace UnityEngine.Purchasing.Services
             ICanMakePaymentsUseCase canMakePaymentsUseCase,
             IClearAppleTransactionLogsUseCase clearAppleTransactionLogsUseCase,
             ISetAppAccountTokenUseCase setAppAccountTokenUseCase,
-            IStoreConnectUseCase connectUseCase,
-            IRetryPolicy? defaultConnectionRetryPolicy)
-            : base(connectUseCase, defaultConnectionRetryPolicy)
+            IStoreConnectUseCase connectUseCase)
+            : base(connectUseCase)
         {
             m_CanMakePaymentsUseCase = canMakePaymentsUseCase;
             m_ClearAppleTransactionLogsUseCase = clearAppleTransactionLogsUseCase;

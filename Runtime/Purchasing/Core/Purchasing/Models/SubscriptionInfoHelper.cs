@@ -42,8 +42,7 @@ namespace UnityEngine.Purchasing
 
     /// <summary>
     /// Use to query in-app purchasing subscription product information, and upgrade subscription products.
-    /// Supports the Apple App Store, Google Play store, and Amazon AppStore.
-    /// Note Amazon support offers no subscription duration information.
+    /// Supports the Apple App Store, Google Play store.
     /// Note expiration dates may become invalid after updating subscriptions between two types of duration.
     /// </summary>
     /// <seealso cref="IAppleExtensions.GetIntroductoryPriceDictionary"/>
@@ -119,10 +118,6 @@ namespace UnityEngine.Purchasing
                             }
                             return GetAppleAppStoreSubInfo(payload, m_ProductId);
                         }
-                        case AmazonApps.Name:
-                        {
-                            return GetAmazonAppStoreSubInfo(m_ProductId);
-                        }
                         default:
                         {
                             throw new StoreSubscriptionInfoNotSupportedException("Store not supported: " + store);
@@ -134,11 +129,6 @@ namespace UnityEngine.Purchasing
             throw new NullReceiptException();
         }
 
-        static SubscriptionInfo GetAmazonAppStoreSubInfo(string productId)
-        {
-            return new SubscriptionInfo(productId);
-        }
-
         SubscriptionInfo GetAppleAppStoreSubInfo(string payload, string productId)
         {
             AppleReceipt receipt = null;
@@ -147,7 +137,14 @@ namespace UnityEngine.Purchasing
 
             try
             {
-                receipt = new AppleReceiptParser().Parse(Convert.FromBase64String(payload));
+                if (string.Empty.Equals(payload))
+                {
+                    logger.LogIAP("Apple receipt is empty. Call `IAppleStoreExtendedPurchaseService.RefreshAppReceipt` to refresh it.");
+                }
+                else
+                {
+                    receipt = new AppleReceiptParser().Parse(Convert.FromBase64String(payload));
+                }
             }
             catch (ArgumentException e)
             {

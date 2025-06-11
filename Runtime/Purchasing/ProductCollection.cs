@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -8,7 +9,7 @@ namespace UnityEngine.Purchasing
     /// Provides helper methods to retrieve products by
     /// store independent/store specific id.
     /// </summary>
-    [Obsolete]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public class ProductCollection
     {
         private Dictionary<string, Product> m_IdToProduct;

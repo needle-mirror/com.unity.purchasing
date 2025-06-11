@@ -10,6 +10,21 @@ namespace UnityEngine.Purchasing
     [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
     class PurchasingManager : IStoreController
     {
+        StoreController m_StoreController = new();
+        public PurchasingManager()
+        {
+            m_StoreController.OnPurchaseFailed += OnPurchaseFailedAction;
+            m_StoreController.OnPurchasePending += OnPurchasePendingAction;
+            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmedAction;
+            m_StoreController.OnPurchasesFetched += OnPurchasesFetchedAction;
+
+            var defaultStore = DefaultStoreHelper.GetDefaultBuiltInAppStore();
+            if (defaultStore is AppStore.AppleAppStore or AppStore.MacAppStore)
+            {
+                UnityIAPServices.DefaultPurchase().Apple?.SetRefreshAppReceipt(true);
+            }
+        }
+
         public ProductCollection products { get; } = new();
 
         public void InitiatePurchase(Product product, string payload)
@@ -29,100 +44,157 @@ namespace UnityEngine.Purchasing
 
         public void InitiatePurchase(string productId)
         {
-            var purchaseService = PurchaseServiceProvider.GetDefaultPurchaseService();
-            purchaseService.AddPurchaseFailedAction(OnPurchaseFailed);
-            purchaseService.AddConfirmedOrderUpdatedAction(OnPurchaseConfirmed);
-            purchaseService.AddPendingOrderUpdatedAction(OnPendingOrderUpdatedAction);
-            purchaseService.Purchase(CreateCart(productId));
+            m_StoreController.Purchase(CreateCart(productId));
         }
 
-        void OnPurchaseFailed(FailedOrder failedOrder)
+        static void OnPurchaseFailedAction(FailedOrder failedOrder)
         {
-            UnityPurchasing.m_StoreListener.OnPurchaseFailed(failedOrder.CartOrdered.Items().FirstOrDefault()?.Product, failedOrder.FailureReason);
+            UnityPurchasing.m_StoreListener?.OnPurchaseFailed(failedOrder.CartOrdered.Items().FirstOrDefault()?.Product, failedOrder.FailureReason);
         }
 
-        void OnPurchaseConfirmed(ConfirmedOrder confirmedOrder)
-        {
-            var product = confirmedOrder.CartOrdered.Items().FirstOrDefault()?.Product;
-            if (product != null)
-            {
-                product.receipt = confirmedOrder.Info.Receipt;
-                var localProduct = ProductServiceProvider.GetDefaultProductService().GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
-                if (localProduct != null)
-                {
-                    localProduct.receipt = confirmedOrder.Info.Receipt;
-                }
-
-                UnityPurchasing.m_StoreListener.ProcessPurchase(new PurchaseEventArgs(product));
-            }
-        }
-
-        void OnPendingOrderUpdatedAction(PendingOrder pendingOrder)
+        void OnPurchasePendingAction(PendingOrder pendingOrder)
         {
             var product = pendingOrder.CartOrdered.Items().FirstOrDefault()?.Product;
             if (product != null)
             {
+                product.transactionID = pendingOrder.Info.TransactionID;
                 product.receipt = pendingOrder.Info.Receipt;
-                var localProduct = ProductServiceProvider.GetDefaultProductService().GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
+                product.appleOriginalTransactionID = pendingOrder.Info.Apple?.OriginalTransactionID;
+                var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
                 if (localProduct != null)
                 {
+                    localProduct.transactionID = pendingOrder.Info.TransactionID;
                     localProduct.receipt = pendingOrder.Info.Receipt;
+                    localProduct.appleOriginalTransactionID = pendingOrder.Info.Apple?.OriginalTransactionID;
                 }
 
-                UnityPurchasing.m_StoreListener.ProcessPurchase(new PurchaseEventArgs(product));
+                if (UnityPurchasing.m_StoreListener?.ProcessPurchase(new PurchaseEventArgs(product)) == PurchaseProcessingResult.Complete)
+                {
+                    ConfirmPendingPurchase(product);
+                }
             }
         }
 
-        static ICart CreateCart(string productId)
+        void OnPurchaseConfirmedAction(Order order)
+        {
+            if (order is not ConfirmedOrder confirmedOrder)
+            {
+                return;
+            }
+
+            var product = confirmedOrder.CartOrdered.Items().FirstOrDefault()?.Product;
+            if (product != null && product.definition.type == ProductType.Consumable)
+            {
+                product.receipt = null;
+                product.transactionID = null;
+                product.appleOriginalTransactionID = null;
+                var localProduct = m_StoreController.GetProducts()
+                    .FirstOrDefault(p => p.definition.id == product.definition.id);
+                if (localProduct != null)
+                {
+                    localProduct.receipt = null;
+                    localProduct.transactionID = null;
+                    localProduct.appleOriginalTransactionID = null;
+                }
+            }
+        }
+
+        void OnPurchasesFetchedAction(Orders orders)
+        {
+            foreach (var order in orders.PendingOrders)
+            {
+                foreach (var cartItem in order.CartOrdered.Items())
+                {
+                    var product = cartItem.Product;
+                    product.receipt = order.Info.Receipt;
+                    product.transactionID = order.Info.TransactionID;
+                    product.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
+                    var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
+                    if (localProduct != null)
+                    {
+                        localProduct.receipt = order.Info.Receipt;
+                        localProduct.transactionID = order.Info.TransactionID;
+                        localProduct.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
+                    }
+                }
+            }
+
+            foreach (var order in orders.ConfirmedOrders)
+            {
+                foreach (var cartItem in order.CartOrdered.Items())
+                {
+                    var product = cartItem.Product;
+                    product.receipt = order.Info.Receipt;
+                    product.transactionID = order.Info.TransactionID;
+                    product.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
+                    var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
+                    if (localProduct != null)
+                    {
+                        localProduct.receipt = order.Info.Receipt;
+                        localProduct.transactionID = order.Info.TransactionID;
+                        localProduct.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
+                    }
+                }
+            }
+        }
+
+        ICart CreateCart(string productId)
         {
             var product = FindProductByProductId(productId);
             var cartItem = new CartItem(product);
             return new Cart(cartItem);
         }
 
-        static Product FindProductByProductId(string productId)
+        Product FindProductByProductId(string productId)
         {
-            var productService = ProductServiceProvider.GetDefaultProductService();
-            return productService.GetProducts().FirstOrDefault(product => product.definition.id == productId);
+            return m_StoreController.GetProducts().FirstOrDefault(product => product.definition.id == productId);
         }
 
         public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason, string> failCallback)
         {
-            var productService = ProductServiceProvider.GetDefaultProductService();
-            productService.AddProductsUpdatedAction(_ =>
+            Action<List<Product>> onFetched = null;
+            Action<ProductFetchFailed> onFailed = null;
+
+            onFetched = _ =>
             {
+                m_StoreController.OnProductsFetched -= onFetched;
+                m_StoreController.OnProductsFetchFailed -= onFailed;
                 successCallback();
-            });
-            productService.AddProductsFetchFailedAction(failedFetch =>
+            };
+
+            onFailed = failed =>
             {
-                failCallback(InitializationFailureReason.NoProductsAvailable, failedFetch.FailureReason);
-            });
+                m_StoreController.OnProductsFetched -= onFetched;
+                m_StoreController.OnProductsFetchFailed -= onFailed;
+                failCallback(InitializationFailureReason.NoProductsAvailable, failed.FailureReason);
+            };
 
-            productService.FetchProductsWithNoRetries(new List<ProductDefinition>(additionalProducts));
+            m_StoreController.OnProductsFetched += onFetched;
+            m_StoreController.OnProductsFetchFailed += onFailed;
 
-
+            m_StoreController.FetchProductsWithNoRetries(new List<ProductDefinition>(additionalProducts));
         }
 
         public void ConfirmPendingPurchase(Product product)
         {
-            var purchaseService = PurchaseServiceProvider.GetDefaultPurchaseService();
-            purchaseService.AddCheckEntitlementAction(entitlement =>
-            {
-                if (entitlement.EntitlementOrder is PendingOrder order)
-                {
-                    purchaseService.ConfirmOrder(order);
-                }
-            });
-            purchaseService.IsProductEntitled(product);
-            purchaseService.ConfirmOrder(CreatePendingOrderFromProduct(product));
+            m_StoreController.ConfirmPurchase(CreatePendingOrderFromProduct(product));
         }
 
         static PendingOrder CreatePendingOrderFromProduct(Product product)
         {
             var cartItem = new CartItem(product);
             var cart = new Cart(cartItem);
-            var orderInfo = new OrderInfo(string.Empty, string.Empty, string.Empty);
-            return new PendingOrder(cart, orderInfo);
+            foreach (var order in PurchaseServiceProvider.GetDefaultPurchaseService().GetPurchases())
+            {
+                if (order is PendingOrder pendingOrder &&
+                    pendingOrder.CartOrdered.Items().First()?.Product.definition.storeSpecificId == product.definition.storeSpecificId)
+                {
+                    var orderInfo = new OrderInfo(pendingOrder.Info.Receipt, pendingOrder.Info.TransactionID, pendingOrder.Info.Apple?.StoreName);
+                    return new PendingOrder(cart, orderInfo);
+                }
+            }
+            Debug.LogWarning($"No pending order found for product {product.definition.id}. Returning a new PendingOrder with empty OrderInfo.");
+            return new PendingOrder(cart, new OrderInfo(string.Empty, string.Empty, string.Empty));
         }
     }
 }

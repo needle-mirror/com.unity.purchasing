@@ -1,5 +1,6 @@
+#nullable enable
+
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -23,15 +24,9 @@ namespace UnityEngine.Purchasing
             m_BaseInternalPurchaseService = basePurchaseService;
         }
 
-        /// <summary>
-        /// Apple Specific Purchase Extensions
-        /// </summary>
-        public virtual IAppleStoreExtendedPurchaseService Apple => m_BaseInternalPurchaseService.Apple;
+        public virtual IAppleStoreExtendedPurchaseService? Apple => m_BaseInternalPurchaseService.Apple;
 
-        /// <summary>
-        /// Google Specific Purchase Extensions
-        /// </summary>
-        public virtual IGooglePlayStoreExtendedPurchaseService Google => m_BaseInternalPurchaseService.Google;
+        public virtual IGooglePlayStoreExtendedPurchaseService? Google => m_BaseInternalPurchaseService.Google;
 
         public virtual void PurchaseProduct(Product product)
         {
@@ -43,9 +38,9 @@ namespace UnityEngine.Purchasing
             m_BaseInternalPurchaseService.Purchase(cart);
         }
 
-        public virtual void ConfirmOrder(PendingOrder order)
+        public virtual void ConfirmPurchase(PendingOrder order)
         {
-            m_BaseInternalPurchaseService.ConfirmOrder(order);
+            m_BaseInternalPurchaseService.ConfirmPurchase(order);
         }
 
         public virtual void FetchPurchases()
@@ -53,12 +48,12 @@ namespace UnityEngine.Purchasing
             m_BaseInternalPurchaseService.FetchPurchases();
         }
 
-        public virtual void IsProductEntitled(Product product)
+        public virtual void CheckEntitlement(Product product)
         {
-            m_BaseInternalPurchaseService.IsProductEntitled(product);
+            m_BaseInternalPurchaseService.CheckEntitlement(product);
         }
 
-        public virtual void RestoreTransactions(Action<bool, string> callback)
+        public virtual void RestoreTransactions(Action<bool, string?>? callback)
         {
             m_BaseInternalPurchaseService.RestoreTransactions(callback);
         }
@@ -68,69 +63,46 @@ namespace UnityEngine.Purchasing
             return m_BaseInternalPurchaseService.GetPurchases();
         }
 
-        public virtual void AddPendingOrderUpdatedAction(Action<PendingOrder> updatedAction)
+        public event Action<PendingOrder>? OnPurchasePending
         {
-            m_BaseInternalPurchaseService.AddPendingOrderUpdatedAction(updatedAction);
+            add => m_BaseInternalPurchaseService.OnPurchasePending += value;
+            remove => m_BaseInternalPurchaseService.OnPurchasePending -= value;
         }
 
-        public virtual void AddConfirmedOrderUpdatedAction(Action<ConfirmedOrder> updatedAction)
+        public event Action<Order>? OnPurchaseConfirmed
         {
-            m_BaseInternalPurchaseService.AddConfirmedOrderUpdatedAction(updatedAction);
+            add => m_BaseInternalPurchaseService.OnPurchaseConfirmed += value;
+            remove => m_BaseInternalPurchaseService.OnPurchaseConfirmed -= value;
         }
 
-        public virtual void AddPurchaseFailedAction(Action<FailedOrder> failedAction)
+        public event Action<FailedOrder>? OnPurchaseFailed
         {
-            m_BaseInternalPurchaseService.AddPurchaseFailedAction(failedAction);
+            add => m_BaseInternalPurchaseService.OnPurchaseFailed += value;
+            remove => m_BaseInternalPurchaseService.OnPurchaseFailed -= value;
         }
 
-        public virtual void AddPurchaseDeferredAction(Action<DeferredOrder> deferredAction)
+        public event Action<DeferredOrder>? OnPurchaseDeferred
         {
-            m_BaseInternalPurchaseService.AddPurchaseDeferredAction(deferredAction);
+            add => m_BaseInternalPurchaseService.OnPurchaseDeferred += value;
+            remove => m_BaseInternalPurchaseService.OnPurchaseDeferred -= value;
         }
 
-        public virtual void AddFetchedPurchasesAction(Action<Orders> updatedAction)
+        public event Action<Orders>? OnPurchasesFetched
         {
-            m_BaseInternalPurchaseService.AddFetchedPurchasesAction(updatedAction);
+            add => m_BaseInternalPurchaseService.OnPurchasesFetched += value;
+            remove => m_BaseInternalPurchaseService.OnPurchasesFetched -= value;
         }
 
-        public virtual void AddFetchPurchasesFailedAction(Action<PurchasesFetchFailureDescription> failedAction)
+        public event Action<PurchasesFetchFailureDescription>? OnPurchasesFetchFailed
         {
-            m_BaseInternalPurchaseService.AddFetchPurchasesFailedAction(failedAction);
+            add => m_BaseInternalPurchaseService.OnPurchasesFetchFailed += value;
+            remove => m_BaseInternalPurchaseService.OnPurchasesFetchFailed -= value;
         }
 
-        public virtual void AddCheckEntitlementAction(Action<Entitlement> checkEntitlementAction)
+        public event Action<Entitlement>? OnCheckEntitlement
         {
-            m_BaseInternalPurchaseService.AddCheckEntitlementAction(checkEntitlementAction);
-        }
-
-        public virtual void RemovePendingOrderUpdatedAction(Action<PendingOrder> updatedAction)
-        {
-            m_BaseInternalPurchaseService.RemovePendingOrderUpdatedAction(updatedAction);
-        }
-
-        public virtual void RemoveConfirmedOrderUpdatedAction(Action<ConfirmedOrder> updatedAction)
-        {
-            m_BaseInternalPurchaseService.RemoveConfirmedOrderUpdatedAction(updatedAction);
-        }
-
-        public virtual void RemovePurchaseFailedAction(Action<FailedOrder> failedAction)
-        {
-            m_BaseInternalPurchaseService.RemovePurchaseFailedAction(failedAction);
-        }
-
-        public virtual void RemoveFetchedPurchasesAction(Action<Orders> updatedAction)
-        {
-            m_BaseInternalPurchaseService.RemoveFetchedPurchasesAction(updatedAction);
-        }
-
-        public virtual void RemoveFetchPurchasesFailedAction(Action<PurchasesFetchFailureDescription> failedAction)
-        {
-            m_BaseInternalPurchaseService.RemoveFetchPurchasesFailedAction(failedAction);
-        }
-
-        public virtual void RemoveCheckEntitlementAction(Action<Entitlement> checkEntitlementAction)
-        {
-            m_BaseInternalPurchaseService.RemoveCheckEntitlementAction(checkEntitlementAction);
+            add => m_BaseInternalPurchaseService.OnCheckEntitlement += value;
+            remove => m_BaseInternalPurchaseService.OnCheckEntitlement -= value;
         }
     }
 }

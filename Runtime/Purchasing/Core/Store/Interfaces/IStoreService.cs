@@ -12,24 +12,18 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Apple Specific Store Extensions
         /// </summary>
-        public IAppleStoreExtendedService? Apple { get; }
+        IAppleStoreExtendedService? Apple { get; }
 
         /// <summary>
         /// Google Specific Store Extensions
         /// </summary>
-        public IGooglePlayStoreExtendedService? Google { get; }
-
-        /// <summary>
-        /// Amazon Specific Store Extensions
-        /// </summary>
-        public IAmazonAppsStoreExtendedService? Amazon { get; }
+        IGooglePlayStoreExtendedService? Google { get; }
 
         /// <summary>
         /// Initiates a connection to the store.
         /// </summary>
         /// <returns>Return a handle to the initialization operation.</returns>
-        /// <exception cref="StoreConnectionException">Throws an exception if the connection fails.</exception>
-        Task ConnectAsync();
+        Task Connect();
 
         //TODO https://jira.unity3d.com/browse/IAP-3119
         // /// <summary>
@@ -45,15 +39,8 @@ namespace UnityEngine.Purchasing
         void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy? retryPolicy);
 
         /// <summary>
-        /// Add an action to be called when connection is lost to the current store.
+        /// Callback when connection is lost to the current store.
         /// </summary>
-        /// <param name="onStoreDisconnected">The action to be added to the list of callbacks.</param>
-        void AddOnStoreDisconnectedAction(Action<StoreConnectionFailureDescription> onStoreDisconnected);
-
-        /// <summary>
-        /// Remove an action to be called when connection is lost to the current store.
-        /// </summary>
-        /// <param name="onStoreDisconnected">The action to be removed from the list of callbacks.</param>
-        void RemoveOnStoreDisconnectedAction(Action<StoreConnectionFailureDescription> onStoreDisconnected);
+        event Action<StoreConnectionFailureDescription>? OnStoreDisconnected;
     }
 }

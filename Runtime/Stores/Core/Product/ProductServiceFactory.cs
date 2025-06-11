@@ -9,7 +9,7 @@ using UnityEngine.Purchasing.Utilities;
 
 namespace UnityEngine.Purchasing
 {
-    public class ProductServiceFactory : IProductServiceFactory
+    class ProductServiceFactory : IProductServiceFactory
     {
         static ProductServiceFactory? s_Instance;
 
@@ -24,7 +24,6 @@ namespace UnityEngine.Purchasing
         {
             m_ProductServiceInstantiationByName.Add(AppleAppStore.Name, CreateAppleProductService);
             m_ProductServiceInstantiationByName.Add(MacAppStore.Name, CreateAppleProductService);
-            m_ProductServiceInstantiationByName.Add(AmazonApps.Name, CreateAmazonProductService);
         }
 
         public void RegisterNewService(string name, Func<IProductService> createFunction)
@@ -86,7 +85,7 @@ namespace UnityEngine.Purchasing
             di.AddService<FetchStorePromotionVisibilityUseCase>();
             di.AddInstance(StoreFactory.Instance().TelemetryDiagnosticsInstanceWrapper);
             di.AddService<TelemetryDiagnostics>();
-            di.AddService<AppleRetrieveProductsService>();
+            di.AddService<AppleFetchProductsService>();
             di.AddService<GetIntroductoryPriceDictionaryUseCase>();
             di.AddService<GetProductDetailsUseCase>();
             di.AddService<SetStorePromotionOrderUseCase>();
@@ -98,26 +97,5 @@ namespace UnityEngine.Purchasing
             return di.GetInstance<AppleStoreExtendedProductService>();
         }
 
-        static AmazonAppsExtendedProductService CreateAmazonProductService(IStoreWrapper store)
-        {
-            IDependencyInjectionService di = new DependencyInjectionService();
-
-            AddProductServiceDependencies(store, di);
-            di.AddService<AmazonStoreCartValidator>();
-            di.AddInstance(Debug.unityLogger);
-            di.AddInstance(AmazonApps.Name);
-            di.AddInstance(StoreFactory.Instance().TelemetryMetricsInstanceWrapper);
-            di.AddService<MetricizedJsonStore>();
-
-            IUnityCallback callback = di.GetInstance<MetricizedJsonStore>();
-            var util = di.GetInstance<IUtil>();
-            var amazonJavaStore = new AmazonNativeStoreBuilder().GetAmazonStore(callback, util);
-            di.AddInstance(callback);
-            di.AddInstance(amazonJavaStore);
-
-            di.AddService<AmazonAppsExtendedProductService>();
-
-            return di.GetInstance<AmazonAppsExtendedProductService>();
-        }
     }
 }

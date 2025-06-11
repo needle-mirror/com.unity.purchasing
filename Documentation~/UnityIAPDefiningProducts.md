@@ -39,3 +39,41 @@ This sections defines the [payout of a product](DefiningProductsOverview.md#Payo
 This sections defines the [Store ID overrides of a product](DefiningProductsOverview.md#Store-ID-Overrides).
 
 ![Populating **Store ID Overrides** fields for Products in the **IAP Catalog** GUI](images/StoreIdOverride.png)
+
+### Google Configuration (required for Google Play export)
+Provide either a Product price, or an ID for a [Pricing Template](https://support.google.com/googleplay/android-developer/answer/6334373) created in Google Play.
+
+![Populating **Google Configuration** fields for Products in the **IAP Catalog** GUI.](images/GoogleConfig.png)
+
+### Apple Configuration (required for Apple export)
+Select a **Pricing Tier** from the dropdown menu. Unity supports predefined Apple price points, but not arbitrary values.
+
+__Select a screenshot__ to upload.
+
+For information on screenshot specs, see Apple’s publisher support documentation.
+
+![Populating **Apple Configuration** fields for Products in the **IAP Catalog** GUI.](images/AppleConfig.png)
+
+### Exporting to an app store
+In order for purchases to function, you must configure your catalog on the corresponding app store. To do so, you can export your Product Catalog as a CSV file to Google Play, or as an XML file through Apple’s Application Loader to the iTunes Store.
+
+#### Google Play
+To export your Product Catalog for Google Play:
+
+1. In the __IAP Catalog__ window (__Services &gt; In-App Purchasing &gt; IAP Catalog__), ensure that each Product has the following defined:<br/>* __ID__ <br/>* __Type__ <br/>* __Title__ and __Description__ <br/>* __Price__ or __Pricing Template__ ID
+2. Scroll down, and select __App Store Export__.
+3. Select __Google Play CSV__.
+4. Choose a location in which to save the CSV file.
+
+For complete guidance on uploading your exported catalog to Google Play, see the [Google in-app billing](https://developer.android.com/google/play/billing/billing_admin.html#billing-list-setup) documentation on the [Android Developers website](https://developer.android.com).
+
+#### Apple App Store
+To export your Product Catalog for Apple App Store:
+
+1. In the **IAP Catalog** window (**Services** &gt; **In-App Purchasing** &gt; **IAP Catalog**), ensure that each Product has the following defined:<br/>* **ID** <br/>* **Type** <br/>* **Title** and **Description** <br/>* **Price Tier** and **Screenshot path** <br/>*
+   **Apple SKU** (found in [iTunes Connect](https://itunesconnect.apple.com)) <br/>* **Apple Team ID** (found on [Apple’s developer website](https://developer.apple.com))
+2. Scroll down, and select **App Store Export**.
+3. Select **Apple XML Delivery**.
+4. Choose a location in which to save the XML file.
+
+For complete guidance on importing through Apple’s Application Loader, see the [Application Loader](https://itunesconnect.apple.com/docs/UsingApplicationLoader.pdf) documentation on the [iTunes Connect website](https://itunesconnect.apple.com).

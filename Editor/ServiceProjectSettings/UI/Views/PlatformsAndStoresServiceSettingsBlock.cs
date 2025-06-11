@@ -10,7 +10,6 @@ namespace UnityEditor.Purchasing
     {
         static readonly List<string> k_StoreNames = new List<string>()
         {
-            "Amazon Appstore",
             "Google Play",
             "Apple App Store",
             "Mac App Store"

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace UnityEngine.Purchasing
 {
-    public interface IAsyncDelayer
+    interface IAsyncDelayer
     {
         Task Delay(int delayMilliseconds);
     }

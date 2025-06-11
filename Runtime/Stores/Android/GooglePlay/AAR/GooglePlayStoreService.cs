@@ -1,6 +1,8 @@
 #nullable enable
+
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
@@ -44,10 +46,17 @@ namespace UnityEngine.Purchasing
             m_GooglePlayStoreConnectionService = connectionService;
         }
 
-        public virtual async void RetrieveProducts(IReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleRetrieveProductException> onRetrieveProductsFailed)
+        public virtual async void FetchProducts(IReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>> onProductsReceived, Action<GoogleFetchProductException> onFetchProductsFailed)
         {
-            var productDescriptions = await m_QueryProductDetailsService.QueryProductDescriptions(products);
-            onProductsReceived(productDescriptions);
+            try
+            {
+                var productDescriptions = await m_QueryProductDetailsService.QueryProductDescriptions(products);
+                onProductsReceived(productDescriptions);
+            }
+            catch (GoogleFetchProductException e)
+            {
+                onFetchProductsFailed(e);
+            }
         }
 
         public void Purchase(ProductDefinition product)
@@ -55,26 +64,21 @@ namespace UnityEngine.Purchasing
             Purchase(product, null, null);
         }
 
-        public virtual void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayReplacementMode? desiredReplacementMode)
+        public virtual void Purchase(ProductDefinition product, Order? currentOrder, GooglePlayReplacementMode? desiredReplacementMode)
         {
-            m_GoogleLastKnownProductService.LastKnownOldProductId = oldProduct?.definition.storeSpecificId;
+            m_GoogleLastKnownProductService.LastKnownOldProductId = currentOrder?.CartOrdered.Items().FirstOrDefault()?.Product.definition.storeSpecificId;
             m_GoogleLastKnownProductService.LastKnownProductId = product.storeSpecificId;
             m_GoogleLastKnownProductService.LastKnownReplacementMode = desiredReplacementMode;
-            m_GooglePurchaseService.Purchase(product, oldProduct, desiredReplacementMode);
+            m_GooglePurchaseService.Purchase(product, currentOrder, desiredReplacementMode);
         }
 
-        public void FinishTransaction(ProductDefinition? product, string? purchaseToken, Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished)
+        public async Task FinishTransaction(ProductDefinition? product, string? purchaseToken, Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished)
         {
-            m_GoogleFinishTransactionUseCase.FinishTransaction(product, purchaseToken, onTransactionFinished);
+            await m_GoogleFinishTransactionUseCase.FinishTransaction(product, purchaseToken, onTransactionFinished);
         }
 
         public async void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed)
         {
-            if (onQueryPurchaseSucceed == null)
-            {
-                throw new ArgumentException("FetchPurchases was called with a null callback, the request will not be executed.");
-            }
-
             try
             {
                 await TryFetchPurchases(onQueryPurchaseSucceed);
@@ -85,7 +89,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        protected virtual async Task TryFetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed)
+        async Task TryFetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed)
         {
             var purchases = await m_GoogleQueryPurchasesUseCase.QueryPurchases();
             onQueryPurchaseSucceed(purchases);

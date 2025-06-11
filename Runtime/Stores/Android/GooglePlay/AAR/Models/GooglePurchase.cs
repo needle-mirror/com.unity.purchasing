@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
-using UnityEngine.Purchasing.MiniJSON;
 using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing.Models
@@ -22,7 +21,7 @@ namespace UnityEngine.Purchasing.Models
         public string receipt { get; }
         public string signature { get; }
         public string originalJson { get; }
-        public string? purchaseToken { get; }
+        public string purchaseToken { get; }
         public string? obfuscatedAccountId { get; }
         public string? obfuscatedProfileId { get; }
         public IEnumerable<ProductDescription> productDescriptions { get; }

@@ -5,14 +5,12 @@ namespace UnityEngine.Purchasing
     internal class ConfirmOrderRequest
     {
         internal PendingOrder OrderToConfirm { get; }
-        internal Action<PendingOrder, ConfirmedOrder> SuccessAction { get; }
-        internal Action<PendingOrder, FailedOrder> FailureAction { get; }
+        internal Action<PendingOrder, Order> Action { get; }
 
-        internal ConfirmOrderRequest(PendingOrder order, Action<PendingOrder, ConfirmedOrder> purchaseSuccessAction, Action<PendingOrder, FailedOrder> purchaseFailureAction)
+        internal ConfirmOrderRequest(PendingOrder order, Action<PendingOrder, Order> purchaseSuccessAction)
         {
             OrderToConfirm = order;
-            SuccessAction = purchaseSuccessAction;
-            FailureAction = purchaseFailureAction;
+            Action = purchaseSuccessAction;
         }
     }
 }
