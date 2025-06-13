@@ -37,9 +37,17 @@ namespace Samples.Purchasing.IAP5.Minimal
             m_StoreController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(ConfirmedOrder order)
+        void OnPurchaseConfirmed(Order order)
         {
-            LogConsole("Purchase completed: " + order.CartOrdered.Items().First().Product.definition.id);
+            switch (order)
+            {
+                case FailedOrder failedOrder:
+                    LogConsole($"Purchase confirmation failed: {failedOrder.CartOrdered.Items().First().Product.definition.id}, {failedOrder.FailureReason.ToString()}, {failedOrder.Details}");
+                    break;
+                case ConfirmedOrder:
+                    LogConsole($"Purchase completed:  {order.CartOrdered.Items().First().Product.definition.id}");
+                    break;
+            }
         }
 
         void FetchProducts()

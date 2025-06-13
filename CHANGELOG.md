@@ -1,5 +1,9 @@
 # Changelog
 
+### [5.0.0-pre.7] - 2025-06-13
+### Fixed
+- Updated samples to use `OnOrderConfirmed(ConfirmedOrder order)` rather than `OnOrderConfirmed(Order order)`.
+
 ## [5.0.0-pre.6] - 2025-06-11
 ### Added
 - Added `UnityIAPServies.StoreController` as a wrapper around the other services obtained through UnityIAPServices.

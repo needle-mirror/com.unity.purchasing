@@ -61,6 +61,14 @@ namespace Samples.Purchasing.IAP5.Demo
             LogConsole($"Product receipt length: {orderInfo.Receipt?.Length}.");
             LogConsole($"Product Type: '{product.definition.type}'");
         }
+
+        public void LogFailedConfirmation(Product product, PurchaseFailureReason reason)
+        {
+            LogConsole("===========");
+            LogConsole("Purchase Confirmation Failed");
+            LogConsole($"Product: '{product.definition.storeSpecificId}'");
+            LogConsole($"FailureReason: {reason.ToString()}.");
+        }
         public void LogFailedPurchase(Product product, PurchaseFailureReason reason)
         {
             LogConsole("===========");

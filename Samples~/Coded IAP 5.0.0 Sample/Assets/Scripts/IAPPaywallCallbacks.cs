@@ -48,6 +48,29 @@ namespace Samples.Purchasing.IAP5.Demo
 
             m_PaywallManager.ConfirmOrderIfAutomatic(order);
         }
+        public void OnPurchaseConfirmed(Order order)
+        {
+            switch (order)
+            {
+                case FailedOrder failedOrder:
+                    OnConfirmationFailed(failedOrder);
+                    break;
+                case ConfirmedOrder confirmedOrder:
+                    OnPurchaseConfirmed(confirmedOrder);
+                    break;
+            }
+        }
+
+        void OnConfirmationFailed(FailedOrder failedOrder)
+        {
+            var reason = failedOrder.FailureReason;
+
+            foreach (var cartItem in failedOrder.CartOrdered.Items())
+            {
+                m_PaywallManager.m_IAPLogger.LogFailedConfirmation(cartItem.Product, reason);
+            }
+        }
+
         public void OnPurchaseConfirmed(ConfirmedOrder order)
         {
             foreach (var cartItem in order.CartOrdered.Items())
