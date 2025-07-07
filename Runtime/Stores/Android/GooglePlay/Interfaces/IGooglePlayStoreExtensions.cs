@@ -10,7 +10,7 @@ namespace UnityEngine.Purchasing
     {
         /// <summary>
         /// Upgrade or downgrade subscriptions, with proration mode `IMMEDIATE_WITHOUT_PRORATION` by default
-        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode">See more</a>
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
         /// </summary>
         /// <param name="oldSku">current subscription</param>
         /// <param name="newSku">new subscription to subscribe</param>
@@ -22,7 +22,7 @@ namespace UnityEngine.Purchasing
         /// <param name="oldSku">current subscription</param>
         /// <param name="newSku">new subscription to subscribe</param>
         /// <param name="desiredProrationMode">Specifies the mode of proration.
-        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode">See more</a>
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
         /// </param>
         void UpgradeDowngradeSubscription(string oldSku, string newSku, int desiredProrationMode);
 
@@ -32,9 +32,20 @@ namespace UnityEngine.Purchasing
         /// <param name="oldSku">current subscription</param>
         /// <param name="newSku">new subscription to subscribe</param>
         /// <param name="desiredProrationMode">Specifies the mode of proration.
-        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode">See more</a>
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
         /// </param>
+        [Obsolete("Use UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayReplacementMode desiredReplacementMode) instead.")]
         void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode);
+
+        /// <summary>
+        /// Upgrade or downgrade subscriptions
+        /// </summary>
+        /// <param name="oldSku">current subscription</param>
+        /// <param name="newSku">new subscription to subscribe</param>
+        /// <param name="desiredReplacementMode">Specifies the mode of proration.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
+        /// </param>
+        void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayReplacementMode desiredReplacementMode);
 
         /// <summary>
         /// Async call to the google store to <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingClient#querypurchases">`queryPurchases`</a>

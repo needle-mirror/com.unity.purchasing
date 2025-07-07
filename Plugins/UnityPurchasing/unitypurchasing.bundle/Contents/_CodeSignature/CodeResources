@@ -4,29 +4,21 @@
 <dict>
 	<key>files</key>
 	<dict>
-		<key>Resources/PrivacyInfo.xcprivacy</key>
-		<data>
-		Eklzmn2Hnx2RFvCy/gA8oIKafF0=
-		</data>
-		<key>Resources/PrivacyInfo.xcprivacy.meta</key>
-		<data>
-		bCyL3ax1sexnFly8E7ZSF2f25fk=
-		</data>
 		<key>Resources/UnityEarlyTransactionObserver.h.meta</key>
 		<data>
-		l9zwUhWiZjRw2c5hhE1U3idwEIg=
+		XDKH2Lo4xk8evXyls9uxkFR84aU=
 		</data>
 		<key>Resources/UnityEarlyTransactionObserver.mm.meta</key>
 		<data>
-		1i/CNc6/Oxxg73BdyBEbOnlS+LQ=
+		Qs0IHjNpB8cyH5BvP0HBsCG6T/s=
 		</data>
 		<key>Resources/UnityPurchasing.h.meta</key>
 		<data>
-		a/aDUFroBvPAxQdFOgbO6urd+qM=
+		S6mw2m8JbAD8FU5xf68e1TGHSS0=
 		</data>
 		<key>Resources/UnityPurchasing.m.meta</key>
 		<data>
-		ZmVNwyJ/hztHBQv88sX0ccUj8dM=
+		TRcD8GTHqOT69TvK36F0SLsE+oE=
 		</data>
 		<key>Resources/en.lproj/InfoPlist.strings</key>
 		<dict>
@@ -40,46 +32,32 @@
 	</dict>
 	<key>files2</key>
 	<dict>
-		<key>Resources/PrivacyInfo.xcprivacy</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			ccyIYOnWkld1srV/Doq03CFdlZxMzos3QxjXqeKeaiY=
-			</data>
-		</dict>
-		<key>Resources/PrivacyInfo.xcprivacy.meta</key>
-		<dict>
-			<key>hash2</key>
-			<data>
-			43Zz4PFU4KAD8vXh6hMiAY60NJa/mvUPATu9Jn+j1C0=
-			</data>
-		</dict>
 		<key>Resources/UnityEarlyTransactionObserver.h.meta</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			5RxVm8cLIPuOf3W69b7+LEh/24akKWSF80b2bjKX4Fk=
+			rrrOL33BwkfsmDBng/BPYds/Ssc1CPAYNtiCM4Od+Mo=
 			</data>
 		</dict>
 		<key>Resources/UnityEarlyTransactionObserver.mm.meta</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			VFcO970ozul3yx699vouO2/fIafSbRv1bqNwDfKqhBE=
+			5rw+mLBQE6BtELJtnQqpLK6kQQlHa0tvC6vhrlUrnvw=
 			</data>
 		</dict>
 		<key>Resources/UnityPurchasing.h.meta</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			iPaS9mtY8lI2fPtBsBWKP52SSXnOG67Go9Rqa0CPGA8=
+			6oLS8SgR9R0DfcrJC4D82+sCn45KSwaFGdEDc06gWK0=
 			</data>
 		</dict>
 		<key>Resources/UnityPurchasing.m.meta</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			nDreNblIote5/BudJRHdK3T8Kc8nQFRjD0J6TdzGoxo=
+			KkgzXlp5wwl+YMH879r1yozt4ukZ2R6vXN2DCI/opxs=
 			</data>
 		</dict>
 		<key>Resources/en.lproj/InfoPlist.strings</key>

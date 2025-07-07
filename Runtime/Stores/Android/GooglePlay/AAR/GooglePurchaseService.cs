@@ -20,7 +20,7 @@ namespace UnityEngine.Purchasing
             m_QueryProductDetailsService = queryProductDetailsService;
         }
 
-        public void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        public void Purchase(ProductDefinition product, Product? oldProduct, GooglePlayReplacementMode? desiredProrationMode)
         {
             m_QueryProductDetailsService.QueryAsyncProduct(product,
                 (productDetailsList, _) =>
@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
                 });
         }
 
-        void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        void OnQueryProductDetailsResponse(List<AndroidJavaObject> productDetailsList, ProductDefinition productToBuy, Product? oldProduct, GooglePlayReplacementMode? desiredProrationMode)
         {
             if (ValidateQueryProductDetailsResponseParams(productDetailsList, productToBuy, oldProduct))
             {
@@ -95,7 +95,7 @@ namespace UnityEngine.Purchasing
             );
         }
 
-        void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Product? oldProduct, GooglePlayProrationMode? desiredProrationMode)
+        void LaunchGoogleBillingFlow(AndroidJavaObject productToPurchase, Product? oldProduct, GooglePlayReplacementMode? desiredProrationMode)
         {
             var billingResult = m_BillingClient.LaunchBillingFlow(productToPurchase, oldProduct?.transactionID, desiredProrationMode);
             HandleBillingFlowResult(new GoogleBillingResult(billingResult), productToPurchase);

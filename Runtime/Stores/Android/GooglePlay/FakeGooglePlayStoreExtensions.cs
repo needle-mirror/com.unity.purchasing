@@ -34,16 +34,27 @@ namespace UnityEngine.Purchasing
         public void UpgradeDowngradeSubscription(string oldSku, string newSku, int desiredProrationMode) { }
 
         /// <summary>
+        /// Upgrade or downgrade subscriptions
+        /// </summary>
+        /// <param name="oldSku">current subscription</param>
+        /// <param name="newSku">new subscription to subscribe</param>
+        /// <param name="desiredProrationMode">Specifies the mode of proration.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
+        /// </param>
+        [Obsolete("Use UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayReplacementMode desiredReplacementMode) instead.")]
+        public void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode) { }
+
+        /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!
         ///
         /// Upgrade or downgrade subscriptions
         /// </summary>
         /// <param name="oldSku">current subscription</param>
         /// <param name="newSku">new subscription to subscribe</param>
-        /// <param name="desiredProrationMode">Specifies the mode of proration.
+        /// <param name="desiredReplacementMode">Specifies the mode of proration.
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode">See more</a>
         /// </param>
-        public void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayProrationMode desiredProrationMode) { }
+        public void UpgradeDowngradeSubscription(string oldSku, string newSku, GooglePlayReplacementMode desiredReplacementMode) { }
 
         /// <summary>
         /// THIS IS A FAKE, NO CODE WILL BE EXECUTED!

@@ -6,6 +6,6 @@ namespace UnityEngine.Purchasing.Interfaces
     {
         string? LastKnownOldProductId { get; set; }
         string? LastKnownProductId { get; set; }
-        GooglePlayProrationMode? LastKnownProrationMode { get; set; }
+        GooglePlayReplacementMode? LastKnownReplacementMode { get; set; }
     }
 }

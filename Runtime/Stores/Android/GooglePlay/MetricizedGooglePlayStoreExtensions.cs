@@ -20,10 +20,10 @@ namespace UnityEngine.Purchasing
         }
 
         public override void UpgradeDowngradeSubscription(string oldSku, string newSku,
-            GooglePlayProrationMode desiredProrationMode)
+            GooglePlayReplacementMode desiredReplacementMode)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(
-                () => base.UpgradeDowngradeSubscription(oldSku, newSku, desiredProrationMode),
+                () => base.UpgradeDowngradeSubscription(oldSku, newSku, desiredReplacementMode),
                 TelemetryMetricDefinitions.upgradeDowngradeSubscriptionName);
         }
 

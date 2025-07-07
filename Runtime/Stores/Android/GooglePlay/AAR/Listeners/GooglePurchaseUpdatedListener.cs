@@ -227,7 +227,7 @@ namespace UnityEngine.Purchasing
 
         bool IsLastProrationModeDeferred()
         {
-            return m_LastKnownProductService.LastKnownProrationMode == GooglePlayProrationMode.Deferred;
+            return m_LastKnownProductService.LastKnownReplacementMode == GooglePlayReplacementMode.Deferred;
         }
 
         void OnPurchaseCancelled(IGoogleBillingResult billingResult)

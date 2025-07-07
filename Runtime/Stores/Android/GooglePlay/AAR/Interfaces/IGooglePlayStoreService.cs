@@ -10,7 +10,7 @@ namespace UnityEngine.Purchasing.Interfaces
     {
         void RetrieveProducts(ReadOnlyCollection<ProductDefinition> products, Action<List<ProductDescription>, IGoogleBillingResult> onProductsReceived, Action<GoogleRetrieveProductsFailureReason, GoogleBillingResponseCode> onRetrieveProductFailed);
         void Purchase(ProductDefinition product);
-        void Purchase(ProductDefinition product, Product oldProduct, GooglePlayProrationMode? desiredProrationMode);
+        void Purchase(ProductDefinition product, Product oldProduct, GooglePlayReplacementMode? desiredReplacementMode);
         void FinishTransaction(ProductDefinition product, string purchaseToken, Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished);
         void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed);
         IGooglePurchase GetPurchase(string purchaseToken, string skuType);

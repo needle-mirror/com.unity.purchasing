@@ -16,15 +16,15 @@ namespace Samples.Purchasing.GooglePlay.UpgradeDowngradeSubscription
 
         string[] m_SubscriptionIds;
 
-        GooglePlayProrationMode m_UpgradeSubscriptionProrationMode;
-        GooglePlayProrationMode m_DowngradeSubscriptionProrationMode;
+        GooglePlayReplacementMode m_UpgradeSubscriptionReplacementMode;
+        GooglePlayReplacementMode m_DowngradeSubscriptionReplacementMode;
 
-        public SubscriptionGroup(IStoreController storeController, IExtensionProvider extensionsProvider, GooglePlayProrationMode upgradeSubscriptionProrationMode,
-            GooglePlayProrationMode downgradeSubscriptionProrationMode, params string[] subscriptionIds)
+        public SubscriptionGroup(IStoreController storeController, IExtensionProvider extensionsProvider, GooglePlayReplacementMode upgradeSubscriptionReplacementMode,
+            GooglePlayReplacementMode downgradeSubscriptionReplacementMode, params string[] subscriptionIds)
         {
             m_StoreController = storeController;
-            m_UpgradeSubscriptionProrationMode = upgradeSubscriptionProrationMode;
-            m_DowngradeSubscriptionProrationMode = downgradeSubscriptionProrationMode;
+            m_UpgradeSubscriptionReplacementMode = upgradeSubscriptionReplacementMode;
+            m_DowngradeSubscriptionReplacementMode = downgradeSubscriptionReplacementMode;
             m_ExtensionsProvider = extensionsProvider;
             m_SubscriptionIds = subscriptionIds;
         }
@@ -50,17 +50,17 @@ namespace Samples.Purchasing.GooglePlay.UpgradeDowngradeSubscription
         void ChangeSubscriptionTier(string currentSubscriptionId, string newSubscriptionId)
         {
             Debug.Log($"Change Subscription from {currentSubscriptionId} to {newSubscriptionId}");
-            var prorationMode = (int)DetermineProrationMode(currentSubscriptionId, newSubscriptionId);
+            var ReplacementMode = (int)DetermineReplacementMode(currentSubscriptionId, newSubscriptionId);
 
             var googlePlayStoreExtension = m_ExtensionsProvider.GetExtension<IGooglePlayStoreExtensions>();
-            googlePlayStoreExtension.UpgradeDowngradeSubscription(currentSubscriptionId, newSubscriptionId, prorationMode);
+            googlePlayStoreExtension.UpgradeDowngradeSubscription(currentSubscriptionId, newSubscriptionId, ReplacementMode);
         }
 
-        GooglePlayProrationMode DetermineProrationMode(string previousSubscriptionId, string newSubscriptionId)
+        GooglePlayReplacementMode DetermineReplacementMode(string previousSubscriptionId, string newSubscriptionId)
         {
             //In this sample, we use different proration modes depending on if the new subscription is an upgrade compared to the current one.
             var isNewSubscriptionAnUpgrade = IsSubscriptionAnUpgrade(previousSubscriptionId, newSubscriptionId);
-            return isNewSubscriptionAnUpgrade ? m_UpgradeSubscriptionProrationMode : m_DowngradeSubscriptionProrationMode;
+            return isNewSubscriptionAnUpgrade ? m_UpgradeSubscriptionReplacementMode : m_DowngradeSubscriptionReplacementMode;
         }
 
         bool IsSubscriptionAnUpgrade(string currentSubscription, string newSubscription)

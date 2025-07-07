@@ -1,4 +1,10 @@
 # Changelog
+## [4.13.0] - 2025-07-07
+### Changed
+- GooglePlay - Billing Library updated to 7.1.1 (was previously 6.2.1). No new feature support was added.
+- GooglePlay - `GooglePlayProrationMode` has been replaced with `GooglePlayReplacementMode` to match the Google Play Billing Library.
+  - `GooglePlayProrationMode` has been marked `[Obsolete]`
+
 ## [4.12.2] - 2024-07-17
 ### Fixed
 - GooglePlay - Fixed `Product.receipt`'s `price_amount_micros` returning a string instead of a long.
