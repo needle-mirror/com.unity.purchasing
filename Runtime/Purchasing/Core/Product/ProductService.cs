@@ -68,6 +68,17 @@ namespace UnityEngine.Purchasing
             return m_ProductCache.GetProducts();
         }
 
+        /// <summary>
+        /// Gets a product by its product ID. If no product is found with the specified product ID,
+        /// attempts to locate a product with a matching store-specific product ID. Returns null if no matching product is found.
+        /// </summary>
+        /// <param name="productId">The ID of the product.</param>
+        /// <returns>The matching product if found, otherwise returns null.</returns>
+        public Product? GetProductById(string productId)
+        {
+            return m_ProductCache.Find(productId);
+        }
+
         void HandleProductsFetched(List<Product>? fetchedProducts)
         {
             fetchedProducts ??= new List<Product>();

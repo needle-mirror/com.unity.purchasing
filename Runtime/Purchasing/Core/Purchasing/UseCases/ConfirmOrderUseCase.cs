@@ -55,6 +55,7 @@ namespace UnityEngine.Purchasing
                 var confirmedOrder = new ConfirmedOrder(matchingRequest.OrderToConfirm.CartOrdered,
                     matchingRequest.OrderToConfirm.Info);
                 matchingRequest.Action?.Invoke(matchingRequest.OrderToConfirm, confirmedOrder);
+                m_ConfirmationRequests.Remove(matchingRequest);
             }
             else
             {

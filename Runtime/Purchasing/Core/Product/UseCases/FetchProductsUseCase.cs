@@ -136,8 +136,7 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    request.FailureAction.Invoke(unretrievedProducts,
-                        "Retrieve Products failed, and could not retrieve any products.");
+                    request.FailureAction.Invoke(unretrievedProducts, ErrorMessages.FetchProductsRetrieveProductsFailed);
                 }
             }
         }

@@ -10,8 +10,8 @@ namespace UnityEngine.Purchasing
     {
         /// <summary>
         /// Unknown replacement mode.
-        /// </summary>
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode#UNKNOWN_REPLACEMENT_MODE()"> See more </a>
+        /// </summary>
         UnknownReplacementMode = 0,
 
         /// <summary>

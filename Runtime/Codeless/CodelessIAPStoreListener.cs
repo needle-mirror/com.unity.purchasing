@@ -273,10 +273,6 @@ namespace UnityEngine.Purchasing
         {
             InvokeListenersOnPurchasesFetched(existingOrders);
             InvokeButtonsOnPurchasesFetched(existingOrders);
-            foreach (var pendingOrder in existingOrders.PendingOrders)
-            {
-                OnOrderPending(pendingOrder);
-            }
         }
 
         void InvokeListenersOnPurchasesFetched(Orders existingOrders)

@@ -9,6 +9,15 @@ namespace UnityEngine.Purchasing.Security
     public class CrossPlatformValidator
     {
         /// <summary>
+        /// Constructs an instance and checks the validity of the certification keys for GooglePlay.
+        /// </summary>
+        /// <param name="googlePublicKey"> The GooglePlay public key. </param>
+        /// <param name="googleBundleId"> The GooglePlay bundle ID. </param>
+        public CrossPlatformValidator(byte[] googlePublicKey, string googleBundleId)
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
         /// Constructs an instance and checks the validity of the certification keys
         /// which only takes input parameters for the supported platforms and uses a common bundle ID for Apple and GooglePlay.
         /// </summary>

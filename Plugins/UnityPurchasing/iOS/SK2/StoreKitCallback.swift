@@ -3,7 +3,6 @@ import Foundation
 @available(iOS 13.0.0, *)
 public protocol StoreKitCallbackDelegate {
     func callback(subject: String, payload: String, entitlementStatus: Int) async
-    func callbackPtr(subject: String, payload: String, entitlementStatus: Int) async
 }
 
 @available(iOS 13.0.0, *)
@@ -16,19 +15,10 @@ public class StoreKitCallback: StoreKitCallbackDelegate {
 
     public func callback(subject: String, payload: String, entitlementStatus: Int) async {
         await MainActor.run {
-            let subjectCStr = subject.toCString()
-            let payloadCStr = payload.toCString()
-
-            storeKitCallbackDelegate!(subjectCStr, payloadCStr, entitlementStatus, nil)
-        }
-    }
-
-    public func callbackPtr(subject: String, payload: String, entitlementStatus: Int) async {
-        await MainActor.run {
-            let subjectCStr = subject.toCString()
+            let subjectPtr = unityPurchasingMakeHeapAllocatedStringCopy(subject)
             let stringPtr = unityPurchasingMakeHeapAllocatedStringCopy(payload)
 
-            storeKitCallbackDelegate!(subjectCStr, "", entitlementStatus, stringPtr)
+            storeKitCallbackDelegate!(subjectPtr, stringPtr, entitlementStatus)
         }
     }
 }

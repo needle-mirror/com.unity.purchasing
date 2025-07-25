@@ -18,7 +18,7 @@ namespace UnityEngine.Purchasing.Interfaces
         void Purchase(ProductDefinition product);
         void Purchase(ProductDefinition product, Order? currentOrder, GooglePlayReplacementMode? desiredReplacementMode);
         Task FinishTransaction(ProductDefinition? product, string? purchaseToken, Action<IGoogleBillingResult, IGooglePurchase> onTransactionFinished);
-        void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed);
+        void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed, Action<string?> onQueryPurchaseFailed);
         void CheckEntitlement(ProductDefinition product, Action<ProductDefinition, EntitlementStatus> onEntitlementChecked);
         void SetObfuscatedAccountId(string obfuscatedAccountId);
         void SetObfuscatedProfileId(string obfuscatedProfileId);

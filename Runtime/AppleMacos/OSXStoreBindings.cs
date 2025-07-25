@@ -6,66 +6,66 @@ namespace UnityEngine.Purchasing
 {
     internal class OSXStoreBindings : INativeAppleStore
     {
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern void unityPurchasing_SetNativeCallback(UnityPurchasingCallback callbackDelegate);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern void unityPurchasing_AddTransactionObserver();
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern void unityPurchasing_FetchProducts(string json);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern void unityPurchasing_PurchaseProduct(string productJson, string optionsJson, StorefrontChangeCallback storefrontCallbackDelegate);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern IntPtr unityPurchasing_FetchAppReceipt();
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern void unityPurchasing_DeallocateMemory(IntPtr pointer);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern void unityPurchasing_FetchPurchases();
 
         // TODO: IAP-3857
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern string unityPurchasing_FetchTransactionForProductId(string productId);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern void unityPurchasing_FinishTransaction(string transactionId, bool logFinishTransaction);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         static extern bool unityPurchasing_checkEntitlement(string json);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_RestoreTransactions();
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern bool unityPurchasing_CanMakePayments();
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_FetchStorePromotionOrder();
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_UpdateStorePromotionOrder(string json);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_FetchStorePromotionVisibility(string productId);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_UpdateStorePromotionVisibility(string productId, string visibility);
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_InterceptPromotionalPurchases();
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_ContinuePromotionalPurchases();
 
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_PresentCodeRedemptionSheet();
 
         // TODO: IAP-3929
-        [DllImport("__Internal")]
+        [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_RefreshAppReceipt();
 
         public void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback)

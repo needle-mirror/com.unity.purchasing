@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using AOT;
 using Uniject;
 using UnityEngine.Purchasing.Exceptions;
@@ -28,6 +29,7 @@ namespace UnityEngine.Purchasing
         // TODO: IAP-3929
         Action<string>? m_RefreshAppReceiptSuccessCallback;
         Action<string>? m_RefreshAppReceiptErrorCallback;
+        TaskCompletionSource<bool>? m_RefreshAppReceiptTask;
         bool m_RefreshAppReceipt = true;
 
         INativeAppleStore? m_Native;
@@ -185,20 +187,11 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnPromotionalPurchaseAttempted(IntPtr productIdPtr)
+        void OnPromotionalPurchaseAttempted(string payload)
         {
-            var productId = "";
-            if (productIdPtr != IntPtr.Zero)
-            {
-                productId = Marshal.PtrToStringAuto(productIdPtr) ?? string.Empty;
-
-                // Deallocate the memory when done
-                m_Native?.DeallocateMemory(productIdPtr);
-            }
-
             if (OnPromotionalPurchaseIntercepted != null)
             {
-                var product = ProductCache.Find(productId);
+                var product = ProductCache.Find(payload);
                 if (null != product)
                 {
                     OnPromotionalPurchaseIntercepted(product);
@@ -345,16 +338,19 @@ namespace UnityEngine.Purchasing
         }
 
         [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
-        static void MessageCallback(string subject, string payload, int entitlementStatus, IntPtr pointer)
+        static void MessageCallback(IntPtr subjectPtr, IntPtr payloadPtr, int entitlementStatus)
         {
             s_Util?.RunOnMainThread(() =>
             {
-                s_Instance?.ProcessCallbackMessage(subject, payload, entitlementStatus, pointer);
+                s_Instance?.ProcessCallbackMessage(subjectPtr, payloadPtr, entitlementStatus);
             });
         }
 
-        void ProcessCallbackMessage(string subject, string payload, int entitlementStatus, IntPtr pointer)
+        void ProcessCallbackMessage(IntPtr subjectPtr, IntPtr payloadPtr, int entitlementStatus)
         {
+            var subject = ConvertPtrToString(subjectPtr);
+            var payload = ConvertPtrToString(payloadPtr);
+
             switch (subject)
             {
                 case "OnProductsFetched":
@@ -376,7 +372,7 @@ namespace UnityEngine.Purchasing
                     OnPurchaseDeferred(payload);
                     break;
                 case "OnPromotionalPurchaseAttempted":
-                    OnPromotionalPurchaseAttempted(pointer);
+                    OnPromotionalPurchaseAttempted(payload);
                     break;
                 case "OnFetchStorePromotionOrderSucceeded":
                     OnFetchStorePromotionOrderSucceeded(payload);
@@ -413,6 +409,20 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        string ConvertPtrToString(IntPtr subjectPtr)
+        {
+            var subject = "";
+            if (subjectPtr != IntPtr.Zero)
+            {
+                subject = Marshal.PtrToStringAuto(subjectPtr) ?? string.Empty;
+
+                // Deallocate the memory when done
+                m_Native?.DeallocateMemory(subjectPtr);
+            }
+
+            return subject;
+        }
+
         // TODO: IAP-3929
         public void SetRefreshAppReceiptCallbacks(Action<string> successCallback, Action<string> errorCallback)
         {
@@ -430,12 +440,14 @@ namespace UnityEngine.Purchasing
         void OnAppReceiptRetrieved(string receipt)
         {
             appReceipt = receipt;
+            m_RefreshAppReceiptTask?.TrySetResult(true);
             m_RefreshAppReceiptSuccessCallback?.Invoke(receipt);
         }
 
         // TODO: IAP-3929
         void OnAppReceiptRefreshedFailed(string error)
         {
+            m_RefreshAppReceiptTask?.TrySetResult(false);
             m_RefreshAppReceiptErrorCallback?.Invoke(error);
         }
 
@@ -464,12 +476,23 @@ namespace UnityEngine.Purchasing
             EntitlementCallback?.OnCheckEntitlement(product.definition, EntitlementStatus.NotEntitled);
         }
 
-        void OnPurchaseSucceeded(string purchaseDetailsJson)
+        async void OnPurchaseSucceeded(string purchaseDetailsJson)
         {
             // TODO: IAP-3929 - Remove RefreshAppReceipt
             if (m_RefreshAppReceipt)
             {
-                m_Native?.RefreshAppReceipt();
+                try
+                {
+                    await RefreshAppReceiptAsync();
+                }
+                catch (Exception e)
+                {
+                    OnAppReceiptRefreshedFailed(e.Message);
+                }
+                finally
+                {
+                    m_RefreshAppReceiptTask = null;
+                }
             }
 
             var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(purchaseDetailsJson);
@@ -496,6 +519,21 @@ namespace UnityEngine.Purchasing
             {
                 base.FinishTransaction(null, transactionId);
             }
+        }
+
+        // TODO: IAP-3929
+        Task<bool> RefreshAppReceiptAsync()
+        {
+            if (m_RefreshAppReceiptTask != null)
+            {
+                return m_RefreshAppReceiptTask.Task;
+            }
+
+            m_RefreshAppReceiptTask = new TaskCompletionSource<bool>();
+
+            m_Native?.RefreshAppReceipt();
+
+            return m_RefreshAppReceiptTask.Task;
         }
 
         void ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws)

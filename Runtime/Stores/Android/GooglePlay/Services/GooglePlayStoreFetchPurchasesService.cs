@@ -39,7 +39,7 @@ namespace UnityEngine.Purchasing
 
         public void FetchPurchases()
         {
-            m_GooglePlayStoreService.FetchPurchases(OnPurchasesFetched);
+            m_GooglePlayStoreService.FetchPurchases(OnPurchasesFetched, PurchaseRetrievalFailedForUnknownReasons);
         }
 
         public void FetchPurchases(Action<List<Product>> onQueryPurchaseSucceed)
@@ -48,7 +48,7 @@ namespace UnityEngine.Purchasing
                 googlePurchases =>
                 {
                     onQueryPurchaseSucceed(FillProductsWithPurchases(googlePurchases));
-                });
+                }, PurchaseRetrievalFailedForUnknownReasons);
         }
 
         public IGooglePurchase? GetGooglePurchase(string purchaseToken)
@@ -58,7 +58,7 @@ namespace UnityEngine.Purchasing
                 googlePurchases =>
                 {
                     purchase = googlePurchases.FirstOrDefault(purchases => purchases.purchaseToken == purchaseToken);
-                });
+                }, PurchaseRetrievalFailedForUnknownReasons);
             return purchase;
         }
 
@@ -102,10 +102,10 @@ namespace UnityEngine.Purchasing
             m_Util.RunOnMainThread(() => UpdateDeferredProductsByPurchases(deferredPurchases));
         }
 
-        void PurchaseRetrievalFailedForUnknownReasons()
+        void PurchaseRetrievalFailedForUnknownReasons(string? message = null)
         {
             m_FetchCallback?.OnPurchasesRetrievalFailed(
-                new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.Unknown, String.Empty));
+                new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.Unknown, message ?? string.Empty));
         }
 
         static Func<IGooglePurchase, bool> PurchaseIsPurchased()

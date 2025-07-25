@@ -57,6 +57,15 @@ namespace UnityEngine.Purchasing
             {
                 onFetchProductsFailed(e);
             }
+            catch (Exception ex)
+            {
+                var description = new ProductFetchFailureDescription(ProductFetchFailureReason.Unknown,
+                    ex.Message, false);
+                var googleFetchProductException = new GoogleFetchProductException(GoogleFetchProductsFailureReason.Unknown,
+                    GoogleBillingResponseCode.FatalError, description);
+
+                onFetchProductsFailed(googleFetchProductException);
+            }
         }
 
         public void Purchase(ProductDefinition product)
@@ -77,7 +86,7 @@ namespace UnityEngine.Purchasing
             await m_GoogleFinishTransactionUseCase.FinishTransaction(product, purchaseToken, onTransactionFinished);
         }
 
-        public async void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed)
+        public async void FetchPurchases(Action<List<IGooglePurchase>> onQueryPurchaseSucceed, Action<string?> onQueryPurchaseFailed)
         {
             try
             {
@@ -85,7 +94,7 @@ namespace UnityEngine.Purchasing
             }
             catch (Exception ex)
             {
-                m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.FetchPurchasesError, ex);
+                onQueryPurchaseFailed.Invoke(ex.Message);
             }
         }
 

@@ -5,6 +5,12 @@ public enum StoreError: Error {
     case failedVerification
 }
 
+public enum PurchaseState: Int {
+    case NotPurchased = 0
+    case Purchased = 1
+    case Pending = 2
+}
+
 /**
  This protocol acts as a main interface for the StoreKit framework to provide the following features and services for your apps and In-App Purchases.
  For more information, see [The Storekit2 Documentation](https://developer.apple.com/documentation/storekit)
@@ -223,16 +229,8 @@ public class StoreKitManager: StoreKitManagerProtocol {
      Check whether a productId is purchased
      - Parameter productId: StoreKit Product Identifier
      */
-    public func isPurchased(_ productId: String) async throws -> Bool {
-        return try await transactionUseCase.isPurchased(productId)
-    }
-
-    /**
-     Check whether a productId is pending
-     - Parameter productId: StoreKit Product Identifier
-     */
-    public func isPending(_ productId: String) async throws -> Bool {
-        return try await transactionUseCase.isPending(productId)
+    public func getPurchaseState(_ productId: String) async throws -> PurchaseState {
+        return try await transactionUseCase.getPurchaseState(productId)
     }
 
     /**
@@ -287,19 +285,14 @@ public class StoreKitManager: StoreKitManagerProtocol {
      */
     public func checkEntitlement(productId: String) async
     {
-        var result = 0; // Unknown
+        var result = PurchaseState.NotPurchased;
         do {
-            if (try await isPending(productId)) {
-                result = 2; // Pending
-            }
-            else if (try await isPurchased(productId)) {
-                result = 1; // Purchased
-            }
+            result = try await getPurchaseState(productId)
         } catch {
             printLog("checkEntitlement error - \(error.localizedDescription)")
         }
 
-        await storeKitCallback.callback(subject: "OnCheckEntitlement", payload: productId, entitlementStatus: result)
+        await storeKitCallback.callback(subject: "OnCheckEntitlement", payload: productId, entitlementStatus: result.rawValue)
     }
 
     public func canMakePayment() -> Bool {

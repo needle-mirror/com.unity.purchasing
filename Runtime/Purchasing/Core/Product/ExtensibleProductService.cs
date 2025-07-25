@@ -43,6 +43,11 @@ namespace UnityEngine.Purchasing
             return m_BaseInternalProductService.GetProducts();
         }
 
+        public virtual Product? GetProductById(string productId)
+        {
+            return m_BaseInternalProductService.GetProductById(productId);
+        }
+
         public event Action<List<Product>>? OnProductsFetched
         {
             add => m_BaseInternalProductService.OnProductsFetched += value;

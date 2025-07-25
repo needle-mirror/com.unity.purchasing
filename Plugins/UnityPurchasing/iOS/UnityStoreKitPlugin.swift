@@ -1,7 +1,7 @@
 import Foundation
 
 // Declared in C# as: delegate void CallbackDelegate(string subject, string payload);
-public typealias UnityPurchasingCallbackDelegateType = @convention(c) (UnsafePointer<CChar>, UnsafePointer<CChar>, Int, UnsafeMutablePointer<CChar>?) -> Void
+public typealias UnityPurchasingCallbackDelegateType = @convention(c) (UnsafeMutablePointer<CChar>?, UnsafeMutablePointer<CChar>?, Int) -> Void
 public typealias StorefrontCallbackDelegateType = @convention(c) (UnsafePointer<CChar>, UnsafePointer<CChar>) -> Bool
 
 func printLog(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
@@ -16,7 +16,7 @@ Set NativeCallback delegate from C#. The function is declared in C# as: static e
  */
 @_cdecl("unityPurchasing_SetNativeCallback")
 @available(iOS 15.0, *)
-func unityPurchasing_SetNativeCallback(_ callback: UnityPurchasingCallbackDelegateType) {
+public func unityPurchasing_SetNativeCallback(_ callback: UnityPurchasingCallbackDelegateType) {
     DependencyInjector.InitialiseWithCallback(callback)
 }
 
@@ -25,7 +25,7 @@ func unityPurchasing_SetNativeCallback(_ callback: UnityPurchasingCallbackDelega
  */
 @_cdecl("unityPurchasing_AddTransactionObserver")
 @available(iOS 15.0, *)
-func unityPurchasing_AddTransactionObserver() {
+public func unityPurchasing_AddTransactionObserver() {
     StoreKitManager.instance.addTransactionObserver()
 }
 
@@ -34,7 +34,7 @@ func unityPurchasing_AddTransactionObserver() {
  */
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FetchProducts")
-func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CChar>) {
+public func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CChar>) {
     let productJson = String(cString: productJsonCString)
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.fetchProducts(productJson: productJson)
@@ -46,7 +46,7 @@ func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CChar>) {
  */
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_PurchaseProduct")
-func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<CChar>, optionsJsonCString: UnsafePointer<CChar>) {
+public func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<CChar>, optionsJsonCString: UnsafePointer<CChar>) {
     let productJson = String(cString: productJsonCString)
     let optionsDict = dictionaryFromJSONCstr(optionsJsonCString) ?? [:]
     Task.detached(priority: .background, operation: {
@@ -60,7 +60,7 @@ func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<CChar>,
  */
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FetchAppReceipt")
-func unityPurchasing_FetchAppReceipt() -> UnsafeMutablePointer<CChar>? {
+public func unityPurchasing_FetchAppReceipt() -> UnsafeMutablePointer<CChar>? {
     let receiptString = StoreKitManager.instance.fetchAppReceipt()
     return unityPurchasingMakeHeapAllocatedStringCopy(receiptString)
 }
@@ -89,13 +89,13 @@ func unityPurchasingMakeHeapAllocatedStringCopy(_ string: String?) -> UnsafeMuta
 
 @_cdecl("unityPurchasing_DeallocateMemory")
 // Function to deallocate the memory when done with the pointer
-func unityPurchasing_DeallocateMemory(_ pointer: UnsafeMutablePointer<CChar>?) {
+public func unityPurchasing_DeallocateMemory(_ pointer: UnsafeMutablePointer<CChar>?) {
     pointer?.deallocate()
 }
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FetchPurchases")
-func unityPurchasing_FetchPurchases() {
+public func unityPurchasing_FetchPurchases() {
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.fetchPurchasedProducts()
     })
@@ -103,7 +103,7 @@ func unityPurchasing_FetchPurchases() {
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FetchTransactionForProductId")
-func unityPurchasing_FetchTransactionForProductId(_ productIdCString: UnsafePointer<CChar>) {
+public func unityPurchasing_FetchTransactionForProductId(_ productIdCString: UnsafePointer<CChar>) {
     let productId = String(cString: productIdCString)
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.fetchTransactions(for: [productId])
@@ -112,13 +112,13 @@ func unityPurchasing_FetchTransactionForProductId(_ productIdCString: UnsafePoin
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_CanMakePayments")
-func unityPurchasing_CanMakePayments() -> Bool {
+public func unityPurchasing_CanMakePayments() -> Bool {
     return StoreKitManager.instance.canMakePayment()
 }
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_PresentCodeRedemptionSheet")
-func unityPurchasing_PresentCodeRedemptionSheet() {
+public func unityPurchasing_PresentCodeRedemptionSheet() {
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.presentCodeRedemptionSheet()
     })
@@ -126,7 +126,7 @@ func unityPurchasing_PresentCodeRedemptionSheet() {
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_RefreshAppReceipt")
-func unityPurchasing_RefreshAppReceipt() {
+public func unityPurchasing_RefreshAppReceipt() {
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.refreshAppReceipt()
     })
@@ -134,7 +134,7 @@ func unityPurchasing_RefreshAppReceipt() {
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FinishTransaction")
-func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar>, logFinishTransaction: Bool) {
+public func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar>, logFinishTransaction: Bool) {
     if let transactionIdUInt64 = UInt64(String(cString: transactionId))
     {
         Task.detached(priority: .background, operation: {
@@ -145,7 +145,7 @@ func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar>, logF
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_checkEntitlement")
-func unityPurchasing_checkEntitlement(_ productJsonCString: UnsafePointer<CChar>) {
+public func unityPurchasing_checkEntitlement(_ productJsonCString: UnsafePointer<CChar>) {
     let productId = String(cString: productJsonCString)
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.checkEntitlement(productId: productId)
@@ -154,7 +154,7 @@ func unityPurchasing_checkEntitlement(_ productJsonCString: UnsafePointer<CChar>
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_RestoreTransactions")
-func unityPurchasing_RestoreTransactions() {
+public func unityPurchasing_RestoreTransactions() {
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.restoreTransactions()
     })
@@ -162,7 +162,7 @@ func unityPurchasing_RestoreTransactions() {
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FetchStorePromotionOrder")
-func unityPurchasing_FetchStorePromotionOrder() {
+public func unityPurchasing_FetchStorePromotionOrder() {
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.fetchStorePromotionOrder()
     })
@@ -170,7 +170,7 @@ func unityPurchasing_FetchStorePromotionOrder() {
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_UpdateStorePromotionOrder")
-func unityPurchasing_UpdateStorePromotionOrder(_ jsonCString: UnsafePointer<CChar>) {
+public func unityPurchasing_UpdateStorePromotionOrder(_ jsonCString: UnsafePointer<CChar>) {
     do {
         let jsonString = String(cString: jsonCString)
 
@@ -185,7 +185,7 @@ func unityPurchasing_UpdateStorePromotionOrder(_ jsonCString: UnsafePointer<CCha
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_FetchStorePromotionVisibility")
-func unityPurchasing_FetchStorePromotionVisibility(productIdCString: UnsafePointer<CChar>) {
+public func unityPurchasing_FetchStorePromotionVisibility(productIdCString: UnsafePointer<CChar>) {
     let productId = String(cString: productIdCString)
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.fetchStorePromotionVisibility(productId: productId)
@@ -194,7 +194,7 @@ func unityPurchasing_FetchStorePromotionVisibility(productIdCString: UnsafePoint
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_UpdateStorePromotionVisibility")
-func unityPurchasing_UpdateStorePromotionVisibility(productIdCString: UnsafePointer<CChar>, visibilityCString: UnsafePointer<CChar>) {
+public func unityPurchasing_UpdateStorePromotionVisibility(productIdCString: UnsafePointer<CChar>, visibilityCString: UnsafePointer<CChar>) {
     let productId = String(cString: productIdCString)
     let visibility = String(cString: visibilityCString)
     Task.detached (priority: .background, operation : {
@@ -204,7 +204,7 @@ func unityPurchasing_UpdateStorePromotionVisibility(productIdCString: UnsafePoin
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_InterceptPromotionalPurchases")
-func unityPurchasing_InterceptPromotionalPurchases() {
+public func unityPurchasing_InterceptPromotionalPurchases() {
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.interceptPromotionalPurchases()
     })
@@ -212,7 +212,7 @@ func unityPurchasing_InterceptPromotionalPurchases() {
 
 @available(iOS 15.0, *)
 @_cdecl("unityPurchasing_ContinuePromotionalPurchases")
-func unityPurchasing_ContinuePromotionalPurchases() {
+public func unityPurchasing_ContinuePromotionalPurchases() {
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.continuePromotionalPurchases()
     })

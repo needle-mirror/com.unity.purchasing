@@ -34,6 +34,12 @@ namespace UnityEngine.Purchasing
         IAppleStoreExtendedProductService? IProductService.Apple => m_ProductService.Apple;
         IAppleStoreExtendedPurchaseService? IPurchaseService.Apple => m_PurchaseService.Apple;
         IGooglePlayStoreExtendedPurchaseService? IPurchaseService.Google => m_PurchaseService.Google;
+
+        public IAppleStoreExtendedService? AppleStoreExtendedStoreService => m_StoreService.Apple;
+        public IGooglePlayStoreExtendedService? GooglePlayStoreExtendedService => m_StoreService.Google;
+        public IAppleStoreExtendedProductService? AppleStoreExtendedProductService => m_ProductService.Apple;
+        public IAppleStoreExtendedPurchaseService? AppleStoreExtendedPurchaseService => m_PurchaseService.Apple;
+        public IGooglePlayStoreExtendedPurchaseService? GooglePlayStoreExtendedPurchaseService => m_PurchaseService.Google;
         #endregion
 
         #region Callbacks
@@ -41,6 +47,11 @@ namespace UnityEngine.Purchasing
         {
             add => m_StoreService.OnStoreDisconnected += value;
             remove => m_StoreService.OnStoreDisconnected -= value;
+        }
+
+        public void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess)
+        {
+            m_PurchaseService.ProcessPendingOrdersOnPurchasesFetched(shouldProcess);
         }
 
         public event Action<PendingOrder>? OnPurchasePending
@@ -107,6 +118,7 @@ namespace UnityEngine.Purchasing
         public void FetchProductsWithNoRetries(List<ProductDefinition> productDefinitions) => m_ProductService.FetchProductsWithNoRetries(productDefinitions);
         public void FetchProducts(List<ProductDefinition> productDefinitions, IRetryPolicy? retryPolicy = null) => m_ProductService.FetchProducts(productDefinitions, retryPolicy);
         public ReadOnlyObservableCollection<Product> GetProducts() => m_ProductService.GetProducts();
+        public Product? GetProductById(string productId) => m_ProductService.GetProductById(productId);
         #endregion
 
         #region PurchaseService

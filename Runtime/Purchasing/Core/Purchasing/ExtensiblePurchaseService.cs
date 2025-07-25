@@ -63,6 +63,11 @@ namespace UnityEngine.Purchasing
             return m_BaseInternalPurchaseService.GetPurchases();
         }
 
+        public void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess)
+        {
+            m_BaseInternalPurchaseService.ProcessPendingOrdersOnPurchasesFetched(shouldProcess);
+        }
+
         public event Action<PendingOrder>? OnPurchasePending
         {
             add => m_BaseInternalPurchaseService.OnPurchasePending += value;

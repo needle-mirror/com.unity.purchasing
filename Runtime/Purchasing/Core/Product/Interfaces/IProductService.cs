@@ -39,6 +39,14 @@ namespace UnityEngine.Purchasing
         ReadOnlyObservableCollection<Product> GetProducts();
 
         /// <summary>
+        /// Gets a product by its product ID. If no product is found with the specified product ID,
+        /// attempts to locate a product with a matching store-specific product ID. Returns null if no matching product is found.
+        /// </summary>
+        /// <param name="productId">The ID of the product.</param>
+        /// <returns>The matching product if found, otherwise returns null.</returns>
+        Product? GetProductById(string productId);
+
+        /// <summary>
         /// Callback invoked with products that are successfully fetched.
         /// </summary>
         event Action<List<Product>>? OnProductsFetched;

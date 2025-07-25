@@ -1,5 +1,27 @@
 # Changelog
 
+### [5.0.0-pre.8] - 2025-07-25
+### Added
+- Added `public CrossPlatformValidator(byte[] googlePublicKey, string googleBundleId)` constructor to `CrossPlatformValidator`.
+- Added `GetProductById(string productId)` to `IProductService` and `StoreController`.
+- Added `IPurchaseService.ProcessPendingOrdersOnPurchasesFetched` to control whether pending orders are processed when purchases are fetched. Defaults to `true`.
+
+### Fixed
+- Fixed a callback crash happening with StoreKit 2
+- Fixed `IPurchaseService.ConfirmPurchase` failing with failure reason `ExistingPurchasePending`
+- Fixed PendingOrders not being removed correctly from the IPurchaseService purchase cache when calling ConfirmPendingPurchase.
+- Coded IAP backwards compatibility fixes:
+  - `OnInitializedFailed` will only be invoked when all products failed to be fetched, rather than when any product fails to be fetched.
+  - Purchases are now fetched on initialization (same behavior as in 4.x versions).
+  - Fixed `OnInitialized` callback being triggered multiple times
+- Apple - Fixed CheckEntitlement returning the wrong result when expired transactions are present.
+- Apple - Apple receipt is properly updated when a purchase succeeds
+- Apple - Improved performance of IPurchaseService.FetchPurchases()
+- Apple - Fixed an issue where FetchPurchases would be limited to a single PendingOrder per product. All pending orders are now fetched properly.
+- Apple - Fixed `IPurchaseService.CheckEntitlement` returning `EntitlementStatus.FullyEntitled` for unfinished subscriptions
+- Apple - Fixed MacOS dynamic library not exposing functions.
+- GooglePlay - Fixed a case where the `FetchPurchases` wouldn't invoke any callback when an internal exception occurred.
+
 ### [5.0.0-pre.7] - 2025-06-13
 ### Fixed
 - Updated samples to use `OnOrderConfirmed(ConfirmedOrder order)` rather than `OnOrderConfirmed(Order order)`.
@@ -469,7 +491,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 - Apple - Added support for fetching the current store promotion order of products on this device with `void IAppleExtensions.FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)`
 - Apple - Added support for fetching the current store promotion visibility of a product on this device with `void FetchStorePromotionVisibilitySuccess(Product product, AppleStorePromotionVisibility visibility)`
 
-## Fixed
+### Fixed
 - Apple - Fixed issue with unknown products being processed with `NonConsumable` type.
 
 ### Fixed

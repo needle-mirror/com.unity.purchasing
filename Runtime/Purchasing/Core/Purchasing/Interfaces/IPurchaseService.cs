@@ -67,6 +67,13 @@ namespace UnityEngine.Purchasing
         ReadOnlyObservableCollection<Order> GetPurchases();
 
         /// <summary>
+        /// Sets whether to process pending orders when purchases are fetched by sending them to the `OnPurchasePending`
+        /// callback.
+        /// </summary>
+        /// Default is <c>true</c>.
+        void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess);
+
+        /// <summary>
         /// Callback when a purchase has been paid, but hasn't been confirmed yet.
         /// </summary>
         event Action<PendingOrder>? OnPurchasePending;

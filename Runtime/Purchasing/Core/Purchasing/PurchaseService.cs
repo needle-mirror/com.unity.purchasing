@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,11 +25,18 @@ namespace UnityEngine.Purchasing
         readonly ReadOnlyObservableCollection<Order> m_PurchasesReadOnly;
         readonly IStoreWrapper m_StoreWrapper;
         readonly IAnalyticsClient m_AnalyticsClient;
+        bool m_ProcessFetchedPendingOrders = true;
+        readonly HashSet<string> m_PurchasesProcessedInSession = new();
 
 #if IAP_TX_VERIFIER_ENABLED
             readonly Store m_StoreName;
             readonly ITransactionVerifier m_TransactionVerifier;
 #endif
+
+        public void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess)
+        {
+            m_ProcessFetchedPendingOrders = shouldProcess;
+        }
 
         public event Action<PendingOrder>? OnPurchasePending;
         public event Action<Order>? OnPurchaseConfirmed;
@@ -126,7 +134,7 @@ namespace UnityEngine.Purchasing
             {
                 var transactionRepresentation = m_StoreName switch
                 {
-                    Store.Apple => order.Info.Apple.jwsRepresentation,
+                    Store.Apple => order.Info.Apple?.jwsRepresentation,
                     Store.Google => order.Info.Receipt,
                     _ => null
                 };
@@ -157,22 +165,14 @@ namespace UnityEngine.Purchasing
         }
 #endif
 
-#if IAP_TX_VERIFIER_ENABLED
-        async void PurchaseSucceeded(PendingOrder order)
-#else
         void PurchaseSucceeded(PendingOrder order)
-#endif
         {
             try
             {
                 RemoveDeferredOrders(order);
                 m_Purchases.Add(order);
 
-#if IAP_TX_VERIFIER_ENABLED
-                await HandleVerification(order);
-#else
-                OnPurchasePending?.Invoke(order);
-#endif
+                ProcessPendingOrder(order);
             }
             catch (Exception ex)
             {
@@ -300,6 +300,7 @@ namespace UnityEngine.Purchasing
 
         void OnFetchSuccess(Orders fetchedPurchases)
         {
+            m_Purchases.Clear();
             foreach (var fetchedPurchase in fetchedPurchases.ConfirmedOrders)
             {
                 m_Purchases.Add(fetchedPurchase);
@@ -308,6 +309,11 @@ namespace UnityEngine.Purchasing
             foreach (var fetchedPurchase in fetchedPurchases.PendingOrders)
             {
                 m_Purchases.Add(fetchedPurchase);
+
+                if (m_ProcessFetchedPendingOrders && !WasPurchaseAlreadyProcessed(fetchedPurchase.Info.TransactionID))
+                {
+                    ProcessPendingOrder(fetchedPurchase);
+                }
             }
 
             foreach (var fetchedPurchase in fetchedPurchases.DeferredOrders)
@@ -317,6 +323,25 @@ namespace UnityEngine.Purchasing
 
             OnPurchasesFetched?.Invoke(fetchedPurchases);
         }
+
+        bool WasPurchaseAlreadyProcessed(string transactionId)
+        {
+            return m_PurchasesProcessedInSession.Contains(transactionId);
+        }
+
+#if IAP_TX_VERIFIER_ENABLED
+        async void ProcessPendingOrder(PendingOrder fetchedPurchase)
+        {
+            await HandleVerification(fetchedPurchase);
+            m_PurchasesProcessedInSession.Add(fetchedPurchase.Info.TransactionID);
+        }
+#else
+        void ProcessPendingOrder(PendingOrder fetchedPurchase)
+        {
+            OnPurchasePending?.Invoke(fetchedPurchase);
+            m_PurchasesProcessedInSession.Add(fetchedPurchase.Info.TransactionID);
+        }
+#endif
 
         void OnFetchFailure(PurchasesFetchFailureDescription fetchFailed)
         {

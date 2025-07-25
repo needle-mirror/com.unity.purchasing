@@ -50,6 +50,6 @@ namespace UnityEngine.Purchasing
         bool CheckEntitlement(string productJSON);
     }
 
-    delegate void UnityPurchasingCallback(string subject, string payload, int entitlementStatus, IntPtr pointer);
+    delegate void UnityPurchasingCallback(IntPtr subjectPtr, IntPtr payloadPtr, int entitlementStatus);
     delegate bool StorefrontChangeCallback(string storefrontCountryCode, string storefrontId);
 }

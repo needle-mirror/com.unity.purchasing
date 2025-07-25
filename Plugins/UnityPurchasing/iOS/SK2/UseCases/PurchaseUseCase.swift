@@ -142,7 +142,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
                     if (self.interceptPromotionalPurchases)
                     {
                         Task.detached(priority: .background, operation: {
-                            await self.storeKitCallback.callbackPtr(subject: "OnPromotionalPurchaseAttempted", payload: purchaseIntent.id, entitlementStatus: 0)
+                            await self.storeKitCallback.callback(subject: "OnPromotionalPurchaseAttempted", payload: purchaseIntent.id, entitlementStatus: 0)
                         })
 
                         self.interceptedProductIds.append(purchaseIntent.id)
@@ -179,7 +179,7 @@ extension PurchaseUseCase: SKPaymentTransactionObserver {
         if (interceptPromotionalPurchases)
         {
             Task.detached(priority: .background, operation: {
-                await self.storeKitCallback.callbackPtr(subject: "OnPromotionalPurchaseAttempted", payload: product.productIdentifier, entitlementStatus: 0)
+                await self.storeKitCallback.callback(subject: "OnPromotionalPurchaseAttempted", payload: product.productIdentifier, entitlementStatus: 0)
             })
             interceptedProductIds.append(product.productIdentifier)
         }

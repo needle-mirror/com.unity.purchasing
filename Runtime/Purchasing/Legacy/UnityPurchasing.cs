@@ -9,9 +9,10 @@ namespace UnityEngine.Purchasing
     [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
     public class UnityPurchasing
     {
-        internal static bool shouldFetchProductsAtInit = true;
-        internal static IStoreListener m_StoreListener;
         internal static ConfigurationBuilder m_ConfigurationBuilder;
+        internal static IStoreListener m_StoreListener;
+        internal static bool shouldFetchProductsAtInit = true;
+        static bool isInitialized = false;
 
         internal static PurchasingManager m_PurchasingManager = new PurchasingManager();
         /// <summary>
@@ -33,16 +34,28 @@ namespace UnityEngine.Purchasing
             productService.FetchProducts(configurationBuilder.m_CatalogProvider.GetProducts(), new MaximumNumberOfAttemptsRetryPolicy(5));
         }
 
+
         static void AddProductServiceListeners(IStoreListener storeListener, IProductService productService)
         {
             productService.OnProductsFetched += _ =>
             {
-                storeListener.OnInitialized(m_PurchasingManager, new ExtensionProvider());
+                if (!isInitialized)
+                {
+                    PurchaseServiceProvider.GetDefaultPurchaseService().FetchPurchases();
+                    storeListener.OnInitialized(m_PurchasingManager, new ExtensionProvider());
+                    isInitialized = true;
+                }
             };
 
             productService.OnProductsFetchFailed += failed =>
             {
-                storeListener.OnInitializeFailed(InitializationFailureReason.PurchasingUnavailable, failed.FailureReason);
+                if (!isInitialized)
+                {
+                    if (failed.FailureReason == ErrorMessages.FetchProductsRetrieveProductsFailed)
+                    {
+                        storeListener.OnInitializeFailed(InitializationFailureReason.PurchasingUnavailable, failed.FailureReason);
+                    }
+                }
             };
         }
 

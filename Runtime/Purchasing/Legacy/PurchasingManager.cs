@@ -68,10 +68,7 @@ namespace UnityEngine.Purchasing
                     localProduct.appleOriginalTransactionID = pendingOrder.Info.Apple?.OriginalTransactionID;
                 }
 
-                if (UnityPurchasing.m_StoreListener?.ProcessPurchase(new PurchaseEventArgs(product)) == PurchaseProcessingResult.Complete)
-                {
-                    ConfirmPendingPurchase(product);
-                }
+                InvokeProcessPurchase(product);
             }
         }
 
@@ -116,6 +113,8 @@ namespace UnityEngine.Purchasing
                         localProduct.transactionID = order.Info.TransactionID;
                         localProduct.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
                     }
+
+                    InvokeProcessPurchase(product);
                 }
             }
 
@@ -135,6 +134,15 @@ namespace UnityEngine.Purchasing
                         localProduct.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
                     }
                 }
+            }
+        }
+
+        void InvokeProcessPurchase(Product product)
+        {
+            var processPurchaseResult = UnityPurchasing.m_StoreListener?.ProcessPurchase(new PurchaseEventArgs(product));
+            if (processPurchaseResult == PurchaseProcessingResult.Complete)
+            {
+                ConfirmPendingPurchase(product);
             }
         }
 
@@ -182,19 +190,21 @@ namespace UnityEngine.Purchasing
 
         static PendingOrder CreatePendingOrderFromProduct(Product product)
         {
-            var cartItem = new CartItem(product);
-            var cart = new Cart(cartItem);
             foreach (var order in PurchaseServiceProvider.GetDefaultPurchaseService().GetPurchases())
             {
-                if (order is PendingOrder pendingOrder &&
-                    pendingOrder.CartOrdered.Items().First()?.Product.definition.storeSpecificId == product.definition.storeSpecificId)
+                if (order is PendingOrder pendingOrder)
                 {
-                    var orderInfo = new OrderInfo(pendingOrder.Info.Receipt, pendingOrder.Info.TransactionID, pendingOrder.Info.Apple?.StoreName);
-                    return new PendingOrder(cart, orderInfo);
+                    var cartItem = pendingOrder.CartOrdered.Items().FirstOrDefault();
+                    if (cartItem != null && cartItem.Product.definition.storeSpecificId == product.definition.storeSpecificId)
+                    {
+                        return pendingOrder; // Return the original instance
+                    }
                 }
             }
             Debug.LogWarning($"No pending order found for product {product.definition.id}. Returning a new PendingOrder with empty OrderInfo.");
-            return new PendingOrder(cart, new OrderInfo(string.Empty, string.Empty, string.Empty));
+            var cartItemNew = new CartItem(product);
+            var cartNew = new Cart(cartItemNew);
+            return new PendingOrder(cartNew, new OrderInfo(string.Empty, string.Empty, string.Empty));
         }
     }
 }
