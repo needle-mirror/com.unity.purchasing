@@ -13,18 +13,30 @@ namespace UnityEngine.Purchasing
         /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/appstoreconnectdefault
         /// </summary>
         AppStoreConnectDefault = 0,
+        /// <summary>
+        /// C# representation of Apple's object `Product.PromotionInfo.Visibility.appStoreConnectDefault`
+        /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/appstoreconnectdefault
+        /// </summary>
         Default = 0,
         /// <summary>
         /// C# representation of Apple's object `Product.PromotionInfo.Visibility.visible`
         /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/visible
         /// </summary>
         Visible = 1,
+        /// <summary>
+        /// C# representation of Apple's object `Product.PromotionInfo.Visibility.visible`
+        /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/visible
+        /// </summary>
         Show = 1,
         /// <summary>
         /// C# representation of Apple's object `Product.PromotionInfo.Visibility.hidden`
         /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/hidden
         /// </summary>
         Hidden = 2,
+        /// <summary>
+        /// C# representation of Apple's object `Product.PromotionInfo.Visibility.hidden`
+        /// https://developer.apple.com/documentation/storekit/product/promotioninfo/visibility/hidden
+        /// </summary>
         Hide = 2
     }
 }

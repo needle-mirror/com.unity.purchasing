@@ -10,7 +10,16 @@ namespace UnityEngine.Purchasing
     [Serializable]
     public class PurchasesFetchFailureDescription
     {
+        /// <summary>
+        /// The reason why fetching purchases from the store failed.
+        /// Indicates the specific type of failure that occurred during the fetch operation.
+        /// </summary>
         public PurchasesFetchFailureReason failureReason;
+
+        /// <summary>
+        /// A detailed error message describing the failure.
+        /// Provides additional context and information about what went wrong during the fetch operation.
+        /// </summary>
         public string message;
 
         /// <summary>

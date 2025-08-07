@@ -676,7 +676,7 @@ namespace UnityEngine.Purchasing
         /// For every enum value in TranslationLocale, build a string with Labels + GoogleLocales for
         /// each platform supported.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Labels with supported platforms.</returns>
         public static string[] GetLabelsWithSupportedPlatforms()
         {
             if (LabelsWithSupportedPlatforms != null)
@@ -831,8 +831,8 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Types of Product Payouts. Mirrors the <c>PayoutType</c> enum.
         /// </summary>
-        /// Values here should mirror the values in the Core PayoutType enum, but we don't want to use that enum
-        /// directly because it will create a dependency between the plugin and a particular core/editor version.
+        // Values here should mirror the values in the Core PayoutType enum, but we don't want to use that enum
+        // directly because it will create a dependency between the plugin and a particular core/editor version.
         public enum ProductCatalogPayoutType
         {
             /// <summary>
@@ -1024,7 +1024,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Gets the list of payouts for this product.
         /// </summary>
-        /// <returns> The list of payouts </returns>
+        /// <value> The list of payouts </value>
         public IList<ProductCatalogPayout> Payouts => payouts;
 
         /// <summary>
@@ -1080,7 +1080,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Gets all of the <c>StoreIds</c> associated with this item.
         /// </summary>
-        /// <returns> A collection of all store IDs for this item. </returns>
+        /// <value> A collection of all store IDs for this item. </value>
         public ICollection<StoreID> allStoreIDs => storeIDs;
 
         /// <summary>
@@ -1147,13 +1147,13 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Property that gets whether or not a valid locale is unassigned.
         /// </summary>
-        /// <returns> Whether or not a new locale is avalable. </returns>
+        /// <value> Whether or not a new locale is avalable. </value>
         public bool HasAvailableLocale => Enum.GetValues(typeof(TranslationLocale)).Length > descriptions.Count + 1; // +1 for the default description
 
         /// <summary>
         /// Property that gets the next avalaible locale on the list.
         /// </summary>
-        /// <returns> The next avalable locale. </returns>
+        /// <value> The next avalable locale. </value>
         public TranslationLocale NextAvailableLocale
         {
             get
@@ -1173,7 +1173,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Property that gets the translated descriptions.
         /// </summary>
-        /// <returns> A collection of all translated descriptions. </returns>
+        /// <value> A collection of all translated descriptions. </value>
         public ICollection<LocalizedProductDescription> translatedDescriptions => descriptions;
     }
 
@@ -1233,7 +1233,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Override the default catalog implementation.
         /// </summary>
-        /// <param name="productCatalogImpl"></param>
+        /// <param name="productCatalogImpl">The product catalog implementation.</param>
         public static void Initialize(IProductCatalogImpl productCatalogImpl)
         {
             instance = productCatalogImpl;

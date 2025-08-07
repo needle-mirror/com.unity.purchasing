@@ -10,7 +10,14 @@ namespace UnityEngine.Purchasing
     [Serializable]
     public class StoreConnectionFailureDescription : IRetryableRequestFailureDescription
     {
+        /// <summary>
+        /// The message containing details about the failed connection attempt.
+        /// </summary>
         public string message;
+
+        /// <summary>
+        /// Specifies if the connection request can be retried.
+        /// </summary>
         public bool isRetryable;
 
         /// <summary>

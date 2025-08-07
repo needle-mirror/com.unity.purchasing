@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -56,7 +57,7 @@ namespace UnityEngine.Purchasing
             UnityPurchasing.shouldFetchProductsAtInit = enable;
         }
 
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public void SetFetchPurchasesExcludeDeferred(bool exclude)
         {
         }

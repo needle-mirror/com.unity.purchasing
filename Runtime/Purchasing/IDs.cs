@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -11,7 +12,7 @@ namespace UnityEngine.Purchasing
     ///
     /// The name is deliberately terse for use as a collection initializer.
     /// </summary>
-    [Obsolete("Use StoreSpecificIds instead. This class exists for backward compatibility.")]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public class IDs : IEnumerable<KeyValuePair<string, string>>
     {
         private readonly Dictionary<string, string> m_Dic = new Dictionary<string, string>();

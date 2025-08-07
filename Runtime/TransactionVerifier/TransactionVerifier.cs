@@ -16,13 +16,34 @@ using VerifyGoogleTransactionRequest = UnityEngine.Purchasing.TransactionVerifie
 
 namespace UnityEngine.Purchasing.TransactionVerifier
 {
+    /// <summary>
+    /// Enumeration of supported app stores for transaction verification.
+    /// Used to identify which store platform a transaction originated from.
+    /// </summary>
     public enum Store
     {
+        /// <summary>
+        /// Apple App Store platform.
+        /// Used for transactions from iOS devices including iPhone, iPad, and Mac App Store.
+        /// </summary>
         Apple,
+
+        /// <summary>
+        /// Google Play Store platform.
+        /// Used for transactions from Android devices using Google Play services.
+        /// </summary>
         Google,
+
+        /// <summary>
+        /// Unknown or unsupported store platform.
+        /// Used when the store platform cannot be determined or is not supported for verification.
+        /// </summary>
         Unknown
     }
 
+    /// <summary>
+    /// Interface for verifying transactions with the Unity Transaction Verifier service.
+    /// </summary>
     [Preserve]
     public class TransactionVerifier : ITransactionVerifier
     {
@@ -31,6 +52,12 @@ namespace UnityEngine.Purchasing.TransactionVerifier
         readonly string? m_EnvironmentId;
         readonly ITransactionVerifierService m_Service;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="TransactionVerifier"/> class.
+        /// </summary>
+        /// <param name="storeName">The name of the store.</param>
+        /// <param name="projectId">The project ID for the Unity project.</param>
+        /// <param name="environmentId">The environment ID for the Unity project.</param>
         public TransactionVerifier(string storeName, string? projectId, string? environmentId)
         {
             m_Store = storeName switch
@@ -51,6 +78,12 @@ namespace UnityEngine.Purchasing.TransactionVerifier
             m_Service = TransactionVerifierService.Instance;
         }
 
+        /// <summary>
+        /// Verifies a pending order by sending the transaction representation to the appropriate store's verification endpoint.
+        /// </summary>
+        /// <param name="transactionRepresentation">The transaction representation to verify, typically a receipt or token.</param>
+        /// <returns>The verification response containing the result of the verification.</returns>
+        /// <exception cref="Exception">Thrown if the transaction verification fails or if the store type is unknown.</exception>
         public async Task<VerificationResponse> VerifyPendingOrder(string transactionRepresentation)
         {
             switch (m_Store)

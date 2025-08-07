@@ -1,0 +1,5 @@
+{
+  "displayName": "07 Catalog Provider",
+  "description": "Demonstrates how to declare in-app products using a CatalogProvider in Unity IAP. Shows how to generate and use a product catalog JSON file.",
+  "createSeparatePackage": false
+}

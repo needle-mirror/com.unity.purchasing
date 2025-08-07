@@ -22,7 +22,6 @@ namespace UnityEditor.Purchasing
         /// This is an internal API.
         /// We recommend that you do not use it as it will be removed in a future release.
         /// </summary>
-        /// <returns></returns>
         [Obsolete("Internal API, it will be removed soon.")]
         protected string m_ErrorMessage;
 
@@ -80,7 +79,7 @@ namespace UnityEditor.Purchasing
         /// This is an internal API.
         /// We recommend that you do not use it as it will be removed in a future release.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns whether the tangle file exists.</returns>
         [Obsolete("Internal API, it will be removed soon.")]
         protected abstract bool DoesTangleFileExist();
 

@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// The main controller for Applications using Unity Purchasing.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     class PurchasingManager : IStoreController
     {
         StoreController m_StoreController = new();

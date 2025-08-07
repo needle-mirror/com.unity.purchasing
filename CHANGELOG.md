@@ -1,6 +1,32 @@
 # Changelog
 
-### [5.0.0-pre.8] - 2025-07-25
+## [5.0.0] - 2025-08-07
+### Added
+- Samples - Added updated samples:
+  - Added `01 Buying Consumables`
+  - Added `02 Buying Subscriptions`
+  - Added `03 Fetching Additional Products`
+  - Added `04 Integrating Self-Provided Backend Receipt Validation`
+  - Added `06 Initialize Unity Gaming Services`
+  - Added `07 Catalog Provider`
+  - Added `Apple App Store - 01 Refreshing App Receipts`
+  - Added `Apple App Store - 02 Handling Deferred Purchases`
+  - Added `Apple App Store - 03 Retrieving Product Receipt`
+  - Added `Apple App Store - 04 Fraud Detection`
+  - Added `Apple App Store - 05 Getting Introductory Subscription Prices`
+  - Added `Google Play Store - 05 Fraud Detection`
+  - Added `Google Play Store - 06 Local Receipt Validation`
+
+### Fixed
+- Apple - Purchase restoration fix - product ID field was incorrectly populated with transaction ID
+- Google Play - Added handling for duplicate product IDs in store responses by skipping duplicates and logging warnings instead of failing with dictionary key error.
+- Google Play - Fixed ProGuard minification issue preventing IAP from working in release builds
+
+### Changed
+- GooglePlay - Billing Library updated to 8.0.0 (was previously 7.1.1). No new feature support was added.
+- Improved transaction fetching performance through parallel processing optimization
+
+## [5.0.0-pre.8] - 2025-07-25
 ### Added
 - Added `public CrossPlatformValidator(byte[] googlePublicKey, string googleBundleId)` constructor to `CrossPlatformValidator`.
 - Added `GetProductById(string productId)` to `IProductService` and `StoreController`.
@@ -22,7 +48,7 @@
 - Apple - Fixed MacOS dynamic library not exposing functions.
 - GooglePlay - Fixed a case where the `FetchPurchases` wouldn't invoke any callback when an internal exception occurred.
 
-### [5.0.0-pre.7] - 2025-06-13
+## [5.0.0-pre.7] - 2025-06-13
 ### Fixed
 - Updated samples to use `OnOrderConfirmed(ConfirmedOrder order)` rather than `OnOrderConfirmed(Order order)`.
 
@@ -671,7 +697,7 @@ public void ShowSubscriptionOfferRedemption(IExtensionProvider extensions)
 ## [3.0.0-pre.3] - 2020-10-09
 - First integration into Unity 2021
 - Includes changes listed in [CHANGELOG-ASSETSTORE.md](CHANGELOG-ASSETSTORE.md), starting from version 1, ending 2020-10-09
-- **This is the first release of the Unified *Unity In App Purchasing*, combining the old package and its Asset Store Components.**
+- **This is the first release of the Unified *Unity In-App Purchasing*, combining the old package and its Asset Store Components.**
 
 ## [2.2.2] - 2021-01-19
 - Fixed logs incorrectly formatted showing “purchases({0}): -id of product-”

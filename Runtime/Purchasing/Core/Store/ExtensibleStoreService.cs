@@ -51,6 +51,9 @@ namespace UnityEngine.Purchasing
             m_BaseInternalStoreService.SetStoreReconnectionRetryPolicyOnDisconnection(retryPolicy);
         }
 
+        /// <summary>
+        /// Callback for when the store disconnects.
+        /// </summary>
         public event Action<StoreConnectionFailureDescription>? OnStoreDisconnected
         {
             add => m_BaseInternalStoreService.OnStoreDisconnected += value;

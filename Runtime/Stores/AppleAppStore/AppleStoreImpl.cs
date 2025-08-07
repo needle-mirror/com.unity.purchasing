@@ -234,6 +234,7 @@ namespace UnityEngine.Purchasing
                 }
 
                 var transactionId = purchaseDetails.TryGetString("transactionId");
+                var productId = purchaseDetails.TryGetString("productId");
                 var originalTransactionId = purchaseDetails.TryGetString("originalTransactionId");
 
                 var ownershipType = OwnershipTypeFromString(purchaseDetails.TryGetString("ownershipType"));
@@ -247,11 +248,11 @@ namespace UnityEngine.Purchasing
 
                 if (isPending)
                 {
-                    orders.Add(GenerateApplePendingOrder(transaction.Key, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+                    orders.Add(GenerateApplePendingOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
                 }
                 else
                 {
-                    orders.Add(GenerateAppleConfirmedOrder(transaction.Key, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+                    orders.Add(GenerateAppleConfirmedOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
                 }
             }
 

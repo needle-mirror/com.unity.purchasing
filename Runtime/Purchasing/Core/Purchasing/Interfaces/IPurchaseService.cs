@@ -69,8 +69,9 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Sets whether to process pending orders when purchases are fetched by sending them to the `OnPurchasePending`
         /// callback.
-        /// </summary>
         /// Default is <c>true</c>.
+        /// </summary>
+        /// <param name="shouldProcess">Whether to process pending orders when purchases are fetched.</param>
         void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess);
 
         /// <summary>
@@ -80,8 +81,8 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// Callback when a purchase has been confirmed.
+        /// This can pass a `ConfirmedOrder` or a `FailedOrder` depending on the purchase outcome.
         /// </summary>
-        /// <returns>`ConfirmedOrder` or `FailedOrder`</returns>
         event Action<Order>? OnPurchaseConfirmed;
 
         /// <summary>

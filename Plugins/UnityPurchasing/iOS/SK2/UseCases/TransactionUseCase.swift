@@ -62,34 +62,50 @@ class TransactionUseCase: TransactionUseCaseProtocol {
      Use `Transaction.currentEntitlements` to fetch all purchases and `Transaction.unfinished` to fetch all pending purchases for the user
      */
     public func fetchAllTransactions() async -> (finishedTransactions: [String : PurchaseDetails], unfinishedTransactions: [String : PurchaseDetails]) {
-        var finishedTransactions: [String: PurchaseDetails] = [:]
-        var unfinishedTransactions: [String: PurchaseDetails] = [:]
 
-        // Fetch current entitlements
-        for await result in Transaction.currentEntitlements {
-            do {
-                let transaction = try transactionObserver.checkVerified(result)
-                let details = result.purchaseDetails()
-                finishedTransactions[String(details.transactionId!)] = details
-            } catch {
-                printLog("Verification failed: \(error.localizedDescription)")
-            }
-        }
+        async let finishedTask = processCurrentEntitlements()
+        async let unfinishedTask = processUnfinishedTransactions()
 
-        // Fetch unfinished transactions
-        for await result in Transaction.unfinished {
-            do {
-                let transaction = try transactionObserver.checkVerified(result)
-                let details = result.purchaseDetails()
-                unfinishedTransactions[String(details.transactionId!)] = details
-            } catch {
-                printLog("Verification failed: \(error.localizedDescription)")
-            }
-        }
+        let (finished, unfinished) = await (finishedTask, unfinishedTask)
 
-        return (finishedTransactions: finishedTransactions, unfinishedTransactions: unfinishedTransactions)
+        return (finishedTransactions: finished, unfinishedTransactions: unfinished)
     }
 
+    private func processCurrentEntitlements() async -> [String: PurchaseDetails] {
+        var result: [String: PurchaseDetails] = [:]
+
+        for await transactionResult in Transaction.currentEntitlements {
+            do {
+                let transaction = try transactionObserver.checkVerified(transactionResult)
+                let details = transactionResult.purchaseDetails()
+                if let productId = details.productId {
+                    result[productId] = details
+                }
+            } catch {
+                printLog("Verification failed: \(error.localizedDescription)")
+            }
+        }
+
+        return result
+    }
+
+    private func processUnfinishedTransactions() async -> [String: PurchaseDetails] {
+        var result: [String: PurchaseDetails] = [:]
+
+        for await transactionResult in Transaction.unfinished {
+            do {
+                let transaction = try transactionObserver.checkVerified(transactionResult)
+                let details = transactionResult.purchaseDetails()
+                if let productId = details.productId {
+                    result[productId] = details
+                }
+            } catch {
+                printLog("Verification failed: \(error.localizedDescription)")
+            }
+        }
+
+        return result
+    }
 
     /**
      Fetch the latest transaction for the list of product Identifiers.

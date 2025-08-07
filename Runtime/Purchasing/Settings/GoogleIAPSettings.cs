@@ -2,6 +2,9 @@ using System;
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Represents the settings for Google IAP integration in Unity.
+    /// </summary>
     [Serializable]
     public class GoogleIapSettings
     {

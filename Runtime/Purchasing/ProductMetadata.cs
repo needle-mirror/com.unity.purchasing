@@ -72,6 +72,10 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public decimal localizedPrice { get; internal set; }
 
+        /// <summary>
+        /// Returns a string representation of the product metadata.
+        /// </summary>
+        /// <returns> A string representation of the product metadata.</returns>
         public override string ToString()
         {
             return $"ProductMetaData: {localizedPriceString}, {localizedTitle}, {localizedDescription}, {isoCurrencyCode}, {localizedPrice}";

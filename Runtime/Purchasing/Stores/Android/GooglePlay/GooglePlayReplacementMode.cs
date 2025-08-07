@@ -49,13 +49,13 @@ namespace UnityEngine.Purchasing
     /// The Google Play proration mode used when upgrading and downgrading subscription.
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode"> See more </a>
     /// </summary>
-    [Obsolete("Use GooglePlayReplacementMode instead")]
+    [Obsolete("Use GooglePlayReplacementMode instead.")]
     public enum GooglePlayProrationMode
     {
         /// <summary>
         /// Unknown subscription upgrade downgrade policy
-        /// </summary>
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode#UNKNOWN_SUBSCRIPTION_UPGRADE_DOWNGRADE_POLICY"> See more </a>
+        /// </summary>
         UnknownSubscriptionUpgradeDowngradePolicy = 0,
 
         /// <summary>

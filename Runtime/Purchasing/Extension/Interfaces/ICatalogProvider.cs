@@ -11,8 +11,10 @@ namespace UnityEngine.Purchasing.Extension
     public interface ICatalogProvider : IBaseCatalogProvider
     {
         /// <summary>
-        /// The set of products in the catalog.
+        /// The list of products in the catalog.
         /// </summary>
+        /// <param name="storeName"> The name of the store to retrieve products from. If null, retrieves products without store-specific IDs.</param>
+        /// <returns> A list of <see cref="ProductDefinition"/> objects representing the products in the catalog. </returns>
         public List<ProductDefinition> GetProducts(string? storeName = null);
 
         /// <summary>

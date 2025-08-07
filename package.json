@@ -1,6 +1,6 @@
 {
   "name": "com.unity.purchasing",
-  "displayName": "In App Purchasing",
+  "displayName": "In-App Purchasing",
   "unity": "2021.3",
   "_upm": {
     "gameService": {
@@ -15,10 +15,10 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Added\n- Added `UnityIAPServies.StoreController` as a wrapper around the other services obtained through UnityIAPServices.\n  - Added `StoreController.PurchaseProduct(string productId)` to initiate a purchase using only the productId.\n- Added messages to `[Obsolete]` attributes on deprecated APIs, test methods, and internal classes.\n- Samples - Added Minimal Coded IAP 5.0.0 Sample to demonstrate a very basic implementation of Coded IAP.\n- Added documentation note in `UpgradeV5.md` clarifying the singleton behavior of `ConfigurationBuilder.Instance` and the use of its constructor as a workaround for scenarios requiring multiple initializations.\n- Added backwards compatibility support for `IAPListener` and `CodelessIAPButton` callbacks. When updating from an older IAP version, your scripts will continue to work without modification.\n- Apple - Added `IAppleStoreExtendedPurchaseService.SetRefreshAppReceipt` to refresh the receipt when a purchase succeeds (true by default). This is useful if are using a backwards compatible implementation or if you use `IOrderInfo.PurchasedProductInfo.subscriptionInfo`.\n- Added `IOrderInfo.Google` to provide access to information specific to orders coming from the Google Play Store.\n- Added `Orders.DeferredOrders` to provide access to deferred orders fetched from the store.\n- Added back `useFakeStoreUIMode` and `useFakeStoreAlways` variables to `StandardPurchasingModule` for backwards compatibility.\n  - Important: neither setting is respected by the FakeStore. Functionality has not been reimplemented.\n- Added back `Instance(AppStore androidStore)` call to `StandardPurchasingModule` for backwards compatibility. Calling `Instance(AppStore androidStore)` will return the same results as `Instance()` regardless of the provided AppStore.\n\n### Changed\n- IAP Catalog - Renamed `Automatically initialize UnityPurchasing (recommended)` to `Automatically initialize UnityIAPServices (recommended)`.\n  - Brought back `Apple Configuration`, `Google Configuration` and `Catalog Export` in IAP Catalog.\n  - Updated translation locales for Google Play Store and Apple App Store\n- Renamed APIs introduced since 5.0.0-pre.1 to improve consistency:\n  - `IStoreService.ConnectAsync` to `IStoreService.Connect`\n  - `IPurchaseService.ConfirmOrder` to `IPurchaseService.ConfirmPurchase`\n  - `IPurchaseService.IsProductEntitled` to `IPurchaseService.CheckEntitlement`\n  - `Entitlement.ProductChecked` to `Entitlement.Product`\n  - `Entitlement.EntitlementOrder` to `Entitlement.Order`\n  - `ConfirmOrderException` to `ConfirmPurchaseException`\n  - `INativeStore.RetrieveProducts` to `INativeStore.FetchProducts`\n- Callbacks introduced since 5.0.0-pre.1 were changed to events:\n  - `IProductService.AddProductsUpdatedAction` and `IProductService.RemoveProductsUpdatedAction` were replaced with `IProductService.OnProductsUpdated`\n  - `IProductService.AddProductsFetchFailedAction` and `IProductService.RemoveProductsFetchFailedAction` were replaced with `IProductService.OnProductsFetchFailed`\n  - `IPurchaseService.AddPendingOrderUpdatedAction` and `IPurchaseService.RemovePendingOrderUpdatedAction` were replaced with `IPurchaseService.OnPurchasePending`\n  - `IPurchaseService.AddConfirmedOrderUpdatedAction` and `IPurchaseService.RemoveConfirmedOrderUpdatedAction` were replaced with `IPurchaseService.OnPurchaseConfirmed`\n  - `IPurchaseService.AddPurchaseFailedAction` and `IPurchaseService.RemovePurchaseFailedAction` were replaced with `IPurchaseService.OnPurchaseFailed`\n  - `IPurchaseService.AddPurchaseDeferredAction` and `IPurchaseService.RemovePurchaseDeferredAction` were replaced with `IPurchaseService.OnPurchaseDeferred`\n  - `IPurchaseService.AddFetchedPurchasesAction` and `IPurchaseService.RemoveFetchedPurchasesAction` were replaced with `IPurchaseService.OnPurchasesFetched`\n  - `IPurchaseService.AddFetchPurchasesFailedAction` and `IPurchaseService.RemoveFetchPurchasesFailedAction` were replaced with `IPurchaseService.OnPurchasesFetchFailed`\n  - `IPurchaseService.AddCheckEntitlementAction` and `IPurchaseService.RemoveCheckEntitlementActio"
+    "changelog": "### Added\n- Samples - Added updated samples:\n  - Added `01 Buying Consumables`\n  - Added `02 Buying Subscriptions`\n  - Added `03 Fetching Additional Products`\n  - Added `04 Integrating Self-Provided Backend Receipt Validation`\n  - Added `06 Initialize Unity Gaming Services`\n  - Added `07 Catalog Provider`\n  - Added `Apple App Store - 01 Refreshing App Receipts`\n  - Added `Apple App Store - 02 Handling Deferred Purchases`\n  - Added `Apple App Store - 03 Retrieving Product Receipt`\n  - Added `Apple App Store - 04 Fraud Detection`\n  - Added `Apple App Store - 05 Getting Introductory Subscription Prices`\n  - Added `Google Play Store - 05 Fraud Detection`\n  - Added `Google Play Store - 06 Local Receipt Validation`\n\n### Fixed\n- Apple - Purchase restoration fix - product ID field was incorrectly populated with transaction ID\n- Google Play - Added handling for duplicate product IDs in store responses by skipping duplicates and logging warnings instead of failing with dictionary key error.\n- Google Play - Fixed ProGuard minification issue preventing IAP from working in release builds\n\n### Changed\n- GooglePlay - Billing Library updated to 8.0.0 (was previously 7.1.1). No new feature support was added.\n- Improved transaction fetching performance through parallel processing optimization"
   },
-  "version": "5.0.0-pre.8",
-  "description": "IMPORTANT UPGRADE NOTES:\n\nThis is a major overhaul of the IAP package. Consult the included sample for a complete example on how to use this new version.\n\nPACKAGE DESCRIPTION:\n\nWith Unity IAP, setting up in-app purchases for your game across multiple app stores has never been easier.\n\nThis package provides:\n\n ▪ One common API to access all stores for free so you can fully understand and optimize your in-game economy\n ▪ Automatic coupling with Unity Analytics to enable monitoring and decision-making based on trends in your revenue and purchase data across multiple platforms\n ▪ Support for iOS, Mac, tvOS and Google Play.\n ▪ Client-side receipt validation for Apple App Store and Google Play\n\nAfter installing this package, open the Services Window to enable In-App Purchasing to use these features.",
+  "version": "5.0.0",
+  "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
@@ -34,22 +34,87 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.0.0-pre.8"
+    "com.unity.purchasing.tests": "5.0.0"
   },
   "upmCi": {
-    "footprint": "738be00cf09300dcaa8a44bfb79cf9f45e3be232"
+    "footprint": "7cf64c50ac39e9d5faf67c1b4ec5b10d4eb106f9"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.0/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "65d7c586ed4fbaa5b3d3d34dac750704f1bd7eee"
+    "revision": "84fc47b8a23939c6a12ff6c22e7252b84552051a"
   },
   "samples": [
+    {
+      "displayName": "01 Buying Consumables",
+      "description": "This sample showcases the basics of how to initialize in-app purchases and handle a simple consumable purchase.",
+      "path": "Samples~/01 BuyingConsumables"
+    },
+    {
+      "displayName": "02 Buying Subscription",
+      "description": "This sample demonstrates the basics of handling subscription purchases using the entitlement system to check and manage subscription status.",
+      "path": "Samples~/02 BuyingSubscription"
+    },
+    {
+      "displayName": "03 Fetching Additional Products",
+      "description": "Demonstrates how to dynamically fetch and display additional in-app products using the Store Controller in Unity IAP. Includes best practices for event subscription management.",
+      "path": "Samples~/03 FetchingAdditionalProducts"
+    },
+    {
+      "displayName": "04 Integrating Self-Provided Backend Receipt Validation",
+      "description": "This sample showcases how to integrate your own backend validation with Unity IAP.",
+      "path": "Samples~/04 IntegratingSelfProvidedBackendReceiptValidation"
+    },
+    {
+      "displayName": "06 Initialize Unity Gaming Services",
+      "description": "This sample showcases how to initialize Unity Gaming Services using the Services Core API",
+      "path": "Samples~/06 InitializeGamingServices"
+    },
+    {
+      "displayName": "07 Catalog Provider",
+      "description": "Demonstrates how to declare in-app products using a CatalogProvider in Unity IAP. Shows how to generate and use a product catalog JSON file.",
+      "path": "Samples~/07 Catalog Provider"
+    },
+    {
+      "displayName": "Apple App Store - 01 Refreshing App Receipts",
+      "description": "This sample shows how to refresh Apple App Store receipts.",
+      "path": "Samples~/Apple App Store - 01 RefreshingAppReceipt"
+    },
+    {
+      "displayName": "Apple App Store - 02 Handling Deferred Purchases",
+      "description": "This sample showcases how to handle deferred purchases using Apple extensions and configurations.",
+      "path": "Samples~/Apple App Store - 02 HandlingDeferredPurchases"
+    },
+    {
+      "displayName": "Apple App Store - 03 Retrieving Product Receipt",
+      "description": "This sample showcases how to retrieve product transaction receipts for Ask to Buy purchases.",
+      "path": "Samples~/Apple App Store - 03 RetrievingJWSRepresentation"
+    },
+    {
+      "displayName": "Apple App Store - 04 Fraud Detection",
+      "description": "This sample showcases how to provide to the Apple App Store your user's identifiers to help prevent fraud.",
+      "path": "Samples~/Apple App Store - 04 FraudDetection"
+    },
+    {
+      "displayName": "Apple App Store - 05 Getting Introductory Subscription Prices",
+      "description": "This sample showcases how to use Apple extensions to get introductory subscription offer information.",
+      "path": "Samples~/Apple App Store - 05 GettingIntroductoryPrices"
+    },
     {
       "displayName": "Coded IAP 5.0.0 Sample",
       "description": "This sample showcases how to use Coded IAP in 5.0.0. ",
       "path": "Samples~/Coded IAP 5.0.0 Sample"
+    },
+    {
+      "displayName": "Google Play Store - 05 Fraud Detection",
+      "description": "This sample showcases how to provide to the Google Play Store your user's identifiers to help prevent fraud.",
+      "path": "Samples~/Google Play Store - 05 FraudDetection"
+    },
+    {
+      "displayName": "Google Play Store - 06 Local Receipt Validation",
+      "description": "This sample showcases how to do local receipt validation with the Google Play Store.",
+      "path": "Samples~/Google Play Store - 06 Local Receipt Validation"
     },
     {
       "displayName": "Minimal Coded IAP 5.0.0 Sample",

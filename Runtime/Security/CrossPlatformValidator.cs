@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine.Purchasing;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing.Security
 {
@@ -165,6 +166,7 @@ namespace UnityEngine.Purchasing.Security
         /// Validates a receipt.
         /// </summary>
         /// <param name="unityIAPReceipt"> The receipt to be validated. </param>
+        /// <exception cref="IAPSecurityException"> The exception thrown if unityIAPReceipt is deemed invalid. </exception>
         /// <returns> An array of receipts parsed from the validation process </returns>
         public IPurchaseReceipt[] Validate(string unityIAPReceipt)
         {

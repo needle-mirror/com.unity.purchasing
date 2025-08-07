@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Security;
 
 namespace UnityEngine.Purchasing
@@ -6,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Access GooglePlay store specific functionality.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public interface IGooglePlayStoreExtensions : IStoreExtension
     {
         /// <summary>
@@ -66,7 +67,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the purchase state when successful, otherwise an exception is thrown.</returns>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         GooglePurchaseState GetPurchaseState(Product product);
 
         /// <summary>
@@ -76,7 +77,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the obfuscated account id if it exists, otherwise null is returned.</returns>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         string GetObfuscatedAccountId(Product product);
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the obfuscated profile id if it exists, otherwise null is returned.</returns>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         string GetObfuscatedProfileId(Product product);
     }
 }

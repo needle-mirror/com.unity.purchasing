@@ -12,6 +12,7 @@ namespace UnityEngine.Purchasing
         /// Populate a CatalogProvider with products from a ProductCatalog
         /// </summary>
         /// <param name="catalog">Source of product identifiers and payouts</param>
+        /// <returns>A CatalogProvider populated with the products from the ProductCatalog</returns>
         public static CatalogProvider PopulateCatalogProvider(ProductCatalog catalog)
         {
             var catalogProvider = new CatalogProvider();

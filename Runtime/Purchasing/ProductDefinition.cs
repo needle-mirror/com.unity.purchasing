@@ -105,6 +105,10 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool enabled { get; private set; }
 
+        /// <summary>
+        /// Returns a string representation of the product definition.
+        /// </summary>
+        /// <returns> A string representation of the product definition.</returns>
         public override string ToString()
         {
             return $"ProductDefinition: {id}, {storeSpecificId}, {type}, {enabled}";

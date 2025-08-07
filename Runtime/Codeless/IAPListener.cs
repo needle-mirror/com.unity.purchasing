@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
     [AddComponentMenu("In-App Purchasing/IAP Listener")]
-    [HelpURL("https://docs.unity3d.com/Packages/com.unity.purchasing@latest")]
+    [HelpURL("https://docs.unity.com/ugs/en-us/manual/iap/manual/overview")]
     public class IAPListener : MonoBehaviour
     {
         /// <summary>
@@ -62,16 +62,27 @@ namespace UnityEngine.Purchasing
         [Serializable]
         public class OnOrderDeferredEvent : UnityEvent<DeferredOrder> { }
 
-
+        /// <summary>
+        /// Legacy event type for fetching products, deprecated in favor of OnProductsFetchedEvent.
+        /// </summary>
         [Serializable, Obsolete]
         public class OnProductsFetchedLegacyEvent : UnityEvent<ProductCollection> { }
 
+        /// <summary>
+        /// Legacy event type for fetching purchases, deprecated in favor of OnPurchasesFetchedEvent.
+        /// </summary>
         [Serializable, Obsolete]
         public class OnPurchaseCompletedLegacyEvent : UnityEvent<Product> { }
 
+        /// <summary>
+        /// Legacy event type for purchase failure, deprecated in favor of OnPurchaseFailedEvent.
+        /// </summary>
         [Serializable, Obsolete]
         public class OnPurchaseFailedLegacyEvent : UnityEvent<Product, PurchaseFailureReason> { }
 
+        /// <summary>
+        /// Legacy event type for detailed purchase failure, deprecated in favor of OnPurchaseFailedEvent.
+        /// </summary>
         [Serializable, Obsolete]
         public class OnPurchaseDetailedFailedLegacyEvent : UnityEvent<Product, PurchaseFailureDescription> { }
 
@@ -135,22 +146,34 @@ namespace UnityEngine.Purchasing
         [Tooltip("Event fired after the payment of a purchase was delayed or postponed.")]
         public OnOrderDeferredEvent onOrderDeferred;
 
+        /// <summary>
+        /// Legacy event for fetching products, deprecated in favor of OnProductsFetchedEvent.
+        /// </summary>
         [Header("Obsolete Events (for backward compatibility only)")]
         [FormerlySerializedAs("onProductsFetched")]
         [Tooltip("Event fired after a successful fetching the products from the store.")]
         [Obsolete]
         public OnProductsFetchedLegacyEvent onProductsFetchedLegacy;
 
+        /// <summary>
+        /// Legacy event for purchase completion, deprecated in favor of OnPurchasesFetchedEvent.
+        /// </summary>
         [FormerlySerializedAs("onPurchaseComplete")]
         [Tooltip("Event fired after a successful purchase of this product.")]
         [Obsolete]
         public OnPurchaseCompletedLegacyEvent onPurchaseCompleteLegacy;
 
+        /// <summary>
+        /// Legacy event for purchase failure, deprecated in favor of OnPurchaseFailedEvent.
+        /// </summary>
         [FormerlySerializedAs("onPurchaseFailed")]
         [Tooltip("Event fired after failing to purchase an order.")]
         [Obsolete]
         public OnPurchaseFailedLegacyEvent onPurchaseFailedLegacy;
 
+        /// <summary>
+        /// Legacy event for detailed purchase failure, deprecated in favor of OnPurchaseFailedEvent.
+        /// </summary>
         [FormerlySerializedAs("onPurchaseDetailedFailedEvent")]
         [Tooltip("Event fired after failing to purchase an order.")]
         [Obsolete]

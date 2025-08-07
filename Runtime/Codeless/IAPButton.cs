@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using UnityEngine.Events;
+using UnityEngine.Purchasing.Extension;
 using UnityEngine.UI;
 
 namespace UnityEngine.Purchasing
@@ -14,8 +15,8 @@ namespace UnityEngine.Purchasing
     /// <seealso cref="CodelessIAPStoreListener"/>
     [RequireComponent(typeof(Button))]
     [AddComponentMenu("In-App Purchasing/IAP Button")]
-    [HelpURL("https://docs.unity3d.com/Manual/UnityIAP.html")]
-    [Obsolete("IAPButton is deprecated and will be removed in a future release. Use the Unity IAP scripting API or CodelessIAPStoreListener instead.")]
+    [HelpURL("https://docs.unity.com/ugs/en-us/manual/iap/manual/overview")]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public class IAPButton : MonoBehaviour
     {
         /// <summary>

@@ -1,3 +1,4 @@
+
 #nullable enable
 
 using System;
@@ -33,17 +34,55 @@ namespace UnityEngine.Purchasing
             readonly ITransactionVerifier m_TransactionVerifier;
 #endif
 
+        /// <summary>
+        /// Configures whether pending orders should be automatically processed when purchases are fetched from the store.
+        /// </summary>
+        /// <param name="shouldProcess">True to automatically process pending orders after fetching purchases, false to skip processing.</param>
         public void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess)
         {
             m_ProcessFetchedPendingOrders = shouldProcess;
         }
 
+        /// <summary>
+        /// Event triggered when a purchase is pending confirmation or processing.
+        /// Subscribe to this event to handle purchases that require additional processing before completion.
+        /// </summary>
         public event Action<PendingOrder>? OnPurchasePending;
+
+        /// <summary>
+        /// Event triggered when a purchase has been successfully confirmed and completed.
+        /// Subscribe to this event to handle successful purchase completion, such as granting in-game content.
+        /// </summary>
         public event Action<Order>? OnPurchaseConfirmed;
+
+        /// <summary>
+        /// Event triggered when a purchase has failed to complete.
+        /// Subscribe to this event to handle purchase failures and provide appropriate user feedback.
+        /// </summary>
         public event Action<FailedOrder>? OnPurchaseFailed;
+
+        /// <summary>
+        /// Event triggered when a purchase has been deferred by the store.
+        /// This typically occurs when parental approval is required for the purchase.
+        /// </summary>
         public event Action<DeferredOrder>? OnPurchaseDeferred;
+
+        /// <summary>
+        /// Event triggered when previously made purchases have been successfully fetched from the store.
+        /// Subscribe to this event to process and restore previously purchased content.
+        /// </summary>
         public event Action<Orders>? OnPurchasesFetched;
+
+        /// <summary>
+        /// Event triggered when fetching previous purchases from the store has failed.
+        /// Subscribe to this event to handle errors in retrieving purchase history.
+        /// </summary>
         public event Action<PurchasesFetchFailureDescription>? OnPurchasesFetchFailed;
+
+        /// <summary>
+        /// Event triggered when checking product entitlement status.
+        /// Subscribe to this event to handle entitlement verification results.
+        /// </summary>
         public event Action<Entitlement>? OnCheckEntitlement;
 
         internal PurchaseService(IFetchPurchasesUseCase fetchPurchasesUseCase,
@@ -73,10 +112,22 @@ namespace UnityEngine.Purchasing
 #endif
         }
 
+        /// <summary>
+        /// Gets the Apple-specific purchase service extensions and functionality.
+        /// Provides access to Apple App Store specific features and operations.
+        /// </summary>
         public IAppleStoreExtendedPurchaseService? Apple => this as IAppleStoreExtendedPurchaseService;
 
+        /// <summary>
+        /// Gets the Google-specific purchase service extensions and functionality.
+        /// Provides access to Google Play Store specific features and operations.
+        /// </summary>
         public IGooglePlayStoreExtendedPurchaseService? Google => this as IGooglePlayStoreExtendedPurchaseService;
 
+        /// <summary>
+        /// Initiates a purchase for the specified product.
+        /// </summary>
+        /// <param name="product">The product to purchase. Must be a valid, purchasable product from the store.</param>
         public void PurchaseProduct(Product product)
         {
             try
@@ -91,6 +142,10 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// Initiates a purchase for all products in the specified cart.
+        /// </summary>
+        /// <param name="cart">The cart containing products to purchase. All products in the cart will be processed for purchase.</param>
         public void Purchase(ICart cart)
         {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -204,6 +259,10 @@ namespace UnityEngine.Purchasing
             OnPurchaseDeferred?.Invoke(order);
         }
 
+        /// <summary>
+        /// Confirms a pending purchase order, completing the transaction.
+        /// </summary>
+        /// <param name="order">The pending order to confirm. This should be a valid pending order received from a purchase event.</param>
         public void ConfirmPurchase(PendingOrder order)
         {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -269,6 +328,10 @@ namespace UnityEngine.Purchasing
             OnPurchaseConfirmed?.Invoke(failedOrder);
         }
 
+        /// <summary>
+        /// Fetches all previous purchases made by the user from the store.
+        /// This will trigger OnPurchasesFetched or OnPurchasesFetchFailed events based on the result.
+        /// </summary>
         public void FetchPurchases()
         {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -348,6 +411,11 @@ namespace UnityEngine.Purchasing
             OnPurchasesFetchFailed?.Invoke(fetchFailed);
         }
 
+        /// <summary>
+        /// Checks the entitlement status for the specified product.
+        /// This verifies whether the user is entitled to access the product's content.
+        /// </summary>
+        /// <param name="product">The product to check entitlement for. Must be a valid product from the store.</param>
         public void CheckEntitlement(Product product)
         {
             if (OnCheckEntitlement == null)
@@ -417,6 +485,13 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// Restores previously purchased transactions from the store.
+        /// This is typically used to restore purchases on a new device or after reinstalling the app.
+        /// </summary>
+        /// <param name="callback">Optional callback invoked when the restore operation completes.
+        /// The first parameter indicates success (true) or failure (false),
+        /// and the second parameter provides an error message if the operation failed.</param>
         public void RestoreTransactions(Action<bool, string?>? callback)
         {
             if (!IsStoreConnected())
@@ -435,6 +510,13 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        /// <summary>
+        /// Internal implementation for restoring transactions.
+        /// Handles the core logic for transaction restoration without external validation.
+        /// </summary>
+        /// <param name="callback">Optional callback invoked when the restore operation completes.
+        /// The first parameter indicates success (true) or failure (false),
+        /// and the second parameter provides an error message if the operation failed.</param>
         protected virtual void RestoreTransactionsInternal(Action<bool, string?>? callback)
         {
             callback?.Invoke(false, Application.platform + " is not a supported platform for the restore button");

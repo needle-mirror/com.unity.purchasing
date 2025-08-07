@@ -78,6 +78,35 @@ namespace UnityEngine.Purchasing.Models
             return s_BillingClientClass;
         }
 
+        const string k_AndroidPendingPurchasesParamsClassName = "com.android.billingclient.api.PendingPurchasesParams";
+        static AndroidJavaClass s_PendingPurchasesParamsClass;
+        static AndroidJavaClass GetPendingPurchasesParamsClass()
+        {
+            s_PendingPurchasesParamsClass ??= new AndroidJavaClass(k_AndroidPendingPurchasesParamsClassName);
+            return s_PendingPurchasesParamsClass;
+        }
+        static AndroidJavaObject PendingPurchasesParams()
+        {
+            using var queryProductDetailsParams = GetPendingPurchasesParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
+            queryProductDetailsParams.Call<AndroidJavaObject>("enableOneTimeProducts").Dispose();
+            return queryProductDetailsParams.Call<AndroidJavaObject>("build");
+        }
+
+
+        const string k_AndroidQueryPurchasesParamsClassName = "com.android.billingclient.api.QueryPurchasesParams";
+        static AndroidJavaClass s_QueryPurchasesParamsClass;
+        static AndroidJavaClass GetQueryPurchasesParamsClass()
+        {
+            s_QueryPurchasesParamsClass ??= new AndroidJavaClass(k_AndroidQueryPurchasesParamsClassName);
+            return s_QueryPurchasesParamsClass;
+        }
+        static AndroidJavaObject QueryPurchasesParams(string productType)
+        {
+            using var queryProductDetailsParams = GetQueryPurchasesParamsClass().CallStatic<AndroidJavaObject>("newBuilder");
+            queryProductDetailsParams.Call<AndroidJavaObject>("setProductType", productType).Dispose();
+            return queryProductDetailsParams.Call<AndroidJavaObject>("build");
+        }
+
         readonly AndroidJavaObject m_BillingClient;
         string m_ObfuscatedAccountId;
         string m_ObfuscatedProfileId;
@@ -92,7 +121,7 @@ namespace UnityEngine.Purchasing.Models
             m_TelemetryDiagnostics = telemetryDiagnostics;
             using var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>("newBuilder", UnityActivity.GetCurrentActivity());
             builder.Call<AndroidJavaObject>("setListener", googlePurchasesUpdatedListener).Dispose();
-            builder.Call<AndroidJavaObject>("enablePendingPurchases").Dispose();
+            builder.Call<AndroidJavaObject>("enablePendingPurchases", PendingPurchasesParams()).Dispose();
             m_BillingClient = builder.Call<AndroidJavaObject>("build");
         }
 
@@ -126,10 +155,12 @@ namespace UnityEngine.Purchasing.Models
             return (GoogleBillingConnectionState)m_BillingClient.Call<int>("getConnectionState");
         }
 
-        public void QueryPurchasesAsync(string skuType, Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse)
+        public void QueryPurchasesAsync(string productType, Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse)
         {
+            var queryPurchaseParams = QueryPurchasesParams(productType);
             var listener = new GooglePurchasesResponseListener(onQueryPurchasesResponse, m_Util);
-            m_BillingClient.Call("queryPurchasesAsync", skuType, listener);
+
+            m_BillingClient.Call("queryPurchasesAsync", queryPurchaseParams, listener);
         }
 
         public void QueryProductDetailsAsync(List<string> products, string type,

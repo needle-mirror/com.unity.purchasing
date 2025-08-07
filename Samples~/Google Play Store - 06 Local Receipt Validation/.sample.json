@@ -1,0 +1,5 @@
+{
+    "displayName": "Google Play Store - 06 Local Receipt Validation",
+    "description": "This sample showcases how to do local receipt validation with the Google Play Store.",
+    "createSeparatePackage": false
+}

@@ -13,13 +13,13 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Gets the instance of the store.
         /// </summary>
-        /// <returns> The store's instance </returns>
+        /// <value> The store's instance </value>
         Store instance { get; }
 
         /// <summary>
         /// Gets the name of the store.
         /// </summary>
-        /// <returns> The store's name </returns>
+        /// <value> The store's name </value>
         string name { get; }
 
         /// <summary>

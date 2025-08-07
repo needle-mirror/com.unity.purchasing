@@ -14,8 +14,8 @@ namespace UnityEditor.Purchasing
         /// This is an internal API.
         /// We recommend that you do not use it as it will be removed in a future release.
         /// </summary>
-        /// <param name="uri"></param>
-        /// <returns></returns>
+        /// <param name="uri">uri</param>
+        /// <returns>UnityWebRequest</returns>
         [Obsolete("Internal API, it will be removed soon.")]
         UnityWebRequest BuildWebRequest(string uri);
     }

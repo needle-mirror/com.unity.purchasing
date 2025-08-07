@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Inform Unity Purchasing of a purchase.
         /// </summary>
-        /// <param name="pendingOrder"> The pending order that was made. </param>
+        /// <param name="order"> The pending order that was made. </param>
         void OnPurchaseSucceeded(PendingOrder order);
 
         /// <summary>

@@ -1,0 +1,5 @@
+{
+  "displayName": "03 Fetching Additional Products",
+  "description": "Demonstrates how to dynamically fetch and display additional in-app products using the Store Controller in Unity IAP. Includes best practices for event subscription management.",
+  "createSeparatePackage": false
+}

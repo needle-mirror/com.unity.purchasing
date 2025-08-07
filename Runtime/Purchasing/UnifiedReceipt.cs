@@ -6,13 +6,13 @@ namespace UnityEngine.Purchasing
     /// I can unpack JSON Product.receipt values.
     ///
     /// See also https://docs.unity3d.com/Manual/UnityIAPPurchaseReceipts.html
+    /// </summary>
     /// <example>
     /// <code>
     /// var unifiedReceipt = JsonUtility.FromJson&lt;UnifiedReceipt&gt;(purchEvtArg.purchasedProduct.receipt)
     /// Debug.LogFormat("{0} {1} {2}", unifiedReceipt.Payload, unifiedReceipt.Store, unifiedReceipt.TransactionID);
     /// </code>
     /// </example>
-    /// </summary>
     [Serializable]
     public class UnifiedReceipt
     {

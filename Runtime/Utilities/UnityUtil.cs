@@ -130,6 +130,6 @@ namespace UnityEngine.Purchasing.Extension
         }
 
         internal const string ObsoleteUpgradeToIAPV5Message =
-            "This API is deprecated. Please upgrade to the new APIs introduced in IAP v5. For more information, visit the IAP upgrade guide: https://docs.unity3d.com/Packages/com.unity.purchasing@latest";
+            "This API is deprecated. Please upgrade to the new APIs introduced in IAP v5. For more information, visit the IAP manual: https://docs.unity.com/ugs/en-us/manual/iap/manual/upgrade-to-iap-v5";
     }
 }

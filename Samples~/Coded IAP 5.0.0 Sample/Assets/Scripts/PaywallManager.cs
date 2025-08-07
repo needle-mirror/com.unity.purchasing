@@ -146,9 +146,9 @@ namespace Samples.Purchasing.IAP5.Demo
                 if (CanCrossPlatformValidate())
                 {
 #if !DEBUG_STOREKIT_TEST
-                    m_CrossPlatformValidator = new CrossPlatformValidator(GooglePlayTangle.Data(), AppleTangle.Data(), Application.identifier);
+                    m_CrossPlatformValidator = new CrossPlatformValidator(GooglePlayTangle.Data(), Application.identifier);
 #else
-                m_CrossPlatformValidator = new CrossPlatformValidator(GooglePlayTangle.Data(), AppleStoreKitTestTangle.Data(), Application.identifier);
+                m_CrossPlatformValidator = new CrossPlatformValidator(GooglePlayTangle.Data(), Application.identifier);
 #endif
                 }
             }

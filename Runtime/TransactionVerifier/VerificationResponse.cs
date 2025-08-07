@@ -7,6 +7,11 @@ using UnityEngine.Purchasing.TransactionVerifier.Models;
 
 namespace Purchasing.TransactionVerifier
 {
+    /// <summary>
+    /// Represents the response from a transaction verification operation.
+    /// Contains the results and metadata from verifying an in-app purchase transaction
+    /// against the appropriate app store platform (Apple App Store or Google Play Store).
+    /// </summary>
     public class VerificationResponse
     {
         Store m_Store;
@@ -63,6 +68,14 @@ namespace Purchasing.TransactionVerifier
             m_PurchaseState = transaction.PurchaseState;
         }
 
+        /// <summary>
+        /// Gets the unique identifier associated with the verified transaction.
+        /// </summary>
+        /// <returns>
+        /// For Apple App Store transactions, returns the transaction ID.
+        /// For Google Play Store transactions, returns the order ID.
+        /// Returns null if the store type is unknown or unsupported.
+        /// </returns>
         public string? GetIdentifier()
         {
             switch (m_Store)

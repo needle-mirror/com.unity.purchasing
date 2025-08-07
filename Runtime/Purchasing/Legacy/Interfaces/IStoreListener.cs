@@ -1,11 +1,12 @@
 using System;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Implemented by Application developers using Unity Purchasing.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public interface IStoreListener
     {
         /// <summary>
@@ -32,7 +33,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// A purchase succeeded.
         /// </summary>
-        /// <param name="purchaseEvent"> The <c>PurchaseEventArgs</c> for the purchase event. </param>
+        /// <param name="args"> The <c>PurchaseEventArgs</c> for the purchase event. </param>
         /// <returns> The result of the successful purchase </returns>
         public PurchaseProcessingResult ProcessPurchase(PurchaseEventArgs args);
         /// <summary>

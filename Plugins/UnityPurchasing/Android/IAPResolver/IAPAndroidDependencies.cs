@@ -10,7 +10,7 @@ namespace IAPResolver
         public override List<string> Dependencies =>
             new List<string>()
             {
-                "com.android.billingclient:billing:7.1.1"
+                "com.android.billingclient:billing:8.0.0"
             };
         public override List<string> Repositories =>
             new List<string>();

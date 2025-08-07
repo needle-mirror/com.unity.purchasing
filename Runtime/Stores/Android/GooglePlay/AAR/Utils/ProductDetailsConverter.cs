@@ -16,28 +16,72 @@ namespace UnityEngine.Purchasing.Utils
     {
         public List<ProductDescription> ConvertOnQueryProductDetailsResponse(IEnumerable<AndroidJavaObject> productDetails, IReadOnlyCollection<ProductDefinition> productDefinitions)
         {
-            var list = new List<ProductDescription>();
+            var productDescriptions = new List<ProductDescription>();
             var productTypes = new Dictionary<string, ProductType>();
+            var processedIds = new HashSet<string>();
 
             foreach (var definition in productDefinitions)
             {
-                productTypes.Add(definition.storeSpecificId, definition.type);
+                try
+                {
+                    productTypes.Add(definition.storeSpecificId, definition.type);
+                }
+                catch (ArgumentException ex) when (ex.Message.Contains("same key"))
+                {
+                    Debug.LogError($"Duplicate product definition found with store specific ID: {definition.storeSpecificId}. " +
+                        $"Only the first definition will be used.");
+                }
             }
 
             foreach (var detail in productDetails)
             {
                 try
                 {
-                    var productId = detail.Call<string>("getProductId");
-                    var productType = productTypes[productId];
-                    list.Add(ConvertToProductDescription(detail, productType));
+                    var productId = GetProductId(detail);
+                    if (string.IsNullOrEmpty(productId))
+                    {
+                        Debug.LogWarning($"Skipping product with empty or null ID from Google Play store response. Detail: {detail?.ToString() ?? "null"}");
+                        continue;
+                    }
+
+                    // Skip duplicate product IDs
+                    if (!processedIds.Add(productId))
+                    {
+                        Debug.LogError($"Duplicate product ID found in Google Play store response: {productId}. " +
+                            $"This product will be ignored to prevent dictionary key conflicts. " +
+                            $"Please ensure each product has a unique store-specific ID.");
+                        continue;
+                    }
+
+                    // Check if the product ID exists in the definitions
+                    if (productTypes.TryGetValue(productId, out var productType))
+                    {
+                        productDescriptions.Add(ConvertToProductDescription(detail, productType));
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"Product with ID {productId} found in store but not in definitions. Skipping.");
+                    }
                 }
                 catch (Exception e)
                 {
                     Debug.unityLogger.LogIAPException(e);
                 }
             }
-            return list;
+            return productDescriptions;
+        }
+
+        public string? GetProductId(AndroidJavaObject productDetails)
+        {
+            try
+            {
+                return productDetails.Call<string>("getProductId");
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to get product ID: {e.Message}");
+                return null;
+            }
         }
 
         public ProductDescription ConvertToProductDescription(AndroidJavaObject productDetails, ProductType productType)

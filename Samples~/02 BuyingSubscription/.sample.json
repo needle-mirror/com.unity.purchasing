@@ -1,0 +1,5 @@
+{
+  "displayName": "02 Buying Subscription",
+  "description": "This sample demonstrates the basics of handling subscription purchases using the entitlement system to check and manage subscription status.",
+  "createSeparatePackage": false
+}

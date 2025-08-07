@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing
         /// This requires using <typeparamref name="IGooglePlayConfiguration.SetObfuscatedAccountId"/> before the purchase is made.
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getAccountIdentifiers()">getAccountIdentifiers</a>
         /// </summary>
-        /// <returns>Returns the obfuscated account id if it exists, otherwise null is returned.</returns>
+        /// <value>Returns the obfuscated account id if it exists, otherwise null is returned.</value>
         string? ObfuscatedAccountId { get; set; }
 
         /// <summary>
@@ -21,7 +21,7 @@ namespace UnityEngine.Purchasing
         /// This requires using <typeparamref name="IGooglePlayConfiguration.SetObfuscatedProfileId"/> before the purchase is made.
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase#getAccountIdentifiers()">getAccountIdentifiers</a>
         /// </summary>
-        /// <returns>Returns the obfuscated profile id if it exists, otherwise null is returned.</returns>
+        /// <value>Returns the obfuscated profile id if it exists, otherwise null is returned.</value>
         string? ObfuscatedProfileId { get; set; }
     }
 }

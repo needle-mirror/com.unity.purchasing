@@ -1,6 +1,6 @@
 ## README - In-App Purchasing Sample Scene
 
-This sample showcases how to setup your Unity In-App Purchasing paywall.
+This sample showcases how to set up your Unity In-App Purchasing paywall.
 
 ## Instructions to test this sample:
 
@@ -16,7 +16,7 @@ Google Play Store:
 
 Apple App Store:
 1. Link your project in `Project Settings` > `Services`
-2. Have in-app purchasing correctly configured with the [Apple App Store](https://docs.unity3d.com/Packages/com.unity.purchasing@4.12/manual/UnityIAPAppleConfiguration.html)
+2. Have In-App Purchasing correctly configured with the [Apple App Store](https://docs.unity3d.com/Packages/com.unity.purchasing@4.12/manual/UnityIAPAppleConfiguration.html)
 3. [Obfuscate the key](https://docs.unity3d.com/Packages/com.unity.purchasing@4.12/manual/UnityIAPValidatingReceipts.html)
 
-###### *You can change the currently selected store under `Services > In-App Purchasing > Configure` and changing the `Current Targeted Store` field.
+For more information about the In-App Purchasing package, see the [IAP manual](https://docs.unity.com/ugs/en-us/manual/iap/manual/overview).

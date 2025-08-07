@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Initializes Unity IAP with the <typeparamref name="Product"/>s defined in the default IAP <see cref="ProductCatalog"/>.
-    /// Automatically initializes at runtime load when enabled in the GUI. <seealso cref="ProductCatalog.enableCodelessAutoInitialization"/>
+    /// Automatically initializes at runtime load when enabled in the GUI. <see cref="ProductCatalog.enableCodelessAutoInitialization"/>
     /// Manages <typeparamref name="CodelessIAPButton"/>s and <typeparamref name="IAPListener"/>s.
     /// </summary>
     public class CodelessIAPStoreListener
@@ -31,18 +31,18 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// For advanced scripted IAP actions, use this session's <typeparamref name="IStoreController"/> after initialization.
         /// </summary>
-        /// <see cref="StoreController"/>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        /// <seealso cref="StoreController"/>
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         protected IStoreController controller = new PurchasingManager();
 
         /// <summary>
         /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IExtensionProvider"/> after initialization.
         /// </summary>
-        /// <see cref="ExtensionProvider"/>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        /// <seealso cref="ExtensionProvider"/>
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         protected IExtensionProvider extensions = null!;
 
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         ConfigurationBuilder m_Builder = null!;
 
         bool m_InitializationComplete;
@@ -50,7 +50,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Allows outside sources to know whether the successful initialization has completed.
         /// </summary>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public static bool initializationComplete;
 
         [RuntimeInitializeOnLoadMethod]
@@ -69,8 +69,8 @@ namespace UnityEngine.Purchasing
         /// Note, these instances are only available after initialization through Codeless IAP, currently.
         /// </summary>
         /// <typeparam name="T">A subclass of <typeparamref name="IStoreConfiguration"/> such as <typeparamref name="IAppleConfiguration"/></typeparam>
-        /// <returns></returns>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        /// <returns>Returns the store configuration.</returns>
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public T GetStoreConfiguration<T>() where T : IStoreConfiguration
         {
             return m_Builder.Configure<T>();
@@ -80,8 +80,8 @@ namespace UnityEngine.Purchasing
         /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IStoreExtension"/>s after initialization.
         /// </summary>
         /// <typeparam name="T">A subclass of <typeparamref name="IStoreExtension"/> such as <typeparamref name="IAppleExtensions"/></typeparam>
-        /// <returns></returns>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        /// <returns>Returns the store extension.</returns>
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public T GetStoreExtensions<T>() where T : IStoreExtension
         {
             return extensions.GetExtension<T>();
@@ -534,8 +534,8 @@ namespace UnityEngine.Purchasing
         /// For advanced scripted IAP actions, use this session's <typeparamref name="IStoreController"/> after
         /// initialization.
         /// </summary>
-        /// <see cref="StoreController"/>
-        [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+        /// <seealso cref="StoreController"/>
+        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public IStoreController StoreController => controller;
 
         /// <summary>
@@ -544,7 +544,7 @@ namespace UnityEngine.Purchasing
         /// <param name="productID">Product identifier to look for in <see cref="m_Catalog"/>. Note this is not the
         /// store-specific identifier.</param>
         /// <returns>Whether this identifier exists in <see cref="m_Catalog"/></returns>
-        /// <see cref="m_Catalog"/>
+        /// <seealso cref="m_Catalog"/>
         public bool HasProductInCatalog(string productID)
         {
             foreach (var product in m_Catalog.allProducts)
@@ -581,7 +581,7 @@ namespace UnityEngine.Purchasing
         /// Register an <typeparamref name="CodelessIAPButton"/> to send IAP initialization and purchasing events.
         /// Use to making IAP functionality visible to the user.
         /// </summary>
-        /// <param name="button"></param>
+        /// <param name="button">CodelessIAPButton to register.</param>
         public void AddButton(CodelessIAPButton button)
         {
             m_ActiveCodelessButtons.Add(button);
@@ -592,7 +592,7 @@ namespace UnityEngine.Purchasing
         /// the button, e.g. when closing a scene containing that button and wanting to prevent the user from making any
         /// IAP events for its product.
         /// </summary>
-        /// <param name="button"></param>
+        /// <param name="button">CodelessIAPButton to unregister.</param>
         public void RemoveButton(CodelessIAPButton button)
         {
             m_ActiveCodelessButtons.Remove(button);
@@ -660,6 +660,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Returns the <typeparamref name="ProductCatalog"/> loaded from the project's IAP Catalog.
         /// </summary>
+        /// <returns>The <typeparamref name="ProductCatalog"/>.</returns>
         public ProductCatalog GetProductCatalog()
         {
             return m_Catalog;
@@ -668,6 +669,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Allows outside sources to know whether the successful initialization has completed.
         /// </summary>
+        /// <returns>True if the initialization has completed successfully, false otherwise.</returns>
         public bool IsInitialized()
         {
             return m_InitializationComplete;

@@ -7,6 +7,10 @@ using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
+    /// <summary>
+    /// Handles web requests for fetching In-App Purchase settings from Unity services.
+    /// This class manages the communication with Unity's IAP configuration endpoints to retrieve project-specific settings.
+    /// </summary>
     public class SettingsWebRequests
     {
         readonly Action<IapSettings> GetIAPSettingsCallback;
@@ -18,6 +22,10 @@ namespace UnityEditor.Purchasing
             var _ = GetIAPSettingsAsync();
         }
 
+        /// <summary>
+        /// Finalizer that ensures proper cleanup of web request resources.
+        /// Aborts and disposes any active web requests to prevent resource leaks.
+        /// </summary>
         ~SettingsWebRequests()
         {
             GetIAPSettingsRequest?.Abort();

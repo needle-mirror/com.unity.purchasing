@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using Purchasing.Extension;
 using Stores.Android.GooglePlay.AAR.Interfaces;
 using Uniject;
-using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Purchasing.Telemetry;
@@ -136,15 +135,15 @@ namespace UnityEngine.Purchasing
 
         IStoreWrapper InstantiateFakeStore()
         {
-            var fakeStore = CreateFakeStoreByUIMode(UseFakeStoreUIMode());
-            return new StoreWrapper(FakeAppStore.Name, fakeStore);
-        }
+            FakeStoreUIMode fakeStoreUIMode = FakeStoreUIMode.StandardUser;
+#if IAP_FAKE_STORE_DEVELOPER_USER
+                fakeStoreUIMode = FakeStoreUIMode.DeveloperUser;
+#elif IAP_FAKE_STORE_DEFAULT
+                fakeStoreUIMode = FakeStoreUIMode.Default;
+#endif
 
-        static FakeStoreUIMode UseFakeStoreUIMode()
-        {
-            // TODO: IAP-2795 - Add a way to configure this
-            // Setting to StandardUser in order to emulate the Codeless IAP standard.
-            return FakeStoreUIMode.StandardUser;
+            var fakeStore = CreateFakeStoreByUIMode(fakeStoreUIMode);
+            return new StoreWrapper(FakeAppStore.Name, fakeStore);
         }
 
         FakeStore CreateFakeStoreByUIMode(FakeStoreUIMode useFakeStoreUIMode)

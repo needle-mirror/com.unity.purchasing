@@ -4,7 +4,7 @@ using UnityEngine.Purchasing.Extension;
 namespace UnityEngine.Purchasing
 {
     /// <summary>
-    /// May be purchased as an In App Purchase.
+    /// May be purchased as an In-App Purchase.
     /// </summary>
     public class Product
     {
@@ -158,6 +158,10 @@ namespace UnityEngine.Purchasing
             return definition.GetHashCode();
         }
 
+        /// <summary>
+        /// Returns a string representation of the product.
+        /// </summary>
+        /// <returns> A string representation of the product.</returns>
         public override string ToString()
         {
             return $"Product: {definition}, {metadata}, {receipt}";

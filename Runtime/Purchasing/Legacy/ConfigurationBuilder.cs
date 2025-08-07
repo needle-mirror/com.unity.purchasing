@@ -8,15 +8,14 @@ namespace UnityEngine.Purchasing
     /// Builds configuration for Unity Purchasing,
     /// consisting of products and store specific configuration details.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public class ConfigurationBuilder
     {
         static ConfigurationBuilder instance = null;
         /// <summary>
         /// Create an instance of the configuration builder.
         /// </summary>
-        /// <param name="first"> The first purchasing module. </param>
-        /// <param name="rest"> The remaining purchasing modules, excluding the one passes as first. </param>
+        /// <param name="ignored"> No longer used parameter. </param>
         /// <returns> The instance of the configuration builder as specified. </returns>
         /// <remarks>
         /// Starting from IAP 5.0.0, this is now a singleton.
@@ -46,7 +45,6 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="id"> The id of the product. </param>
         /// <param name="type"> The type of the product. </param>
-        /// <returns> The instance of the configuration builder with the new product added. </returns>
         public void AddProduct(string id, ProductType type)
         {
             AddProduct(id, type, null);
@@ -58,7 +56,6 @@ namespace UnityEngine.Purchasing
         /// <param name="id"> The id of the product. </param>
         /// <param name="type"> The type of the product. </param>
         /// <param name="storeIDs"> The object representing store IDs the product is to be added to. </param>
-        /// <returns> The instance of the configuration builder with the new product added. </returns>
         public void AddProduct(string id, ProductType type, StoreSpecificIds storeIDs)
         {
             AddProduct(id, type, storeIDs, (IEnumerable<PayoutDefinition>)null!);
@@ -71,7 +68,6 @@ namespace UnityEngine.Purchasing
         /// <param name="type"> The type of the product. </param>
         /// <param name="storeIDs"> The object representing store IDs the product is to be added to. </param>
         /// <param name="payout"> The payout definition of the product. </param>
-        /// <returns> The instance of the configuration builder with the new product added. </returns>
         public void AddProduct(string id, ProductType type, StoreSpecificIds storeIDs, PayoutDefinition payout)
         {
             AddProduct(id, type, storeIDs, new List<PayoutDefinition> { payout });
@@ -84,7 +80,6 @@ namespace UnityEngine.Purchasing
         /// <param name="type"> The type of the product. </param>
         /// <param name="storeIDs"> The object representing store IDs the product is to be added to. </param>
         /// <param name="payouts"> The enumerator of the payout definitions of the product. </param>
-        /// <returns> The instance of the configuration builder with the new product added. </returns>
         public void AddProduct(string id, ProductType type, StoreSpecificIds storeIDs, IEnumerable<PayoutDefinition> payouts)
         {
             m_CatalogProvider.AddProduct(id, type, storeIDs, payouts);

@@ -142,7 +142,7 @@ namespace UnityEngine.Purchasing
         /// My Product.receipt must have a "Payload" JSON key containing supported native app store
         /// information, which will be converted here.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns the SubscriptionInfo</returns>
         /// <exception cref="NullProductIdException">My Product must have a non-null product identifier</exception>
         /// <exception cref="StoreSubscriptionInfoNotSupportedException">A supported app store must be used as my product</exception>
         /// <exception cref="NullReceiptException">My product must have a receipt</exception>

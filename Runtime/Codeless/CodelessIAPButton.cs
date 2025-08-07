@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     /// <seealso cref="CodelessIAPStoreListener"/>
     [AddComponentMenu("In-App Purchasing/IAP Button")]
-    [HelpURL("https://docs.unity3d.com/Packages/com.unity.purchasing@latest")]
+    [HelpURL("https://docs.unity.com/ugs/en-us/manual/iap/manual/overview")]
     public class CodelessIAPButton : MonoBehaviour
     {
         /// <summary>
@@ -67,9 +67,15 @@ namespace UnityEngine.Purchasing
         [Serializable]
         public class OnOrderDeferredEvent : UnityEvent<DeferredOrder> { }
 
+        /// <summary>
+        /// Type of event fired after a successful purchase of a product.
+        /// </summary>
         [Serializable, Obsolete]
         public class OnPurchaseCompletedLegacyEvent : UnityEvent<Product> { }
 
+        /// <summary>
+        /// Type of event fired after a failed purchase of a product.
+        /// </summary>
         [Serializable, Obsolete]
         public class OnPurchaseFailedLegacyEvent : UnityEvent<Product, PurchaseFailureDescription> { }
 
@@ -140,17 +146,26 @@ namespace UnityEngine.Purchasing
         [Tooltip("Event fired after the payment of a purchase was delayed or postponed for this product.")]
         public OnOrderDeferredEvent? onOrderDeferred;
 
+        /// <summary>
+        /// Event fired after a successful purchase of this product.
+        /// </summary>
         [Header("Obsolete Events (for backward compatibility only)")]
         [FormerlySerializedAs("onPurchaseComplete")]
         [Tooltip("Event fired after a successful purchase of this product.")]
         [Obsolete]
         public OnPurchaseCompletedLegacyEvent? onPurchaseCompleteLegacy;
 
+        /// <summary>
+        /// Event fired after a failed purchase of this product.
+        /// </summary>
         [FormerlySerializedAs("onPurchaseFailed")]
         [Tooltip("Event fired after failing to purchase an order.")]
         [Obsolete]
         public OnPurchaseFailedLegacyEvent? onPurchaseFailedLegacy;
 
+        /// <summary>
+        /// Button that triggers purchase.
+        /// </summary>
         [Tooltip("Button that triggers purchase.")]
         public Button? button;
 

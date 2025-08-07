@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
 {
+    /// <summary>
+    /// Interface for receiving callbacks when an entitlement is revoked.
+    /// </summary>
     public interface IOnEntitlementRevokedCallback
     {
         /// <summary>

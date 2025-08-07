@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -6,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// A purchase that failed including the product under purchase,
     /// the reason for the failure and any additional information.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public class PurchaseFailedEventArgs
     {
         internal PurchaseFailedEventArgs(Product purchasedProduct, PurchaseFailureReason reason, string message)

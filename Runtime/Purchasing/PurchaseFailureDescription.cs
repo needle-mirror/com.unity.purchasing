@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Parametrized Constructor.
         /// </summary>
-        /// <param name="product"> The product. </param>
+        /// <param name="item"> The cart item. </param>
         /// <param name="reason"> The reason for the purchase failure </param>
         /// <param name="message"> The message containing details about the failed purchase. </param>
         public PurchaseFailureDescription(CartItem item, PurchaseFailureReason reason, string message)
@@ -28,10 +28,10 @@ namespace UnityEngine.Purchasing
         public CartItem item { get; private set; }
 
 
-        [Obsolete("Use item.Product instead")]
         /// <summary>
         /// The product.
         /// </summary>
+        [Obsolete("Use item.Product instead")]
         public Product product => item.Product;
 
 

@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Generic;
 using System.Xml;
@@ -7,7 +8,7 @@ using UnityEngine.Purchasing.Security;
 namespace UnityEngine.Purchasing
 {
     /// <summary>
-    /// A container for a Product’s subscription-related information.
+    /// A container for a Product's subscription-related information.
     /// </summary>
     /// <seealso cref="SubscriptionInfoHelper.GetSubscriptionInfo"/>
     public class SubscriptionInfo
@@ -42,7 +43,7 @@ namespace UnityEngine.Purchasing
         /// <c>introductoryPriceLocale</c>, <c>introductoryPrice</c>, <c>introductoryPriceNumberOfPeriods</c>, <c>numberOfUnits</c>,
         /// <c>unit</c>, which can be fetched from Apple's remote service.</param>
         /// <exception cref="InvalidProductTypeException">Error found involving an invalid product type.</exception>
-        /// <see cref="CrossPlatformValidator"/>
+        /// <seealso cref="CrossPlatformValidator"/>
         public SubscriptionInfo(AppleInAppPurchaseReceipt r, string introJson)
         {
 
@@ -293,6 +294,10 @@ namespace UnityEngine.Purchasing
         /// <returns>The product identifier from the store receipt.</returns>
         public string GetProductId() { return m_ProductId; }
 
+        /// <summary>
+        /// Store specific product identifier.
+        /// </summary>
+        /// <returns>The product identifier from the store receipt.</returns>
         [Obsolete("getProductId is deprecated. Please use GetProductId instead.", false)]
         public string getProductId() { return GetProductId(); }
 
@@ -306,6 +311,14 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public DateTime GetPurchaseDate() { return m_PurchaseDate; }
 
+        /// <summary>
+        /// A date this subscription was billed.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// For Apple, the purchase date is the date when the subscription was either purchased or renewed.
+        /// For Google, the purchase date is the date when the subscription was originally purchased.
+        /// </returns>
         [Obsolete("getPurchaseDate is deprecated. Please use GetPurchaseDate instead.", false)]
         public DateTime getPurchaseDate() { return GetPurchaseDate(); }
 
@@ -327,6 +340,22 @@ namespace UnityEngine.Purchasing
         /// <seealso cref="DateTime.UtcNow"/>
         public Result IsSubscribed() { return m_IsSubscribed; }
 
+        /// <summary>
+        /// Indicates whether this auto-renewable subscription Product is currently subscribed or not.
+        /// Note the store-specific behavior.
+        /// Note also that the receipt may update and change this subscription expiration status if the user sends
+        /// their iOS app to the background and then returns it to the foreground. It is therefore recommended to remember
+        /// subscription expiration state at app-launch, and ignore the fact that a subscription may expire later during
+        /// this app launch runtime session.
+        /// </summary>
+        /// <returns>
+        /// <typeparamref name="Result.True"/> Subscription status if the store receipt's expiration date is
+        /// after the device's current time.
+        /// <typeparamref name="Result.False"/> otherwise.
+        /// Non-renewable subscriptions in the Apple store return a <typeparamref name="Result.Unsupported"/> value.
+        /// </returns>
+        /// <seealso cref="IsExpired"/>
+        /// <seealso cref="DateTime.UtcNow"/>
         [Obsolete("isSubscribed is deprecated. Please use IsSubscribed instead.", false)]
         public Result isSubscribed() { return IsSubscribed(); }
 
@@ -348,6 +377,22 @@ namespace UnityEngine.Purchasing
         /// <seealso cref="DateTime.UtcNow"/>
         public Result IsExpired() { return m_IsExpired; }
 
+        /// <summary>
+        /// Indicates whether this auto-renewable subscription Product is currently unsubscribed or not.
+        /// Note the store-specific behavior.
+        /// Note also that the receipt may update and change this subscription expiration status if the user sends
+        /// their iOS app to the background and then returns it to the foreground. It is therefore recommended to remember
+        /// subscription expiration state at app-launch, and ignore the fact that a subscription may expire later during
+        /// this app launch runtime session.
+        /// </summary>
+        /// <returns>
+        /// <typeparamref name="Result.True"/> Subscription status if the store receipt's expiration date is
+        /// before the device's current time.
+        /// <typeparamref name="Result.False"/> otherwise.
+        /// Non-renewable subscriptions in the Apple store return a <typeparamref name="Result.Unsupported"/> value.
+        /// </returns>
+        /// <seealso cref="IsSubscribed"/>
+        /// <seealso cref="DateTime.UtcNow"/>
         [Obsolete("isExpired is deprecated. Please use IsExpired instead.", false)]
         public Result isExpired() { return IsExpired(); }
 
@@ -362,6 +407,15 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public Result IsCancelled() { return m_IsCancelled; }
 
+        /// <summary>
+        /// Indicates whether this Product has been cancelled by Apple customer support or
+        /// by upgrading an auto-renewable subscription plan.
+        /// </summary>
+        /// <returns>
+        /// <typeparamref name="Result.True"/> Cancellation status if the store receipt's indicates this subscription is cancelled.
+        /// <typeparamref name="Result.False"/> otherwise.
+        /// Non-renewable subscriptions in the Apple store return a <typeparamref name="Result.Unsupported"/> value.
+        /// </returns>
         [Obsolete("isCancelled is deprecated. Please use IsCancelled instead.", false)]
         public Result isCancelled() { return IsCancelled(); }
 
@@ -377,6 +431,16 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public Result IsFreeTrial() { return m_IsFreeTrial; }
 
+        /// <summary>
+        /// Indicates whether this Product is a free trial.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// <typeparamref name="Result.True"/> This subscription is a free trial according to the store receipt.
+        /// <typeparamref name="Result.False"/> This subscription is not a free trial according to the store receipt.
+        /// Non-renewable subscriptions in the Apple store
+        /// and Google subscriptions queried on devices with version lower than 6 of the Android in-app billing API return a <typeparamref name="Result.Unsupported"/> value.
+        /// </returns>
         [Obsolete("isFreeTrial is deprecated. Please use IsFreeTrial instead.", false)]
         public Result isFreeTrial() { return IsFreeTrial(); }
 
@@ -390,6 +454,14 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public Result IsAutoRenewing() { return m_IsAutoRenewing; }
 
+        /// <summary>
+        /// Indicates whether this Product is expected to auto-renew. The product must be auto-renewable, not canceled, and not expired.
+        /// </summary>
+        /// <returns>
+        /// <typeparamref name="Result.True"/> The store receipt's indicates this subscription is auto-renewing.
+        /// <typeparamref name="Result.False"/> The store receipt's indicates this subscription is not auto-renewing.
+        /// Non-renewable subscriptions in the Apple store return a <typeparamref name="Result.Unsupported"/> value.
+        /// </returns>
         [Obsolete("isAutoRenewing is deprecated. Please use IsAutoRenewing instead.", false)]
         public Result isAutoRenewing() { return IsAutoRenewing(); }
 
@@ -406,6 +478,17 @@ namespace UnityEngine.Purchasing
         /// <seealso cref="DateTime.UtcNow"/>
         public TimeSpan GetRemainingTime() { return m_RemainedTime; }
 
+        /// <summary>
+        /// Indicates how much time remains until the next billing date.
+        /// Note the store-specific behavior.
+        /// Note also that the receipt may update and change this subscription expiration status if the user sends
+        /// their iOS app to the background and then returns it to the foreground.
+        /// </summary>
+        /// <returns>
+        /// A time duration from now until subscription billing occurs.
+        /// Google subscriptions queried on devices with version lower than 6 of the Android in-app billing API return <typeparamref name="TimeSpan.MaxValue"/>.
+        /// </returns>
+        /// <seealso cref="DateTime.UtcNow"/>
         [Obsolete("getRemainingTime is deprecated. Please use GetRemainingTime instead.", false)]
         public TimeSpan getRemainingTime() { return GetRemainingTime(); }
 
@@ -422,6 +505,17 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public Result IsIntroductoryPricePeriod() { return m_IsIntroductoryPricePeriod; }
 
+        /// <summary>
+        /// Indicates whether this Product is currently owned within an introductory price period.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// <typeparamref name="Result.True"/> The store receipt's indicates this subscription is within its introductory price period.
+        /// <typeparamref name="Result.False"/> The store receipt's indicates this subscription is not within its introductory price period.
+        /// <typeparamref name="Result.False"/> If the product is not configured to have an introductory period.
+        /// Non-renewable subscriptions in the Apple store return a <typeparamref name="Result.Unsupported"/> value.
+        /// Google subscriptions queried on devices with version lower than 6 of the Android in-app billing API return a <typeparamref name="Result.Unsupported"/> value.
+        /// </returns>
         [Obsolete("isIntroductoryPricePeriod is deprecated. Please use IsIntroductoryPricePeriod instead.", false)]
         public Result isIntroductoryPricePeriod() { return IsIntroductoryPricePeriod(); }
 
@@ -438,6 +532,17 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public TimeSpan GetIntroductoryPricePeriod() { return m_IntroductoryPricePeriod; }
 
+        /// <summary>
+        /// Indicates how much time remains for the introductory price period.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// Duration remaining in this product's introductory price period.
+        /// Subscription products with no introductory price period return <typeparamref name="TimeSpan.Zero"/>.
+        /// Products in the Apple store return <typeparamref name="TimeSpan.Zero"/> if the application does
+        /// not support iOS version 11.2+, macOS 10.13.2+, or tvOS 11.2+.
+        /// <typeparamref name="TimeSpan.Zero"/> returned also for products which do not have an introductory period configured.
+        /// </returns>
         [Obsolete("getIntroductoryPricePeriod is deprecated. Please use GetIntroductoryPricePeriod instead.", false)]
         public TimeSpan getIntroductoryPricePeriod() { return GetIntroductoryPricePeriod(); }
 
@@ -453,6 +558,16 @@ namespace UnityEngine.Purchasing
         /// <seealso cref="ProductMetadata.isoCurrencyCode"/>
         public string GetIntroductoryPrice() { return string.IsNullOrEmpty(m_IntroductoryPrice) ? "not available" : m_IntroductoryPrice; }
 
+        /// <summary>
+        /// For subscriptions with an introductory price, get this price.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// For subscriptions with a introductory price, a localized price string.
+        /// For Google store the price may not include the currency symbol (e.g. $) and the currency code is available in <typeparamref name="ProductMetadata.isoCurrencyCode"/>.
+        /// For all other product configurations, the string <c>"not available"</c>.
+        /// </returns>
+        /// <seealso cref="ProductMetadata.isoCurrencyCode"/>
         [Obsolete("getIntroductoryPrice is deprecated. Please use GetIntroductoryPrice instead.", false)]
         public string getIntroductoryPrice() { return GetIntroductoryPrice(); }
 
@@ -467,6 +582,15 @@ namespace UnityEngine.Purchasing
         /// <seealso cref="intro"/>
         public long GetIntroductoryPricePeriodCycles() { return m_IntroductoryPriceCycles; }
 
+        /// <summary>
+        /// Indicates the number of introductory price billing periods that can be applied to this subscription Product.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// Products in the Apple store return <c>0</c> if the application does not support iOS version 11.2+, macOS 10.13.2+, or tvOS 11.2+.
+        /// <c>0</c> returned also for products which do not have an introductory period configured.
+        /// </returns>
+        /// <seealso cref="intro"/>
         [Obsolete("getIntroductoryPricePeriodCycles is deprecated. Please use GetIntroductoryPricePeriodCycles instead.", false)]
         public long getIntroductoryPricePeriodCycles() { return GetIntroductoryPricePeriodCycles(); }
 
@@ -478,6 +602,12 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public DateTime GetExpireDate() { return m_SubscriptionExpireDate; }
 
+        /// <summary>
+        /// When this auto-renewable receipt expires.
+        /// </summary>
+        /// <returns>
+        /// An absolute date when this receipt will expire.
+        /// </returns>
         [Obsolete("getExpireDate is deprecated. Please use GetExpireDate instead.", false)]
         public DateTime getExpireDate() { return GetExpireDate(); }
 
@@ -491,6 +621,14 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public DateTime GetCancelDate() { return m_SubscriptionCancelDate; }
 
+        /// <summary>
+        /// When this auto-renewable receipt was canceled.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// For Apple store, the date when this receipt was canceled.
+        /// For other stores this will be <c>null</c>.
+        /// </returns>
         [Obsolete("getCancelDate is deprecated. Please use GetCancelDate instead.", false)]
         public DateTime getCancelDate() { return GetCancelDate(); }
 
@@ -504,6 +642,14 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public TimeSpan GetFreeTrialPeriod() { return m_FreeTrialPeriod; }
 
+        /// <summary>
+        /// The period duration of the free trial for this subscription, if enabled.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// For Google Play store if the product is configured with a free trial, this will be the period duration.
+        /// For Apple store this will be <c> null </c>.
+        /// </returns>
         [Obsolete("getFreeTrialPeriod is deprecated. Please use GetFreeTrialPeriod instead.", false)]
         public TimeSpan getFreeTrialPeriod() { return GetFreeTrialPeriod(); }
 
@@ -517,6 +663,14 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public TimeSpan GetSubscriptionPeriod() { return m_SubscriptionPeriod; }
 
+        /// <summary>
+        /// The duration of this subscription.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// A duration this subscription is valid for.
+        /// <typeparamref name="TimeSpan.Zero"/> returned for Apple products.
+        /// </returns>
         [Obsolete("getSubscriptionPeriod is deprecated. Please use GetSubscriptionPeriod instead.", false)]
         public TimeSpan getSubscriptionPeriod() { return GetSubscriptionPeriod(); }
 
@@ -531,6 +685,15 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public string GetFreeTrialPeriodString() { return m_FreeTrialPeriodString; }
 
+        /// <summary>
+        /// The string representation of the period in ISO8601 format this subscription is free for.
+        /// Note the store-specific behavior.
+        /// </summary>
+        /// <returns>
+        /// For Google Play store on configured subscription this will be the period which the can own this product for free, unless
+        /// the user is ineligible for this free trial.
+        /// For Apple store this will be <c> null </c>.
+        /// </returns>
         [Obsolete("getFreeTrialPeriodString is deprecated. Please use GetFreeTrialPeriodString instead.", false)]
         public string getFreeTrialPeriodString() { return GetFreeTrialPeriodString(); }
 
@@ -545,6 +708,15 @@ namespace UnityEngine.Purchasing
         /// </returns>
         public string GetSkuDetails() { return m_SKUDetails; }
 
+        /// <summary>
+        /// The raw JSON SkuDetails from the underlying Google API.
+        /// Note the store-specific behavior.
+        /// Note this is not supported.
+        /// </summary>
+        /// <returns>
+        /// For Google store the <c> SkuDetails#getOriginalJson </c> results.
+        /// For Apple this returns <c>null</c>.
+        /// </returns>
         [Obsolete("getSkuDetails is deprecated. Please use GetSkuDetails instead.", false)]
         public string getSkuDetails() { return GetSkuDetails(); }
 
@@ -569,6 +741,15 @@ namespace UnityEngine.Purchasing
             return MiniJson.JsonEncode(dict);
         }
 
+        /// <summary>
+        /// A JSON including a collection of data involving free-trial and introductory prices.
+        /// Note the store-specific behavior.
+        /// Used internally for subscription updating on Google store.
+        /// </summary>
+        /// <returns>
+        /// A JSON with keys: <c>productId</c>, <c>is_free_trial</c>, <c>is_introductory_price_period</c>, <c>remaining_time_in_seconds</c>.
+        /// </returns>
+        /// <seealso cref="SubscriptionInfoHelper.UpdateSubscription"/>
         [Obsolete("getSubscriptionInfoJsonString is deprecated. Please use GetSubscriptionInfoJsonString instead.", false)]
         public string getSubscriptionInfoJsonString() { return GetSubscriptionInfoJsonString(); }
 
@@ -690,7 +871,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Used internally to parse Apple receipts. Corresponds to Apple SKProductPeriodUnit.
     /// </summary>
-    /// <see cref="https://developer.apple.com/documentation/storekit/skproductperiodunit?language=objc"/>
+    /// <seealso cref="https://developer.apple.com/documentation/storekit/skproductperiodunit?language=objc"/>
     public enum SubscriptionPeriodUnit
     {
         /// <summary>

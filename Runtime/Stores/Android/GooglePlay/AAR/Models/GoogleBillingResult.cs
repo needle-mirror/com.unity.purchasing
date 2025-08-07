@@ -16,6 +16,7 @@ namespace UnityEngine.Purchasing.Models
             {
                 responseCode = (GoogleBillingResponseCode)billingResult.Call<int>("getResponseCode");
                 debugMessage = billingResult.Call<string>("getDebugMessage");
+                // TODO: ULO-3790: getOnPurchasesUpdatedSubResponseCode
             }
         }
     }

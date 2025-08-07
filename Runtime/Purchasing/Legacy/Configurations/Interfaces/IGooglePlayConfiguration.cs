@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Access Google Play store specific configurations.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public interface IGooglePlayConfiguration : IStoreConfiguration
     {
         /// <summary>
@@ -65,7 +65,7 @@ namespace UnityEngine.Purchasing
         ///
         /// Default is <c>true</c>.
         /// </summary>
-        /// <param name="enable"></param>
+        /// <param name="enable">Whether to enable fetching purchases at initialize.</param>
         void SetFetchPurchasesAtInitialize(bool enable);
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace UnityEngine.Purchasing
         ///
         /// Default is <c>true</c>.
         /// </summary>
-        /// <param name="exclude"></param>
+        /// <param name="exclude">Whether to exclude deferred purchases from being fetched.</param>
         void SetFetchPurchasesExcludeDeferred(bool exclude);
     }
 }

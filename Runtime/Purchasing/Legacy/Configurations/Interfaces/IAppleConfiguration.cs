@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Access Apple store specific configurations.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public interface IAppleConfiguration : IStoreConfiguration
     {
         /// <summary>
@@ -32,7 +32,7 @@ namespace UnityEngine.Purchasing
         /// inside it in order to continue the intercepted
         /// purchase(s).
         /// </summary>
-        /// <param name="callback"></param>
+        /// <param name="callback">Callback to invoke.</param>
         void SetApplePromotionalPurchaseInterceptorCallback(Action<Product> callback);
 
         /// <summary>

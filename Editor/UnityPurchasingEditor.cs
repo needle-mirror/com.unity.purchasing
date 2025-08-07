@@ -69,7 +69,7 @@ namespace UnityEditor.Purchasing
         // Notice: Multiple files per target supported. While Key must be unique, Value can be duplicated!
         static readonly Dictionary<string, AppStore> StoreSpecificFiles = new Dictionary<string, AppStore>()
         {
-            {"billing-7.1.1.aar", AppStore.GooglePlay}
+            {"billing-8.0.0.aar", AppStore.GooglePlay}
         };
 
         // Create or read BillingMode.json at Project Editor load

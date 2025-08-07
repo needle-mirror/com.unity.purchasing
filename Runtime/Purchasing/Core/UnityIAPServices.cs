@@ -1,3 +1,4 @@
+
 #nullable enable
 
 using System;
@@ -15,34 +16,40 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// A service responsible for connecting to the default store and its extensions.
         /// </summary>
+        /// <returns>The default IStoreService implementation for the current default platform.</returns>
         public static IStoreService DefaultStore() { return StoreServiceProvider.GetDefaultStoreService(); }
 
         /// <summary>
         /// A service responsible for connecting to a store and its extensions.
         /// </summary>
         /// <param name="storeName"> The name of the store for which to get the service. </param>
+        /// <returns>The IStoreService implementation for the specified store.</returns>
         public static IStoreService Store(string storeName) { return StoreServiceProvider.GetStoreService(storeName); }
 
         /// <summary>
         /// A service responsible for ordering products, fetching previous purchases from the default store and validating product entitlements.
         /// </summary>
+        /// <returns>The default IPurchaseService implementation for the current default platform.</returns>
         public static IPurchaseService DefaultPurchase() { return PurchaseServiceProvider.GetDefaultPurchaseService(); }
 
         /// <summary>
         /// A service responsible for ordering products, fetching previous purchases from the store indicated and validating product entitlements.
         /// </summary>
         /// <param name="storeName"> The name of the store for which to get the service. </param>
+        /// <returns>The IPurchaseService implementation for the specified store.</returns>
         public static IPurchaseService Purchase(string storeName) { return PurchaseServiceProvider.GetPurchaseService(storeName); }
 
         /// <summary>
         /// A service responsible for fetching and storing products available for purchase from the default store.
         /// </summary>
+        /// <returns>The default IProductService implementation for the current default platform.</returns>
         public static IProductService DefaultProduct() { return ProductServiceProvider.GetDefaultProductService(); }
 
         /// <summary>
         /// A service responsible for fetching and storing products available for purchase.
         /// </summary>
         /// <param name="storeName"> The name of the store for which to get the service. </param>
+        /// <returns>The IProductService implementation for the specified store.</returns>
         public static IProductService Product(string storeName) { return ProductServiceProvider.GetProductService(storeName); }
 
         /// <summary>
@@ -50,6 +57,7 @@ namespace UnityEngine.Purchasing
         /// This is a wrapper over the services meant to be used a single point of entry for the application.
         /// </summary>
         /// <param name="storeName">The name of the store for which to get the store controller. When null, the default store will be used.</param>
+        /// <returns>A new StoreController instance for the specified store, or the default store if storeName is null.</returns>
         public static StoreController StoreController(string? storeName = null)
         {
             return new StoreController(storeName);
@@ -77,7 +85,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Add a function for a new custom StoreService, the result of which will be retained and maintained by the API. This function assumes that all of the interface of IStoreService has been implemented from scratch.
         /// </summary>
-        /// <param name="name"> The name of the store for which the custom service is mapped. </param>
+        /// <param name="storeName"> The name of the store for which the custom service is mapped. </param>
         /// <param name="createStoreService"> A function to return an instance of the Store Service. Normally this will be called only once upon first reference and calling Store(storeName) will always return the same instance. </param>
         public static void AddNewStoreService(string storeName, Func<IStoreService> createStoreService)
         {
@@ -88,7 +96,7 @@ namespace UnityEngine.Purchasing
         /// Add a function for a new custom StoreService, the result of which will be retained and maintained by the API.
         /// This function assumes that the interface of IStoreService will be the SDK's generic once and that extension and configuration implementations will be added to the derived version of  <c>ExtensibleStoreService</c>.
         /// </summary>
-        /// <param name="name"> The name of the store for which the custom service is mapped. </param>
+        /// <param name="storeName"> The name of the store for which the custom service is mapped. </param>
         /// <param name="createStoreService"> A function to return an instance of the custom <c>ExtensibleStoreService</c>. Normally this will be called only once upon first reference and calling Store(storeName) will always return the same instance. </param>
         public static void AddNewExtendedStoreService(string storeName, Func<IStoreService, ExtensibleStoreService> createStoreService)
         {
@@ -98,7 +106,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Add a function for a new custom Product Service, the result of which will be retained and maintained by the API. This function assumes that all of the interface of IProductService has been implemented from scratch.
         /// </summary>
-        /// <param name="name"> The name of the store for which the custom service is mapped. </param>
+        /// <param name="storeName"> The name of the store for which the custom service is mapped. </param>
         /// <param name="createProductService"> A function to return an instance of the Product Service. Normally this will be called only once upon first reference and calling Store(storeName) will always return the same instance. </param>
         public static void AddNewProductService(string storeName, Func<IProductService> createProductService)
         {
@@ -109,7 +117,7 @@ namespace UnityEngine.Purchasing
         /// Add a function for a new custom Product Service, the result of which will be retained and maintained by the API.
         /// This function assumes that the interface of IProductService will be the SDK's generic once and that extension and configuration implementations will be added to the derived version of  <c>ExtensibleProductService</c>.
         /// </summary>
-        /// <param name="name"> The name of the store for which the custom service is mapped. </param>
+        /// <param name="storeName"> The name of the store for which the custom service is mapped. </param>
         /// <param name="createProductService"> A function to return an instance of the custom <c>ExtensibleProductService</c>. Normally this will be called only once upon first reference and calling Store(storeName) will always return the same instance. </param>
         public static void AddNewExtendedProductService(string storeName, Func<IProductService, ExtensibleProductService> createProductService)
         {
@@ -119,7 +127,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Add a function for a new custom Purchase Service, the result of which will be retained and maintained by the API. This function assumes that all of the interface of IPurchaseService has been implemented from scratch.
         /// </summary>
-        /// <param name="name"> The name of the store for which the custom service is mapped. </param>
+        /// <param name="storeName"> The name of the store for which the custom service is mapped. </param>
         /// <param name="createPurchaseService"> A function to return an instance of the Purchase Service. Normally this will be called only once upon first reference and calling Store(storeName) will always return the same instance. </param>
         public static void AddNewPurchaseService(string storeName, Func<IPurchaseService> createPurchaseService)
         {
@@ -130,7 +138,7 @@ namespace UnityEngine.Purchasing
         /// Add a function for a new custom Purchase Service, the result of which will be retained and maintained by the API.
         /// This function assumes that the interface of IPurchaseService will be the SDK's generic once and that extension and configuration implementations will be added to the derived version of  <c>ExtensiblePurchaseService</c>.
         /// </summary>
-        /// <param name="name"> The name of the store for which the custom service is mapped. </param>
+        /// <param name="storeName"> The name of the store for which the custom service is mapped. </param>
         /// <param name="createPurchaseService"> A function to return an instance of the custom <c>ExtensiblePurchaseService</c>. Normally this will be called only once upon first reference and calling Store(storeName) will always return the same instance. </param>
         public static void AddNewExtendedPurchaseService(string storeName, Func<IPurchaseService, ExtensiblePurchaseService> createPurchaseService)
         {

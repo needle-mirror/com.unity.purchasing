@@ -1,4 +1,5 @@
 using System;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -6,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// Module for the standard stores covered by Unity;
     /// Apple App store, Google Play and more.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public class StandardPurchasingModule
     {
         static StandardPurchasingModule instance = null;
@@ -27,6 +28,7 @@ namespace UnityEngine.Purchasing
         /// Creates an instance of StandardPurchasingModule or retrieves the existing one.
         /// For backwards compatibility only. Returns same results as calling `Instance()`.
         /// </summary>
+        /// <param name="androidStore">The Android store type. This parameter is ignored and maintained only for backwards compatibility.</param>
         /// <returns> The existing instance or the one just created. </returns>
         public static StandardPurchasingModule Instance(AppStore androidStore)
         {
@@ -45,7 +47,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool useFakeStoreAlways { get; set; }
 
-        internal readonly string k_Version = "5.0.0-pre.6"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "5.0.0"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>

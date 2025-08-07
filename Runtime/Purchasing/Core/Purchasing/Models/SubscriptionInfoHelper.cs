@@ -83,7 +83,7 @@ namespace UnityEngine.Purchasing
         /// My Product.receipt must have a "Payload" JSON key containing supported native app store
         /// information, which will be converted here.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Returns the SubscriptionInfo</returns>
         /// <exception cref="NullProductIdException">My Product must have a non-null product identifier</exception>
         /// <exception cref="StoreSubscriptionInfoNotSupportedException">A supported app store must be used as my product</exception>
         /// <exception cref="NullReceiptException">My product must have a receipt</exception>
@@ -286,6 +286,11 @@ namespace UnityEngine.Purchasing
         /// <param name="message">Description of error</param>
         public ReceiptParserException(string message) : base(message) { }
 
+        /// <summary>
+        /// Initializes a new instance of the ReceiptParserException class with serialized data.
+        /// </summary>
+        /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The StreamingContext that contains contextual information about the source or destination.</param>
         protected ReceiptParserException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
@@ -306,6 +311,11 @@ namespace UnityEngine.Purchasing
         /// <param name="message">Description of error</param>
         public InvalidProductTypeException(string message) : base(message) { }
 
+        /// <summary>
+        /// Initializes a new instance of the InvalidProductTypeException class with serialized data.
+        /// </summary>
+        /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The StreamingContext that contains contextual information about the source or destination.</param>
         protected InvalidProductTypeException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
@@ -326,6 +336,11 @@ namespace UnityEngine.Purchasing
         /// <param name="message">Description of error</param>
         public NullProductIdException(string message) : base(message) { }
 
+        /// <summary>
+        /// Initializes a new instance of the NullProductIdException class with serialized data.
+        /// </summary>
+        /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The StreamingContext that contains contextual information about the source or destination.</param>
         protected NullProductIdException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
@@ -346,6 +361,11 @@ namespace UnityEngine.Purchasing
         /// <param name="message">Description of error</param>
         public NullReceiptException(string message) : base(message) { }
 
+        /// <summary>
+        /// Initializes a new instance of the NullReceiptException class with serialized data.
+        /// </summary>
+        /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown.</param>
+        /// <param name="context">The StreamingContext that contains contextual information about the source or destination.</param>
         protected NullReceiptException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 

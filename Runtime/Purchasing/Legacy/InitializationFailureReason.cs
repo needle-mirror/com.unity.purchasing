@@ -1,15 +1,16 @@
 using System;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Reasons for which purchasing initialization could fail.
     /// </summary>
-    [Obsolete("Please upgrade to the new APIs available. For more info visit `Upgrading to IAP v5` in the IAP documentation. https://docs.unity3d.com/Packages/com.unity.purchasing@latest", false)]
+    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     public enum InitializationFailureReason
     {
         /// <summary>
-        /// In App Purchases disabled in device settings.
+        /// In-App Purchases disabled in device settings.
         /// </summary>
         PurchasingUnavailable,
 

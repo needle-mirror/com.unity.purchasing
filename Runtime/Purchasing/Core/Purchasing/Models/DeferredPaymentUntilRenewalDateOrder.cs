@@ -16,6 +16,11 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public Product SubscriptionOrdered { get; }
 
+        /// <summary>
+        /// Creates a new instance of <see cref="DeferredPaymentUntilRenewalDateOrder"/>.
+        /// </summary>
+        /// <param name="currentOrder">The current order containing the subscription owned by the player.</param>
+        /// <param name="subscriptionOrdered">The subscription that the player has ordered to be deferred until the renewal date.</param>
         public DeferredPaymentUntilRenewalDateOrder(Order currentOrder, Product subscriptionOrdered)
         {
             CurrentOrder = currentOrder;

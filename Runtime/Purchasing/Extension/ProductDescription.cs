@@ -2,7 +2,7 @@ namespace UnityEngine.Purchasing.Extension
 {
     /// <summary>
     /// A common format for store subsystems to use to
-    /// describe available In App Purchases to UnityPurchasing,
+    /// describe available In-App Purchases to UnityPurchasing,
     /// including purchase state via Receipt and Transaction
     /// Identifiers.
     /// </summary>
@@ -85,6 +85,10 @@ namespace UnityEngine.Purchasing.Extension
         /// </summary>
         public string transactionId { get; set; }
 
+        /// <summary>
+        /// Returns a string representation of the ProductDescription.
+        /// </summary>
+        /// <returns>A string representation of the ProductDescription.</returns>
         public override string ToString()
         {
             return $"ProductDescription: {storeSpecificId}, {type}, {receipt}, {transactionId}, {metadata} \n --------------------------";
