@@ -119,12 +119,12 @@ namespace UnityEngine.Purchasing
         {
             di.AddService<AppleFetchProductsService>();
             di.AddService<MetricizedAppleStoreImpl>();
-            di.AddInstance(BuildTransactionLog(di));
+            di.AddInstance(BuildTransactionLog());
         }
 
-        static ITransactionLog BuildTransactionLog(IDependencyInjectionService di)
+        static ITransactionLog BuildTransactionLog()
         {
-            return new TransactionLog(di.GetInstance<ILogger>(), Application.persistentDataPath);
+            return new TransactionLog(Application.persistentDataPath);
         }
 
         void CreateAndAssignNativeAppleStore(AppleStoreImpl store)

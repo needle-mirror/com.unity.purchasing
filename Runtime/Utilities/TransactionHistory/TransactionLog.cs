@@ -12,12 +12,10 @@ namespace UnityEngine.Purchasing
     /// </summary>
     class TransactionLog : ITransactionLog
     {
-        readonly ILogger m_Logger;
         readonly string? m_PersistentDataPath;
 
-        public TransactionLog(ILogger logger, string persistentDataPath)
+        public TransactionLog(string persistentDataPath)
         {
-            m_Logger = logger;
             if (!string.IsNullOrEmpty(persistentDataPath))
             {
                 m_PersistentDataPath = Path.Combine(Path.Combine(persistentDataPath, "Unity"), "UnityPurchasing");
@@ -59,12 +57,12 @@ namespace UnityEngine.Purchasing
             {
                 // A wide variety of exceptions can occur, for all of which
                 // nothing is the best course of action.
-                m_Logger.LogException(recordPathException);
+                Debug.unityLogger.LogException(recordPathException);
             }
 
         }
 
-        string GetRecordPath(string dataPath, string transactionID)
+        static string GetRecordPath(string dataPath, string transactionID)
         {
             return Path.Combine(dataPath, ComputeHash(transactionID));
         }

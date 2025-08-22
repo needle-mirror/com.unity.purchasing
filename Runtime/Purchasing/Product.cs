@@ -83,7 +83,7 @@ namespace UnityEngine.Purchasing
         /// Once a consumable has been acknowledged (ConfirmPendingPurchase) the `receipt` is removed.
         /// </summary>
         [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
-        public bool hasReceipt => !string.IsNullOrEmpty(receipt);
+        public bool hasReceipt => !string.IsNullOrEmpty(transactionID) && !string.IsNullOrEmpty(receipt);
 
         /// <summary>
         /// The purchase receipt for this product, if owned.
@@ -104,6 +104,10 @@ namespace UnityEngine.Purchasing
             var defaultStore = DefaultStoreHelper.GetDefaultBuiltInAppStore();
             if (defaultStore == AppStore.AppleAppStore || defaultStore == AppStore.MacAppStore)
             {
+                if (transactionID == null)
+                {
+                    return null;
+                }
                 var curReceipt = UnityIAPServices.DefaultPurchase().Apple?.appReceipt;
                 return CreateUnifiedReceipt(curReceipt, transactionID, defaultStore == AppStore.AppleAppStore ? AppleAppStore.Name : MacAppStore.Name);
             }

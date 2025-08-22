@@ -15,16 +15,16 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Added\n- Samples - Added updated samples:\n  - Added `01 Buying Consumables`\n  - Added `02 Buying Subscriptions`\n  - Added `03 Fetching Additional Products`\n  - Added `04 Integrating Self-Provided Backend Receipt Validation`\n  - Added `06 Initialize Unity Gaming Services`\n  - Added `07 Catalog Provider`\n  - Added `Apple App Store - 01 Refreshing App Receipts`\n  - Added `Apple App Store - 02 Handling Deferred Purchases`\n  - Added `Apple App Store - 03 Retrieving Product Receipt`\n  - Added `Apple App Store - 04 Fraud Detection`\n  - Added `Apple App Store - 05 Getting Introductory Subscription Prices`\n  - Added `Google Play Store - 05 Fraud Detection`\n  - Added `Google Play Store - 06 Local Receipt Validation`\n\n### Fixed\n- Apple - Purchase restoration fix - product ID field was incorrectly populated with transaction ID\n- Google Play - Added handling for duplicate product IDs in store responses by skipping duplicates and logging warnings instead of failing with dictionary key error.\n- Google Play - Fixed ProGuard minification issue preventing IAP from working in release builds\n\n### Changed\n- GooglePlay - Billing Library updated to 8.0.0 (was previously 7.1.1). No new feature support was added.\n- Improved transaction fetching performance through parallel processing optimization"
+    "changelog": "### Changed\n- Updated `com.unity.services.core` dependency to 1.14.0\n\n### Fixed\n- Coded IAP backwards compatibility fixes:\n  - `ProcessPurchase` will be invoked for restored purchases on their first encounter. This brings back the behaviour from IAP 4.13.0.\n  - Apple - Fixed `Product.hasReceipt` and `Product.receipt` falsely returning a receipt for products that were not purchased."
   },
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.modules.jsonserialize": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
-    "com.unity.services.core": "1.12.5"
+    "com.unity.services.core": "1.14.0"
   },
   "keywords": [
     "purchasing",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.0.0"
+    "com.unity.purchasing.tests": "5.0.1"
   },
   "upmCi": {
-    "footprint": "7cf64c50ac39e9d5faf67c1b4ec5b10d4eb106f9"
+    "footprint": "6bf4b9f88459c735793c1ea69a31b2b9059cd139"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.0/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "84fc47b8a23939c6a12ff6c22e7252b84552051a"
+    "revision": "4fc0a84d51bc571dde90b12d948ab9a5e5b8f2b3"
   },
   "samples": [
     {

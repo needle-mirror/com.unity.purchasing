@@ -58,31 +58,39 @@ namespace UnityEngine.Purchasing
 
         void HandleFinishTransaction(ProductDefinition? product, IGoogleBillingResult billingResult, IGooglePurchase purchase)
         {
-            if (!m_ProcessedPurchaseToken.Contains(purchase.purchaseToken))
+            // Only process if token has not been seen before
+            if (m_ProcessedPurchaseToken.Contains(purchase.purchaseToken))
             {
-                if (billingResult.responseCode == GoogleBillingResponseCode.Ok)
-                {
-                    m_RetryCount = 0;
-                    m_ProcessedPurchaseToken.Add(purchase.purchaseToken);
-                    CallPurchaseSucceededUpdateReceipt(purchase);
-                }
-                else if (m_RetryCount <= k_MaxRetryAttempts && IsResponseCodeInRecoverableState(billingResult))
-                {
-                    ++m_RetryCount;
-                    FinishTransaction(product, purchase.purchaseToken);
-                }
-                else
-                {
-                    SendTransactionFailedCallback(
-                        new PurchaseFailureDescription(
-                            m_ProductCache?.FindOrDefault(product?.storeSpecificId) ??
-                                Product.CreateUnknownProduct(product?.storeSpecificId),
-                            PurchaseFailureReason.Unknown,
-                            billingResult.debugMessage + " {code: " + billingResult.responseCode + ", M: GPSFTS.HFT}"
-                        ), purchase.purchaseToken
-                    );
-                }
+                return;
             }
+
+            // Success path: Transaction completed successfully by Google Play
+            if (billingResult.responseCode == GoogleBillingResponseCode.Ok)
+            {
+                m_RetryCount = 0;
+                m_ProcessedPurchaseToken.Add(purchase.purchaseToken);
+                CallPurchaseSucceededUpdateReceipt(purchase);
+                return;
+            }
+
+            // Retry path: Recoverable error occurred, attempt retry if within limits
+            if (m_RetryCount <= k_MaxRetryAttempts && IsResponseCodeInRecoverableState(billingResult))
+            {
+                ++m_RetryCount;
+                FinishTransaction(product, purchase.purchaseToken);
+                return;
+            }
+
+            // Fallback error path: All other cases are treated as failures
+            // This includes: non-recoverable errors, exhausted retry attempts, or unexpected response codes
+            SendTransactionFailedCallback(
+                new PurchaseFailureDescription(
+                    m_ProductCache?.FindOrDefault(product?.storeSpecificId) ??
+                    Product.CreateUnknownProduct(product?.storeSpecificId),
+                    PurchaseFailureReason.Unknown,
+                    billingResult.debugMessage + " {code: " + billingResult.responseCode + ", M: GPSFTS.HFT}"
+                ), purchase.purchaseToken
+            );
         }
 
         void SendTransactionFailedCallback(PurchaseFailureDescription purchaseFailureDescription, string? purchaseToken)

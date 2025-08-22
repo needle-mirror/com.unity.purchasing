@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.0.1] - 2025-08-22
+### Changed
+- Updated `com.unity.services.core` dependency to 1.14.0
+
+### Fixed
+- Coded IAP backwards compatibility fixes:
+  - `ProcessPurchase` will be invoked for restored purchases on their first encounter. This brings back the behaviour from IAP 4.13.0.
+  - Apple - Fixed `Product.hasReceipt` and `Product.receipt` falsely returning a receipt for products that were not purchased.
+
 ## [5.0.0] - 2025-08-07
 ### Added
 - Samples - Added updated samples:

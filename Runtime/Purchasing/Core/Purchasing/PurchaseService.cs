@@ -271,13 +271,11 @@ namespace UnityEngine.Purchasing
                 Debug.unityLogger.LogIAPWarning("IPurchaseService.ConfirmPurchase called without a callback defined for IPurchaseService.OnPurchaseConfirmed.");
             }
 #endif
-
-            if (!IsStoreConnected())
+            var validationError = ConfirmPurchaseValidations(order);
+            if (validationError != null)
             {
-                OnConfirmFailed(new FailedOrder(
-                    order,
-                    PurchaseFailureReason.StoreNotConnected,
-                    "Unable to confirm purchase - store is not connected. Please check your internet connection and try again."));
+                OnConfirmFailed(validationError);
+                return;
             }
 
             try
@@ -312,6 +310,46 @@ namespace UnityEngine.Purchasing
                     PurchaseFailureReason.Unknown,
                     e.Message));
             }
+        }
+
+        FailedOrder? ConfirmPurchaseValidations(PendingOrder order)
+        {
+            if (order == null)
+            {
+                return new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
+                    "Attempting to confirm a null order.");
+            }
+
+            if (order.Info == null)
+            {
+                return new FailedOrder(order, PurchaseFailureReason.Unknown, "Order info is null");
+            }
+
+            if (string.IsNullOrEmpty(order.Info.TransactionID))
+            {
+                return new FailedOrder(order, PurchaseFailureReason.Unknown, "Transaction ID is null or empty");
+            }
+
+            if (!IsStoreConnected())
+            {
+                return new FailedOrder(
+                    order,
+                    PurchaseFailureReason.StoreNotConnected,
+                    "Unable to confirm purchase - store is not connected. Please check your internet connection and try again.");
+            }
+
+            // Check if the pending order still exists in our purchases collection as ConfirmedOrder
+            var existingConfirmedOrder = m_Purchases.OfType<ConfirmedOrder>()
+                .FirstOrDefault(p => p.Info.TransactionID == order.Info.TransactionID);
+
+            if (existingConfirmedOrder != null)
+            {
+                return new FailedOrder(
+                    order,
+                    PurchaseFailureReason.ExistingPurchasePending,
+                    "Order has already been processed or was not found in pending purchases");
+            }
+            return null; // No validation errors
         }
 
         void OnConfirmSucceeded(PendingOrder pendingOrder, ConfirmedOrder confirmedOrder)

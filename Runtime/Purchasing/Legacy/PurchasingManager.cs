@@ -11,6 +11,13 @@ namespace UnityEngine.Purchasing
     [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
     class PurchasingManager : IStoreController
     {
+        /// <summary>
+        /// Stores may opt to disable Unity IAP's transaction log.
+        /// </summary>
+        public bool useTransactionLog { get; set; }
+
+        readonly ITransactionLog m_TransactionLog = new TransactionLog(Application.persistentDataPath);
+
         StoreController m_StoreController = new();
         public PurchasingManager()
         {
@@ -24,6 +31,7 @@ namespace UnityEngine.Purchasing
             {
                 UnityIAPServices.DefaultPurchase().Apple?.SetRefreshAppReceipt(true);
             }
+            useTransactionLog = true;
         }
 
         public ProductCollection products { get; } = new();
@@ -69,7 +77,7 @@ namespace UnityEngine.Purchasing
                     localProduct.appleOriginalTransactionID = pendingOrder.Info.Apple?.OriginalTransactionID;
                 }
 
-                InvokeProcessPurchase(product);
+                InvokeProcessPurchase(product, pendingOrder);
             }
         }
 
@@ -114,8 +122,6 @@ namespace UnityEngine.Purchasing
                         localProduct.transactionID = order.Info.TransactionID;
                         localProduct.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
                     }
-
-                    InvokeProcessPurchase(product);
                 }
             }
 
@@ -134,16 +140,30 @@ namespace UnityEngine.Purchasing
                         localProduct.transactionID = order.Info.TransactionID;
                         localProduct.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
                     }
+
+                    InvokeProcessPurchase(product, order);
                 }
             }
         }
 
-        void InvokeProcessPurchase(Product product)
+        void InvokeProcessPurchase(Product product, Order order)
         {
+            if (order is ConfirmedOrder && HasRecordedTransaction(product.transactionID))
+            {
+                return;
+            }
+
             var processPurchaseResult = UnityPurchasing.m_StoreListener?.ProcessPurchase(new PurchaseEventArgs(product));
             if (processPurchaseResult == PurchaseProcessingResult.Complete)
             {
-                ConfirmPendingPurchase(product);
+                if (order is PendingOrder)
+                {
+                    ConfirmPendingPurchase(product);
+                }
+                else if (useTransactionLog)
+                {
+                    m_TransactionLog.Record(product.transactionID);
+                }
             }
         }
 
@@ -187,6 +207,11 @@ namespace UnityEngine.Purchasing
         public void ConfirmPendingPurchase(Product product)
         {
             m_StoreController.ConfirmPurchase(CreatePendingOrderFromProduct(product));
+
+            if (useTransactionLog)
+            {
+                m_TransactionLog.Record(product.transactionID);
+            }
         }
 
         static PendingOrder CreatePendingOrderFromProduct(Product product)
@@ -206,6 +231,11 @@ namespace UnityEngine.Purchasing
             var cartItemNew = new CartItem(product);
             var cartNew = new Cart(cartItemNew);
             return new PendingOrder(cartNew, new OrderInfo(string.Empty, string.Empty, string.Empty));
+        }
+
+        bool HasRecordedTransaction(string transactionId)
+        {
+            return useTransactionLog && m_TransactionLog.HasRecordOf(transactionId);
         }
     }
 }
