@@ -16,7 +16,7 @@ namespace UnityEngine.Purchasing
     {
         private static CodelessIAPStoreListener instance;
 
-        //disable Warning CS0618  IAPButton is deprecated, please use CodelessIAPButton instead.
+//disable Warning CS0618  IAPButton is deprecated, please use CodelessIAPButton instead.
 #pragma warning disable 0618
         private readonly List<IAPButton> activeButtons = new List<IAPButton>();
         private readonly List<CodelessIAPButton> activeCodelessButtons = new List<CodelessIAPButton>();

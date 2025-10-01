@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing.Security
     ///
     /// This class will validate the Apple receipt is signed with the correct certificate.
     /// </summary>
-    public class AppleValidator
+	public class AppleValidator
     {
         /// <summary>
         /// THIS IS A STUB, WILL NOT EXECUTE CODE!
@@ -17,7 +17,7 @@ namespace UnityEngine.Purchasing.Security
         /// Constructs an instance with Apple Certificate.
         /// </summary>
         /// <param name="appleRootCertificate">The apple certificate.</param>
-        public AppleValidator(byte[] appleRootCertificate)
+		public AppleValidator(byte[] appleRootCertificate)
         {
             throw new NotImplementedException();
         }
@@ -30,7 +30,7 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="receiptData">The Apple receipt to validate.</param>
         /// <returns>The parsed AppleReceipt</returns>
         /// <exception cref="InvalidSignatureException">The exception thrown if the receipt is incorrectly signed.</exception>
-        public AppleReceipt Validate(byte[] receiptData)
+		public AppleReceipt Validate(byte[] receiptData)
         {
             throw new NotImplementedException();
         }
@@ -41,7 +41,7 @@ namespace UnityEngine.Purchasing.Security
     ///
     /// This class with parse the Apple receipt data received in byte[] into a AppleReceipt object
     /// </summary>
-    public class AppleReceiptParser
+	public class AppleReceiptParser
     {
         /// <summary>
         /// THIS IS A STUB, WILL NOT EXECUTE CODE!
@@ -50,7 +50,7 @@ namespace UnityEngine.Purchasing.Security
         /// </summary>
         /// <param name="receiptData">Apple receipt data</param>
         /// <returns>The converted AppleReceipt object from the Apple receipt data</returns>
-        public AppleReceipt Parse(byte[] receiptData)
+		public AppleReceipt Parse(byte[] receiptData)
         {
             throw new NotImplementedException();
         }

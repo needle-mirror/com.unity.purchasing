@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
     /// Is used by most public IStore implementations which themselves are owned by the purchasing
     /// core.
     /// </summary>
-    public interface INativeStore
+	public interface INativeStore
     {
         /// <summary>
         /// Call the Store to retrieve the store products. The `IStoreCallback` will be call with the retrieved products.

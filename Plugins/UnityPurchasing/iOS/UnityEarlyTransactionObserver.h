@@ -2,14 +2,13 @@
 #import <StoreKit/StoreKit.h>
 #import "LifeCycleListener.h"
 
-@protocol UnityEarlyTransactionObserverDelegate<NSObject>
+@protocol UnityEarlyTransactionObserverDelegate <NSObject>
 
 - (void)promotionalPurchaseAttempted:(SKPayment *)payment;
 
 @end
 
-@interface UnityEarlyTransactionObserver : NSObject<SKPaymentTransactionObserver, LifeCycleListener>
-{
+@interface UnityEarlyTransactionObserver : NSObject<SKPaymentTransactionObserver, LifeCycleListener> {
     NSMutableSet *m_QueuedPayments;
 }
 

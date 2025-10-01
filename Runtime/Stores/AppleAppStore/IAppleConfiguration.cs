@@ -41,3 +41,4 @@ namespace UnityEngine.Purchasing
         void SetEntitlementsRevokedListener(Action<List<Product>> callback);
     }
 }
+

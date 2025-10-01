@@ -18,3 +18,4 @@ namespace UnityEngine.Purchasing.Default
         }
     }
 }
+

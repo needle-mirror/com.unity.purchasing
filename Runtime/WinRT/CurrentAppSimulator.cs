@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -11,11 +11,9 @@ namespace UnityEngine.Purchasing.Default
 {
     class UnibillCurrentAppSimulator : ICurrentApp
     {
-        public void BuildMockProducts(List<WinProductDescription> winProducts)
-        {
+        public void BuildMockProducts(List<WinProductDescription> winProducts) {
             StorageFolder myfolder = ApplicationData.Current.LocalFolder;
-            if (!Exists("WindowsStoreProxy.xml"))
-            {
+            if (!Exists("WindowsStoreProxy.xml")) {
                 myfolder.CreateFileAsync("WindowsStoreProxy.xml").AsTask().Wait();
             }
             var file = myfolder.GetFileAsync("WindowsStoreProxy.xml").AsTask().Result;
@@ -26,26 +24,21 @@ namespace UnityEngine.Purchasing.Default
             task.Wait();
         }
 
-        private bool Exists(string fileName)
-        {
-            try
-            {
+        private bool Exists(string fileName) {
+            try {
                 var task = ApplicationData.Current.LocalFolder.GetFileAsync(fileName).AsTask();
                 task.Wait();
-                if (task.Exception == null)
-                {
+                if (task.Exception == null) {
                     return true;
                 }
             }
-            catch
-            {
+            catch {
                 // Filenotfound
             }
             return false;
         }
 
-        private XDocument BuildDoc(List<WinProductDescription> winProducts)
-        {
+        private XDocument BuildDoc(List<WinProductDescription> winProducts) {
             XNamespace xml = "xml";
             XElement CurrentApp =
                     new XElement("CurrentApp",
@@ -101,16 +94,14 @@ namespace UnityEngine.Purchasing.Default
 
         public IAsyncOperation<PurchaseResults> RequestProductPurchaseAsync(string productId)
         {
-            return CurrentAppSimulator.RequestProductPurchaseAsync(productId);
+            return  CurrentAppSimulator.RequestProductPurchaseAsync(productId);
         }
 
-        public IAsyncOperation<string> RequestProductReceiptAsync(string productId)
-        {
+        public IAsyncOperation<string> RequestProductReceiptAsync(string productId) {
             return CurrentAppSimulator.GetProductReceiptAsync(productId);
         }
 
-        public LicenseInformation LicenseInformation
-        {
+        public LicenseInformation LicenseInformation {
             get
             {
                 return CurrentAppSimulator.LicenseInformation;
@@ -118,8 +109,7 @@ namespace UnityEngine.Purchasing.Default
         }
 
 
-        public IAsyncOperation<string> RequestAppReceiptAsync()
-        {
+        public IAsyncOperation<string> RequestAppReceiptAsync() {
             return CurrentAppSimulator.GetAppReceiptAsync();
         }
     }

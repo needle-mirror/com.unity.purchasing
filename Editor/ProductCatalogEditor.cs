@@ -56,37 +56,37 @@ namespace UnityEditor.Purchasing
 
         #region UDP Related Fields
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static bool kValidLogin = true; // User needs to login to Unity first.
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static bool kValidConfig = true; // User needs to have clientID for the game.
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static readonly Queue<ReqStruct> requestQueue = new Queue<ReqStruct>();
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static bool kIsPreparing = true;
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static TokenInfo kTokenInfo = new TokenInfo();
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static string kOrgId;
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static object kAppStoreSettings; //UDP AppStoreSettings via Reflection
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static readonly IDictionary<string, IapItem> kIapItems = new Dictionary<string, IapItem>();
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static string kUdpErrorMsg = "";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static bool udpOfflineMode;
 
         #endregion
@@ -175,7 +175,7 @@ namespace UnityEditor.Purchasing
             SetupUdpOnEnable();
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         void SetupUdpOnEnable()
         {
             if (s_udpAvailable && IsUdpInstalled())
@@ -190,7 +190,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         private static bool IsUdpInstalled()
         {
             return UnityPurchasingEditor.IsUdpUpmPackageInstalled() || UnityPurchasingEditor.IsUdpAssetStorePackageInstalled();
@@ -500,7 +500,7 @@ namespace UnityEditor.Purchasing
 
         #region UDP Related Functions
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         // This method is used in Update() to check the UnityWebRequest each frame
         private void CheckApiUpdate()
         {
@@ -516,7 +516,7 @@ namespace UnityEditor.Purchasing
             {
                 var downloadedRawJson = request.downloadHandler.text;
 
-                if (!CheckAndHandleNetworkErrors(reqStruct, downloadedRawJson))
+                if(!CheckAndHandleNetworkErrors(reqStruct, downloadedRawJson))
                 {
                     var resp = reqStruct.resp;
                     if (resp.GetType() == typeof(TokenInfo))
@@ -634,7 +634,7 @@ namespace UnityEditor.Purchasing
             return request.responseCode == 410 || request.result == UnityWebRequest.Result.ConnectionError;
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         void TryParseErrorAsJson(string downloadedRawJson, long responseCode)
         {
             try
@@ -650,7 +650,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         /// <summary>
         /// Get userId, orgId of the developer. Make prepare for syncing
         /// </summary>
@@ -688,7 +688,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        [Obsolete("API to be removed with UDP deprecation.")]
+        [Obsolete ("API to be removed with UDP deprecation.")]
         /// <summary>
         /// Gets the authenticate code of a web response.
         /// </summary>
@@ -740,20 +740,20 @@ namespace UnityEditor.Purchasing
             private bool googleVisible = false;
             private bool appleVisible = false;
 
-            [Obsolete("Internal API to be removed with UDP deprecation.")]
+            [Obsolete ("Internal API to be removed with UDP deprecation.")]
             private bool udpVisible = false;
 
             private bool idDuplicate = false;
             private bool idInvalid = false;
             private bool shouldBeMarked = true;
 
-            [Obsolete("API to be removed with UDP deprecation.")]
+            [Obsolete ("API to be removed with UDP deprecation.")]
             /// <summary>
             /// Whether or not this item is syncing a UDP item.
             /// </summary>
             public Boolean udpItemSyncing = false;
 
-            [Obsolete("API to be removed with UDP deprecation.")]
+            [Obsolete ("API to be removed with UDP deprecation.")]
             /// <summary>
             /// The Error message of the UDP sync, if applicable.
             /// </summary>
@@ -976,7 +976,7 @@ namespace UnityEditor.Purchasing
                 EditorGUILayout.EndVertical();
             }
 
-            [Obsolete("Internal API to be removed with UDP deprecation.")]
+            [Obsolete ("Internal API to be removed with UDP deprecation.")]
             void OnUdpGui(GUIStyle style)
             {
                 if (s_udpAvailable && IsUdpInstalled())
@@ -1040,7 +1040,7 @@ namespace UnityEditor.Purchasing
                 }
             }
 
-            [Obsolete("Internal API to be removed with UDP deprecation.")]
+            [Obsolete ("Internal API to be removed with UDP deprecation.")]
             void OnSyncToUdpGui()
             {
                 if (!udpOfflineMode)

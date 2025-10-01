@@ -1,4 +1,4 @@
-# Purchase Receipts
+﻿# Purchase Receipts
 
 Unity IAP provides purchase receipts as a JSON hash containing the following keys and values:
 

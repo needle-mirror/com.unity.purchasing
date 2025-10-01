@@ -1,4 +1,8 @@
 # Changelog
+## [4.13.1] - 2025-10-01
+### Changed
+- Package auto-bumped via PETS for editor manifest distribution
+
 ## [4.13.0] - 2025-07-07
 ### Changed
 - GooglePlay - Billing Library updated to 7.1.1 (was previously 6.2.1). No new feature support was added.
@@ -78,12 +82,12 @@
 - GooglePlay - Fixed bug causing BillingClient duplication resulting in ANR.
 - Apple - Fixed isFamilyShareable on tvOS to be only available on supported versions (14.0 and above).
 - Apple - Error codes when a purchase fails now always returns the code from Apple instead of defaulting to `SKErrorUnknown`.
-- Fixed Analytics' transactionServer being null.
+- Fixed Analytics' transactionServer being null. 
 
 ## [4.10.0] - 2023-09-07
 ### Changed
-- Unity Distribution Portal - IAP will retract support for UDP at some point in the near future (Announcement TBD). Until then, all UDP features will continue to function, but the public interfaces, as well as some private functions are now marked `[Obsolete]`. In the next major update these will all be removed and UDP will cease to function with that version of In-App Purchasing and those that follow.
-- Unity Distribution Portal - If the editor is unable to connect to the UDP backend, the developer can now use some UDP catalog features in offline mode. This allows the developer to continue to enter prices, meaning that prices will need to be synced manually. In this case, we strongly suggest you sync your prices properly once connection is re-established. A warning message will display in the Catalog if the editor is unable to connect to the UDP backend.
+- Unity Distribution Portal - IAP will retract support for UDP at some point in the near future (Announcement TBD). Until then, all UDP features will continue to function, but the public interfaces, as well as some private functions are now marked `[Obsolete]`. In the next major update these will all be removed and UDP will cease to function with that version of In-App Purchasing and those that follow. 
+- Unity Distribution Portal - If the editor is unable to connect to the UDP backend, the developer can now use some UDP catalog features in offline mode. This allows the developer to continue to enter prices, meaning that prices will need to be synced manually. In this case, we strongly suggest you sync your prices properly once connection is re-established. A warning message will display in the Catalog if the editor is unable to connect to the UDP backend. 
 - Analytics - The Legacy Analytics built-in module, com.unity.modules.unityanalytics, is now no longer a dependency. You may now remove it from your project if you don't use it. Make sure it is in your project if you do use it.
 - Project Settings - In the Services Project Settings page of the Editor, we have changed the endpoint from which the Google Play Key is obtained. Also, instead of setting the key directly in the editor, there is now a dashboard link to set it directly on the backend to avoid future errors.
 
@@ -131,7 +135,7 @@
 
 ### Fixed
 - Unity IAP will consider the call to `UnityPurchasing.initialize` completed before invoking the correct callback `IStoreListener.OnInitialized` or `IStoreListener.OnInitializeFailed`. This prevents these callbacks from being invoked more than once per initialization.
-- GooglePlay - Fixed `No such proxy method` exception in our representation of `BillingClientStateListener.onBillingServiceDisconnected()` introduced by Unity IAP 4.6.0
+- GooglePlay - Fixed `No such proxy method` exception in our representation of `BillingClientStateListener.onBillingServiceDisconnected()` introduced by Unity IAP 4.6.0 
 - Apple - Fixed a `NullReferenceException` happening when the receipt isn't found.
 
 ### Changed
@@ -175,7 +179,7 @@
 - Telemetry - Calls to telemetry reporting were occasionally tripping a `NullReferenceException`, `IndexOutOfRangeException` or `KeyNotFoundException`,  for some users. These exceptions are now caught safely and logged. These failures are also mitigated by moving all Telemetry calls to the main thread. Issue noticed in IAP 4.4.1, but may be older.
 - Apple - Optimized memory usage when processing transactions to prevent out of memory crash when processing transactions on launch.
 - Batch Mode - Calls to `UnityPurchasingEditor.TargetAndroidStore` to select UDP will now successfully check UDP package installation and log an error instead of throwing a blocking popup when executed as part of a Batch Mode command.
-- Analytics - Removed escape characters for receipt JSON which was causing parsing issues in the backend.
+- Analytics - Removed escape characters for receipt JSON which was causing parsing issues in the backend. 
 - GooglePlay - Fixed a bug causing a crash when retrying to finish a transaction while disconnected
 
 ## [4.5.1] - 2022-10-13
@@ -212,7 +216,7 @@
   - Add support for
       the [IMMEDIATE_AND_CHARGE_FULL_PRICE](https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.ProrationMode#IMMEDIATE_AND_CHARGE_FULL_PRICE)
       proration mode. Use `GooglePlayProrationMode.ImmediateAndChargeFullPrice` for easy access.
-  - The `"skuDetails"` in the receipt json is now an array of the old structure, not just one object. It will only have one element in most cases, so if this is being parsed in your app, treat it like an array and get the first element by default.
+  - The `"skuDetails"` in the receipt json is now an array of the old structure, not just one object. It will only have one element in most cases, so if this is being parsed in your app, treat it like an array and get the first element by default. 
 
 ### Fixed
 - GooglePlay - Fix `IGooglePlayConfiguration.SetDeferredPurchaseListener`
@@ -235,7 +239,7 @@
 - Feature to automatically initialize **Unity Gaming Services** through the catalog UI. Please see the [documentation](https://docs.unity3d.com/Packages/com.unity.purchasing@4.2/manual/UnityIAPInitializeUnityGamingServices.html) for more details.
 
 ### Changed
-- The In-App Purchasing package now requires **Unity Gaming Services** to have been initialized before it can be used.
+- The In-App Purchasing package now requires **Unity Gaming Services** to have been initialized before it can be used. 
 For the time being **IAP** will continue working as usual, but will log a warning if **Unity Gaming Services** has not been initialized.
 In future releases of this package, initializing **Unity Gaming Services** will be mandatory. Please see the [documentation](https://docs.unity3d.com/Packages/com.unity.purchasing@4.2/manual/UnityIAPInitializeUnityGamingServices.html) for more details.
 
@@ -271,7 +275,7 @@ In future releases of this package, initializing **Unity Gaming Services** will 
 ## [4.1.4] - 2022-03-30
 
 ### Fixed
-- GooglePlay - Fixed issue where if an app is backgrounded while a purchase is being processed,
+- GooglePlay - Fixed issue where if an app is backgrounded while a purchase is being processed, 
 an `OnPurchaseFailed` would be called with the purchase failure reason `UserCancelled`, even if the purchase was successful.
 
 ## [4.1.3] - 2022-01-11
@@ -307,7 +311,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 - Fixed warning, missing await for async call in ExponentialRetryPolicy.cs
 
 ### Removed
-- Removed the original and complex Unity IAP sample known as "Example", or "IAP Demo". Please use the recently added [samples](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/Overview.html#learn-more) for a granular introduction to In-App Purchasing features.
+- Removed the original and complex Unity IAP sample known as "Example", or "IAP Demo". Please use the recently added [samples](https://docs.unity3d.com/Packages/com.unity.purchasing@4.0/manual/Overview.html#learn-more) for a granular introduction to In-App Purchasing features. 
 
 ## [4.0.3] - 2021-08-18
 ### Added
@@ -324,7 +328,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 - Apple - Added support for fetching the current store promotion order of products on this device with `void IAppleExtensions.FetchStorePromotionOrder(Action<List<Product>> successCallback, Action errorCallback)`
 - Apple - Added support for fetching the current store promotion visibility of a product on this device with `void FetchStorePromotionVisibilitySuccess(Product product, AppleStorePromotionVisibility visibility)`
 
-## Fixed
+### Fixed
 - Apple - Fixed issue with unknown products being processed with `NonConsumable` type.
 
 ### Fixed
@@ -338,7 +342,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 
 ## [4.0.0] - 2021-07-19
 ### Added
-- Codeless Listener method to access the store configuration after initialization.
+- Codeless Listener method to access the store configuration after initialization. 
   - `CodelessIAPStoreListener.Instance.GetStoreConfiguration`
 - Several samples to the [Package Manager Details view](https://docs.unity3d.com/Manual/upm-ui-details.html) for com.unity.purchasing:
   - Fetching additional products
@@ -361,13 +365,13 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 - Reorganized and renamed APIs:
   - `CodelessIAPStoreListener.Instance.ExtensionProvider.GetExtension` to `CodelessIAPStoreListener.Instance.GetStoreExtensions` to match the new `GetStoreConfiguration` API, above
   - `IGooglePlayStoreExtensions.NotifyDeferredProrationUpgradeDowngradeSubscription` to `IGooglePlayConfiguration.NotifyDeferredProrationUpgradeDowngradeSubscription`
-  - `IGooglePlayStoreExtensions.NotifyDeferredPurchase` to `IGooglePlayConfiguration.NotifyDeferredPurchase`
-  - `IGooglePlayStoreExtensions.SetDeferredProrationUpgradeDowngradeSubscriptionListener` to `IGooglePlayConfiguration.SetDeferredProrationUpgradeDowngradeSubscriptionListener`
+  - `IGooglePlayStoreExtensions.NotifyDeferredPurchase` to `IGooglePlayConfiguration.NotifyDeferredPurchase` 
+  - `IGooglePlayStoreExtensions.SetDeferredProrationUpgradeDowngradeSubscriptionListener` to `IGooglePlayConfiguration.SetDeferredProrationUpgradeDowngradeSubscriptionListener` 
   - `IGooglePlayStoreExtensions.SetDeferredPurchaseListener` to `IGooglePlayConfiguration.SetDeferredPurchaseListener`
-  - `IGooglePlayStoreExtensions.SetObfuscatedAccountId` to `IGooglePlayConfiguration.SetObfuscatedAccountId`
+  - `IGooglePlayStoreExtensions.SetObfuscatedAccountId` to `IGooglePlayConfiguration.SetObfuscatedAccountId` 
   - `IGooglePlayStoreExtensions.SetObfuscatedProfileId` to `IGooglePlayConfiguration.SetObfuscatedProfileId`
 - Apple - Change the order of execution of the post-process build script, which adds the `StoreKitFramework` such that other post-process build scripts can run after it.
-- Changed the __Target Android__ Menu app store selection feature to display a window under `Window > Unity IAP > Switch Store...`. To set the app store for the next build, first use __Build Settings__ to activate the Android build target.
+- Changed the __Target Android__ Menu app store selection feature to display a window under `Window > Unity IAP > Switch Store...`. To set the app store for the next build, first use __Build Settings__ to activate the Android build target. 
 - For the future Unity 2022
   - Moved Unity IAP menu items from `Window > Unity IAP > ...` to  `Services > In-App Purchasing > ...`
   - Updated and added new functionnality to the `Services > In-App Purchasing` window in the `Project Settings`. The `Current Targeted Store` selector and `Receipt Obfuscator` settings are now accessible from this window.
@@ -401,7 +405,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
   - `UnityPurchasingEditor.TargetAndroidStore(AndroidStore)`. Use `TargetAndroidStore(AppStore)` instead.
   - `WinRT` class. Use `WindowsStore` instead.
   - `WindowsPhone8` class. Use `WindowsStore` instead.
-
+  
 ## [3.2.3] - 2021-07-08
 ### Fixed
 - GooglePlay - Fix `DuplicateTransaction` errors seen during purchase, after a purchase had previously been Acknowledged with Google.
@@ -418,7 +422,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 
 ## [3.2.1] - 2021-05-18
 ### Changed
-- Manual and API documentation updated.
+- Manual and API documentation updated. 
 
 ## [3.2.0] - 2021-05-17
 ### Added
@@ -466,7 +470,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 ### Added
 - GooglePlay - populate `Product.receipt` for `Action<Product>` parameter returned by `IGooglePlayStoreExtensions.SetDeferredPurchaseListener` callback
 
-### Changed
+### Changed 
 - WinRT - This feature is now shipped as C# code under assembly definitions instead of .dll files.
 - Security - This feature is now shipped as C# code under assembly definitions instead of .dll files.
 - Receipt Validation Obfuscator - The Tangle File Obfuscate function is now Editor-only and no longer part of the Runtime Security module.
@@ -482,7 +486,7 @@ an `OnPurchaseFailed` would be called with the purchase failure reason `UserCanc
 
 ## [3.0.0-pre.5] - 2021-01-12
 ### Added
-- Apple - Support for [auto-renewable subscription Offer Codes](https://developer.apple.com/documentation/storekit/in-app_purchase/subscriptions_and_offers/implementing_offer_codes_in_your_app) on iOS and iPadOS 14 and later via `IAppleExtensions.PresentOfferRedemptionSheet()`. E.g.
+- Apple - Support for [auto-renewable subscription Offer Codes](https://developer.apple.com/documentation/storekit/in-app_purchase/subscriptions_and_offers/implementing_offer_codes_in_your_app) on iOS and iPadOS 14 and later via `IAppleExtensions.PresentOfferRedemptionSheet()`. E.g. 
 
  ```csharp
 public void ShowSubscriptionOfferRedemption(IExtensionProvider extensions)
@@ -493,7 +497,7 @@ public void ShowSubscriptionOfferRedemption(IExtensionProvider extensions)
 ```
 
 ### Fixed
- - Security and WinRT stub dlls and references to Analytics no longer break builds unsupported platforms like PS4, XboxOne, Switch and Lumin. These platforms are still unsupported but will no longer raise errors on build.
+ - Security and WinRT stub dlls and references to Analytics no longer break builds unsupported platforms like PS4, XboxOne, Switch and Lumin. These platforms are still unsupported but will no longer raise errors on build.  
 
 ### Removed
 - Support for Facebook in-app purchasing is no longer provided. All classes and implementations have been removed.
@@ -540,7 +544,7 @@ Fix migration tooling's obfuscator file destination path to target Scripts inste
 - Added editor and playmode testing.
 
 ## [2.0.3] - 2018-06-14
-- Fixed issue related to 2.0.2 that caused new projects to not compile in the editor.
+- Fixed issue related to 2.0.2 that caused new projects to not compile in the editor. 
 - Engine dll is enabled for editor by default.
 - Removed meta data that disabled engine dll for windows store.
 

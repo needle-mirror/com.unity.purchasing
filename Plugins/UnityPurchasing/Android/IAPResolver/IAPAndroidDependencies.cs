@@ -6,7 +6,7 @@ namespace IAPResolver
 {
     class IAPAndroidDependencies : AndroidDependencies
     {
-        public override string DependantName => "com.unity.purchasing";
+        public override string DependantName  => "com.unity.purchasing";
         public override List<string> Dependencies =>
             new List<string>()
             {

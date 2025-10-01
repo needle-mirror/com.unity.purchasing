@@ -471,11 +471,11 @@ namespace LipingShare.LCLib.Asn1Processor
         }
 
         /// <summary>
-        /// Remove the child from children node list.
-        /// </summary>
-        /// <param name="node">The node needs to be removed.</param>
-        /// <returns></returns>
-        public Asn1Node RemoveChild(Asn1Node node)
+		/// Remove the child from children node list.
+		/// </summary>
+		/// <param name="node">The node needs to be removed.</param>
+		/// <returns></returns>
+		public Asn1Node RemoveChild(Asn1Node node)
         {
             Asn1Node retval = null;
             int i = childNodeList.IndexOf(node);
@@ -1457,11 +1457,11 @@ namespace LipingShare.LCLib.Asn1Processor
         }
 
         /// <summary>
-        /// Decode ASN.1 encoded complex data type Stream data.
-        /// </summary>
-        /// <param name="xdata">Stream data.</param>
-        /// <returns>true:Succeed, false:Failed.</returns>
-        protected bool ListDecode(Stream xdata)
+		/// Decode ASN.1 encoded complex data type Stream data.
+		/// </summary>
+		/// <param name="xdata">Stream data.</param>
+		/// <returns>true:Succeed, false:Failed.</returns>
+		protected bool ListDecode(Stream xdata)
         {
             bool retval = false;
             long originalPosition = xdata.Position;

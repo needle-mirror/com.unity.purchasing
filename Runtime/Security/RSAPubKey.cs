@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using LipingShare.LCLib.Asn1Processor;
@@ -26,8 +26,8 @@ namespace UnityEngine.Purchasing.Security
         }
 
         /**
-         * Public verification of a message
-         */
+		 * Public verification of a message
+		 */
         public bool VerifySha1(byte[] message, byte[] signature)
         {
             var sha1hash = new SHA1Managed();
@@ -47,9 +47,9 @@ namespace UnityEngine.Purchasing.Security
         }
 
         /**
-         * Parses an DER encoded RSA public key:
-         * It will only try to get the mod and the exponent
-         */
+		 * Parses an DER encoded RSA public key:
+		 * It will only try to get the mod and the exponent
+		 */
         private RSACryptoServiceProvider ParseNode(Asn1Node n)
         {
             if ((n.Tag & Asn1Tag.TAG_MASK) == Asn1Tag.SEQUENCE &&
@@ -87,5 +87,5 @@ namespace UnityEngine.Purchasing.Security
     /// <summary>
     /// An IAP Security exception indicating some invalid data parsing an RSA node.
     /// </summary>
-    public class InvalidRSAData : IAPSecurityException { }
+	public class InvalidRSAData : IAPSecurityException { }
 }

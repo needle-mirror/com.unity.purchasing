@@ -6,7 +6,7 @@ Purchases may fail for a number of reasons, including network failure, payment f
 ````
 /// <summary>
 /// Called when a purchase fails.
-/// IStoreListener.OnPurchaseFailed is deprecated,
+/// IStoreListener.OnPurchaseFailed is deprecated, 
 /// use IDetailedStoreListener.OnPurchaseFailed instead.
 /// </summary>
 public void OnPurchaseFailed (Product i, PurchaseFailureReason p)
@@ -26,3 +26,4 @@ public void OnPurchaseFailed (Product i, PurchaseFailureDescription p)
     }
 }
 ````
+

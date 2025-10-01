@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
         /// https://developer.amazon.com/public/apis/earn/in-app-purchasing/docs-v2/implementing-iap-2.0
         /// </summary>
         /// <param name="transactionID">Products transaction id</param>
-        public void NotifyUnableToFulfillUnavailableProduct(string transactionID)
+		public void NotifyUnableToFulfillUnavailableProduct(string transactionID)
         {
         }
 

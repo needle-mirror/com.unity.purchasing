@@ -45,22 +45,22 @@ namespace UnityEngine.Purchasing
                     }
 
                 case AppStore.UDP:
-                {
-                    var udpIapBridge = UdpIapBridgeInterface.GetClassType();
-                    if (udpIapBridge != null)
                     {
-                        var udpImpl = new UDPImpl();
-                        var udpBindings = new UDPBindings();
-                        udpImpl.SetNativeStore(udpBindings);
-                        binder.RegisterExtension<IUDPExtensions>(udpImpl);
-                        return udpBindings;
+                        var udpIapBridge = UdpIapBridgeInterface.GetClassType();
+                        if (udpIapBridge != null)
+                        {
+                            var udpImpl = new UDPImpl();
+                            var udpBindings = new UDPBindings();
+                            udpImpl.SetNativeStore(udpBindings);
+                            binder.RegisterExtension<IUDPExtensions>(udpImpl);
+                            return udpBindings;
+                        }
+                        else
+                        {
+                            Debug.LogError("Cannot set Android target to UDP. Make sure you have installed UDP in your project");
+                            throw new NotImplementedException();
+                        }
                     }
-                    else
-                    {
-                        Debug.LogError("Cannot set Android target to UDP. Make sure you have installed UDP in your project");
-                        throw new NotImplementedException();
-                    }
-                }
             }
 
             throw new NotImplementedException();

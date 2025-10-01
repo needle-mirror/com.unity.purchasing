@@ -13,3 +13,4 @@ Handling errors
 ---------------
 
 If products cannot be retrieved due to an unrecoverable error, such as the developer making an error with their store configuration, you should call the ``OnSetupFailed`` method of the ``IStoreCallback``, indicating the ``InitializationFailureReason`` responsible.
+

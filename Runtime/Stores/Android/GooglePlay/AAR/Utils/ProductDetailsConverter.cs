@@ -69,7 +69,7 @@ namespace UnityEngine.Purchasing.Utils
             var priceAmountMicros = oneTimePurchaseOffer != null ?
                 Convert.ToDecimal(oneTimePurchaseOffer.Call<long>("getPriceAmountMicros") > 0 ? oneTimePurchaseOffer.Call<long>("getPriceAmountMicros") : 0) :
                 Convert.ToDecimal(subscriptionBasePricingPhase?.Call<long>("getPriceAmountMicros") > 0 ? subscriptionBasePricingPhase.Call<long>("getPriceAmountMicros") : 0);
-            var priceAmount = priceAmountMicros / (decimal)1000000.0;
+            var priceAmount = priceAmountMicros / (decimal) 1000000.0;
             var title = productDetails.Call<string>("getTitle");
             var description = productDetails.Call<string>("getDescription");
             var priceCurrencyCode = oneTimePurchaseOffer?.Call<string>("getPriceCurrencyCode") ?? subscriptionBasePricingPhase?.Call<string>("getPriceCurrencyCode");

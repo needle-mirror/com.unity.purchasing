@@ -88,33 +88,33 @@ namespace UnityEngine.Purchasing
                 switch (store)
                 {
                     case "GooglePlay":
-                    {
-                        var oldSubscriptionManager = new SubscriptionManager(oldProduct, null);
-                        SubscriptionInfo oldSubscriptionInfo;
-                        try
                         {
-                            oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.unityLogger.LogError("Error: the product that will be updated does not have a valid receipt", e);
+                            var oldSubscriptionManager = new SubscriptionManager(oldProduct, null);
+                            SubscriptionInfo oldSubscriptionInfo;
+                            try
+                            {
+                                oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.unityLogger.LogError("Error: the product that will be updated does not have a valid receipt", e);
+                                return;
+                            }
+                            var newSubscriptionId = newProduct.definition.storeSpecificId;
+                            googleStore(oldSubscriptionInfo.getSubscriptionInfoJsonString(), newSubscriptionId);
                             return;
                         }
-                        var newSubscriptionId = newProduct.definition.storeSpecificId;
-                        googleStore(oldSubscriptionInfo.getSubscriptionInfoJsonString(), newSubscriptionId);
-                        return;
-                    }
                     case "AppleAppStore":
                     case "MacAppStore":
-                    {
-                        appleStore(newProduct, developerPayload);
-                        return;
-                    }
+                        {
+                            appleStore(newProduct, developerPayload);
+                            return;
+                        }
                     default:
-                    {
-                        Debug.LogWarning("This store does not support update subscriptions");
-                        return;
-                    }
+                        {
+                            Debug.LogWarning("This store does not support update subscriptions");
+                            return;
+                        }
                 }
             }
         }
@@ -207,26 +207,26 @@ namespace UnityEngine.Purchasing
                     switch (store)
                     {
                         case GooglePlay.Name:
-                        {
-                            return getGooglePlayStoreSubInfo(payload);
-                        }
+                            {
+                                return getGooglePlayStoreSubInfo(payload);
+                            }
                         case AppleAppStore.Name:
                         case MacAppStore.Name:
-                        {
-                            if (productId == null)
                             {
-                                throw new NullProductIdException();
+                                if (productId == null)
+                                {
+                                    throw new NullProductIdException();
+                                }
+                                return getAppleAppStoreSubInfo(payload, productId);
                             }
-                            return getAppleAppStoreSubInfo(payload, productId);
-                        }
                         case AmazonApps.Name:
-                        {
-                            return getAmazonAppStoreSubInfo(productId);
-                        }
+                            {
+                                return getAmazonAppStoreSubInfo(productId);
+                            }
                         default:
-                        {
-                            throw new StoreSubscriptionInfoNotSupportedException("Store not supported: " + store);
-                        }
+                            {
+                                throw new StoreSubscriptionInfoNotSupportedException("Store not supported: " + store);
+                            }
                     }
                 }
             }

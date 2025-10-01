@@ -34,12 +34,12 @@ namespace UnityEngine.Purchasing.Security
     /// <summary>
     /// A GooglePlay purchase receipt
     /// </summary>
-    public class GooglePlayReceipt : IPurchaseReceipt
+	public class GooglePlayReceipt : IPurchaseReceipt
     {
         /// <summary>
         /// The item's product identifier.
         /// </summary>
-        public string productID { get; private set; }
+		public string productID { get; private set; }
 
         /// <summary>
         /// The ID  of the transaction.
@@ -49,27 +49,27 @@ namespace UnityEngine.Purchasing.Security
         /// <summary>
         /// A unique order identifier for the transaction.
         /// </summary>
-        public string orderID { get; private set; }
+		public string orderID { get; private set; }
 
         /// <summary>
         /// The package name of the app.
         /// </summary>
-        public string packageName { get; private set; }
+		public string packageName { get; private set; }
 
         /// <summary>
         /// A token that uniquely identifies a purchase for a given item and user pair.
         /// </summary>
-        public string purchaseToken { get; private set; }
+		public string purchaseToken { get; private set; }
 
         /// <summary>
         /// The time the product was purchased, in milliseconds since the epoch (Jan 1, 1970).
         /// </summary>
-        public DateTime purchaseDate { get; private set; }
+		public DateTime purchaseDate { get; private set; }
 
         /// <summary>
         /// The purchase state of the order.
         /// </summary>
-        public GooglePurchaseState purchaseState { get; private set; }
+		public GooglePurchaseState purchaseState { get; private set; }
 
         /// <summary>
         /// Constructor that initializes the members from the input parameters.

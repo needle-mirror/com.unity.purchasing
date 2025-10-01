@@ -22,7 +22,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         AmazonAppStore, //
 
-        [Obsolete("AppStore to be removed with UDP deprecation.")]
+        [Obsolete ("AppStore to be removed with UDP deprecation.")]
         /// <summary>
         /// Unity Distribution Portal, which supports a set of stores internally.
         /// Will become deprecated with UDP eventually.

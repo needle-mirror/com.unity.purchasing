@@ -12,13 +12,14 @@ On Apple platforms users must enter their password to retrieve previous transact
 /// </summary>
 public void OnInitialized(IStoreController controller, IExtensionProvider extensions)
 {
-    extensions.GetExtension<IAppleExtensions> ().RestoreTransactions ((result, error) => {
-        if (result) {
-            // This does not mean anything was restored,
-            // merely that the restoration process succeeded.
-        } else {
-            // Restoration failed. `error` contains the failure reason.
-        }
-    });
+	extensions.GetExtension<IAppleExtensions> ().RestoreTransactions ((result, error) => {
+		if (result) {
+			// This does not mean anything was restored,
+			// merely that the restoration process succeeded.
+		} else {
+			// Restoration failed. `error` contains the failure reason.
+		}
+	});
 }
 ````
+

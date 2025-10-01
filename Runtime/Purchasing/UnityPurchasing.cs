@@ -53,11 +53,11 @@ namespace UnityEngine.Purchasing
 #else
             try
             {
-#if IAP_ANALYTICS_SERVICE_ENABLED
+    #if IAP_ANALYTICS_SERVICE_ENABLED
                 return new AnalyticsAdapter(AnalyticsService.Instance, logger);
-#elif IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT
+    #elif IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT
                 return new CoreAnalyticsAdapter(AnalyticsService.Instance, logger);
-#endif
+    #endif
             }
             catch (ServicesInitializationException ex)
             {

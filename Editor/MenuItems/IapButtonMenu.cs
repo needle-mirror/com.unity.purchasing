@@ -62,7 +62,7 @@ namespace UnityEditor.Purchasing
 
             if (buttonObject)
             {
-                //disable Warning CS0618  IAPButton is deprecated, please use CodelessIAPButton instead.
+//disable Warning CS0618  IAPButton is deprecated, please use CodelessIAPButton instead.
 #pragma warning disable 0618
                 var iapButton = buttonObject.AddComponent<IAPButton>();
 

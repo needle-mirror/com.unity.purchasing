@@ -50,7 +50,7 @@ namespace Samples.Purchasing.GooglePlay.UpgradeDowngradeSubscription
         void ChangeSubscriptionTier(string currentSubscriptionId, string newSubscriptionId)
         {
             Debug.Log($"Change Subscription from {currentSubscriptionId} to {newSubscriptionId}");
-            var ReplacementMode = (int)DetermineReplacementMode(currentSubscriptionId, newSubscriptionId);
+            var ReplacementMode = (int) DetermineReplacementMode(currentSubscriptionId, newSubscriptionId);
 
             var googlePlayStoreExtension = m_ExtensionsProvider.GetExtension<IGooglePlayStoreExtensions>();
             googlePlayStoreExtension.UpgradeDowngradeSubscription(currentSubscriptionId, newSubscriptionId, ReplacementMode);

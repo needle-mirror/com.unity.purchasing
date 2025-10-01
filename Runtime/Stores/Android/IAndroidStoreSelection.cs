@@ -9,8 +9,8 @@ namespace UnityEngine.Purchasing
     public interface IAndroidStoreSelection : IStoreConfiguration
     {
         /// <summary>
-        /// A property that retrieves the <c>AppStore</c> type.
-        /// </summary>
+	    /// A property that retrieves the <c>AppStore</c> type.
+	    /// </summary>
         AppStore appStore { get; }
     }
 }

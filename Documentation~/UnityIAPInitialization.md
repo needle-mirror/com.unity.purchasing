@@ -60,13 +60,13 @@ public class MyIAPManager : IDetailedStoreListener {
 
     /// <summary>
     /// Called when a purchase fails.
-    /// IStoreListener.OnPurchaseFailed is deprecated,
+    /// IStoreListener.OnPurchaseFailed is deprecated, 
     /// use IDetailedStoreListener.OnPurchaseFailed instead.
     /// </summary>
     public void OnPurchaseFailed (Product i, PurchaseFailureReason p)
     {
     }
-
+    
     /// <summary>
     /// Called when a purchase fails.
     /// </summary>

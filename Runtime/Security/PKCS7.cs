@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using LipingShare.LCLib.Asn1Processor;
@@ -104,8 +104,8 @@ namespace UnityEngine.Purchasing.Security
             }
 
             /**
-             * TODO: improve this logic
-             */
+			 * TODO: improve this logic
+			 */
             foreach (var c in certChain)
             {
                 if (c != cert && c.Subject.Equals(cert.Issuer) && c.CheckCertTime(certificateCreationTime))

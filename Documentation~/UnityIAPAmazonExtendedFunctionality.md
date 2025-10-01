@@ -10,8 +10,9 @@ To fetch the current Amazon User ID for other Amazon services, use the `IAmazonE
 public void OnInitialized
     (IStoreController controller, IExtensionProvider extensions)
 {
-    string amazonUserId =
+    string amazonUserId = 
         extensions.GetExtension<IAmazonExtensions>().amazonUserId;
     // ...
 }
 ````
+

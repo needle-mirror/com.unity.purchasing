@@ -29,4 +29,4 @@ IAP.
 
 See
 Apple's [Family Sharing documentation](https://developer.apple.com/documentation/storekit/in-app_purchase/original_api_for_in-app_purchase/supporting_family_sharing_in_your_app)
-for more information.
+for more information. 

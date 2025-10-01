@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Gets the current Amazon user ID (for other Amazon services).
         /// </summary>
-        string amazonUserId { get; }
+		string amazonUserId { get; }
 
         /// <summary>
         /// Amazon makes it possible to notify them of a product that cannot be fulfilled.

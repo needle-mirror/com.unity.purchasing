@@ -11,3 +11,4 @@ The following is the full list of stores supported by the In-App Purchasing pack
 |Unity Distribution Portal |Android|2.0.0 and higher|[UDP](https://unity.com/products/unity-distribution-portal)|**_Support will be removed in the next major update of In-App Purchasing_**|
 |App Store|MacOS / iOS / tvOS|Store Kit v1|[Apple Store Kit](https://developer.apple.com/documentation/storekit)||
 |Microsoft Store|Windows|Windows 8|[Microsoft SDK](https://docs.microsoft.com/en-us/windows/uwp/monetize/in-app-purchases-and-trials)||
+  

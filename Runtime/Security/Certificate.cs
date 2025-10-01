@@ -20,11 +20,11 @@ namespace UnityEngine.Purchasing.Security
         public DistinguishedName(Asn1Node n)
         {
             /* Name:
-             * SET
-             *   SEQ (attr)
-             *     Object Identifier
-             *     Printable String || UTF8String
-             */
+			 * SET
+			 *   SEQ (attr)
+			 *     Object Identifier
+			 *     Printable String || UTF8String
+			 */
             if (n.MaskedTag == Asn1Tag.SEQUENCE)
             {
                 for (int i = 0; i < n.ChildNodeCount; i++)
@@ -206,9 +206,9 @@ namespace UnityEngine.Purchasing.Security
         }
 
         /**
-         * According to rfc5280, time should be specified in GMT:
-         * https://tools.ietf.org/html/rfc5280#section-4.1.2.5
-         */
+		 * According to rfc5280, time should be specified in GMT:
+		 * https://tools.ietf.org/html/rfc5280#section-4.1.2.5
+		 */
         private DateTime ParseTime(Asn1Node n)
         {
             string time = (new System.Text.UTF8Encoding()).GetString(n.Data);
@@ -256,5 +256,5 @@ namespace UnityEngine.Purchasing.Security
     /// <summary>
     /// An IAP Security exception indicating some invalid data for X509 certification checks.
     /// </summary>
-    public class InvalidX509Data : IAPSecurityException { }
+	public class InvalidX509Data : IAPSecurityException { }
 }

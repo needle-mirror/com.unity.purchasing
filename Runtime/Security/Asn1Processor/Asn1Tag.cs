@@ -166,11 +166,11 @@ namespace LipingShare.LCLib.Asn1Processor
 
         /// <summary>
         /// Constant value.
-        /// </summary>
+	    /// </summary>
         public const byte UNIVERSAL_STRING = 0x1C;
 
         /// <summary>
-        /// Constant value.
+	    /// Constant value.
         /// </summary>
         public const byte BMPSTRING = 0x1E; /* 30: Basic Multilingual Plane/Unicode string */
 

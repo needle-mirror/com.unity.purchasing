@@ -8,6 +8,6 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Constant used for Mapping the store with Amazon
         /// </summary>
-        public const string Name = "AmazonApps";
+		public const string Name = "AmazonApps";
     }
 }

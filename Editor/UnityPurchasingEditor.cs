@@ -20,33 +20,33 @@ namespace UnityEditor.Purchasing
     {
         const string PurchasingPackageName = "com.unity.purchasing";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         internal const string UdpPackageName = "com.unity.purchasing.udp";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         const string k_UdpErrorText = "In order to use UDP functionality, you must install or update the Unity Distribution Portal Package. Please configure your project's packages before running UDP-related editor commands in batch mode.";
 
         const string ModePath = "Assets/Resources/BillingMode.json";
         const string prevModePath = "Assets/Plugins/UnityPurchasing/Resources/BillingMode.json";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static ListRequest m_ListRequestOfDependentPackages;
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static SearchRequest m_SearchRequestOfAvailablePackages;
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static bool m_UdpUpmPackageInstalled;
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static bool m_UdpUpmPackageAvailable;
 
         const string BinPath = "Packages/com.unity.purchasing/Plugins/UnityPurchasing/Android";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         const string AssetStoreUdpBinPath = "Assets/Plugins/UDP/Android";
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static readonly string PackManUdpBinPath = $"Packages/{UdpPackageName}/Android";
 
         static StoreConfiguration config;
@@ -54,16 +54,16 @@ namespace UnityEditor.Purchasing
         internal delegate void AndroidTargetChange(AppStore store);
         internal static AndroidTargetChange OnAndroidTargetChange;
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static readonly bool s_udpAvailable = UdpSynchronizationApi.CheckUdpAvailability();
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         internal static bool IsUdpUpmPackageInstalled()
         {
             return m_UdpUpmPackageInstalled || File.Exists($"Packages/{UdpPackageName}/package.json");
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static void ListingCurrentPackageProgress()
         {
             if (m_ListRequestOfDependentPackages.IsCompleted)
@@ -88,7 +88,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static void SearchingAvailablePackageProgress()
         {
             if (m_SearchRequestOfAvailablePackages.IsCompleted)
@@ -108,13 +108,13 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         internal static bool IsUdpAssetStorePackageInstalled()
         {
             return File.Exists("Assets/UDP/UDP.dll") || File.Exists("Assets/Plugins/UDP/UDP.dll");
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         [InitializeOnLoadMethod]
         static void CheckUdpUpmPackageInstalled()
         {
@@ -134,7 +134,7 @@ namespace UnityEditor.Purchasing
             return UnityEditorInternal.InternalEditorUtility.inBatchMode;
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static void CheckUdpUpmPackageInstalledViaPackageManager()
         {
             if (IsInBatchMode())
@@ -146,7 +146,7 @@ namespace UnityEditor.Purchasing
             EditorApplication.update += ListingCurrentPackageProgress;
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static void CheckUdpUpmPackageInstalledViaManifest()
         {
             if (!IsInBatchMode())
@@ -163,7 +163,7 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static void CheckUdpUpmPackageAvailableViaPackageManager()
         {
             if (IsInBatchMode())
@@ -218,7 +218,7 @@ namespace UnityEditor.Purchasing
             {"AmazonAppStore.aar", AppStore.AmazonAppStore}
         };
 
-        [Obsolete("Internal API to be removed with UDP deprecation.")]
+        [Obsolete ("Internal API to be removed with UDP deprecation.")]
         static readonly Dictionary<string, AppStore> UdpSpecificFiles = new Dictionary<string, AppStore>() {
             { "udp.aar", AppStore.UDP},
             { "udpsandbox.aar", AppStore.UDP},

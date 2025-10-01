@@ -11,3 +11,4 @@ public void OnPurchaseClicked(string productId) {
 ````
 
 Your application will be notified asynchronously of the result, either with an invocation of ``ProcessPurchase`` for successful purchases or ``OnPurchaseFailed`` for failures.
+

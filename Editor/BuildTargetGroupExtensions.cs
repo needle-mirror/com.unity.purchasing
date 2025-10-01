@@ -24,10 +24,10 @@ static class BuildTargetGroupExtensions
         switch (value)
         {
             case BuildTargetGroup.Android:
-            {
-                storesArray = ToAndroidAppStores(value);
-                break;
-            }
+                {
+                    storesArray = ToAndroidAppStores(value);
+                    break;
+                }
 
             case BuildTargetGroup.iOS:
             case BuildTargetGroup.tvOS:
@@ -80,22 +80,22 @@ static class BuildTargetGroupExtensions
         switch (value)
         {
             case BuildTargetGroup.iOS:
-            {
-                // TRICKY: Prefer an "iOS" string on BuildTarget, to avoid the unwanted "BuildTargetGroup.iPhone"
-                return BuildTarget.iOS.ToString();
-            }
-            case BuildTargetGroup.Standalone:
-            {
-                switch (EditorUserBuildSettings.activeBuildTarget)
                 {
-                    case BuildTarget.StandaloneOSX:
-                        return "macOS";
-                    case BuildTarget.StandaloneWindows:
-                        return "Windows";
-                    default:
-                        return BuildTargetGroup.Standalone.ToString();
+                    // TRICKY: Prefer an "iOS" string on BuildTarget, to avoid the unwanted "BuildTargetGroup.iPhone"
+                    return BuildTarget.iOS.ToString();
                 }
-            }
+            case BuildTargetGroup.Standalone:
+                {
+                    switch (EditorUserBuildSettings.activeBuildTarget)
+                    {
+                        case BuildTarget.StandaloneOSX:
+                            return "macOS";
+                        case BuildTarget.StandaloneWindows:
+                            return "Windows";
+                        default:
+                            return BuildTargetGroup.Standalone.ToString();
+                    }
+                }
             default:
                 return value.ToString();
         }

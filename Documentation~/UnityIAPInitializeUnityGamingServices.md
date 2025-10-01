@@ -38,9 +38,9 @@ This ensures that **Unity Gaming Services** initializes immediately when the app
 ![Enabling auto-initialization for the Unity Gaming Services through the **IAP Catalog** GUI](images/AutoInitializeUGS.png)
 To use this feature **Automatically initialize UnityPurchasing (recommended)** must be enabled. If you do not see these checkboxes inside the **IAP Catalog**, it may be because you have not yet added products in the catalog window.
 
-This initializes **Unity Gaming Services** with the default `production` environment.
+This initializes **Unity Gaming Services** with the default `production` environment. 
 This way of initializing **Unity Gaming Services** might not be compatible with all other services as they might require special initialization options.
-If the use of initialization options is needed, **Unity Gaming Services** should be initialized with the coded API as described above.
+If the use of initialization options is needed, **Unity Gaming Services** should be initialized with the coded API as described above. 
 
 ## Warning message
 
@@ -61,3 +61,5 @@ ___
 For more information, please see the [Services Core API documentation](https://docs.unity.com/ugs-overview/services-core-api.html#Services_Core_API).
 
 Download the `06 Initialize Gaming Services` from `Package Manager > In-App Purchasing > Samples` for a concrete example.
+
+
