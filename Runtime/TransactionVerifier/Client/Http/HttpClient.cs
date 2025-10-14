@@ -28,7 +28,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Http
     {
 
         /// <summary>Default Constructor.</summary>
-
+        
         public HttpClient()
         {
         }

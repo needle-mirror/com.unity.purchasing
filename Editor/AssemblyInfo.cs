@@ -5,3 +5,4 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Unity.IntegrationTests")]
 [assembly: InternalsVisibleTo("Unity.RuntimeTests")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+

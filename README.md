@@ -15,11 +15,11 @@ This package provides:
 
 If updating from Unity IAP (com.unity.purchasing + the Asset Store plugin) versions 2.x to version 3.x, complete the following actions in order to resolve compilation errors:
 1. Move IAPProductCatalog.json and BillingMode.json
-    FROM: Assets/Plugins/UnityPurchasing/Resources/
-    TO: Assets/Resources/
+	FROM: Assets/Plugins/UnityPurchasing/Resources/
+	TO: Assets/Resources/
 2. Move GooglePlayTangle.cs
-    FROM: Assets/Plugins/UnityPurchasing/generated
-    TO: Assets/Scripts/UnityPurchasing/generated
+	FROM: Assets/Plugins/UnityPurchasing/generated
+	TO: Assets/Scripts/UnityPurchasing/generated
 3. Remove all remaining Asset Store plugin folders and files in Assets/Plugins/UnityPurchasing from your project.
 
 # Installing In-App Purchasing

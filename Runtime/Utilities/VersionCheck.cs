@@ -3,7 +3,7 @@ using System;
 namespace UnityEngine.Purchasing
 {
     /// <summary>
-    /// Utility class for comparing Unity versions. This class only compares the major, minor, and patch versions and
+    /// Utility class for comparing Unity versions. This class only compares the major, minor, and patch versions and 
     /// ignores the suffixes (e.g. f2, p3, b1)
     /// </summary>
     internal static class VersionCheck

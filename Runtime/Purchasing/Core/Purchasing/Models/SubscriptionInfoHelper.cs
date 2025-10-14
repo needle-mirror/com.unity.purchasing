@@ -106,22 +106,22 @@ namespace UnityEngine.Purchasing
                     switch (store)
                     {
                         case GooglePlay.Name:
-                        {
-                            return GetGooglePlayStoreSubInfo(payload);
-                        }
+                            {
+                                return GetGooglePlayStoreSubInfo(payload);
+                            }
                         case AppleAppStore.Name:
                         case MacAppStore.Name:
-                        {
-                            if (m_ProductId == null)
                             {
-                                throw new NullProductIdException();
+                                if (m_ProductId == null)
+                                {
+                                    throw new NullProductIdException();
+                                }
+                                return GetAppleAppStoreSubInfo(payload, m_ProductId);
                             }
-                            return GetAppleAppStoreSubInfo(payload, m_ProductId);
-                        }
                         default:
-                        {
-                            throw new StoreSubscriptionInfoNotSupportedException("Store not supported: " + store);
-                        }
+                            {
+                                throw new StoreSubscriptionInfoNotSupportedException("Store not supported: " + store);
+                            }
                     }
                 }
             }

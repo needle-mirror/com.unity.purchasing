@@ -37,7 +37,7 @@ namespace UnityEngine.Purchasing
 
         bool FindExistingConfirmationRequest(PendingOrder orderToCheckFor)
         {
-            return m_ConfirmationRequests.Exists(request => request.OrderToConfirm == orderToCheckFor);
+            return m_ConfirmationRequests.Exists(request => request.OrderToConfirm?.Info.TransactionID == orderToCheckFor.Info.TransactionID);
         }
 
         void AddAndSendFinishTransactionRequest(PendingOrder order, Action<PendingOrder, Order> confirmationAction)

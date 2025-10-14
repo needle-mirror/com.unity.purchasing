@@ -136,11 +136,11 @@ namespace UnityEngine.Purchasing
         IStoreWrapper InstantiateFakeStore()
         {
             FakeStoreUIMode fakeStoreUIMode = FakeStoreUIMode.StandardUser;
-#if IAP_FAKE_STORE_DEVELOPER_USER
+            #if IAP_FAKE_STORE_DEVELOPER_USER
                 fakeStoreUIMode = FakeStoreUIMode.DeveloperUser;
-#elif IAP_FAKE_STORE_DEFAULT
+            #elif IAP_FAKE_STORE_DEFAULT
                 fakeStoreUIMode = FakeStoreUIMode.Default;
-#endif
+            #endif
 
             var fakeStore = CreateFakeStoreByUIMode(fakeStoreUIMode);
             return new StoreWrapper(FakeAppStore.Name, fakeStore);

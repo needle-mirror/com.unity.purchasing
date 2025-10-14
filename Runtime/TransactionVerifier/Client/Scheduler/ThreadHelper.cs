@@ -31,7 +31,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Scheduler
         /// <summary>
         /// Init runs at start sets the main thread ID to ensure that methods which can only be
         /// called from the main thread have a reference. It is also triggered
-        /// by switching between Runtime and Editor to update the thread id.
+        /// by switching between Runtime and Editor to update the thread id. 
         /// </summary>
 #if UNITY_EDITOR
         [InitializeOnLoadMethod]

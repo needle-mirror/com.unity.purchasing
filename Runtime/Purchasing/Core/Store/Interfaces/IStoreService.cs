@@ -44,3 +44,4 @@ namespace UnityEngine.Purchasing
         event Action<StoreConnectionFailureDescription>? OnStoreDisconnected;
     }
 }
+

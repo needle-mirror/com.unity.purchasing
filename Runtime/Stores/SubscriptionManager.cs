@@ -46,34 +46,34 @@ namespace UnityEngine.Purchasing
                 switch (store)
                 {
                     case "GooglePlay":
-                    {
-                        var oldSubscriptionManager = new SubscriptionManager(oldProduct, null);
-                        SubscriptionInfo oldSubscriptionInfo; ;
-                        try
                         {
-                            oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
-                        }
-                        catch (Exception e)
-                        {
-                            Debug.unityLogger.LogIAPError($"The product that will be updated does not have a " +
-                                $"valid receipt: {e}");
+                            var oldSubscriptionManager = new SubscriptionManager(oldProduct, null);
+                            SubscriptionInfo oldSubscriptionInfo;;
+                            try
+                            {
+                                oldSubscriptionInfo = oldSubscriptionManager.getSubscriptionInfo();
+                            }
+                            catch (Exception e)
+                            {
+                                Debug.unityLogger.LogIAPError($"The product that will be updated does not have a " +
+                                    $"valid receipt: {e}");
+                                return;
+                            }
+                            var newSubscriptionId = newProduct.definition.storeSpecificId;
+                            googleStore(oldSubscriptionInfo.GetSubscriptionInfoJsonString(), newSubscriptionId);
                             return;
                         }
-                        var newSubscriptionId = newProduct.definition.storeSpecificId;
-                        googleStore(oldSubscriptionInfo.GetSubscriptionInfoJsonString(), newSubscriptionId);
-                        return;
-                    }
                     case "AppleAppStore":
                     case "MacAppStore":
-                    {
-                        appleStore(newProduct, developerPayload);
-                        return;
-                    }
+                        {
+                            appleStore(newProduct, developerPayload);
+                            return;
+                        }
                     default:
-                    {
-                        Debug.unityLogger.LogIAPWarning("This store does not support update subscriptions");
-                        return;
-                    }
+                        {
+                            Debug.unityLogger.LogIAPWarning("This store does not support update subscriptions");
+                            return;
+                        }
                 }
             }
         }

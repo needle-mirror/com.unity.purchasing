@@ -7,14 +7,14 @@ namespace UnityEngine.Purchasing.Security
     /// Note: when building for non-Apple platforms, this will not execute code.
     /// </summary>
     [Obsolete("AppleValidator is a stub and does not perform any validation. Do not use this class. Use UnityEngine.Purchasing.Security.CrossPlatformValidator with a valid Apple certificate for receipt validation.", false)]
-    public class AppleValidator
+	public class AppleValidator
     {
         /// <summary>
         /// Constructs an instance with Apple Certificate.
         /// </summary>
         /// <param name="appleRootCertificate">The apple certificate.</param>
         /// <exception cref="NotImplementedException">Not implemented for this platform.</exception>
-        public AppleValidator(byte[] appleRootCertificate)
+		public AppleValidator(byte[] appleRootCertificate)
         {
             throw new NotImplementedException();
         }
@@ -26,7 +26,7 @@ namespace UnityEngine.Purchasing.Security
         /// <returns>The parsed AppleReceipt</returns>
         /// <exception cref="InvalidSignatureException">The exception thrown if the receipt is incorrectly signed.</exception>
         /// <exception cref="NotImplementedException">Not implemented for this platform.</exception>
-        public AppleReceipt Validate(byte[] receiptData)
+		public AppleReceipt Validate(byte[] receiptData)
         {
             throw new NotImplementedException();
         }
@@ -36,7 +36,7 @@ namespace UnityEngine.Purchasing.Security
     /// This class with parse the Apple receipt data received in byte[] into a AppleReceipt object
     /// Note: when building for non-Apple platforms, this will not execute code.
     /// </summary>
-    public class AppleReceiptParser
+	public class AppleReceiptParser
     {
         /// <summary>
         /// Parse the Apple receipt data into a AppleReceipt object
@@ -44,7 +44,7 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="receiptData">Apple receipt data</param>
         /// <returns>The converted AppleReceipt object from the Apple receipt data</returns>
         /// <exception cref="NotImplementedException">Not implemented for this platform.</exception>
-        public AppleReceipt Parse(byte[] receiptData)
+		public AppleReceipt Parse(byte[] receiptData)
         {
             throw new NotImplementedException();
         }

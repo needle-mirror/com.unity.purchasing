@@ -1,6 +1,6 @@
 ## README - In-App Purchasing Sample Scenes - App Store - Refreshing App Receipts
 
-This sample showcases how to use the Apple Store Extended Purchase Service to refresh app receipts. This allows
+This sample showcases how to use the Apple Store Extended Purchase Service to refresh app receipts. This allows 
 developers to manually check for new purchases without creating new transactions, in contrast to RestoreTransactions.
 
 ## Instructions to test this sample:
@@ -13,7 +13,7 @@ developers to manually check for new purchases without creating new transactions
 4. Build your project for `iOS`.
    1. If you are using a simulator with Xcode 12+, follow these [instructions](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode)
    to set up StoreKit Testing.
-
+      
 ## Refreshing App Receipts
 
 Using `RefreshAppReceipt` will prompt the user to enter their Apple login password.

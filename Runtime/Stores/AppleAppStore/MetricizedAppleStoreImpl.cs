@@ -22,7 +22,7 @@ namespace UnityEngine.Purchasing
         {
             m_TelemetryMetricsService = telemetryMetricsService;
         }
-
+        
         public override void FetchProducts(IReadOnlyCollection<ProductDefinition> products)
         {
             m_TelemetryMetricsService.ExecuteTimedAction(

@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.ErrorMitigation
     {
         float _jitterMagnitude = 1.0f;
         float _delayScale = 1.0f;
-        float _maxDelayTime = 8.0f;
+        float _maxDelayTime = 8.0f;        
         List<ExceptionPredicate> _exceptionsToHandle = new List<ExceptionPredicate>();
 
         /// <summary>

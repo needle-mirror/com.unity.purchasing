@@ -22,14 +22,14 @@ using UnityEngine.Purchasing.TransactionVerifier.Http;
 namespace UnityEngine.Purchasing.TransactionVerifier.Models
 {
     /// <summary>
-    /// Validation error response when a value provided from the client does not pass validation on server.
+    /// Validation error response when a value provided from the client does not pass validation on server. 
     /// </summary>
     [Preserve]
     [DataContract(Name = "validation-error-response")]
     internal class ValidationErrorResponse
     {
         /// <summary>
-        /// Validation error response when a value provided from the client does not pass validation on server.
+        /// Validation error response when a value provided from the client does not pass validation on server. 
         /// </summary>
         /// <param name="type">type param</param>
         /// <param name="title">title param</param>
@@ -56,49 +56,49 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
         [Preserve]
         [DataMember(Name = "type", IsRequired = true, EmitDefaultValue = true)]
         public string Type{ get; }
-
+        
         /// <summary>
         /// Parameter title of ValidationErrorResponse
         /// </summary>
         [Preserve]
         [DataMember(Name = "title", IsRequired = true, EmitDefaultValue = true)]
         public string Title{ get; }
-
+        
         /// <summary>
         /// Parameter status of ValidationErrorResponse
         /// </summary>
         [Preserve]
         [DataMember(Name = "status", IsRequired = true, EmitDefaultValue = true)]
         public int Status{ get; }
-
+        
         /// <summary>
         /// Parameter code of ValidationErrorResponse
         /// </summary>
         [Preserve]
         [DataMember(Name = "code", IsRequired = true, EmitDefaultValue = true)]
         public int Code{ get; }
-
+        
         /// <summary>
         /// Parameter detail of ValidationErrorResponse
         /// </summary>
         [Preserve]
         [DataMember(Name = "detail", IsRequired = true, EmitDefaultValue = true)]
         public string Detail{ get; }
-
+        
         /// <summary>
         /// Parameter instance of ValidationErrorResponse
         /// </summary>
         [Preserve]
         [DataMember(Name = "instance", EmitDefaultValue = false)]
         public string Instance{ get; }
-
+        
         /// <summary>
         /// Parameter errors of ValidationErrorResponse
         /// </summary>
         [Preserve]
         [DataMember(Name = "errors", IsRequired = true, EmitDefaultValue = true)]
         public List<ValidationErrorBody> Errors{ get; }
-
+    
         /// <summary>
         /// Formats a ValidationErrorResponse into a string of key-value pairs for use as a path parameter.
         /// </summary>
@@ -145,31 +145,31 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
                 var typeStringValue = Type.ToString();
                 dictionary.Add("type", typeStringValue);
             }
-
+            
             if (Title != null)
             {
                 var titleStringValue = Title.ToString();
                 dictionary.Add("title", titleStringValue);
             }
-
+            
             var statusStringValue = Status.ToString();
             dictionary.Add("status", statusStringValue);
-
+            
             var codeStringValue = Code.ToString();
             dictionary.Add("code", codeStringValue);
-
+            
             if (Detail != null)
             {
                 var detailStringValue = Detail.ToString();
                 dictionary.Add("detail", detailStringValue);
             }
-
+            
             if (Instance != null)
             {
                 var instanceStringValue = Instance.ToString();
                 dictionary.Add("instance", instanceStringValue);
             }
-
+            
             return dictionary;
         }
     }

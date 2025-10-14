@@ -39,5 +39,5 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Http
         /// <returns>This object as the given type.</returns>
         T GetAs<T>(DeserializationSettings deserializationSettings = null);
     }
-
+        
 }

@@ -292,7 +292,7 @@ namespace UnityEditor.Purchasing
             // and create a string.
             var stringBuilder = new StringBuilder();
 
-            // Loop through each byte of the hashed data
+            // Loop through each byte of the hashed data 
             // and format each one as a hexadecimal string.
             for (var i = 0; i < data.Length; i++)
             {

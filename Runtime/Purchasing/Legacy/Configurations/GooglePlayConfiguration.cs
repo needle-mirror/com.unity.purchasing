@@ -4,7 +4,7 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
-    class GooglePlayConfiguration : IGooglePlayConfiguration
+    class GooglePlayConfiguration: IGooglePlayConfiguration
     {
         public void SetServiceDisconnectAtInitializeListener(Action action)
         {

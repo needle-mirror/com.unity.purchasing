@@ -40,8 +40,8 @@ namespace UnityEditor.Purchasing
                 order[i] = j;
                 var sliceSize = 20; // prob should be configurable
                 var tmp = res.Skip(i * 20).Take(sliceSize).ToArray(); // tmp = res[i*20 .. slice]
-                Array.Copy(res, j * 20, res, i * 20, sliceSize);      // res[i] = res[j*20 .. slice]
-                Array.Copy(tmp, 0, res, j * 20, sliceSize);           // res[j] = tmp
+                Array.Copy(res, j * 20, res, i * 20, sliceSize);	  // res[i] = res[j*20 .. slice]
+                Array.Copy(tmp, 0, res, j * 20, sliceSize);		      // res[j] = tmp
             }
             order[slices - 1] = slices - 1;
 

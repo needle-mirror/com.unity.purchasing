@@ -17,10 +17,10 @@ namespace UnityEngine.Purchasing.TransactionVerifier.ErrorMitigation
 
     /// <summary>
     /// StatusCodePolicyConfig is a class that represents and stores how certain
-    /// status codes should be handled.
+    /// status codes should be handled. 
     /// </summary>
     internal class StatusCodePolicyConfig
-    {
+    {   
         IDictionary<long, bool> _statusCodesToHandleDict = new Dictionary<long, bool>()
         {
             {408, true}, // Request Timeout
@@ -45,9 +45,9 @@ namespace UnityEngine.Purchasing.TransactionVerifier.ErrorMitigation
                 _statusCodesToHandleDict.Add(new KeyValuePair<long, bool>(code, true));
             }
         }
-
+        
         /// <summary>
-        /// Register a status code that should not be handled.
+        /// Register a status code that should not be handled. 
         /// </summary>
         /// <param name="code">A long representing the status code to be handled.</param>
         public void DontHandleStatusCode(long code)

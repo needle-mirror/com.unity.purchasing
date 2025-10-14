@@ -26,8 +26,8 @@ namespace UnityEngine.Purchasing
         /// <param name="newProduct">new subscription to subscribe</param>
         /// <param name="desiredProrationMode">Specifies the mode of proration.
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
-        /// </param>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+		/// </param>
+		[Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayProrationMode desiredProrationMode);
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace UnityEngine.Purchasing
         /// <param name="newProduct">new subscription to subscribe</param>
         /// <param name="desiredReplacementMode">Specifies the replacement mode.
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
-        /// </param>
+		/// </param>
         [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayReplacementMode desiredReplacementMode);
 

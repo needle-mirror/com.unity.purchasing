@@ -28,13 +28,13 @@ namespace UnityEngine.Purchasing.TransactionVerifier
     /// <summary> Interface for TransactionVerifierService</summary>
     internal interface ITransactionVerifierService
     {
-
+        
         /// <summary> Accessor for AppleApi methods.</summary>
         IAppleApiClient AppleApi { get; set; }
-
+        
         /// <summary> Accessor for GoogleApi methods.</summary>
         IGoogleApiClient GoogleApi { get; set; }
-
+        
 
         /// <summary> Configuration properties for the service.</summary>
         Configuration Configuration { get; set; }

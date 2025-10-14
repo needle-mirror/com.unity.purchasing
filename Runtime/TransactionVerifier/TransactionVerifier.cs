@@ -11,7 +11,7 @@ using VerifyGoogleTransactionRequest = UnityEngine.Purchasing.TransactionVerifie
 
 #if IAP_UNITY_AUTH_ENABLED
 #else
-#error Unity Authentication (com.unity.services.authentication) is required when validating transactions (when IAP_TX_VERIFIER_ENABLED is defined).
+    #error Unity Authentication (com.unity.services.authentication) is required when validating transactions (when IAP_TX_VERIFIER_ENABLED is defined).
 #endif
 
 namespace UnityEngine.Purchasing.TransactionVerifier

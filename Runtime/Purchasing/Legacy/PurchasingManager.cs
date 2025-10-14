@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing
     /// The main controller for Applications using Unity Purchasing.
     /// </summary>
     [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
-    class PurchasingManager : IStoreController
+    class PurchasingManager: IStoreController
     {
         /// <summary>
         /// Stores may opt to disable Unity IAP's transaction log.
@@ -19,8 +19,7 @@ namespace UnityEngine.Purchasing
         readonly ITransactionLog m_TransactionLog = new TransactionLog(Application.persistentDataPath);
 
         StoreController m_StoreController = new();
-        public PurchasingManager()
-        {
+        public PurchasingManager() {
             m_StoreController.OnPurchaseFailed += OnPurchaseFailedAction;
             m_StoreController.OnPurchasePending += OnPurchasePendingAction;
             m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmedAction;

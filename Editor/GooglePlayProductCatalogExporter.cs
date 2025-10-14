@@ -7,9 +7,9 @@ using ExporterValidationResults = UnityEditor.Purchasing.ProductCatalogEditor.Ex
 namespace UnityEditor.Purchasing
 {
     /// <summary>
-    /// Exports a ProductCatalog to the CSV format expected by Google Play's batch import tools.
-    /// </summary>
-    internal class GooglePlayProductCatalogExporter : ProductCatalogEditor.IProductCatalogExporter
+	/// Exports a ProductCatalog to the CSV format expected by Google Play's batch import tools.
+	/// </summary>
+	internal class GooglePlayProductCatalogExporter : ProductCatalogEditor.IProductCatalogExporter
     {
         public string DisplayName => "Google Play CSV";
 

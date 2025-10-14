@@ -435,7 +435,7 @@ namespace UnityEngine.Purchasing
         /// Zulu.
         /// </summary>
         zu_ZA,
-    }
+}
 
     /// <summary>
     /// Class that facilitates localization code extensions.

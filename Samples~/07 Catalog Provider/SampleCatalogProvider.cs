@@ -5,7 +5,7 @@ using UnityEngine.Purchasing;
 
 namespace Samples.Purchasing.Core.CatalogProvider
 {
-    public class SampleCatalogProvider : MonoBehaviour
+    public class SampleCatalogProvider: MonoBehaviour
     {
         /// <summary>
         /// Here we create a CatalogProvider for each Catalog that we want to manage.
@@ -65,7 +65,7 @@ namespace Samples.Purchasing.Core.CatalogProvider
             };
             var storeSpecificIdsByProductId = new Dictionary<string, StoreSpecificIds>();
             //Here we declare each SkuID specific to each store we need
-            var adventurePassIds = new StoreSpecificIds { { "com.example.google.adventure.pass", UnityEngine.Purchasing.GooglePlay.Name }, { "com.example.adventure.ios.pass", UnityEngine.Purchasing.AppleAppStore.Name }, { "com.example.adventure.macos.pass", MacAppStore.Name } };
+            var adventurePassIds = new StoreSpecificIds {{"com.example.google.adventure.pass", UnityEngine.Purchasing.GooglePlay.Name}, {"com.example.adventure.ios.pass", UnityEngine.Purchasing.AppleAppStore.Name}, {"com.example.adventure.macos.pass", MacAppStore.Name}};
             storeSpecificIdsByProductId.Add(k_SubscriptionAdventurePassSkuID, adventurePassIds);
             //Finally we add everything to the Catalog Provider
             m_DefaultCatalogProvider.AddProducts(initialProductsToFetch, storeSpecificIdsByProductId);

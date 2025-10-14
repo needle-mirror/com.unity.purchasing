@@ -66,84 +66,84 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
         [Preserve]
         [DataMember(Name = "hash", EmitDefaultValue = false)]
         public string Hash{ get; }
-
+        
         /// <summary>
         /// ID of the player.
         /// </summary>
         [Preserve]
         [DataMember(Name = "player_id", EmitDefaultValue = false)]
         public string PlayerId{ get; }
-
+        
         /// <summary>
         /// ID of the Unity project.
         /// </summary>
         [Preserve]
         [DataMember(Name = "project_id", EmitDefaultValue = false)]
         public string ProjectId{ get; }
-
+        
         /// <summary>
         /// Whether the transaction has been marked as fulfilled.
         /// </summary>
         [Preserve]
         [DataMember(Name = "fulfilled", EmitDefaultValue = true)]
         public bool Fulfilled{ get; }
-
+        
         /// <summary>
         /// Date time in ISO 8601 format. &#x60;null&#x60; if there is no associated value.
         /// </summary>
         [Preserve]
         [DataMember(Name = "fulfilled_at", EmitDefaultValue = false)]
         public DateTime? FulfilledAt{ get; }
-
+        
         /// <summary>
         /// ID of the order/transaction/receipt from a Google Play Store receipt.
         /// </summary>
         [Preserve]
         [DataMember(Name = "transaction_id", EmitDefaultValue = false)]
         public string TransactionId{ get; }
-
+        
         /// <summary>
         /// ID of the product.
         /// </summary>
         [Preserve]
         [DataMember(Name = "product_id", EmitDefaultValue = false)]
         public string ProductId{ get; }
-
+        
         /// <summary>
         /// Quantity of the product.
         /// </summary>
         [Preserve]
         [DataMember(Name = "quantity", EmitDefaultValue = false)]
         public int? Quantity{ get; }
-
+        
         /// <summary>
         /// Type of the transaction.
         /// </summary>
         [Preserve]
         [DataMember(Name = "transaction_type", EmitDefaultValue = false)]
         public string TransactionType{ get; }
-
+        
         /// <summary>
         /// Date time in ISO 8601 format.
         /// </summary>
         [Preserve]
         [DataMember(Name = "validated_at", EmitDefaultValue = false)]
         public DateTime ValidatedAt{ get; }
-
+        
         /// <summary>
         /// Date time in ISO 8601 format.
         /// </summary>
         [Preserve]
         [DataMember(Name = "updated_at", EmitDefaultValue = false)]
         public DateTime UpdatedAt{ get; }
-
+        
         /// <summary>
         /// Date time in ISO 8601 format. Null if the transaction is not revoked.
         /// </summary>
         [Preserve]
         [DataMember(Name = "revoked_at", EmitDefaultValue = false)]
         public DateTime? RevokedAt{ get; }
-
+    
         /// <summary>
         /// Formats a AppleTransactionDto into a string of key-value pairs for use as a path parameter.
         /// </summary>
@@ -213,70 +213,70 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
                 var hashStringValue = Hash.ToString();
                 dictionary.Add("hash", hashStringValue);
             }
-
+            
             if (PlayerId != null)
             {
                 var player_idStringValue = PlayerId.ToString();
                 dictionary.Add("player_id", player_idStringValue);
             }
-
+            
             if (ProjectId != null)
             {
                 var project_idStringValue = ProjectId.ToString();
                 dictionary.Add("project_id", project_idStringValue);
             }
-
+            
             var fulfilledStringValue = Fulfilled.ToString();
             dictionary.Add("fulfilled", fulfilledStringValue);
-
+            
             if (FulfilledAt != null)
             {
                 var fulfilled_atStringValue = FulfilledAt.ToString();
                 dictionary.Add("fulfilled_at", fulfilled_atStringValue);
             }
-
+            
             if (TransactionId != null)
             {
                 var transaction_idStringValue = TransactionId.ToString();
                 dictionary.Add("transaction_id", transaction_idStringValue);
             }
-
+            
             if (ProductId != null)
             {
                 var product_idStringValue = ProductId.ToString();
                 dictionary.Add("product_id", product_idStringValue);
             }
-
+            
             if (Quantity != null)
             {
                 var quantityStringValue = Quantity.ToString();
                 dictionary.Add("quantity", quantityStringValue);
             }
-
+            
             if (TransactionType != null)
             {
                 var transaction_typeStringValue = TransactionType.ToString();
                 dictionary.Add("transaction_type", transaction_typeStringValue);
             }
-
+            
             if (ValidatedAt != null)
             {
                 var validated_atStringValue = ValidatedAt.ToString();
                 dictionary.Add("validated_at", validated_atStringValue);
             }
-
+            
             if (UpdatedAt != null)
             {
                 var updated_atStringValue = UpdatedAt.ToString();
                 dictionary.Add("updated_at", updated_atStringValue);
             }
-
+            
             if (RevokedAt != null)
             {
                 var revoked_atStringValue = RevokedAt.ToString();
                 dictionary.Add("revoked_at", revoked_atStringValue);
             }
-
+            
             return dictionary;
         }
     }

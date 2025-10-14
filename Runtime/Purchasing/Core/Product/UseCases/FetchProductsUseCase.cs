@@ -38,7 +38,7 @@ namespace UnityEngine.Purchasing
         {
             if (m_ActiveRequest == null)
             {
-                if (productDefinitions != null)
+                if (productDefinitions != null && productDefinitions.Count > 0)
                 {
                     var readOnlyProducts = new ReadOnlyCollection<ProductDefinition>(productDefinitions);
                     ProcessValidFetchRequest(new ProductFetchRequest(readOnlyProducts, fetchSuccessAction,
@@ -96,7 +96,7 @@ namespace UnityEngine.Purchasing
             // Clear the active request before invoking the callbacks to avoid concurrency issues with retries
             m_ActiveRequest = null;
 
-            InvokeSuccess(retrievedProducts, successCallback);
+            InvokeSuccessIfFetchedProducts(retrievedProducts, successCallback);
             InvokeFailureIfIncomplete(request, matchedDefinitions);
         }
 
@@ -117,9 +117,12 @@ namespace UnityEngine.Purchasing
             return matchedProduct;
         }
 
-        static void InvokeSuccess(List<Product> fetchedProducts, Action<List<Product>>? successCallback)
+        static void InvokeSuccessIfFetchedProducts(List<Product> fetchedProducts, Action<List<Product>>? successCallback)
         {
-            successCallback?.Invoke(fetchedProducts);
+            if (fetchedProducts.Count > 0)
+            {
+                 successCallback?.Invoke(fetchedProducts);
+            }
         }
 
         static void InvokeFailureIfIncomplete(ProductFetchRequest request, List<ProductDefinition> matchedDefinitions)

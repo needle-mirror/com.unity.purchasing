@@ -10,16 +10,16 @@ namespace UnityEngine.Purchasing.Security
         /// <summary>
         /// The ID of the transaction.
         /// </summary>
-        string transactionID { get; }
+		string transactionID { get; }
 
         /// <summary>
         /// The ID of the product purchased.
         /// </summary>
-        string productID { get; }
+		string productID { get; }
 
         /// <summary>
         /// The date fof the purchase.
         /// </summary>
-        DateTime purchaseDate { get; }
+		DateTime purchaseDate { get; }
     }
 }

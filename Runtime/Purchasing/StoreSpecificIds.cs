@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing
     public class StoreSpecificIds : IEnumerable, ISerializationCallbackReceiver
     {
         Dictionary<string, string> m_productIdDictionary = new Dictionary<string, string>();
-
+        
         [FormerlySerializedAs("m_keys")]
         [SerializeField]
         List<string> m_storeNames = new List<string>();
@@ -71,7 +71,7 @@ namespace UnityEngine.Purchasing
         {
             return m_productIdDictionary.ContainsKey(store) ? m_productIdDictionary[store] : defaultValue;
         }
-
+        
         /// <summary>
         /// Method from ISerializationCallbackReceiver. Allow the serialization of the dictionary.
         /// </summary>
@@ -86,7 +86,7 @@ namespace UnityEngine.Purchasing
                 m_productIds.Add(kvp.Value);
             }
         }
-
+        
         /// <summary>
         /// Method from ISerializationCallbackReceiver. Allow the deserialization of the dictionary.
         /// </summary>

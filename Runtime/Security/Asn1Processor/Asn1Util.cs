@@ -729,43 +729,43 @@ namespace LipingShare.LCLib.Asn1Processor
         }
 
 #if UNITYIAP_DISABLED
-        /// <summary>
-        /// Read registry information from local machine entrys.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        static public object ReadRegInfo(string path, string name)
-        {
-            object retval = null;
-            Microsoft.Win32.RegistryKey regKey;
-            regKey = Registry.LocalMachine.OpenSubKey(path, false);
-            if (regKey!=null)
-            {
-                retval = regKey.GetValue(name);
-            }
-            return retval;
-        }
+		/// <summary>
+		/// Read registry information from local machine entrys.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <param name="name"></param>
+		/// <returns></returns>
+		static public object ReadRegInfo(string path, string name)
+		{
+			object retval = null;
+			Microsoft.Win32.RegistryKey regKey;
+			regKey = Registry.LocalMachine.OpenSubKey(path, false);
+			if (regKey!=null)
+			{
+				retval = regKey.GetValue(name);
+			}
+			return retval;
+		}
 
-        /// <summary>
-        /// Write information into local machine registry entry.
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="name"></param>
-        /// <param name="data"></param>
-        static public void WriteRegInfo(string path, string name, object data)
-        {
-            Microsoft.Win32.RegistryKey regKey;
-            regKey = Registry.LocalMachine.OpenSubKey(path, true);
-            if (regKey == null)
-            {
-                regKey = Registry.LocalMachine.CreateSubKey(path);
-            }
-            if (regKey != null)
-            {
-                regKey.SetValue(name, data);
-            }
-        }
+		/// <summary>
+		/// Write information into local machine registry entry.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <param name="name"></param>
+		/// <param name="data"></param>
+		static public void WriteRegInfo(string path, string name, object data)
+		{
+			Microsoft.Win32.RegistryKey regKey;
+			regKey = Registry.LocalMachine.OpenSubKey(path, true);
+			if (regKey == null)
+			{
+				regKey = Registry.LocalMachine.CreateSubKey(path);
+			}
+			if (regKey != null)
+			{
+				regKey.SetValue(name, data);
+			}
+		}
 #endif
 
         /// <summary>

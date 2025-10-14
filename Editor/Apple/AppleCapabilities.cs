@@ -1,6 +1,7 @@
 #if UNITY_TVOS || UNITY_IOS || UNITY_VISIONOS
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
 using UnityEditor.iOS.Xcode;
@@ -42,6 +43,8 @@ namespace UnityEditor.Purchasing
 
             AddStoreKitFramework(proj, projPath);
             AddInAppPurchasingCapability(projPath, proj);
+
+            PatchSwiftHeaderImports(path);
         }
 
         static void AddInAppPurchasingCapability(string projPath, PBXProject proj)
@@ -60,7 +63,31 @@ namespace UnityEditor.Purchasing
             foreach (var targetGuid in new[] { proj.GetUnityMainTargetGuid(), proj.GetUnityFrameworkTargetGuid() })
             {
                 proj.AddFrameworkToProject(targetGuid, k_StorekitFramework, false);
-                System.IO.File.WriteAllText(projPath, proj.WriteToString());
+            }
+            File.WriteAllText(projPath, proj.WriteToString());
+        }
+
+        static void PatchSwiftHeaderImports(string xcodePath)
+        {
+            // Find all .h, .m and .mm files in the exported Xcode project
+            var files = Directory.GetFiles(xcodePath, "*.*", SearchOption.AllDirectories);
+            foreach (var file in files)
+            {
+                if (file.EndsWith(".h") || file.EndsWith(".m") || file.EndsWith(".mm"))
+                {
+                    string text = File.ReadAllText(file);
+                    // If file contains UnityFramework-Swift.h import but not StoreKit, add StoreKit import before it
+                    if (text.Contains("#import <UnityFramework/UnityFramework-Swift.h>") &&
+                        !text.Contains("#import <StoreKit/StoreKit.h>"))
+                    {
+                        text = Regex.Replace(
+                            text,
+                            @"(#import <UnityFramework/UnityFramework-Swift\.h>)",
+                            "#import <StoreKit/StoreKit.h>\n$1"
+                        );
+                        File.WriteAllText(file, text);
+                    }
+                }
             }
         }
     }

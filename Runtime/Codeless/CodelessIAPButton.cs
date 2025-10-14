@@ -94,8 +94,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Consume the product immediately after a successful purchase.
         /// </summary>
-        [FormerlySerializedAs("consumePurchase")]
-        [Tooltip("Automatically confirm the transaction immediately after a successful purchase.")]
+        [FormerlySerializedAs("consumePurchase")] [Tooltip("Automatically confirm the transaction immediately after a successful purchase.")]
         public bool automaticallyConfirmTransaction = true;
 
         /// <summary>

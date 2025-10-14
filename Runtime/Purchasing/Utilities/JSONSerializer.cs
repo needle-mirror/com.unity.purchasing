@@ -73,9 +73,9 @@ namespace UnityEngine.Purchasing
             try
             {
                 var decodedJson = MiniJson.JsonDecode(json);
-                foreach (var val in (Dictionary<string, object>)decodedJson)
+                foreach (var val in (Dictionary<string, object>) decodedJson)
                 {
-                    result[val.Key] = (Dictionary<string, object>)val.Value;
+                    result[val.Key] = (Dictionary<string, object>) val.Value;
                 }
             }
             catch (Exception e)
@@ -153,7 +153,7 @@ namespace UnityEngine.Purchasing
             try
             {
                 var decodedJson = MiniJson.JsonDecode(purchaseDetailJson);
-                foreach (var (key, value) in (Dictionary<string, object>)decodedJson)
+                foreach (var (key, value) in (Dictionary<string, object>) decodedJson)
                 {
                     result[key] = value;
                 }
@@ -168,8 +168,12 @@ namespace UnityEngine.Purchasing
 
         public static Dictionary<string, string> DeserializeSubscriptionDescriptions(string json)
         {
-            var objects = (List<object>)MiniJson.JsonDecode(json);
+            var objects = MiniJson.JsonDecode(json) as List<object>;
             var result = new Dictionary<string, string>();
+            if (objects == null)
+            {
+                return result;
+            }
             foreach (var obj in objects.Cast<Dictionary<string, object>>())
             {
                 var subscription = new Dictionary<string, string>();
@@ -210,8 +214,12 @@ namespace UnityEngine.Purchasing
 
         public static Dictionary<string, string> DeserializeProductDetails(string json)
         {
-            var objects = (List<object>)MiniJson.JsonDecode(json);
+            var objects = MiniJson.JsonDecode(json) as List<object>;
             var result = new Dictionary<string, string>();
+            if (objects == null)
+            {
+                return result;
+            }
             foreach (var obj in objects.Cast<Dictionary<string, object>>())
             {
                 var details = new Dictionary<string, string>();

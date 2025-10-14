@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -141,22 +141,22 @@ namespace Samples.Purchasing.IAP5.Demo
         void CreateCrossPlatformValidator()
         {
 #if !UNITY_EDITOR
-            try
+        try
+        {
+            if (CanCrossPlatformValidate())
             {
-                if (CanCrossPlatformValidate())
-                {
 #if !DEBUG_STOREKIT_TEST
-                    m_CrossPlatformValidator = new CrossPlatformValidator(GooglePlayTangle.Data(), Application.identifier);
+                m_CrossPlatformValidator = new CrossPlatformValidator(GooglePlayTangle.Data(), Application.identifier);
 #else
                 m_CrossPlatformValidator = new CrossPlatformValidator(GooglePlayTangle.Data(), Application.identifier);
 #endif
-                }
             }
-            catch (NotImplementedException exception)
-            {
-                m_IAPLogger.LogConsole("===========");
-                m_IAPLogger.LogConsole($"Cross Platform Validator Not Implemented: {exception}");
-            }
+        }
+        catch (NotImplementedException exception)
+        {
+            m_IAPLogger.LogConsole("===========");
+            m_IAPLogger.LogConsole($"Cross Platform Validator Not Implemented: {exception}");
+        }
 #endif
         }
 

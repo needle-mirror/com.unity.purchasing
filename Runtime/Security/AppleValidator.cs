@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing.Security
     public class AppleValidator
     {
         X509Cert cert;
-        AppleReceiptParser parser = new AppleReceiptParser();
+        AppleReceiptParser parser = new AppleReceiptParser ();
 
         /// <summary>
         /// Constructs an instance with Apple Certificate.
@@ -130,7 +130,7 @@ namespace UnityEngine.Purchasing.Security
             Thread.CurrentThread.CurrentCulture = originalCulture;
         }
 
-        AppleReceipt ParseReceipt(Asn1Node data)
+        AppleReceipt ParseReceipt (Asn1Node data)
         {
             if (data == null || data.ChildNodeCount != 1)
             {
@@ -200,7 +200,7 @@ namespace UnityEngine.Purchasing.Security
             }
         }
 
-        AppleInAppPurchaseReceipt ParseInAppReceipt(Asn1Node inApp)
+        AppleInAppPurchaseReceipt ParseInAppReceipt (Asn1Node inApp)
         {
             var result = new AppleInAppPurchaseReceipt();
             for (int t = 0; t < inApp.ChildNodeCount; t++)
@@ -265,7 +265,7 @@ namespace UnityEngine.Purchasing.Security
         /// <summary>
         /// Try and parse a DateTime, returning the minimum DateTime on failure.
         /// </summary>
-        static DateTime TryParseDateTimeNode(Asn1Node node)
+        static DateTime TryParseDateTimeNode (Asn1Node node)
         {
             var dateString = Encoding.UTF8.GetString(node.GetChildNode(0).Data);
             if (!string.IsNullOrEmpty(dateString))

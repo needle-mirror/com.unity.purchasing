@@ -18,7 +18,7 @@
 //| this list of conditions and the following disclaimer in the documentation     |
 //| and/or other materials provided with the distribution.                        |
 //|                                                                               |
-//| THE SOFTWARE PRODUCT IS PROVIDED ‚ÄúAS IS‚Äù WITHOUT WARRANTY OF ANY KIND,        |
+//| THE SOFTWARE PRODUCT IS PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND,        |
 //| EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED         |
 //| WARRANTIES OF TITLE, NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS FOR        |
 //| A PARTICULAR PURPOSE.                                                         |
@@ -181,3 +181,4 @@ namespace LipingShare.LCLib.Asn1Processor
 
     }
 }
+

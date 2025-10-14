@@ -4,7 +4,7 @@ using UnityEditor;
 
 namespace UnityEngine.Purchasing
 {
-    class ExtensionProvider : IExtensionProvider
+    class ExtensionProvider: IExtensionProvider
     {
         readonly Dictionary<Type, IStoreExtension> m_ExtensionMap = new Dictionary<Type, IStoreExtension>();
 

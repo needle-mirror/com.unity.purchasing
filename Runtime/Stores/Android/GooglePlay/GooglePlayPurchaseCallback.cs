@@ -71,7 +71,7 @@ namespace UnityEngine.Purchasing
 
         public void NotifyDeferredPurchase(IGooglePurchase purchase)
         {
-            var order = (DeferredOrder)m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
+            var order = (DeferredOrder) m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
             m_PurchaseCallback?.OnPurchaseDeferred(order);
         }
 

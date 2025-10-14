@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -35,7 +35,7 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
             userWarning.Clear();
             UpdateUI();
         }
-
+        
         static bool IsGooglePlayStoreSelected()
         {
             var currentAppStore = StandardPurchasingModule.Instance().appStore;

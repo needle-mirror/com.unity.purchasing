@@ -44,7 +44,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
         [Preserve]
         [DataMember(Name = "jwsTransaction", IsRequired = true, EmitDefaultValue = true)]
         public string JwsTransaction{ get; }
-
+    
         /// <summary>
         /// Formats a VerifyAppleTransactionRequest into a string of key-value pairs for use as a path parameter.
         /// </summary>
@@ -73,7 +73,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
                 var jwsTransactionStringValue = JwsTransaction.ToString();
                 dictionary.Add("jwsTransaction", jwsTransactionStringValue);
             }
-
+            
             return dictionary;
         }
     }

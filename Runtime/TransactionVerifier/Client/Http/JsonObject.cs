@@ -56,7 +56,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Http
                 {
                     return obj.ToString();
                 }
-
+                
                 return IsolatedJsonConvert.SerializeObject(obj);
             }
             catch (System.Exception)

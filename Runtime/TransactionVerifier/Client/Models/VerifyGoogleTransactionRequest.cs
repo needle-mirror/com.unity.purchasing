@@ -44,7 +44,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
         [Preserve]
         [DataMember(Name = "receipt", EmitDefaultValue = false)]
         public string Receipt{ get; }
-
+    
         /// <summary>
         /// Formats a VerifyGoogleTransactionRequest into a string of key-value pairs for use as a path parameter.
         /// </summary>
@@ -73,7 +73,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
                 var receiptStringValue = Receipt.ToString();
                 dictionary.Add("receipt", receiptStringValue);
             }
-
+            
             return dictionary;
         }
     }

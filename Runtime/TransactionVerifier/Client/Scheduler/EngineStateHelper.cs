@@ -43,6 +43,6 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Scheduler
                 IsPlaying = true;
             }
         }
-#endif
+#endif   
     }
 }

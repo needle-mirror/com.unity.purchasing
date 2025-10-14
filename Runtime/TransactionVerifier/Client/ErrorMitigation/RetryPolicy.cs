@@ -45,7 +45,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.ErrorMitigation
 
     /// <summary>
     /// Retry Policy class that defines how exponential backoff and retry
-    /// behaviour should work.
+    /// behaviour should work. 
     /// </summary>
     /// <typeparam name="T">The type of the operation.</typeparam>
     internal class RetryPolicy<T> : IRetryPolicy<T>
@@ -221,14 +221,14 @@ namespace UnityEngine.Purchasing.TransactionVerifier.ErrorMitigation
                 catch (Exception e)
                 {
                     // If we catch an exception, first check if it is one we are supposed to
-                    // handle. If so, we can retry, otherwise, we should throw.
+                    // handle. If so, we can retry, otherwise, we should throw.                    
                     if (!retryPolicyConfig.IsHandledException(e))
                     {
                         // Rethrow the exception
                         throw;
                     }
                 }
-
+                
                 // If RetryCondition is not null, invoke the RetryCondition and
                 // check if the CreateOperation succeeded. Also check if
                 // asyncOp is null, if it is that likely means we have thrown an

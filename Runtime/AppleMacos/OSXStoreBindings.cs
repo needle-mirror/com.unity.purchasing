@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 
 #if !UNITY_EDITOR
@@ -75,24 +75,24 @@ namespace UnityEngine.Purchasing
 
         public string AppReceipt()
         {
-            // Fetch the receipt pointer from Swift
-            IntPtr receiptPointer = unityPurchasing_FetchAppReceipt();
-            string res = "";
-            if (receiptPointer != IntPtr.Zero)
-            {
-                res = Marshal.PtrToStringAuto(receiptPointer);
+        	// Fetch the receipt pointer from Swift
+        	IntPtr receiptPointer = unityPurchasing_FetchAppReceipt();
+			string res = "";
+        	if (receiptPointer != IntPtr.Zero)
+        	{
+				res = Marshal.PtrToStringAuto(receiptPointer);
 
-                // Deallocate the memory when done
-                DeallocateMemory(receiptPointer);
-            }
+            	// Deallocate the memory when done
+            	DeallocateMemory(receiptPointer);
+        	}
 
-            return res;
+        	return res;
         }
 
         public void DeallocateMemory(IntPtr pointer)
-        {
-            unityPurchasing_DeallocateMemory(pointer);
-        }
+		{
+    		unityPurchasing_DeallocateMemory(pointer);
+		}
 
         public bool canMakePayments
         {
@@ -163,12 +163,12 @@ namespace UnityEngine.Purchasing
 
         public void InterceptPromotionalPurchases()
         {
-            unityPurchasing_InterceptPromotionalPurchases();
+            unityPurchasing_InterceptPromotionalPurchases ();
         }
 
         public void ContinuePromotionalPurchases()
         {
-            unityPurchasing_ContinuePromotionalPurchases();
+            unityPurchasing_ContinuePromotionalPurchases ();
         }
 
         public void PresentCodeRedemptionSheet()

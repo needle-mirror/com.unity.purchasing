@@ -1,6 +1,6 @@
 namespace UnityEngine.Purchasing
 {
-    interface IAndroidJavaStore : INativeStore
+    interface IAndroidJavaStore: INativeStore
     {
         AndroidJavaObject GetStore();
     }

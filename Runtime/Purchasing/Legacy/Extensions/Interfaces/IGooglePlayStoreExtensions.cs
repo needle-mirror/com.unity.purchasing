@@ -50,7 +50,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="productId">Product id</param>
         /// <param name="callback">Price changed event finished successfully</param>
-        [Obsolete("No longer functional. This calls launchPriceChangeConfirmationFlow which was removed from Google Play Billing Library 6.0.0")]
+        [Obsolete ("No longer functional. This calls launchPriceChangeConfirmationFlow which was removed from Google Play Billing Library 6.0.0")]
         void ConfirmSubscriptionPriceChange(string productId, Action<bool> callback);
 
         /// <summary>

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Linq;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -23,12 +24,19 @@ namespace UnityEngine.Purchasing
                 return new DeferredOrder(cart, orderInfo);
             }
 
-            if (purchase.IsAcknowledged())
+            // A consumable that was acknowledged should still be a PendingOrder since it hasn't been rewarded or consumed yet.
+            if (GetProductType(cart) != ProductType.Consumable && purchase.IsAcknowledged())
             {
                 return new ConfirmedOrder(cart, orderInfo);
             }
 
             return new PendingOrder(cart, orderInfo);
+        }
+
+        static ProductType GetProductType(ICart cart)
+        {
+            var cartItem = cart.Items().FirstOrDefault();
+            return cartItem?.Product.definition?.type ?? ProductType.Unknown;
         }
 
         public ICart CreateCartFromPurchase(IGooglePurchase purchase, IProductCache? productCache)

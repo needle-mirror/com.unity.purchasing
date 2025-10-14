@@ -15,7 +15,7 @@ namespace UnityEngine.Purchasing
         internal static bool shouldFetchProductsAtInit = true;
         static bool isInitialized = false;
 
-        internal static PurchasingManager m_PurchasingManager = new PurchasingManager();
+        internal static PurchasingManager m_PurchasingManager= new PurchasingManager();
         /// <summary>
         /// The main initialization call for Unity Purchasing.
         /// </summary>

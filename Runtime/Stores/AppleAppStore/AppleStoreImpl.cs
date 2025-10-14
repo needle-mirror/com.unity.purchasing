@@ -35,7 +35,6 @@ namespace UnityEngine.Purchasing
         INativeAppleStore? m_Native;
         readonly IAppleFetchProductsService m_FetchProductsService;
         readonly ITransactionLog m_TransactionLog;
-        static HashSet<string> s_SubscriptionDeduplicationData = new();
 
         static IUtil? s_Util;
         static AppleStoreImpl? s_Instance;
@@ -512,14 +511,7 @@ namespace UnityEngine.Purchasing
                 appAccountToken = parsedToken;
             }
 
-            if (IsValidPurchaseState(expirationDate, productId))
-            {
-                ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
-            }
-            else
-            {
-                base.FinishTransaction(null, transactionId);
-            }
+            ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
         }
 
         // TODO: IAP-3929
@@ -553,23 +545,12 @@ namespace UnityEngine.Purchasing
         {
             var pendingOrder = GenerateApplePendingOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws);
             PurchaseCallback?.OnPurchaseSucceeded(pendingOrder);
-            AddSubscriptionDeduplicationData(id, expirationDate);
         }
 
         void ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
         {
             var confirmedOrder = GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws);
             EnsureConfirmedOrderIsFinished(confirmedOrder);
-            AddSubscriptionDeduplicationData(id, expirationDate);
-        }
-
-        void AddSubscriptionDeduplicationData(string productId, string expirationDate)
-        {
-            var product = FindProductById(productId);
-            if (product.definition.type == ProductType.Subscription)
-            {
-                s_SubscriptionDeduplicationData.Add(productId + "|" + expirationDate);
-            }
         }
 
         DeferredOrder GenerateAppleDeferredOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
@@ -596,18 +577,24 @@ namespace UnityEngine.Purchasing
         void EnsureConfirmedOrderIsFinished(ConfirmedOrder confirmedOrder)
         {
             var productDefinition = confirmedOrder.CartOrdered.Items().FirstOrDefault()?.Product.definition;
+            InvokeErrorIfRepurchasedConsumables(confirmedOrder);
             base.FinishTransaction(productDefinition, confirmedOrder.Info.TransactionID);
         }
 
-        bool IsValidPurchaseState(string expirationDate, string productId)
+        void InvokeErrorIfRepurchasedConsumables(ConfirmedOrder confirmedOrder)
         {
-            var product = FindProductById(productId);
-            if (product.definition.type == ProductType.Subscription)
+            var allConsumables = confirmedOrder.CartOrdered.Items().All(
+                (item) => item.Product.definition.type == ProductType.Consumable
+            );
+            if (!allConsumables)
             {
-                return !s_SubscriptionDeduplicationData.Contains(productId + "|" + expirationDate);
+                return;
             }
 
-            return true;
+            var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
+                PurchaseFailureReason.DuplicateTransaction,
+                "Consumable purchase has already been confirmed by IAP.");
+            PurchaseCallback?.OnPurchaseFailed(failedOrder);
         }
     }
 }

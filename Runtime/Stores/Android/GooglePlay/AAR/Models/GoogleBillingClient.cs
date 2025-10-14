@@ -207,7 +207,7 @@ namespace UnityEngine.Purchasing.Models
             {
                 productDetailsParamsBuilder.Call<AndroidJavaObject>("setOfferToken", offerToken).Dispose();
             }
-            using var productDetailsParams = productDetailsParamsBuilder.Call<AndroidJavaObject>("build");
+            using var productDetailsParams =  productDetailsParamsBuilder.Call<AndroidJavaObject>("build");
             var productDetailsParamsList = new List<AndroidJavaObject> { productDetailsParams }.ToJava();
 
             return m_BillingClient.Call<AndroidJavaObject>("launchBillingFlow", UnityActivity.GetCurrentActivity(), MakeBillingFlowParams(productDetailsParamsList, oldPurchaseToken, replacementMode));

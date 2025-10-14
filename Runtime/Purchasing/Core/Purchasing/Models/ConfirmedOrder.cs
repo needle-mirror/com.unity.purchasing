@@ -24,11 +24,12 @@ namespace UnityEngine.Purchasing
         List<IPurchasedProductInfo> FillPurchasedProductInfo()
         {
             var purchasedProductInfo = new List<IPurchasedProductInfo>();
-            var productId = CartOrdered.Items().First().Product.definition.storeSpecificId;
-            var productType = CartOrdered.Items().First().Product.definition.type;
+            var productDefinition = CartOrdered.Items()?.FirstOrDefault()?.Product.definition;
+            var productId = productDefinition?.storeSpecificId;
+            var productType = productDefinition?.type;
             if (productId != null)
             {
-                purchasedProductInfo.Add(new PurchasedProductInfo(productId, Info.Receipt, productType));
+                purchasedProductInfo.Add(new PurchasedProductInfo(productId, Info.Receipt, productType ?? ProductType.Unknown));
             }
 
             return purchasedProductInfo;

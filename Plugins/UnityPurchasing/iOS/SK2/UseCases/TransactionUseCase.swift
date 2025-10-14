@@ -68,7 +68,17 @@ class TransactionUseCase: TransactionUseCaseProtocol {
 
         let (finished, unfinished) = await (finishedTask, unfinishedTask)
 
-        return (finishedTransactions: finished, unfinishedTransactions: unfinished)
+        let unfinishedTransactionIds: Set<UInt64> = Set(unfinished.values.compactMap { $0.transactionId })
+        let filteredFinishedTransactions: [String: PurchaseDetails] = finished.filter { _, details in
+            guard let txnId = details.transactionId else {
+                // Drop entries without a transactionId
+                return false
+            }
+            // Keep only if its transactionId is not present in unfinished
+            return !unfinishedTransactionIds.contains(txnId)
+        }
+
+        return (finishedTransactions: filteredFinishedTransactions, unfinishedTransactions: unfinished)
     }
 
     private func processCurrentEntitlements() async -> [String: PurchaseDetails] {
@@ -78,9 +88,7 @@ class TransactionUseCase: TransactionUseCaseProtocol {
             do {
                 let transaction = try transactionObserver.checkVerified(transactionResult)
                 let details = transactionResult.purchaseDetails()
-                if let productId = details.productId {
-                    result[productId] = details
-                }
+                result[String(transaction.id)] = details
             } catch {
                 printLog("Verification failed: \(error.localizedDescription)")
             }
@@ -96,9 +104,7 @@ class TransactionUseCase: TransactionUseCaseProtocol {
             do {
                 let transaction = try transactionObserver.checkVerified(transactionResult)
                 let details = transactionResult.purchaseDetails()
-                if let productId = details.productId {
-                    result[productId] = details
-                }
+                result[String(transaction.id)] = details
             } catch {
                 printLog("Verification failed: \(error.localizedDescription)")
             }

@@ -46,14 +46,14 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
         [Preserve]
         [DataMember(Name = "field", IsRequired = true, EmitDefaultValue = true)]
         public string Field{ get; }
-
+        
         /// <summary>
         /// Parameter messages of ValidationErrorBody
         /// </summary>
         [Preserve]
         [DataMember(Name = "messages", IsRequired = true, EmitDefaultValue = true)]
         public List<string> Messages{ get; }
-
+    
         /// <summary>
         /// Formats a ValidationErrorBody into a string of key-value pairs for use as a path parameter.
         /// </summary>
@@ -86,13 +86,13 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
                 var fieldStringValue = Field.ToString();
                 dictionary.Add("field", fieldStringValue);
             }
-
+            
             if (Messages != null)
             {
                 var messagesStringValue = Messages.ToString();
                 dictionary.Add("messages", messagesStringValue);
             }
-
+            
             return dictionary;
         }
     }

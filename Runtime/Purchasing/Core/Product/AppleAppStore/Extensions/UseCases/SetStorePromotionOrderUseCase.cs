@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing.UseCases
                     productIds.Add(p.definition.storeSpecificId);
                 }
             }
-
+            
             m_NativeAppleStore.SetStorePromotionOrder(MiniJson.JsonEncode(productIds));
         }
     }

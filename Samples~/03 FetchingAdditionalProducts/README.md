@@ -1,10 +1,10 @@
 # In-App Purchasing Sample Scenes - Fetching Additional Products
 
-This sample demonstrates how to use the `StoreController` to dynamically fetch
+This sample demonstrates how to use the `StoreController` to dynamically fetch 
 and display additional products that can be purchased in your store.
 
-The sample uses a fake store for transactions.
-To use a real store (such as the App Store or Google Play Store), register your application and configure In-App Purchases.
+The sample uses a fake store for transactions. 
+To use a real store (such as the App Store or Google Play Store), register your application and configure In-App Purchases. 
 
 Product identifiers are defined in the `FetchingAdditionalProducts.cs` file.
 

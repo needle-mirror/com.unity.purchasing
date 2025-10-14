@@ -55,6 +55,8 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// Initiate a request to restore previously made purchases.
+        ///
+        /// When successful, `OnPurchasesFetched` will be invoked with the restored purchases.
         /// </summary>
         /// <param name="callback">Action will be called when the request to restore transactions comes back. The bool will be true if it was successful or false if it was not.
         /// The string is an optional error message.</param>

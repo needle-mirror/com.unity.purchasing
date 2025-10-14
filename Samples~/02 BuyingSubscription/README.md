@@ -13,10 +13,10 @@ The sample relies on entitlements provided by the store to manage subscription s
 
 ## Subscription Handling
 
-When a user purchases a subscription, the sample checks the entitlement status for the configured product.
-If the user is fully entitled, the UI updates to indicate an active subscription.
+When a user purchases a subscription, the sample checks the entitlement status for the configured product. 
+If the user is fully entitled, the UI updates to indicate an active subscription. 
 
-Users can restore their subscription status after reinstalling the app,
+Users can restore their subscription status after reinstalling the app, 
 as the entitlement system retrieves current ownership from the store.
 
 For more information about the In-App Purchasing package, see the [IAP manual](https://docs.unity.com/ugs/en-us/manual/iap/manual/overview).

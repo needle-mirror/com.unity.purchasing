@@ -357,7 +357,7 @@ namespace UnityEngine.Purchasing
 
         bool ShouldConfirmOrderAutomatically(PendingOrder order)
         {
-            if (m_ActiveListeners.Any(listener => listener is { automaticallyConfirmTransaction: true }))
+            if (m_ActiveListeners.Any(listener => listener is {automaticallyConfirmTransaction: true}))
             {
                 return true;
             }
@@ -371,7 +371,7 @@ namespace UnityEngine.Purchasing
                 var matchingButton = FindMatchingButtonByProduct(cartItem.Product.definition.id);
                 if (matchingButton)
                 {
-                    if (matchingButton is { automaticallyConfirmTransaction: true })
+                    if (matchingButton is {automaticallyConfirmTransaction: true})
                     {
                         containsItemToAutoConfirm = true;
                     }
@@ -640,7 +640,7 @@ namespace UnityEngine.Purchasing
             else
             {
                 SendPurchaseFailedEventsToAllButtons(product);
-                Debug.unityLogger.LogIAPError("Cannot initiate purchase because product was not found for ID '" + productID + "'");
+                Debug.unityLogger.LogIAPError("Cannot initiate purchase because product was not found for ID '" + productID +"'");
             }
         }
 

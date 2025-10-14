@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace UnityEngine.Purchasing
 {
-    class AppleConfiguration : IAppleConfiguration
+    class AppleConfiguration: IAppleConfiguration
     {
         public string appReceipt => UnityIAPServices.DefaultPurchase().Apple?.appReceipt;
 

@@ -33,7 +33,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
     /// GooglePurchaseState enum.
     /// </summary>
     /// <value>Purchase state of the transaction. Should match with the IAP SDK purchase state.</value>
-
+    
     [Preserve]
     [JsonConverter(typeof(StringEnumConverter))]
     internal enum GooglePurchaseState
@@ -58,3 +58,6 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Models
 
     }
 }
+
+
+

@@ -34,7 +34,7 @@ namespace Samples.Purchasing.Core.CatalogProvider
                 var jsonContent = JsonUtility.ToJson(catalog);
                 File.WriteAllText(filePath, jsonContent);
             }
-            catch (Exception error)
+            catch(Exception error)
             {
                 Debug.Log(error);
             }

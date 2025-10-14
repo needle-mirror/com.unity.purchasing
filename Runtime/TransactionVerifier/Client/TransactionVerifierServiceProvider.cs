@@ -36,7 +36,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier
             var httpClient = new HttpClient();
 
             var accessTokenTransactionVerifier = registry.GetServiceComponent<IAccessToken>();
-
+            
             if (accessTokenTransactionVerifier != null)
             {
                 TransactionVerifierService.Instance =
@@ -56,24 +56,24 @@ namespace UnityEngine.Purchasing.TransactionVerifier
         /// </summary>
         /// <param name="httpClient">The HttpClient for InternalTransactionVerifierService.</param>
         /// <param name="accessToken">The Authentication token for the service.</param>
-
+        
         public InternalTransactionVerifierService(HttpClient httpClient, IAccessToken accessToken = null)
         {
-
+            
             AppleApi = new AppleApiClient(httpClient, accessToken);
-
+            
             GoogleApi = new GoogleApiClient(httpClient, accessToken);
-
+            
             var baseUrl = "https://transaction-verifier.services.api.unity.com";
             Configuration = new Configuration(baseUrl, 10, 4, null);
         }
-
+        
         /// <summary> Instance of IAppleApiClient interface</summary>
         public IAppleApiClient AppleApi { get; set; }
-
+        
         /// <summary> Instance of IGoogleApiClient interface</summary>
         public IGoogleApiClient GoogleApi { get; set; }
-
+        
         /// <summary> Configuration properties for the service.</summary>
         public Configuration Configuration { get; set; }
     }

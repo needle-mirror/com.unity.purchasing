@@ -300,7 +300,7 @@ public class StoreKitManager: StoreKitManagerProtocol {
     }
 
     public func presentCodeRedemptionSheet() async {
-#if !os(macOS)
+#if !os(macOS) && !os(tvOS)
         if #available(iOS 16, *) {
             do {
                 if let windowScene = await UIApplication.shared.connectedScenes.first as? UIWindowScene {

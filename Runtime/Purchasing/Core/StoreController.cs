@@ -36,7 +36,7 @@ namespace UnityEngine.Purchasing
             m_PurchaseService = purchaseService;
         }
 
-        #region ExtendedServices
+#region ExtendedServices
         IAppleStoreExtendedService? IStoreService.Apple => m_StoreService.Apple;
         IGooglePlayStoreExtendedService? IStoreService.Google => m_StoreService.Google;
         IAppleStoreExtendedProductService? IProductService.Apple => m_ProductService.Apple;
@@ -67,9 +67,9 @@ namespace UnityEngine.Purchasing
         /// Gets the Google Play Store extended purchase service for platform-specific purchase operations.
         /// </summary>
         public IGooglePlayStoreExtendedPurchaseService? GooglePlayStoreExtendedPurchaseService => m_PurchaseService.Google;
-        #endregion
+#endregion
 
-        #region Callbacks
+#region Callbacks
         /// <summary>
         /// Event triggered when the store connection is lost or fails.
         /// </summary>
@@ -168,9 +168,9 @@ namespace UnityEngine.Purchasing
             add => m_ProductService.OnProductsFetchFailed += value;
             remove => m_ProductService.OnProductsFetchFailed -= value;
         }
-        #endregion
+#endregion
 
-        #region StoreService
+#region StoreService
         /// <summary>
         /// Establishes a connection to the store asynchronously.
         /// </summary>
@@ -182,9 +182,9 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="retryPolicy">The retry policy to use, or null to disable automatic reconnection.</param>
         public void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy? retryPolicy) => m_StoreService.SetStoreReconnectionRetryPolicyOnDisconnection(retryPolicy);
-        #endregion
+#endregion
 
-        #region ProductService
+#region ProductService
         /// <summary>
         /// Fetches product information from the store without retry logic.
         /// </summary>
@@ -210,9 +210,9 @@ namespace UnityEngine.Purchasing
         /// <param name="productId">The product identifier to search for.</param>
         /// <returns>The product if found, or null if not found.</returns>
         public Product? GetProductById(string productId) => m_ProductService.GetProductById(productId);
-        #endregion
+#endregion
 
-        #region PurchaseService
+#region PurchaseService
         /// <summary>
         /// Initiates a purchase for the specified product.
         /// </summary>
@@ -253,9 +253,9 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <returns>A read-only observable collection of orders.</returns>
         public ReadOnlyObservableCollection<Order> GetPurchases() => m_PurchaseService.GetPurchases();
-        #endregion
+#endregion
 
-        #region IStoreController
+#region IStoreController
         // TODO: IAP-3929 - Move to IStoreController
         /// <summary>
         /// Purchase a product by product id
@@ -268,6 +268,6 @@ namespace UnityEngine.Purchasing
             var product = products?.FirstOrDefault(product => product.definition.id == productId) ?? Product.CreateUnknownProduct(productId);
             m_PurchaseService.PurchaseProduct(product);
         }
-        #endregion
+#endregion
     }
 }

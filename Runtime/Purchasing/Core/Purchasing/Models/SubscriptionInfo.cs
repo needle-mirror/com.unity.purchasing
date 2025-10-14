@@ -159,7 +159,7 @@ namespace UnityEngine.Purchasing
             object typeObject = null;
             var validTypeKey = skuDetailsWrapper != null && skuDetailsWrapper.TryGetValue("type", out typeObject);
 
-            if (!validTypeKey || (string)typeObject == "inapp")
+            if (!validTypeKey ||(string)typeObject == "inapp")
             {
                 throw new InvalidProductTypeException();
             }

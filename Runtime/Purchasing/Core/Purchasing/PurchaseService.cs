@@ -29,13 +29,14 @@ namespace UnityEngine.Purchasing
         bool m_ProcessFetchedPendingOrders = true;
         readonly HashSet<string> m_PurchasesProcessedInSession = new();
 
-#if IAP_TX_VERIFIER_ENABLED
+        #if IAP_TX_VERIFIER_ENABLED
             readonly Store m_StoreName;
             readonly ITransactionVerifier m_TransactionVerifier;
-#endif
+        #endif
 
         /// <summary>
         /// Configures whether pending orders should be automatically processed when purchases are fetched from the store.
+        /// Note: This is currently only applicable to the Google Play Store
         /// </summary>
         /// <param name="shouldProcess">True to automatically process pending orders after fetching purchases, false to skip processing.</param>
         public void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess)
@@ -182,7 +183,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-#if IAP_TX_VERIFIER_ENABLED
+        #if IAP_TX_VERIFIER_ENABLED
         async Task HandleVerification(PendingOrder order)
         {
             try
@@ -218,13 +219,14 @@ namespace UnityEngine.Purchasing
 
             OnPurchasePending?.Invoke(order);
         }
-#endif
+        #endif
 
-        void PurchaseSucceeded(PendingOrder order)
+        internal void PurchaseSucceeded(PendingOrder order)
         {
             try
             {
                 RemoveDeferredOrders(order);
+                RemovePendingOrders(order);
                 m_Purchases.Add(order);
 
                 ProcessPendingOrder(order);
@@ -232,6 +234,16 @@ namespace UnityEngine.Purchasing
             catch (Exception ex)
             {
                 Debug.unityLogger.LogException(ex);
+            }
+        }
+
+        void RemovePendingOrders(PendingOrder order)
+        {
+            var pendingOrders = m_Purchases.OfType<PendingOrder>().ToList().AsReadOnly();
+            var ordersToRemove = pendingOrders.Where(pendingOrder => Equals(order.Info.TransactionID, pendingOrder.Info.TransactionID));
+            foreach (var orderToRemove in ordersToRemove)
+            {
+                m_Purchases.Remove(orderToRemove);
             }
         }
 
@@ -338,23 +350,12 @@ namespace UnityEngine.Purchasing
                     "Unable to confirm purchase - store is not connected. Please check your internet connection and try again.");
             }
 
-            // Check if the pending order still exists in our purchases collection as ConfirmedOrder
-            var existingConfirmedOrder = m_Purchases.OfType<ConfirmedOrder>()
-                .FirstOrDefault(p => p.Info.TransactionID == order.Info.TransactionID);
-
-            if (existingConfirmedOrder != null)
-            {
-                return new FailedOrder(
-                    order,
-                    PurchaseFailureReason.ExistingPurchasePending,
-                    "Order has already been processed or was not found in pending purchases");
-            }
             return null; // No validation errors
         }
 
         void OnConfirmSucceeded(PendingOrder pendingOrder, ConfirmedOrder confirmedOrder)
         {
-            m_Purchases.Remove(pendingOrder);
+            RemovePendingOrders(pendingOrder);
             m_Purchases.Add(confirmedOrder);
 
             m_AnalyticsClient.OnPurchaseSucceeded(confirmedOrder);
@@ -410,8 +411,8 @@ namespace UnityEngine.Purchasing
             foreach (var fetchedPurchase in fetchedPurchases.PendingOrders)
             {
                 m_Purchases.Add(fetchedPurchase);
-
-                if (m_ProcessFetchedPendingOrders && !WasPurchaseAlreadyProcessed(fetchedPurchase.Info.TransactionID))
+                // TODO: ULO-7772
+                if (m_ProcessFetchedPendingOrders && !WasPurchaseAlreadyProcessed(fetchedPurchase.Info.TransactionID) && m_StoreWrapper.name == GooglePlay.Name)
                 {
                     ProcessPendingOrder(fetchedPurchase);
                 }
@@ -540,7 +541,15 @@ namespace UnityEngine.Purchasing
 
             try
             {
-                RestoreTransactionsInternal(callback);
+                Action<bool, string?> fetchCallback = (success, error) =>
+                {
+                    if (success)
+                    {
+                        FetchPurchases();
+                    }
+                    callback?.Invoke(success, error);
+                };
+                RestoreTransactionsInternal(fetchCallback);
             }
             catch (Exception e)
             {

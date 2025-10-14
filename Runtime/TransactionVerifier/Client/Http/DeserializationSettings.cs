@@ -11,7 +11,7 @@
 using System;
 
 namespace UnityEngine.Purchasing.TransactionVerifier.Http
-{
+{   
     /// <summary>Enum for how handling missing members when deserializing.</summary>
     internal enum MissingMemberHandling
     {
@@ -29,5 +29,5 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Http
         /// <summary>MissingMemberHandling is set to Error by default.</summary>
         public MissingMemberHandling MissingMemberHandling = MissingMemberHandling.Error;
     }
-
+    
 }

@@ -1,6 +1,6 @@
 ## README - In-App Purchasing Sample Scenes - Apple App Store - Handling Deferred Purchases
 
-This sample showcases how to handle deferred purchases
+This sample showcases how to handle deferred purchases 
 and test using `AppleStoreExtendedPurchaseService.simulateAskToBuy`.
 
 ## Instructions to test this sample:

@@ -231,7 +231,7 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Http
                 if (statusCodeToTypeMap[response.StatusCode.ToString()] == typeof(string))
                 {
                     return (response.Data == null ? null : Encoding.UTF8.GetString(response.Data)) as T;
-                }
+                }                        
                 else if (statusCodeToTypeMap[response.StatusCode.ToString()] == typeof(System.IO.Stream))
                 {
                     return (response.Data == null ? new MemoryStream() : new MemoryStream(response.Data)) as T;

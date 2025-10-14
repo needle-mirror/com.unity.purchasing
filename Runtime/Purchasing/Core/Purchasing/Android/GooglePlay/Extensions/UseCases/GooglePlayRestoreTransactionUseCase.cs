@@ -18,10 +18,7 @@ namespace UnityEngine.Purchasing
 
         public void RestoreTransactions(Action<bool, string?>? callback)
         {
-            Action<Orders> successCallback = _ => { callback?.Invoke(true, null); };
-            Action<PurchasesFetchFailureDescription> failureCallback = (desc) => { callback?.Invoke(false, desc.message); };
-
-            m_FetchPurchasesUseCase.FetchPurchases(successCallback, failureCallback);
+            callback?.Invoke(true, null);
         }
     }
 }
