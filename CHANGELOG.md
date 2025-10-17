@@ -1,7 +1,11 @@
 # Changelog
+## [4.13.2] - 2025-10-17
+### Fixed
+- Returned missing Amazon dependencies.
+
 ## [4.13.1] - 2025-10-01
 ### Changed
-- Package auto-bumped via PETS for editor manifest distribution
+- Updated package signature
 
 ## [4.13.0] - 2025-07-07
 ### Changed
