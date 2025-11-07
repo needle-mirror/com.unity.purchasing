@@ -1,4 +1,12 @@
 # Changelog
+## [4.14.0] - 2025-11-07
+### Changed
+- GooglePlay - Billing Library updated to 8.0.0 (was previously 7.1.1). No new feature support was added.
+
+### Fixed
+- Apple - Added synchronization within the `OnProductReceived` callback, potentially fixing concurrency issues during `RetrieveProducts`.
+- GooglePlay - Improved performance of `FetchAdditionalProducts`
+
 ## [4.13.2] - 2025-10-17
 ### Fixed
 - Returned missing Amazon dependencies.

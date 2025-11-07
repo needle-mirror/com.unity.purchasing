@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
@@ -12,6 +13,7 @@ namespace UnityEngine.Purchasing
     {
         private readonly ILogger logger;
         private readonly string persistentDataPath;
+        private HashSet<string> recordCache;
 
         public TransactionLog(ILogger logger, string persistentDataPath)
         {
@@ -20,6 +22,7 @@ namespace UnityEngine.Purchasing
             {
                 this.persistentDataPath = Path.Combine(Path.Combine(persistentDataPath, "Unity"), "UnityPurchasing");
             }
+            recordCache = new HashSet<string>();
         }
 
         /// <summary>
@@ -28,6 +31,7 @@ namespace UnityEngine.Purchasing
         public void Clear()
         {
             Directory.Delete(persistentDataPath, true);
+            recordCache.Clear();
         }
 
         public bool HasRecordOf(string transactionID)
@@ -36,8 +40,17 @@ namespace UnityEngine.Purchasing
             {
                 return false;
             }
+            else if (recordCache.Contains(transactionID))
+            {
+                return true;
+            }
 
-            return Directory.Exists(GetRecordPath(transactionID));
+            bool exists = Directory.Exists(GetRecordPath(transactionID));
+            if (exists)
+            {
+                recordCache.Add(transactionID);
+            }
+            return exists;
         }
 
         public void Record(string transactionID)
@@ -49,6 +62,7 @@ namespace UnityEngine.Purchasing
                 try
                 {
                     Directory.CreateDirectory(path);
+                    recordCache.Add(transactionID);
                 }
                 catch (Exception recordPathException)
                 {

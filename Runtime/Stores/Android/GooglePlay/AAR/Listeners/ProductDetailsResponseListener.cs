@@ -32,14 +32,17 @@ namespace UnityEngine.Purchasing
         }
 
         [Preserve]
-        public void onProductDetailsResponse(AndroidJavaObject billingResult, AndroidJavaObject? productDetails)
+        public void onProductDetailsResponse(AndroidJavaObject billingResult, AndroidJavaObject queryProductDetailsResult)
         {
+            // TODO ULO-3790: Finish implementation of QueryProductDetailsResult to support UnfetchedProduct
+            // https://developer.android.com/reference/com/android/billingclient/api/QueryProductDetailsResult
             m_Util.RunOnMainThread(() =>
             {
                 List<AndroidJavaObject>? productDetailsList = null;
 
                 try
                 {
+                    using var productDetails = queryProductDetailsResult.Call<AndroidJavaObject>("getProductDetailsList");
                     productDetailsList = productDetails.Enumerate<AndroidJavaObject>().ToList();
                     m_OnProductDetailsResponse(new GoogleBillingResult(billingResult), productDetailsList);
                 }
@@ -60,7 +63,7 @@ namespace UnityEngine.Purchasing
 #endif
 
                 billingResult.Dispose();
-                productDetails?.Dispose();
+                queryProductDetailsResult.Dispose();
             });
         }
     }

@@ -358,7 +358,9 @@ int delayInSeconds = 2;
     UnityPurchasingLog(@"Received %lu products and %lu invalid products", (unsigned long) [response.products count], (unsigned long) [response.invalidProductIdentifiers count]);
     // Add the retrieved products to our set of valid products.
     NSDictionary* fetchedProducts = [NSDictionary dictionaryWithObjects:response.products forKeys:[response.products valueForKey:@"productIdentifier"]];
-    [validProducts addEntriesFromDictionary:fetchedProducts];
+    @synchronized(validProducts) {
+        [validProducts addEntriesFromDictionary:fetchedProducts];
+    }
 
     NSString* productJSON = [UnityPurchasing serializeProductMetadata:response.products];
 
