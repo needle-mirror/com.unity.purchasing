@@ -41,6 +41,9 @@ public class StoreKitManager: StoreKitManagerProtocol {
     var purchasedProducts: [Product] = []
     var receiptData: Data?
 
+    // Dictionary to store products by ID for quick access
+    private var productsByID: [String: Product] = [:]
+
     // MARK: Singleton
     static let instance: StoreKitManager = {
         let sharedInstance = StoreKitManager()
@@ -78,6 +81,11 @@ public class StoreKitManager: StoreKitManagerProtocol {
             else {
                 return
             }
+
+            // Record transaction with Unity Ads for attribution
+            // This happens AFTER successful purchase but BEFORE the success callback
+            recordTransactionWithUnityAds(purchaseDetail)
+
             let jsonString = encodeToJSON(purchaseDetail)
             await storeKitCallback.callback(subject: "OnPurchaseSucceeded", payload: jsonString, entitlementStatus: 0)
         } catch {
@@ -85,6 +93,87 @@ public class StoreKitManager: StoreKitManagerProtocol {
             let jsonString = encodeToJSON(purchaseDetail)
             await self.storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
         }
+    }
+
+    internal func recordTransactionWithUnityAds(_ purchaseDetail: PurchaseDetails) {
+        let transactionIdString = purchaseDetail.transactionId?.description ?? "unknown"
+        let productIdString = purchaseDetail.productId ?? "unknown"
+        let transactionDate = Date(timeIntervalSince1970: purchaseDetail.purchaseDate ?? Date().timeIntervalSince1970)
+        let jwsRepresentation = purchaseDetail.signatureJws ?? ""
+
+        guard transactionIdString != "unknown", productIdString != "unknown" else {
+            printLog("StoreKItManager.recordTransactionWithUnityAds: Missing transaction data")
+            return
+        }
+
+        // Prepare JSON data (convert Base64 back to raw NSData)
+        var productJsonData: Data = Data()
+        var transactionJsonData: Data = Data()
+
+        if let productJson = purchaseDetail.productJsonRepresentation {
+            if let decodedData = Data(base64Encoded: productJson, options: .ignoreUnknownCharacters) {
+                productJsonData = decodedData
+                // To debug the product JSON content, uncomment the following line.
+                // logDecodedProductJson(decodedData)
+            }
+        }
+
+        if let transactionJson = purchaseDetail.transactionJsonRepresentation {
+            if let decodedData = Data(base64Encoded: transactionJson) {
+                transactionJsonData = decodedData
+            }
+        }
+
+        let userInfo: [String: Any] = [
+            "transactionIdentifier": transactionIdString,
+            "productIdentifier": productIdString,
+            "productJsonRepresentation": productJsonData,
+            "transactionDate": transactionDate,
+            "transactionJsonRepresentation": transactionJsonData,
+            "jwsRepresentation": jwsRepresentation
+        ]
+
+        NotificationCenter.default.post(
+            name: NSNotification.Name("UnityAds_RecordPurchase"),
+            object: nil,
+            userInfo: userInfo
+        )
+
+        // To debug the transaction recording, uncomment the following line.
+        // logTransactionRecordingDebug(transactionId: transactionIdString, productId: productIdString, productJsonData: productJsonData, transactionDate: transactionDate, transactionJsonData: transactionJsonData, jwsRepresentation: jwsRepresentation)
+    }
+
+    private func logDecodedProductJson(_ data: Data) {
+        print("Unity Ads: Product JSON decoded successfully: \(data.count) bytes")
+        do {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                let prettyJsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
+                if let prettyJsonString = String(data: prettyJsonData, encoding: .utf8) {
+                    // Split into chunks for better readability in logs
+                    let chunkSize = 500
+                    let chunks = prettyJsonString.chunked(into: chunkSize)
+
+                    print("Unity Ads: === DECODED PRODUCT JSON ===")
+                    for (index, chunk) in chunks.enumerated() {
+                        print("Unity Ads: Product JSON Part \(index + 1): \(chunk)")
+                    }
+                    print("Unity Ads: --- END Product JSON ---")
+                }
+            }
+        } catch {
+            print("Unity Ads: Failed to parse Product JSON: \(error)")
+        }
+    }
+
+    private func logTransactionRecordingDebug(transactionId: String, productId: String, productJsonData: Data, transactionDate: Date, transactionJsonData: Data, jwsRepresentation: String) {
+        print("Unity Ads: === TRANSACTION RECORDING DEBUG ===")
+        print("Unity Ads: Transaction ID: \(transactionId)")
+        print("Unity Ads: Product ID: \(productId)")
+        print("Unity Ads: Product JSON: Data - \(productJsonData.count) bytes")
+        print("Unity Ads: Transaction Date: \(transactionDate)")
+        print("Unity Ads: Transaction JSON: Data - \(transactionJsonData.count) bytes")
+        print("Unity Ads: JWS Representation: \(jwsRepresentation.isEmpty ? "None" : "Present (\(jwsRepresentation.count) chars)")")
+        print("Unity Ads: === END DEBUG ===")
     }
 
     // MARK: Products
@@ -100,12 +189,40 @@ public class StoreKitManager: StoreKitManagerProtocol {
 
             let response = await productUseCase.fetchProducts(for: storeSpecificIds)
             products = response.products
-            let jsonString = encodeToJSON( ["products": products])
+
+            // Populate productsByID dictionary for quick access
+            updateProductsLookup(products)
+
+            let jsonString = encodeToJSON(response)
             await storeKitCallback.callback(subject: "OnProductsFetched", payload: jsonString, entitlementStatus: 0)
         } catch {
             Task(priority: .background, operation: {
                 await self.storeKitCallback.callback(subject: "OnProductsFetchFailed", payload: "JSONDecoder An error occurred - \(error.localizedDescription)", entitlementStatus: 0)
             })
+        }
+    }
+
+    // Helper method to update products lookup dictionary
+    private func updateProductsLookup(_ products: [Product]) {
+        productsByID.removeAll()
+        for product in products {
+            productsByID[product.id] = product
+        }
+    }
+
+    /**
+     Get a single product by ID. First checks cache, then uses direct Product.products lookup
+     to handle edge cases like removed catalog items that still have active transactions.
+     */
+    public func getProduct(for productId: String) async -> Product? {
+        // Use Product.products directly - this can find products even if they are
+        // removed from catalog but still have active subscriptions
+        do {
+            let products = try await Product.products(for: [productId])
+            return products.first
+        } catch {
+            printLog("Error obtaining Product.products(for: \(productId)) - \(error.localizedDescription)")
+            return nil
         }
     }
 
@@ -434,5 +551,15 @@ public class StoreKitManager: StoreKitManagerProtocol {
     public func continuePromotionalPurchases() async
     {
         await purchaseUseCase.continuePromotionalPurchases()
+    }
+}
+
+extension String {
+    func chunked(into size: Int) -> [String] {
+        return stride(from: 0, to: count, by: size).map {
+            let start = index(startIndex, offsetBy: $0)
+            let end = index(start, offsetBy: min(size, count - $0))
+            return String(self[start..<end])
+        }
     }
 }

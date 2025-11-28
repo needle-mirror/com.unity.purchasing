@@ -23,6 +23,25 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
         updateListenerTask?.cancel()
     }
 
+    // helper method to create PurchaseDetails with product information
+    private func createPurchaseDetails(from verificationResult: VerificationResult<Transaction>) async -> PurchaseDetails {
+        do {
+            let transaction = try checkVerified(verificationResult)
+
+            // StoreKitManager.getProduct now handles both cache and direct network lookup efficiently
+            if let product = await StoreKitManager.instance.getProduct(for: transaction.productID) {
+                return PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
+            }
+
+            // Fallback without product
+            printLog("Warning: Product information not available for transaction: \(transaction.productID)")
+            return verificationResult.purchaseDetails()
+        } catch {
+            printLog("Error verifying transaction: \(error)")
+            return verificationResult.purchaseDetails()
+        }
+    }
+
     /**
      Start a transaction listener as close to app launch as possible so you don't miss any transactions.
      */
@@ -52,8 +71,8 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
     public func updateCustomerProductStatus() async {
         for await result in Transaction.currentEntitlements {
             do {
-                _ = try checkVerified(result)
-                await updatePurchasedIdentifier(result.purchaseDetails())
+                let purchaseDetails = await createPurchaseDetails(from: result)
+                await updatePurchasedIdentifier(purchaseDetails)
             } catch {
                 printLog(error.localizedDescription)
             }
@@ -78,12 +97,16 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
             for await result in Transaction.updates {
                 do {
                     let transaction = try self.checkVerified(result)
+                    let purchaseDetails = await self.createPurchaseDetails(from: result)
+
+                    // Record transaction with Unity Ads for attribution
+                    StoreKitManager.instance.recordTransactionWithUnityAds(purchaseDetails)
 
                     if let _ = transaction.revocationDate {
                         // Remove access to the product identified by transaction.productID.
                         // Transaction.revocationReason provides details about
                         // the revoked transaction.
-                        await self.revokePurchase(result.purchaseDetails())
+                        await self.revokePurchase(purchaseDetails)
                         await transaction.finish()
 
                     } else if let expirationDate = transaction.expirationDate,
@@ -97,7 +120,7 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
                     } else {
                         // Provide access to the product identified by
                         // transaction.productID.
-                        await self.updatePurchasedIdentifier(result.purchaseDetails())
+                        await self.updatePurchasedIdentifier(purchaseDetails)
                     }
                 } catch {
                     // StoreKit has a transaction that fails verification. Don't deliver content to the user.

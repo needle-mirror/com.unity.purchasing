@@ -1,6 +1,10 @@
 import Foundation
 import StoreKit
 
+enum PurchaseVerificationError: Error {
+    case failedVerification
+}
+
 /**
  This protocol can be implemented by any classes that can be used to perform StoreKit product purchase operations.
  */
@@ -9,6 +13,7 @@ public protocol PurchaseUseCaseProtocol {
     func purchaseProduct(productId: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async -> PurchaseDetails?
     func addPurchaseIntentListener()
     func activateInterceptPromotionalPurchases()
+    func checkVerified<T>(_ result: VerificationResult<T>) throws -> T
     func continuePromotionalPurchases() async
 }
 
@@ -32,6 +37,52 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
         purchaseIntentTask?.cancel()
     }
 
+    // Helper method to create PurchaseDetails with product information for Ads SDK
+    private func createPurchaseDetails(from verificationResult: VerificationResult<Transaction>) async -> PurchaseDetails {
+        do {
+            let transaction = try checkVerified(verificationResult)
+            // Fetch the product first
+            if let product = await StoreKitManager.instance.getProduct(for: transaction.productID) {
+                let purchaseDetails = PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
+
+                // Log for debugging Ads SDK integration
+                if let productJson = purchaseDetails.productJsonRepresentation {
+                    printLog("Product JSON available for Ads SDK: \(product.id) (\(productJson.prefix(50))...)")
+                } else {
+                    printLog("Missing product JSON for: \(product.id)")
+                }
+
+                if let transactionJson = purchaseDetails.transactionJsonRepresentation {
+                    printLog("Transaction JSON available for Ads SDK: (\(transactionJson.prefix(50))...)")
+                } else {
+                    printLog("Missing transaction JSON")
+                }
+
+                return purchaseDetails
+            } else {
+                // Fallback without product
+                printLog("Warning: Product not available for: \(transaction.productID)")
+                return verificationResult.purchaseDetails()
+            }
+        } catch {
+            // Handle the error gracefully
+            printLog("Error verifying transaction: \(error)")
+            return verificationResult.purchaseDetails()
+        }
+    }
+
+    // Verify the VerificationResult. StoreKit does the transaction verification for us.
+    public func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+        // Check whether the JWS passes StoreKit verification.
+        switch result {
+        case .unverified:
+            // StoreKit parses the JWS, but it fails verification.
+            throw PurchaseVerificationError.failedVerification
+        case .verified(let safe):
+            // The result is verified. Return the unwrapped value.
+            return safe
+        }
+    }
 
     public func purchaseProduct(productId: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async -> PurchaseDetails? {
         guard let product = await fetchProductsUseCase.fetchProduct(for: productId) else {
@@ -61,8 +112,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             let purchaseResult = try await product.purchase(confirmIn: (scene?.windowScene)!, options: Set(purchaseProductOptions))
             switch purchaseResult {
             case .success(let verification):
-                _ = try transactionObserver.checkVerified(verification)
-                return verification.purchaseDetails()
+                 return await createPurchaseDetails(from: verification)
             case .userCancelled:
                 purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: 4 /* 4 = UserCancelled */)
                 return nil
@@ -98,8 +148,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
         let result = try await product.purchase(options: options)
         switch result {
         case .success(let verification):
-            _ = try transactionObserver.checkVerified(verification)
-            return verification.purchaseDetails()
+            return await createPurchaseDetails(from: verification)
         case .userCancelled:
             await purchaseProductExceptionCallbacks(productID: product.id, error: "User cancelled", reason: 4 /* 4 = UserCanceled */)
             return nil
@@ -147,8 +196,8 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
 
                         self.interceptedProductIds.append(purchaseIntent.id)
                     } else {
-                        // Receive the purchase intent and then complete the purchase workflow.
-                        _ = try await self.purchaseProduct(product: purchaseIntent.product, options: options, storefrontChangeCallback: nil)
+                        // Use the public method with productId string instead of private method with Product
+                        _ = await self.purchaseProduct(productId: purchaseIntent.id, options: options, storefrontChangeCallback: nil)
                     }
                 }
             }

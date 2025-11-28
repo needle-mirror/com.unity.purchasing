@@ -1,5 +1,9 @@
 # Changelog
 
+## [5.0.3] - 2025-11-28
+### Added
+- Apple - Implemented an SK2 transaction reporting hook for the Ads SDK.
+
 ## [5.0.2] - 2025-10-14
 ### Changed
 - `IPurchaseService.RestoreTransactions` will now invoke `OnPurchasesFetched` for the restored purchases.
@@ -8,7 +12,7 @@
 - Fixed `IProductService.OnProductsFetched` being invoked when 0 products were fetched.
 - Fixed Minimal Coded IAP 5.0.0 Sample having a missing script reference.
 - Removed a validation that prevented confirming a `PendingOrder` if there was an existing `ConfirmedOrder` for the same transactionID.
-- Apple - Fixed a missing import `StoreKit/StoreKit.h` when using `UnityFramework/UnityFramework-Swift.h`
+- Apple - Fixed a missing import `StoreKit/StoreKit.h` when using `<UnityFramework/UnityFramework-Swift.h>`
 - Apple - `IPurchaseService.ProcessPendingOrdersOnPurchasesFetched` no longer applies to the Apple App Store since the store already returns pending orders on startup through the `IPurchaseService.OnPurchasePending` callback.
   - This fixes the case where you could obtain duplicate pending orders when `ProcessPendingOrdersOnPurchasesFetched` was set to `true`.
 - Apple - Fixed an issue where FetchPurchases would be limited to a single order per product.

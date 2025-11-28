@@ -16,6 +16,10 @@ public struct PurchaseDetails: Codable {
     var appAccountToken: UUID?
     var reason: Int?
 
+    // Json representation keys for Ads SDK
+    var productJsonRepresentation: String?
+    var transactionJsonRepresentation: String?
+
     enum CodingKeys: String, CodingKey {
         case error
         case expirationDate
@@ -29,9 +33,11 @@ public struct PurchaseDetails: Codable {
         case verified
         case appAccountToken
         case reason
+        case productJsonRepresentation
+        case transactionJsonRepresentation
     }
 
-    init(verificationResult: VerificationResult<Transaction>) {
+    init(verificationResult: VerificationResult<Transaction>, nativeProduct: Product? = nil) {
         var verificationError: VerificationResult<Transaction>.VerificationError?
         var nativeTransaction: Transaction?
 
@@ -62,6 +68,15 @@ public struct PurchaseDetails: Codable {
         if let appAccountToken = nativeTransaction?.appAccountToken {
             self.appAccountToken = appAccountToken
         }
+
+        // Json representation for Ads SDK
+        if let product = nativeProduct {
+            generateProductJsonRepresentation(from: product)
+        }
+
+        if let transaction = nativeTransaction {
+            generateTransactionJsonRepresentation(from: transaction)
+        }
     }
 
     init(productId: String, verificationError: String, reason: Int) {
@@ -69,5 +84,15 @@ public struct PurchaseDetails: Codable {
         self.verificationError = verificationError
         self.reason = reason
         error = true
+    }
+
+    // Helper method to generate transaction JSON representation
+    private mutating func generateTransactionJsonRepresentation(from transaction: Transaction) {
+        self.transactionJsonRepresentation = transaction.jsonRepresentation.base64EncodedString()
+    }
+
+    // Helper method to generate product JSON representation
+    private mutating func generateProductJsonRepresentation(from product: Product) {
+        self.productJsonRepresentation = product.jsonRepresentation.base64EncodedString()
     }
 }
