@@ -1,8 +1,8 @@
 # Changelog
 
-## [5.0.3] - 2025-11-28
-### Added
-- Apple - Implemented an SK2 transaction reporting hook for the Ads SDK.
+## [5.0.4] - 2025-12-03
+### Changed
+- Apple - Improved SK2 transaction handling
 
 ## [5.0.2] - 2025-10-14
 ### Changed

@@ -32,6 +32,11 @@
             "name": "com.unity.services.analytics",
             "expression": "4.4.0",
             "define": "IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT"
+        },
+        {
+            "name": "com.unity.ads",
+            "expression": "4.16.4",
+            "define": "IAP_UNITY_ATTRIBUTION"
         }
     ],
     "noEngineReferences": false

@@ -186,6 +186,17 @@ namespace UnityEngine.Purchasing
         {
             unityPurchasing_RefreshAppReceipt();
         }
+
+        // Intentionally empty - macOS is not a supported platform for this feature
+        public void TransactionObserved(
+            string transactionId,
+            string productId,
+            string productJsonRepresentation,
+            double transactionUnixTime,
+            string transactionJsonRepresentation,
+            string signatureJws)
+        {
+        }
     }
 }
 #endif

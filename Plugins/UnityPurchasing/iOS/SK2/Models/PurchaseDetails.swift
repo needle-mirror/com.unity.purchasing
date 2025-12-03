@@ -16,7 +16,6 @@ public struct PurchaseDetails: Codable {
     var appAccountToken: UUID?
     var reason: Int?
 
-    // Json representation keys for Ads SDK
     var productJsonRepresentation: String?
     var transactionJsonRepresentation: String?
 
@@ -69,7 +68,7 @@ public struct PurchaseDetails: Codable {
             self.appAccountToken = appAccountToken
         }
 
-        // Json representation for Ads SDK
+        // Json representation for Attribution SDK
         if let product = nativeProduct {
             generateProductJsonRepresentation(from: product)
         }

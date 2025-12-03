@@ -68,6 +68,19 @@ namespace UnityEngine.Purchasing
         [DllImport("__Internal")]
         private static extern void unityPurchasing_RefreshAppReceipt();
 
+#if IAP_UNITY_ATTRIBUTION
+#region Objective-C for Attribution
+        [DllImport("__Internal")]
+        private static extern void unityPurchasing_TransactionObserved(
+            string transactionId,
+            string productId,
+            string productJsonRepresentation,
+            double transactionUnixTime,
+            string transactionJsonRepresentation,
+            string signatureJws);
+#endregion
+#endif
+
         public void SetUnityPurchasingCallback(UnityPurchasingCallback AsyncCallback)
         {
             unityPurchasing_SetNativeCallback(AsyncCallback);
@@ -187,6 +200,31 @@ namespace UnityEngine.Purchasing
         public void RefreshAppReceipt()
         {
             unityPurchasing_RefreshAppReceipt();
+        }
+
+        public void TransactionObserved(
+            string transactionId,
+            string productId,
+            string productJsonRepresentation,
+            double transactionUnixTime,
+            string transactionJsonRepresentation,
+            string signatureJws)
+        {
+#if IAP_UNITY_ATTRIBUTION
+            transactionId ??= string.Empty;
+            productId ??= string.Empty;
+            productJsonRepresentation ??= "{}";
+            transactionJsonRepresentation ??= "{}";
+            signatureJws ??= string.Empty;
+
+            unityPurchasing_TransactionObserved(
+                transactionId,
+                productId,
+                productJsonRepresentation,
+                transactionUnixTime,
+                transactionJsonRepresentation,
+                signatureJws);
+#endif
         }
     }
 }

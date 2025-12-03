@@ -406,6 +406,11 @@ namespace UnityEngine.Purchasing
                 case "onAppReceiptRefreshFailed":
                     OnAppReceiptRefreshedFailed(payload);
                     break;
+#if IAP_UNITY_ATTRIBUTION
+                case "onTransactionObserved":
+                    OnTransactionObserved(payload);
+                    break;
+#endif
             }
         }
 
@@ -450,6 +455,39 @@ namespace UnityEngine.Purchasing
             m_RefreshAppReceiptTask?.TrySetResult(false);
             m_RefreshAppReceiptErrorCallback?.Invoke(error);
         }
+
+#if IAP_UNITY_ATTRIBUTION
+        void OnTransactionObserved(string payload)
+        {
+            var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(payload);
+            var productId = purchaseDetails.TryGetString("productId");
+            var transactionId = purchaseDetails.TryGetString("transactionId");
+            var signatureJws = purchaseDetails.TryGetString("signatureJws");
+            var productJsonRepresentation = purchaseDetails.TryGetString("productJsonRepresentation") ?? "{}";
+            var transactionJsonRepresentation = purchaseDetails.TryGetString("transactionJsonRepresentation") ?? "{}";
+            double transactionUnixTime = ParseTransactionDate(purchaseDetails);
+
+            OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
+        }
+        
+        void OnTransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws)
+        {
+            m_Native?.TransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
+        }
+
+        double ParseTransactionDate(Dictionary<string, object> purchaseDetails)
+        {
+            double transactionUnixTime = 0.0;
+            if (purchaseDetails.TryGetValue("transactionDate", out var dateObj))
+            {
+                if (dateObj is double d) transactionUnixTime = d;
+                else if (dateObj is long l) transactionUnixTime = l;
+                else if (dateObj is string s && DateTimeOffset.TryParse(s, out var dto))
+                    transactionUnixTime = dto.ToUnixTimeSeconds();
+            }
+            return transactionUnixTime;
+        }
+#endif
 
         public override void CheckEntitlement(ProductDefinition productDefinition)
         {
@@ -511,6 +549,13 @@ namespace UnityEngine.Purchasing
                 appAccountToken = parsedToken;
             }
 
+#if IAP_UNITY_ATTRIBUTION
+            var productJsonRepresentation = purchaseDetails.TryGetString("productJsonRepresentation") ?? "{}";
+            var transactionJsonRepresentation = purchaseDetails.TryGetString("transactionJsonRepresentation") ?? "{}";
+            double transactionUnixTime = ParseTransactionDate(purchaseDetails);
+
+            OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
+#endif
             ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
         }
 

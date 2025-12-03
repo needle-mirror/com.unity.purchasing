@@ -18,5 +18,6 @@ namespace UnityEngine.Purchasing
         void PresentCodeRedemptionSheet();
         void DeallocateMemory(IntPtr pointer);
         void RefreshAppReceipt();
+        void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws);
     }
 }
