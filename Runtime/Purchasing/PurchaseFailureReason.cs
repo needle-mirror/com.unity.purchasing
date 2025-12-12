@@ -39,10 +39,8 @@ namespace UnityEngine.Purchasing
         PaymentDeclined,
 
         /// <summary>
-        /// The transaction has already been completed successfully. This error can occur
-        /// on Apple platforms if the transaction is finished successfully while the user
-        /// is logged out of the app store, using a receipt generated while the user was
-        /// logged in.
+        /// The transaction has already been completed successfully.
+        /// The purchase has already been confirmed.
         /// </summary>
         DuplicateTransaction,
 

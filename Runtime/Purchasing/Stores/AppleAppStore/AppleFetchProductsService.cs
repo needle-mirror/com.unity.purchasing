@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Purchasing.Utilities;
 using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Scripting;
@@ -58,7 +59,15 @@ namespace UnityEngine.Purchasing
             LastRequestProductsJson = json;
 
             // get product list
-            var productDescriptions = JSONSerializer.DeserializeProductDescriptionsFromFetchProductsSk2(json);
+            List<ProductDescription> productDescriptions;
+            if (StoreKitSelector.UseStoreKit1())
+            {
+                productDescriptions = new AppleJsonProductDescriptionsDeserializer().DeserializeProductDescriptions(json);
+            }
+            else
+            {
+                productDescriptions= JSONSerializer.DeserializeProductDescriptionsFromFetchProductsSk2(json);
+            }
 
             m_CurrentRequestCompletionSource?.SetResult(productDescriptions);
         }

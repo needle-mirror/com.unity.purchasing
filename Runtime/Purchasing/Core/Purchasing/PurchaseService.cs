@@ -539,6 +539,15 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
+            Action<bool, string?> newCallback = (success, error) =>
+            {
+                if (success)
+                {
+                    FetchPurchases();
+                }
+                callback?.Invoke(success, error);
+            };
+
             try
             {
                 Action<bool, string?> fetchCallback = (success, error) =>

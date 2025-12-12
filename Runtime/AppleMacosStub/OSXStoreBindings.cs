@@ -8,6 +8,12 @@ namespace UnityEngine.Purchasing
         {
             throw new NotImplementedException();
         }
+
+        public void Sk1SetUnityPurchasingCallback(Sk1UnityPurchasingCallback asyncCallback)
+        {
+            throw new NotImplementedException();
+        }
+
         public void RestoreTransactions()
         {
             throw new NotImplementedException();
@@ -29,6 +35,11 @@ namespace UnityEngine.Purchasing
         }
 
         public void AddTransactionObserver()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetApplicationUsername (string applicationUsername)
         {
             throw new NotImplementedException();
         }
@@ -99,11 +110,6 @@ namespace UnityEngine.Purchasing
 
         // TODO: IAP-3929
         public void RefreshAppReceipt()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws)
         {
             throw new NotImplementedException();
         }

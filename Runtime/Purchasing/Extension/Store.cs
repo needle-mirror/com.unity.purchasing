@@ -51,6 +51,12 @@ namespace UnityEngine.Purchasing.Extension
         internal IProductCache ProductCache;
 
         /// <summary>
+        /// Read-only cache of products specific to the store.
+        /// The cache is populated using responses passed to <see cref="IStoreProductsCallback.OnProductsFetched"/>.
+        /// </summary>
+        protected IReadOnlyProductCache ReadOnlyProductCache => ProductCache;
+
+        /// <summary>
         /// Initializes a new instance of the Store class.
         /// </summary>
         protected Store()

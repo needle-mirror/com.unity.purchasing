@@ -52,6 +52,7 @@ namespace UnityEngine.Purchasing
         readonly string m_Receipt;
         readonly string m_ProductId;
         readonly string m_IntroJson;
+        readonly IAppleTransactionSubscriptionInfo m_AppleTransactionSubscriptionInfo;
 
         /// <summary>
         /// Construct an object that allows inspection of a subscription product.
@@ -76,6 +77,15 @@ namespace UnityEngine.Purchasing
             m_Receipt = receipt;
             m_ProductId = id;
             m_IntroJson = introJson;
+        }
+
+        internal SubscriptionInfoHelper(string receipt, string id, string introJson,
+            IAppleTransactionSubscriptionInfo subscriptionInfo)
+        {
+            m_Receipt = receipt;
+            m_ProductId = id;
+            m_IntroJson = introJson;
+            m_AppleTransactionSubscriptionInfo = subscriptionInfo;
         }
 
         /// <summary>
@@ -112,11 +122,15 @@ namespace UnityEngine.Purchasing
                         case AppleAppStore.Name:
                         case MacAppStore.Name:
                             {
+                                if (m_AppleTransactionSubscriptionInfo != null)
+                                {
+                                    return GetAppleAppStoreSubInfo();
+                                }
                                 if (m_ProductId == null)
                                 {
                                     throw new NullProductIdException();
                                 }
-                                return GetAppleAppStoreSubInfo(payload, m_ProductId);
+                                return GetAppleAppStoreSubInfoFromReceipt(payload, m_ProductId);
                             }
                         default:
                             {
@@ -129,7 +143,12 @@ namespace UnityEngine.Purchasing
             throw new NullReceiptException();
         }
 
-        SubscriptionInfo GetAppleAppStoreSubInfo(string payload, string productId)
+        SubscriptionInfo GetAppleAppStoreSubInfo()
+        {
+            return new SubscriptionInfo(m_AppleTransactionSubscriptionInfo, m_IntroJson, m_ProductId);
+        }
+
+        SubscriptionInfo GetAppleAppStoreSubInfoFromReceipt(string payload, string productId)
         {
             AppleReceipt receipt = null;
 

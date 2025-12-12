@@ -6,7 +6,7 @@ struct SubscriptionInfoDetails: Codable {
     let subscriptionGroupId: String
     let subscriptionPeriodUnit: String
     let subscriptionPeriodValue: Int
-    let introductoryOffer: SubscriptionOfferDetails
+    let introductoryOffer: SubscriptionOfferDetails?
     let promotionalOffers: [SubscriptionOfferDetails]
 
     enum CodingKeys: String, CodingKey {
@@ -22,7 +22,7 @@ struct SubscriptionInfoDetails: Codable {
         subscriptionPeriodUnit = subscriptionInfo.subscriptionPeriod.unit.rawValue
         subscriptionPeriodValue = subscriptionInfo.subscriptionPeriod.value
 
-        introductoryOffer = SubscriptionOfferDetails(subscriptionInfo.introductoryOffer)
+        introductoryOffer = subscriptionInfo.introductoryOffer.map({SubscriptionOfferDetails($0)})
         promotionalOffers = subscriptionInfo.promotionalOffers.map({ offer in
             SubscriptionOfferDetails(offer)
         })

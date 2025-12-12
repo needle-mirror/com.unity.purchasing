@@ -21,7 +21,7 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// Purchase a product.
-        /// Be sure to first register callbacks via `AddPurchasePendingAction` and `AddPurchaseFailedAction`.
+        /// Be sure to first register callbacks via `OnPurchasePending` and `OnPurchaseFailed`.
         /// </summary>
         /// <param name="product">The Product to purchase.</param>
         void PurchaseProduct(Product product);
@@ -55,7 +55,6 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// Initiate a request to restore previously made purchases.
-        ///
         /// When successful, `OnPurchasesFetched` will be invoked with the restored purchases.
         /// </summary>
         /// <param name="callback">Action will be called when the request to restore transactions comes back. The bool will be true if it was successful or false if it was not.

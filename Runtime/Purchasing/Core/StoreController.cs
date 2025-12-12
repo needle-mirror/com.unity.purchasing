@@ -215,29 +215,34 @@ namespace UnityEngine.Purchasing
 #region PurchaseService
         /// <summary>
         /// Initiates a purchase for the specified product.
+        /// Be sure to first register callbacks via `OnPurchasePending` and `OnPurchaseFailed`.
         /// </summary>
         /// <param name="product">The product to purchase.</param>
         public void PurchaseProduct(Product product) => m_PurchaseService.PurchaseProduct(product);
 
         /// <summary>
         /// Initiates a purchase for all items in the specified cart.
+        /// Be sure to first register callbacks via `OnPurchasePending` and `OnPurchaseFailed`.
         /// </summary>
         /// <param name="cart">The cart containing items to purchase.</param>
         public void Purchase(ICart cart) => m_PurchaseService.Purchase(cart);
 
         /// <summary>
         /// Confirms a pending purchase order, completing the transaction.
+        /// Be sure to first register callbacks via `OnPurchaseConfirmed`.
         /// </summary>
         /// <param name="order">The pending order to confirm.</param>
         public void ConfirmPurchase(PendingOrder order) => m_PurchaseService.ConfirmPurchase(order);
 
         /// <summary>
         /// Fetches existing purchases from the store.
+        /// Be sure to first register callbacks via `OnPurchasesFetched` and `OnPurchasesFetchFailed`.
         /// </summary>
         public void FetchPurchases() => m_PurchaseService.FetchPurchases();
 
         /// <summary>
         /// Checks the entitlement status for the specified product.
+        /// Be sure to first register callbacks via `OnCheckEntitlement`.
         /// </summary>
         /// <param name="product">The product to check entitlement for.</param>
         public void CheckEntitlement(Product product) => m_PurchaseService.CheckEntitlement(product);
@@ -259,7 +264,7 @@ namespace UnityEngine.Purchasing
         // TODO: IAP-3929 - Move to IStoreController
         /// <summary>
         /// Purchase a product by product id
-        /// Be sure to first register callbacks via `AddPurchasePendingAction` and `AddPurchaseFailedAction`.
+        /// Be sure to first register callbacks via `OnPurchasePending` and `OnPurchaseFailed`.
         /// </summary>
         /// <param name="productId">The product id to purchase.</param>
         public void PurchaseProduct(string? productId)

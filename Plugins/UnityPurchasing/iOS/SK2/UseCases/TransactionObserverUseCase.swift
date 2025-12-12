@@ -99,6 +99,8 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
                     let transaction = try self.checkVerified(result)
                     let purchaseDetails = await self.createPurchaseDetails(from: result)
 
+                    // Record transaction with Unity Ads for attribution
+                    StoreKitManager.instance.recordTransactionWithUnityAds(purchaseDetails)
 
                     if let _ = transaction.revocationDate {
                         // Remove access to the product identified by transaction.productID.
@@ -106,15 +108,15 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
                         // the revoked transaction.
                         await self.revokePurchase(purchaseDetails)
                         await transaction.finish()
-                    } else if let expirationDate = transaction.expirationDate, expirationDate < Date() {
+
+                    } else if let expirationDate = transaction.expirationDate,
+                              expirationDate < Date() {
                         // Do nothing, this subscription is expired.
                         await transaction.finish()
-                        StoreKitManager.instance.recordTransactionForAttribution(purchaseDetails)
                     } else if transaction.isUpgraded {
                         // Do nothing, there is an active transaction
                         // for a higher level of service.
                         await transaction.finish()
-                        StoreKitManager.instance.recordTransactionForAttribution(purchaseDetails)
                     } else {
                         // Provide access to the product identified by
                         // transaction.productID.

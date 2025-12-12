@@ -22,7 +22,12 @@ namespace UnityEngine.Purchasing
         /// <param name="product">The product to be added to the cart.</param>
         public CartItem(Product product) : this(product, 1) { }
 
-        internal CartItem(Product product, int quantity)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CartItem"/> class with a specified product and a quantity of 1.
+        /// </summary>
+        /// <param name="product">The product to be added to the cart.</param>
+        /// <param name="quantity">The quantity to be added to the cart.</param>
+        public CartItem(Product product, int quantity)
         {
             if (product?.definition == null)
             {

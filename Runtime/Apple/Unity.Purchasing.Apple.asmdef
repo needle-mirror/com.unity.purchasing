@@ -2,7 +2,8 @@
     "name": "Unity.Purchasing.Apple",
     "rootNamespace": "",
     "references": [
-        "Unity.Purchasing"
+        "Unity.Purchasing",
+        "Unity.Purchasing.Utilities"
     ],
     "includePlatforms": [],
     "excludePlatforms": [
@@ -29,12 +30,6 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
-    "versionDefines": [
-        {
-            "name": "com.unity.ads",
-            "expression": "4.16.4",
-            "define": "IAP_UNITY_ATTRIBUTION"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }

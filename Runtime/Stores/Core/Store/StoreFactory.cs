@@ -74,6 +74,12 @@ namespace UnityEngine.Purchasing
             }
         }
 
+        // This function is used for removing stores added in unit tests
+        internal void RemoveStore(string storeName)
+        {
+            m_StoreInstantiationByName.Remove(storeName);
+        }
+
         IDependencyInjectionService CreateBaseDiService()
         {
             var di = new DependencyInjectionService();

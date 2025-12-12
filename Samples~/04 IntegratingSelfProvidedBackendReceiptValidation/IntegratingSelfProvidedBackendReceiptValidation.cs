@@ -83,7 +83,7 @@ namespace Samples.Purchasing.Core.IntegratingSelfProvidedBackendReceiptValidatio
             UpdateUI();
 
             //Mock backend validation. Here you would call your own backend and wait for its response.
-            //If the app is closed during this time, ProcessPurchase will be called again for the same purchase once the app is opened again.
+            //If the app is closed during this time, OnPurchasePending will be called again for the same purchase once the app is opened again.
             yield return MockServerSideValidation(order);
 
             m_ProcessingPurchasesCount--;

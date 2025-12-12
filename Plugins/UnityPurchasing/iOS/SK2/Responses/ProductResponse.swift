@@ -28,7 +28,8 @@ public class ProductResponse: ResponseProtocol, Encodable {
     }
 
     enum CodingKeys: String, CodingKey {
-        case productDetails = "products"
+        case products = "products"
+        case productDetails = "productDetails"
         case responseError = "error"
     }
 }

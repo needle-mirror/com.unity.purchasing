@@ -1,5 +1,21 @@
 # Changelog
 
+## [5.1.0] - 2025-12-12
+### Added
+- Custom Stores - Added a new constructor `CartItem(Product product, int quantity)` to support specifying the quantity of items in the cart.
+- Custom Stores - Added `ReadOnlyProductCache` to `Store` to allow read only access to the internal product cache when implementing a custom store.
+- Apple - StoreKit 1 support has been brought back for iOS, iPadOS, tvOS below 15.0 and macOS below 12.0.
+  - By default, StoreKit 2 will be used, but older devices that are incompatible with it will use StoreKit 1.
+  - Added `StoreKitSelector.forceStoreKit1` to force StoreKit 1 usage on all supported platforms.
+
+### Changed
+- `ProductDefinition` fields `id` and `storeSpecificId` fields are now non-nullable.
+- `SubscriptionInfo` - `IsSubscribed()`, `IsExpired()`, `IsCancelled()`, `IsAutoRenewing()`, `GetRemainingTime()` are now calculated at call time.
+- Apple - On buying an already confirmed product, a `FailedOrder` callback will be sent with the `DuplicateTransaction` reason.
+
+### Fixed
+- Apple - Fixed a missing import `StoreKit/StoreKit.h` when using `"UnityFramework/UnityFramework-Swift.h"`
+
 ## [5.0.4] - 2025-12-03
 ### Changed
 - Apple - Improved SK2 transaction handling

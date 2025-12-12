@@ -8,6 +8,7 @@ namespace UnityEditor.Purchasing
             : base(k_StateNameEnabled, stateMachine)
         {
             m_UIBlocks.Add(new GooglePlayConfigurationSettingsBlock());
+            m_UIBlocks.Add(new AppleConfigurationSettingsBlock());
             m_UIBlocks.Add(new IapCatalogServiceSettingsBlock());
 
             ModifyActionForEvent(false, HandleDisabling);

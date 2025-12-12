@@ -5,6 +5,7 @@ namespace UnityEngine.Purchasing
     interface INativeAppleStore : INativeStore
     {
         void SetUnityPurchasingCallback(UnityPurchasingCallback asyncCallback);
+        void Sk1SetUnityPurchasingCallback(Sk1UnityPurchasingCallback asyncCallback);
         void RestoreTransactions();
         void AddTransactionObserver();
         string AppReceipt();
@@ -18,6 +19,6 @@ namespace UnityEngine.Purchasing
         void PresentCodeRedemptionSheet();
         void DeallocateMemory(IntPtr pointer);
         void RefreshAppReceipt();
-        void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws);
+        void SetApplicationUsername(string guid);
     }
 }

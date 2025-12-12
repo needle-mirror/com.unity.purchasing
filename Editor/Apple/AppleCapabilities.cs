@@ -75,17 +75,20 @@ namespace UnityEditor.Purchasing
             {
                 if (file.EndsWith(".h") || file.EndsWith(".m") || file.EndsWith(".mm"))
                 {
-                    string text = File.ReadAllText(file);
+                    var text = File.ReadAllText(file);
                     // If file contains UnityFramework-Swift.h import but not StoreKit, add StoreKit import before it
-                    if (text.Contains("#import <UnityFramework/UnityFramework-Swift.h>") &&
-                        !text.Contains("#import <StoreKit/StoreKit.h>"))
+                    if (!text.Contains("#import <StoreKit/StoreKit.h>"))
                     {
-                        text = Regex.Replace(
+                        var newText = Regex.Replace(
                             text,
-                            @"(#import <UnityFramework/UnityFramework-Swift\.h>)",
+                            @"(#import (?:<UnityFramework/UnityFramework-Swift\.h>|""UnityFramework/UnityFramework-Swift\.h""))",
                             "#import <StoreKit/StoreKit.h>\n$1"
                         );
-                        File.WriteAllText(file, text);
+
+                        if (newText != text)
+                        {
+                            File.WriteAllText(file, newText);
+                        }
                     }
                 }
             }

@@ -2,14 +2,17 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using AOT;
+using Purchasing.Utilities;
 using Uniject;
 using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.MiniJSON;
+using UnityEngine.Purchasing.Security;
 using UnityEngine.Purchasing.Telemetry;
 
 namespace UnityEngine.Purchasing
@@ -30,7 +33,7 @@ namespace UnityEngine.Purchasing
         Action<string>? m_RefreshAppReceiptSuccessCallback;
         Action<string>? m_RefreshAppReceiptErrorCallback;
         TaskCompletionSource<bool>? m_RefreshAppReceiptTask;
-        bool m_RefreshAppReceipt = true;
+        bool m_RefreshAppReceipt = false;
 
         INativeAppleStore? m_Native;
         readonly IAppleFetchProductsService m_FetchProductsService;
@@ -67,7 +70,15 @@ namespace UnityEngine.Purchasing
 
             //TODO: IAP-4089: Add test
             Application.quitting += () => apple.SetUnityPurchasingCallback(null);
-            apple.SetUnityPurchasingCallback(MessageCallback);
+            if (StoreKitSelector.UseStoreKit1())
+            {
+                apple.Sk1SetUnityPurchasingCallback(Sk1MessageCallback);
+
+            }
+            else
+            {
+                apple.SetUnityPurchasingCallback(MessageCallback);
+            }
         }
 
         public INativeAppleStore? GetNativeStore()
@@ -77,6 +88,12 @@ namespace UnityEngine.Purchasing
 
         public string? AppReceipt()
         {
+            if (StoreKitSelector.UseStoreKit1())
+            {
+               return m_Native?.AppReceipt();
+
+            }
+
             return appReceipt;
         }
 
@@ -143,7 +160,72 @@ namespace UnityEngine.Purchasing
 
         public override void FetchPurchases()
         {
+            if (StoreKitSelector.UseStoreKit1())
+            {
+                OnPurchasesFetchedStoreKit1();
+                return;
+            }
+
             m_Native?.FetchExistingPurchases();
+        }
+
+        void OnPurchasesFetchedStoreKit1()
+        {
+            var receipt = AppReceipt();
+            var appleReceipt = GetAppleReceiptFromBase64String(receipt);
+            if (appleReceipt == null || !HasInAppPurchaseReceipts(appleReceipt))
+            {
+                return;
+            }
+
+            var products = ProductCache.GetProducts();
+
+            var orders = CreateConfirmedOrdersForSK1(products, appleReceipt);
+            PurchaseFetchCallback?.OnAllPurchasesRetrieved(orders);
+        }
+
+        List<Order> CreateConfirmedOrdersForSK1(ReadOnlyObservableCollection<Product> products, AppleReceipt appleReceipt)
+        {
+            var orders = new List<Order>();
+            // Enrich the product descriptions with parsed receipt data
+            foreach (var product in products)
+            {
+                var mostRecentReceipt = FindMostRecentReceipt(appleReceipt, product.definition.storeSpecificId);
+                if (mostRecentReceipt == null)
+                {
+                    continue;
+                    //finalProductDescriptions.Add(productDescription);
+                }
+
+                var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
+                switch (productType)
+                {
+                    // if the product is auto-renewing subscription, filter the expired products
+                    case AppleStoreProductType.AutoRenewingSubscription when new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True:
+                        continue;
+                    case AppleStoreProductType.Consumable:
+                        // Nothing to do, a consumable with a receipt is Pending and will be sent to OnPurchaseSucceeded on launch
+                        continue;
+                    case AppleStoreProductType.AutoRenewingSubscription:
+                    case AppleStoreProductType.NonConsumable:
+                        UpdateAppleProductFields(product.definition.storeSpecificId,
+                            mostRecentReceipt.originalTransactionIdentifier,
+                            true);
+
+                        var confirmedOrder = GenerateAppleConfirmedOrder(product.definition.id, mostRecentReceipt.transactionID, mostRecentReceipt.originalTransactionIdentifier, OwnershipType.Undefined, null, null, null);
+                        orders.Add(confirmedOrder);
+                        continue;
+                    default:
+                        continue;
+                }
+            }
+
+            return orders;
+        }
+
+        static bool HasInAppPurchaseReceipts(AppleReceipt? appleReceipt)
+        {
+            return appleReceipt is {inAppPurchaseReceipts: {Length: > 0}};
         }
 
         public void SetFetchStorePromotionOrderCallbacks(Action<List<Product>> successCallback, Action<string> errorCallback)
@@ -171,6 +253,12 @@ namespace UnityEngine.Purchasing
         public bool simulateAskToBuy { get; set; }
         public void SetAppAccountToken(Guid value)
         {
+            if (StoreKitSelector.UseStoreKit1())
+            {
+                m_Native?.SetApplicationUsername(value.ToString());
+                return;
+            }
+
             m_AppAccountToken = value;
         }
 
@@ -186,11 +274,11 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnPromotionalPurchaseAttempted(string payload)
+        void OnPromotionalPurchaseAttempted(string productId)
         {
             if (OnPromotionalPurchaseIntercepted != null)
             {
-                var product = ProductCache.Find(payload);
+                var product = ProductCache.Find(productId);
                 if (null != product)
                 {
                     OnPromotionalPurchaseIntercepted(product);
@@ -232,6 +320,8 @@ namespace UnityEngine.Purchasing
                     continue;
                 }
 
+                var subscriptionInfo = TryGetSubscriptionInfoFromPayload(purchaseDetails);
+
                 var transactionId = purchaseDetails.TryGetString("transactionId");
                 var productId = purchaseDetails.TryGetString("productId");
                 var originalTransactionId = purchaseDetails.TryGetString("originalTransactionId");
@@ -247,15 +337,75 @@ namespace UnityEngine.Purchasing
 
                 if (isPending)
                 {
-                    orders.Add(GenerateApplePendingOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+                    orders.Add(GenerateApplePendingOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo));
                 }
                 else
                 {
-                    orders.Add(GenerateAppleConfirmedOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+                    orders.Add(GenerateAppleConfirmedOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo));
                 }
             }
 
             return orders;
+        }
+
+        static IAppleTransactionSubscriptionInfo? TryGetSubscriptionInfoFromPayload(Dictionary<string, object> purchaseDetails)
+        {
+            var productType = TryGetProductTypeForTransaction(purchaseDetails.TryGetString("productType"));
+            if (productType is not AppleStoreProductType.AutoRenewingSubscription and not AppleStoreProductType.NonRenewingSubscription)
+            {
+                return null;
+            }
+
+            bool? isFree = null;
+            var hasIsFree = purchaseDetails.TryGetValue("isFree", out var isFreeData);
+            if (hasIsFree && isFreeData is bool isFreeBool)
+            {
+                isFree = isFreeBool;
+            }
+
+            var offerId = purchaseDetails.TryGetString("offerId");
+
+            var offerType = OfferType.Unknown;
+            var typeIntString = purchaseDetails.TryGetString("offerType");
+            var parsedTypeInt = int.TryParse(typeIntString, out var offerInt) ? offerInt : -1;
+            if (typeof(OfferType).IsEnumDefined(parsedTypeInt))
+            {
+                offerType = (OfferType)parsedTypeInt;
+            }
+
+            var expirationDate = TryGetDateTimeFromSecondsString(purchaseDetails.TryGetString("expirationDate"));
+            var revocationDate = TryGetDateTimeFromSecondsString(purchaseDetails.TryGetString("revocationDate"));
+            var purchaseDate = TryGetDateTimeFromSecondsString(purchaseDetails.TryGetString("purchaseDate"));
+
+            return new AppleTransactionSubscriptionInfo(offerType, offerId, isFree, expirationDate, revocationDate, purchaseDate, productType);
+        }
+
+        static DateTime? TryGetDateTimeFromSecondsString(string? secondsString)
+        {
+            if (secondsString == null)
+            {
+                return null;
+            }
+
+            if (!double.TryParse(secondsString, out double seconds))
+            {
+                return null;
+            }
+
+            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+            return epoch.AddSeconds(seconds);
+        }
+
+        static AppleStoreProductType TryGetProductTypeForTransaction(string? productTypeString)
+        {
+            return productTypeString switch
+            {
+                "Consumable" => AppleStoreProductType.Consumable,
+                "Non-Consumable" => AppleStoreProductType.NonConsumable,
+                "Non-Renewing Subscription" => AppleStoreProductType.NonRenewingSubscription,
+                "Auto-Renewable Subscription" => AppleStoreProductType.AutoRenewingSubscription,
+                _ => AppleStoreProductType.Unknown
+            };
         }
 
         static OwnershipType OwnershipTypeFromString(string ownershipTypeString)
@@ -406,11 +556,6 @@ namespace UnityEngine.Purchasing
                 case "onAppReceiptRefreshFailed":
                     OnAppReceiptRefreshedFailed(payload);
                     break;
-#if IAP_UNITY_ATTRIBUTION
-                case "onTransactionObserved":
-                    OnTransactionObserved(payload);
-                    break;
-#endif
             }
         }
 
@@ -456,41 +601,67 @@ namespace UnityEngine.Purchasing
             m_RefreshAppReceiptErrorCallback?.Invoke(error);
         }
 
-#if IAP_UNITY_ATTRIBUTION
-        void OnTransactionObserved(string payload)
-        {
-            var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(payload);
-            var productId = purchaseDetails.TryGetString("productId");
-            var transactionId = purchaseDetails.TryGetString("transactionId");
-            var signatureJws = purchaseDetails.TryGetString("signatureJws");
-            var productJsonRepresentation = purchaseDetails.TryGetString("productJsonRepresentation") ?? "{}";
-            var transactionJsonRepresentation = purchaseDetails.TryGetString("transactionJsonRepresentation") ?? "{}";
-            double transactionUnixTime = ParseTransactionDate(purchaseDetails);
-
-            OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
-        }
-        
-        void OnTransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws)
-        {
-            m_Native?.TransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
-        }
-
-        double ParseTransactionDate(Dictionary<string, object> purchaseDetails)
-        {
-            double transactionUnixTime = 0.0;
-            if (purchaseDetails.TryGetValue("transactionDate", out var dateObj))
-            {
-                if (dateObj is double d) transactionUnixTime = d;
-                else if (dateObj is long l) transactionUnixTime = l;
-                else if (dateObj is string s && DateTimeOffset.TryParse(s, out var dto))
-                    transactionUnixTime = dto.ToUnixTimeSeconds();
-            }
-            return transactionUnixTime;
-        }
-#endif
-
         public override void CheckEntitlement(ProductDefinition productDefinition)
         {
+            if (StoreKitSelector.UseStoreKit1())
+            {
+                var entitlementStatus = 0;
+                var storeName = Application.platform == RuntimePlatform.OSXPlayer? MacAppStore.Name : AppleAppStore.Name;
+                var orders = UnityIAPServices.Purchase(storeName).GetPurchases();
+                switch (productDefinition.type)
+                {
+                    case ProductType.NonConsumable:
+                    {
+                        foreach (var order in orders)
+                        {
+                            if (order.CartOrdered.Items().FirstOrDefault()?.Product.definition.storeSpecificId == productDefinition.storeSpecificId)
+                            {
+                                if (order is PendingOrder)
+                                    entitlementStatus = 2;
+                                else if (order is ConfirmedOrder)
+                                    entitlementStatus = 1;
+                                break;
+                            }
+                        }
+
+                        break;
+                    }
+                    case ProductType.Subscription:
+                    {
+                        foreach (var order in orders)
+                        {
+                            if (order.CartOrdered.Items().FirstOrDefault()?.Product.definition.storeSpecificId == productDefinition.storeSpecificId)
+                            {
+                                // Help me find the storeSpecificId in PurchasedProductInfo
+                                foreach (var purchasedProductInfo in order.Info.PurchasedProductInfo)
+                                {
+                                    if (purchasedProductInfo.productId != productDefinition.storeSpecificId)
+                                        continue;
+
+                                    if (purchasedProductInfo.subscriptionInfo != null && purchasedProductInfo.subscriptionInfo.IsSubscribed() == Result.True)
+                                    {
+                                        if (order is PendingOrder)
+                                            entitlementStatus = 2;
+                                        else if (order is ConfirmedOrder)
+                                            entitlementStatus = 1;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case ProductType.Consumable:
+                    {
+                        var isPending = orders.Any(order => order is PendingOrder && order.CartOrdered.Items().FirstOrDefault()?.Product.definition.storeSpecificId == productDefinition.storeSpecificId);
+                        entitlementStatus = isPending? 2 : 0;
+                        break;
+                    }
+                }
+
+                OnCheckEntitlement(productDefinition.storeSpecificId, entitlementStatus);
+                return;
+            }
             m_Native?.CheckEntitlement(productDefinition.storeSpecificId);
         }
 
@@ -535,6 +706,8 @@ namespace UnityEngine.Purchasing
 
             var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(purchaseDetailsJson);
 
+            var subscriptionInfo = TryGetSubscriptionInfoFromPayload(purchaseDetails);
+
             var productId = purchaseDetails.TryGetString("productId");
             var transactionId = purchaseDetails.TryGetString("transactionId");
             var originalTransactionId = purchaseDetails.TryGetString("originalTransactionId");
@@ -549,14 +722,7 @@ namespace UnityEngine.Purchasing
                 appAccountToken = parsedToken;
             }
 
-#if IAP_UNITY_ATTRIBUTION
-            var productJsonRepresentation = purchaseDetails.TryGetString("productJsonRepresentation") ?? "{}";
-            var transactionJsonRepresentation = purchaseDetails.TryGetString("transactionJsonRepresentation") ?? "{}";
-            double transactionUnixTime = ParseTransactionDate(purchaseDetails);
-
-            OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
-#endif
-            ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
+            ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
         }
 
         // TODO: IAP-3929
@@ -574,27 +740,27 @@ namespace UnityEngine.Purchasing
             return m_RefreshAppReceiptTask.Task;
         }
 
-        void ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws)
+        void ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
             if (!m_TransactionLog.HasRecordOf(transactionId))
             {
-                ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
+                ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             }
             else
             {
-                ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws);
+                ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             }
         }
 
-        void ProcessNewPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws)
+        void ProcessNewPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
-            var pendingOrder = GenerateApplePendingOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws);
+            var pendingOrder = GenerateApplePendingOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             PurchaseCallback?.OnPurchaseSucceeded(pendingOrder);
         }
 
-        void ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
+        void ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
-            var confirmedOrder = GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws);
+            var confirmedOrder = GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             EnsureConfirmedOrderIsFinished(confirmedOrder);
         }
 
@@ -605,41 +771,274 @@ namespace UnityEngine.Purchasing
             return new DeferredOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
         }
 
-        PendingOrder GenerateApplePendingOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
+        PendingOrder GenerateApplePendingOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new PendingOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+            return new PendingOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws), subscriptionInfo);
         }
 
-        ConfirmedOrder GenerateAppleConfirmedOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws)
+        ConfirmedOrder GenerateAppleConfirmedOrder(string id, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
             var product = FindProductById(id);
             var cart = new Cart(product);
-            return new ConfirmedOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
+            return new ConfirmedOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws), subscriptionInfo);
         }
 
         void EnsureConfirmedOrderIsFinished(ConfirmedOrder confirmedOrder)
         {
             var productDefinition = confirmedOrder.CartOrdered.Items().FirstOrDefault()?.Product.definition;
-            InvokeErrorIfRepurchasedConsumables(confirmedOrder);
+            InvokeDuplicateTransactionError(confirmedOrder);
             base.FinishTransaction(productDefinition, confirmedOrder.Info.TransactionID);
         }
 
-        void InvokeErrorIfRepurchasedConsumables(ConfirmedOrder confirmedOrder)
+        void InvokeDuplicateTransactionError(ConfirmedOrder confirmedOrder)
         {
-            var allConsumables = confirmedOrder.CartOrdered.Items().All(
-                (item) => item.Product.definition.type == ProductType.Consumable
-            );
-            if (!allConsumables)
-            {
-                return;
-            }
-
             var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
                 PurchaseFailureReason.DuplicateTransaction,
-                "Consumable purchase has already been confirmed by IAP.");
+                "Purchase has already been confirmed.");
+
             PurchaseCallback?.OnPurchaseFailed(failedOrder);
         }
+
+#region StoreKit1
+    [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
+        static void Sk1MessageCallback(string subject, string payload, string receipt, string transactionId, string originalTransactionId, bool isRestored)
+        {
+            s_Util?.RunOnMainThread(() =>
+            {
+                s_Instance?.ProcessMessage(subject, payload, receipt, transactionId, originalTransactionId, isRestored);
+            });
+        }
+
+        void ProcessMessage(string subject, string payload, string receipt, string transactionId, string originalTransactionId, bool isRestored)
+        {
+            if (string.IsNullOrEmpty(receipt))
+            {
+                receipt = appReceipt ?? "";
+            }
+
+            switch (subject)
+            {
+                case "OnProductsRetrieved":
+                    m_FetchProductsService.OnProductsFetched(payload);
+                    break;
+                case "OnPurchaseSucceeded":
+                    OnPurchaseSucceeded(payload, receipt, transactionId, originalTransactionId, isRestored);
+                    break;
+                case "OnPurchaseFailed":
+                    OnPurchaseFailedSk1(payload);
+                    break;
+                case "onProductPurchaseDeferred":
+                    OnPurchaseDeferredSk1(payload);
+                    break;
+                case "onPromotionalPurchaseAttempted":
+                    OnPromotionalPurchaseAttempted(payload);
+                    break;
+                case "onFetchStorePromotionOrderSucceeded":
+                    OnFetchStorePromotionOrderSucceeded(payload);
+                    break;
+                case "onFetchStorePromotionOrderFailed":
+                    OnFetchStorePromotionOrderFailed("");
+                    break;
+                case "onFetchStorePromotionVisibilitySucceeded":
+                    OnFetchStorePromotionVisibilitySucceeded(payload);
+                    break;
+                case "onFetchStorePromotionVisibilityFailed":
+                    OnFetchStorePromotionVisibilityFailed("");
+                    break;
+                case "onTransactionsRestoredSuccess":
+                    OnTransactionsRestoredSuccess();
+                    break;
+                case "onTransactionsRestoredFail":
+                    OnTransactionsRestoredFail(payload);
+                    break;
+                case "onAppReceiptRefreshed":
+                    OnAppReceiptRetrieved(payload);
+                    break;
+                case "onAppReceiptRefreshFailed":
+                    OnAppReceiptRefreshedFailed(payload);
+                    break;
+                case "onEntitlementsRevoked":
+                    OnEntitlementsRevokedSk1(payload);
+                    break;
+            }
+        }
+
+        void OnPurchaseSucceeded(string id, string receipt, string transactionId, string originalTransactionId, bool isRestored)
+        {
+            var appleReceipt = GetAppleReceiptFromBase64String(receipt);
+            var mostRecentReceipt = FindMostRecentReceipt(appleReceipt, id);
+
+            if (IsValidPurchaseStateSk1(mostRecentReceipt))
+            {
+                isRestored = isRestored || IsRestored(id, mostRecentReceipt, transactionId, originalTransactionId);
+                UpdateAppleProductFields(id, originalTransactionId, isRestored);
+
+                if (!m_TransactionLog.HasRecordOf(transactionId))
+                {
+                    ProcessNewPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null);
+                }
+                else
+                {
+                    ProcessLoggedPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null);
+                }
+            }
+            else
+            {
+                base.FinishTransaction(null, transactionId);
+            }
+        }
+
+        static AppleInAppPurchaseReceipt? FindMostRecentReceipt(AppleReceipt? appleReceipt, string productId)
+        {
+            if (appleReceipt == null)
+            {
+                return null;
+            }
+
+            var foundReceipts = Array.FindAll(appleReceipt.inAppPurchaseReceipts, (r) => r.productID == productId);
+            Array.Sort(foundReceipts, (b, a) => a.purchaseDate.CompareTo(b.purchaseDate));
+            return FirstNonCancelledReceipt(foundReceipts);
+        }
+
+        static AppleInAppPurchaseReceipt? FirstNonCancelledReceipt(AppleInAppPurchaseReceipt[] foundReceipts)
+        {
+            foreach (var receipt in foundReceipts)
+            {
+                if (receipt.cancellationDate == DateTime.MinValue)
+                {
+                    return receipt;
+                }
+            }
+
+            return null;
+        }
+
+        static AppleReceipt? GetAppleReceiptFromBase64String(string? receipt)
+        {
+            AppleReceipt? appleReceipt = null;
+            if (!string.IsNullOrEmpty(receipt))
+            {
+                var parser = new AppleReceiptParser();
+                try
+                {
+                    appleReceipt = parser.Parse(Convert.FromBase64String(receipt));
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+            }
+            return appleReceipt;
+        }
+
+        static bool IsValidPurchaseStateSk1(AppleInAppPurchaseReceipt? mostRecentReceipt)
+        {
+            var isValid = true;
+            if (mostRecentReceipt != null)
+            {
+                var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
+                if (productType == AppleStoreProductType.AutoRenewingSubscription)
+                {
+                    // if the product is auto-renewing subscription, check if this transaction is expired
+                    if (new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True)
+                    {
+                        isValid = false;
+                    }
+                }
+            }
+            return isValid;
+        }
+
+        bool IsRestored(string productId, AppleInAppPurchaseReceipt? productReceipt, string transactionId, string originalTransactionId)
+        {
+            bool isRestored;
+
+            var currentProduct = FindProductById(productId);
+            if (currentProduct.definition.type == ProductType.Unknown)
+            {
+                isRestored = false;
+            }
+            else
+            {
+                isRestored = currentProduct.definition.type == ProductType.Subscription
+                    ? IsSubscriptionRestored(productReceipt, currentProduct)
+                    : IsNonSubscriptionRestored(transactionId, originalTransactionId);
+            }
+
+            static bool IsSubscriptionRestored(AppleInAppPurchaseReceipt? productReceipt, Product previousProduct)
+            {
+                var isRestored = false;
+                if (previousProduct.hasReceipt)
+                {
+                    var subscriptionExpirationDate = productReceipt?.subscriptionExpirationDate;
+                    var subscriptionManager = new SubscriptionManager(previousProduct, null);
+                    var previousSubscriptionInfo = subscriptionManager.getSubscriptionInfo();
+                    if (previousSubscriptionInfo != null &&
+                        previousSubscriptionInfo.isCancelled() == Result.False &&
+                        previousSubscriptionInfo.getExpireDate() >= subscriptionExpirationDate)
+                    {
+                        isRestored = true;
+                    }
+                }
+
+                return isRestored;
+            }
+
+            static bool IsNonSubscriptionRestored(string transactionId, string? originalTransactionId)
+            {
+                return originalTransactionId != null && originalTransactionId != transactionId;
+            }
+
+            return isRestored;
+        }
+
+        void UpdateAppleProductFields(string id, string originalTransactionId, bool isRestored)
+        {
+            var product = FindProductById(id);
+            if (product.definition.type != ProductType.Unknown)
+            {
+                product.appleProductIsRestored = isRestored;
+                product.appleOriginalTransactionID = originalTransactionId;
+            }
+        }
+
+        void OnPurchaseFailedSk1(string json)
+        {
+            try
+            {
+                var purchaseFailureDescription = JSONSerializer.DeserializeFailureReason(json, ProductCache);
+                OnPurchaseFailed(purchaseFailureDescription, json);
+            }
+            catch
+            {
+                OnPurchaseFailed(new PurchaseFailureDescription(Product.CreateUnknownProduct("Unknown ProductID"), PurchaseFailureReason.Unknown, "Unable to parse purchase failure details"));
+            }
+        }
+
+        void OnPurchaseDeferredSk1(string productId)
+        {
+            var product = FindProductById(productId);
+            if (product.definition.type != ProductType.Unknown)
+            {
+                Guid? appAccountToken = null; // passed as null as there is only a promise of a purchase
+                var deferredOrder = GenerateAppleDeferredOrder(product.definition.storeSpecificId, "", "", OwnershipType.Undefined, appAccountToken, null);
+                PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
+            }
+        }
+
+        void OnEntitlementsRevokedSk1(string productIds)
+        {
+            var productIdList = productIds.ArrayListFromJson();
+
+            foreach (string productId in productIdList)
+            {
+                RevokeEntitlement(productId);
+            }
+
+        }
+
+#endregion StoreKit1
     }
 }

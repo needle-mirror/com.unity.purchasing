@@ -82,6 +82,10 @@ public class StoreKitManager: StoreKitManagerProtocol {
                 return
             }
 
+            // Record transaction with Unity Ads for attribution
+            // This happens AFTER successful purchase but BEFORE the success callback
+            recordTransactionWithUnityAds(purchaseDetail)
+
             let jsonString = encodeToJSON(purchaseDetail)
             await storeKitCallback.callback(subject: "OnPurchaseSucceeded", payload: jsonString, entitlementStatus: 0)
         } catch {
@@ -91,33 +95,85 @@ public class StoreKitManager: StoreKitManagerProtocol {
         }
     }
 
-    internal func recordTransactionForAttribution(_ purchaseDetail: PurchaseDetails) {
-        guard let productId = purchaseDetail.productId,
-              let transactionId = purchaseDetail.transactionId,
-              let purchaseDate = purchaseDetail.purchaseDate,
-              let productJson = purchaseDetail.productJsonRepresentation,
-              let transactionJson = purchaseDetail.transactionJsonRepresentation,
-              let jwsRepresentation = purchaseDetail.signatureJws 
-        else {
+    internal func recordTransactionWithUnityAds(_ purchaseDetail: PurchaseDetails) {
+        let transactionIdString = purchaseDetail.transactionId?.description ?? "unknown"
+        let productIdString = purchaseDetail.productId ?? "unknown"
+        let transactionDate = Date(timeIntervalSince1970: purchaseDetail.purchaseDate ?? Date().timeIntervalSince1970)
+        let jwsRepresentation = purchaseDetail.signatureJws ?? ""
+
+        guard transactionIdString != "unknown", productIdString != "unknown" else {
+            printLog("StoreKItManager.recordTransactionWithUnityAds: Missing transaction data")
             return
         }
 
-        // Build JSON payload for C# callback
-        let payload: [String: Any] = [
-            "transactionId": String(transactionId),
-            "productId": productId,
-            "productJsonRepresentation": productJson,
-            "transactionDate": purchaseDate,
-            "transactionJsonRepresentation": transactionJson,
-            "signatureJws": jwsRepresentation
-        ]
+        // Prepare JSON data (convert Base64 back to raw NSData)
+        var productJsonData: Data = Data()
+        var transactionJsonData: Data = Data()
 
-        if let jsonData = try? JSONSerialization.data(withJSONObject: payload, options: []),
-           let jsonString = String(data: jsonData, encoding: .utf8) {
-            Task {
-                await self.storeKitCallback.callback(subject: "onTransactionObserved", payload: jsonString, entitlementStatus: 0)
+        if let productJson = purchaseDetail.productJsonRepresentation {
+            if let decodedData = Data(base64Encoded: productJson, options: .ignoreUnknownCharacters) {
+                productJsonData = decodedData
+                // To debug the product JSON content, uncomment the following line.
+                // logDecodedProductJson(decodedData)
             }
         }
+
+        if let transactionJson = purchaseDetail.transactionJsonRepresentation {
+            if let decodedData = Data(base64Encoded: transactionJson) {
+                transactionJsonData = decodedData
+            }
+        }
+
+        let userInfo: [String: Any] = [
+            "transactionIdentifier": transactionIdString,
+            "productIdentifier": productIdString,
+            "productJsonRepresentation": productJsonData,
+            "transactionDate": transactionDate,
+            "transactionJsonRepresentation": transactionJsonData,
+            "jwsRepresentation": jwsRepresentation
+        ]
+
+        NotificationCenter.default.post(
+            name: NSNotification.Name("UnityAds_RecordPurchase"),
+            object: nil,
+            userInfo: userInfo
+        )
+
+        // To debug the transaction recording, uncomment the following line.
+        // logTransactionRecordingDebug(transactionId: transactionIdString, productId: productIdString, productJsonData: productJsonData, transactionDate: transactionDate, transactionJsonData: transactionJsonData, jwsRepresentation: jwsRepresentation)
+    }
+
+    private func logDecodedProductJson(_ data: Data) {
+        print("Unity Ads: Product JSON decoded successfully: \(data.count) bytes")
+        do {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                let prettyJsonData = try JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted)
+                if let prettyJsonString = String(data: prettyJsonData, encoding: .utf8) {
+                    // Split into chunks for better readability in logs
+                    let chunkSize = 500
+                    let chunks = prettyJsonString.chunked(into: chunkSize)
+
+                    print("Unity Ads: === DECODED PRODUCT JSON ===")
+                    for (index, chunk) in chunks.enumerated() {
+                        print("Unity Ads: Product JSON Part \(index + 1): \(chunk)")
+                    }
+                    print("Unity Ads: --- END Product JSON ---")
+                }
+            }
+        } catch {
+            print("Unity Ads: Failed to parse Product JSON: \(error)")
+        }
+    }
+
+    private func logTransactionRecordingDebug(transactionId: String, productId: String, productJsonData: Data, transactionDate: Date, transactionJsonData: Data, jwsRepresentation: String) {
+        print("Unity Ads: === TRANSACTION RECORDING DEBUG ===")
+        print("Unity Ads: Transaction ID: \(transactionId)")
+        print("Unity Ads: Product ID: \(productId)")
+        print("Unity Ads: Product JSON: Data - \(productJsonData.count) bytes")
+        print("Unity Ads: Transaction Date: \(transactionDate)")
+        print("Unity Ads: Transaction JSON: Data - \(transactionJsonData.count) bytes")
+        print("Unity Ads: JWS Representation: \(jwsRepresentation.isEmpty ? "None" : "Present (\(jwsRepresentation.count) chars)")")
+        print("Unity Ads: === END DEBUG ===")
     }
 
     // MARK: Products
@@ -137,7 +193,7 @@ public class StoreKitManager: StoreKitManagerProtocol {
             // Populate productsByID dictionary for quick access
             updateProductsLookup(products)
 
-            let jsonString = encodeToJSON( ["products": products])
+            let jsonString = encodeToJSON(response)
             await storeKitCallback.callback(subject: "OnProductsFetched", payload: jsonString, entitlementStatus: 0)
         } catch {
             Task(priority: .background, operation: {
@@ -187,7 +243,7 @@ public class StoreKitManager: StoreKitManagerProtocol {
      Fetch the receipt data from the application bundle. This is read from `Bundle.main.appStoreReceiptURL`.
 
      - Warning:
-        The method isn’t necessary because we use Transaction to validate in-app purchases. It is here to support IAP Package that expects the receipt payload.
+        The method isn't necessary because we use Transaction to validate in-app purchases. It is here to support IAP Package that expects the receipt payload.
      */
     public func fetchAppReceipt() -> String {
         if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,

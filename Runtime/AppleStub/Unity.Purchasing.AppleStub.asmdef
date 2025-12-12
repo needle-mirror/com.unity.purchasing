@@ -2,7 +2,8 @@
     "name": "Unity.Purchasing.AppleStub",
     "rootNamespace": "",
     "references": [
-        "Unity.Purchasing"
+        "Unity.Purchasing",
+        "Unity.Purchasing.Utilities"
     ],
     "includePlatforms": [
         "Android",

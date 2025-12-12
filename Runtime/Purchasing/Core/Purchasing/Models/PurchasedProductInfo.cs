@@ -7,12 +7,12 @@ namespace UnityEngine.Purchasing
 {
     class PurchasedProductInfo : IPurchasedProductInfo
     {
-        public PurchasedProductInfo(string productId, string receipt, ProductType productType)
+        public PurchasedProductInfo(string productId, string receipt, ProductType productType, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
             this.productId = productId;
             if (productType == ProductType.Subscription)
             {
-                var subscriptionInfoHelper = new SubscriptionInfoHelper(receipt, productId, null);
+                var subscriptionInfoHelper = new SubscriptionInfoHelper(receipt, productId, null, subscriptionInfo);
                 TryInitSubscriptionInfo(subscriptionInfoHelper);
             }
         }

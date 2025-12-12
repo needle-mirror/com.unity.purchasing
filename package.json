@@ -15,9 +15,9 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Changed\n- Apple - Improved SK2 transaction handling"
+    "changelog": "### Added\n- Custom Stores - Added a new constructor `CartItem(Product product, int quantity)` to support specifying the quantity of items in the cart.\n- Custom Stores - Added `ReadOnlyProductCache` to `Store` to allow read only access to the internal product cache when implementing a custom store.\n- Apple - StoreKit 1 support has been brought back for iOS, iPadOS, tvOS below 15.0 and macOS below 12.0.\n  - By default, StoreKit 2 will be used, but older devices that are incompatible with it will use StoreKit 1.\n  - Added `StoreKitSelector.forceStoreKit1` to force StoreKit 1 usage on all supported platforms.\n\n### Changed\n- `ProductDefinition` fields `id` and `storeSpecificId` fields are now non-nullable.\n- `SubscriptionInfo` - `IsSubscribed()`, `IsExpired()`, `IsCancelled()`, `IsAutoRenewing()`, `GetRemainingTime()` are now calculated at call time.\n- Apple - On buying an already confirmed product, a `FailedOrder` callback will be sent with the `DuplicateTransaction` reason.\n\n### Fixed\n- Apple - Fixed a missing import `StoreKit/StoreKit.h` when using `\"UnityFramework/UnityFramework-Swift.h\"`"
   },
-  "version": "5.0.4",
+  "version": "5.1.0",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.0.4"
+    "com.unity.purchasing.tests": "5.1.0"
   },
   "upmCi": {
-    "footprint": "4c7d4d3cac2a3fcc934b3ebcea6c080a98886186"
+    "footprint": "2186a40c7d25f28853ecf38befb2d513044f623a"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.0/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.1/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "3bd76b55c09f086d1105b1f633e5dcaaf55f4a9d"
+    "revision": "3428ba501f82552263f310b7aaac6c5dc525efda"
   },
   "samples": [
     {

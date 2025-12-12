@@ -13,17 +13,14 @@ namespace UnityEngine.Purchasing
     /// <seealso cref="SubscriptionInfoHelper.GetSubscriptionInfo"/>
     public class SubscriptionInfo
     {
-        readonly Result m_IsSubscribed;
-        readonly Result m_IsExpired;
-        readonly Result m_IsCancelled;
         readonly Result m_IsFreeTrial;
-        readonly Result m_IsAutoRenewing;
+        readonly Result m_IsAutoRenewingSubscription;
+        readonly bool m_IsAutoRenewingProduct; // For Apple: true if AutoRenewingSubscription, used to compute IsAutoRenewing()
         readonly Result m_IsIntroductoryPricePeriod;
         readonly string m_ProductId;
         readonly DateTime m_PurchaseDate;
         readonly DateTime m_SubscriptionExpireDate;
         readonly DateTime m_SubscriptionCancelDate;
-        readonly TimeSpan m_RemainedTime;
         readonly string m_IntroductoryPrice;
         readonly TimeSpan m_IntroductoryPricePeriod;
         readonly long m_IntroductoryPriceCycles;
@@ -34,6 +31,14 @@ namespace UnityEngine.Purchasing
         // for test
         readonly string m_FreeTrialPeriodString;
         readonly string m_SKUDetails;
+
+        // If false, time-based fields return Unsupported (e.g., Apple non-renewing subscriptions)
+        readonly bool m_SupportsTimeBasedFields;
+
+
+        // For stores that determine cancelled state by auto-renew status (Google),
+        // rather than a cancellation date (Apple)
+        readonly Result m_IsAutoRenewCancelled;
 
         /// <summary>
         /// Unpack Apple receipt subscription data.
@@ -49,95 +54,137 @@ namespace UnityEngine.Purchasing
 
             var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), r.productType.ToString());
 
-            if (productType == AppleStoreProductType.Consumable || productType == AppleStoreProductType.NonConsumable)
+            if (productType != AppleStoreProductType.AutoRenewingSubscription
+                && productType != AppleStoreProductType.NonRenewingSubscription)
             {
                 throw new InvalidProductTypeException();
             }
 
-            if (!string.IsNullOrEmpty(introJson))
-            {
-                var introWrapper = (Dictionary<string, object>)MiniJson.JsonDecode(introJson);
-                var nunit = -1;
-                var unit = SubscriptionPeriodUnit.NotAvailable;
-                m_IntroductoryPrice = introWrapper.TryGetString("introductoryPrice") + introWrapper.TryGetString("introductoryPriceLocale");
-                if (string.IsNullOrEmpty(m_IntroductoryPrice))
-                {
-                    m_IntroductoryPrice = "not available";
-                }
-                else
-                {
-                    try
-                    {
-                        m_IntroductoryPriceCycles = Convert.ToInt64(introWrapper.TryGetString("introductoryPriceNumberOfPeriods"));
-                        nunit = Convert.ToInt32(introWrapper.TryGetString("numberOfUnits"));
-                        unit = (SubscriptionPeriodUnit)Convert.ToInt32(introWrapper.TryGetString("unit"));
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.unityLogger.LogIAP("Unable to parse introductory period cycles and duration, " +
-                            $"this product does not have configuration of introductory price period: {e}");
-                        unit = SubscriptionPeriodUnit.NotAvailable;
-                    }
-                }
-                var now = DateTime.Now;
-                switch (unit)
-                {
-                    case SubscriptionPeriodUnit.Day:
-                        m_IntroductoryPricePeriod = TimeSpan.FromTicks(TimeSpan.FromDays(1).Ticks * nunit);
-                        break;
-                    case SubscriptionPeriodUnit.Month:
-                        var monthSpan = now.AddMonths(1) - now;
-                        m_IntroductoryPricePeriod = TimeSpan.FromTicks(monthSpan.Ticks * nunit);
-                        break;
-                    case SubscriptionPeriodUnit.Week:
-                        m_IntroductoryPricePeriod = TimeSpan.FromTicks(TimeSpan.FromDays(7).Ticks * nunit);
-                        break;
-                    case SubscriptionPeriodUnit.Year:
-                        var yearSpan = now.AddYears(1) - now;
-                        m_IntroductoryPricePeriod = TimeSpan.FromTicks(yearSpan.Ticks * nunit);
-                        break;
-                    default:
-                        m_IntroductoryPricePeriod = TimeSpan.Zero;
-                        m_IntroductoryPriceCycles = 0;
-                        break;
-                }
-            }
-            else
-            {
-                m_IntroductoryPrice = "not available";
-                m_IntroductoryPricePeriod = TimeSpan.Zero;
-                m_IntroductoryPriceCycles = 0;
-            }
+            (m_IntroductoryPrice, m_IntroductoryPricePeriod, m_IntroductoryPriceCycles) = TryParseAppleIntroOffer(introJson);
 
-            var currentDate = DateTime.UtcNow;
             m_PurchaseDate = r.purchaseDate;
             m_ProductId = r.productID;
 
             m_SubscriptionExpireDate = r.subscriptionExpirationDate;
             m_SubscriptionCancelDate = r.cancellationDate;
 
+            // Apple subscriptions don't use the Google-style cancelled flag
+            m_IsAutoRenewCancelled = Result.Unsupported;
+
             // if the product is non-renewing subscription, apple store will not return expiration date for this product
             if (productType == AppleStoreProductType.NonRenewingSubscription)
             {
-                m_IsSubscribed = Result.Unsupported;
-                m_IsExpired = Result.Unsupported;
-                m_IsCancelled = Result.Unsupported;
+                m_SupportsTimeBasedFields = false;
                 m_IsFreeTrial = Result.Unsupported;
-                m_IsAutoRenewing = Result.Unsupported;
+                m_IsAutoRenewingProduct = false;
                 m_IsIntroductoryPricePeriod = Result.Unsupported;
             }
             else
             {
-                m_IsCancelled = (r.cancellationDate.Ticks > 0) && (r.cancellationDate.Ticks < currentDate.Ticks) ? Result.True : Result.False;
-                m_IsSubscribed = r.subscriptionExpirationDate.Ticks >= currentDate.Ticks ? Result.True : Result.False;
-                m_IsExpired = (r.subscriptionExpirationDate.Ticks > 0 && r.subscriptionExpirationDate.Ticks < currentDate.Ticks) ? Result.True : Result.False;
+                m_SupportsTimeBasedFields = true;
                 m_IsFreeTrial = (r.isFreeTrial == 1) ? Result.True : Result.False;
-                m_IsAutoRenewing = ((productType == AppleStoreProductType.AutoRenewingSubscription) && m_IsCancelled == Result.False
-                        && m_IsExpired == Result.False) ? Result.True : Result.False;
+                m_IsAutoRenewingProduct = true;
                 m_IsIntroductoryPricePeriod = r.isIntroductoryPricePeriod == 1 ? Result.True : Result.False;
             }
+        }
 
-            m_RemainedTime = m_IsSubscribed == Result.True ? r.subscriptionExpirationDate.Subtract(currentDate) : TimeSpan.Zero;
+        internal SubscriptionInfo(IAppleTransactionSubscriptionInfo transactionSubscriptionInfo, string introJson, string productId)
+        {
+            var productType = transactionSubscriptionInfo.ProductType;
+            if (productType != AppleStoreProductType.AutoRenewingSubscription
+                && productType != AppleStoreProductType.NonRenewingSubscription)
+            {
+                throw new InvalidProductTypeException();
+            }
+
+            (m_IntroductoryPrice, m_IntroductoryPricePeriod, m_IntroductoryPriceCycles) = TryParseAppleIntroOffer(introJson);
+
+            m_ProductId = productId;
+
+            m_PurchaseDate = transactionSubscriptionInfo.PurchaseDate ?? DateTime.MinValue;
+            m_SubscriptionCancelDate = transactionSubscriptionInfo.RevocationDate ?? DateTime.MinValue;
+            m_SubscriptionExpireDate = transactionSubscriptionInfo.ExpirationDate ?? DateTime.MinValue;
+
+            // Apple subscriptions don't use the Google-style cancelled flag
+            m_IsAutoRenewCancelled = Result.Unsupported;
+
+            if (productType == AppleStoreProductType.NonRenewingSubscription)
+            {
+                m_SupportsTimeBasedFields = false;
+                m_IsFreeTrial = Result.Unsupported;
+                m_IsAutoRenewingProduct = false;
+                m_IsIntroductoryPricePeriod = Result.Unsupported;
+            }
+            else
+            {
+                m_SupportsTimeBasedFields = true;
+                m_IsAutoRenewingProduct = true;
+                m_IsFreeTrial = transactionSubscriptionInfo.IsFree switch
+                {
+                    null => Result.Unsupported,
+                    true => Result.True,
+                    false => Result.False
+                };
+                m_IsIntroductoryPricePeriod = transactionSubscriptionInfo.OfferType == OfferType.Introductory ? Result.True : Result.False;
+            }
+        }
+
+        private static (string introductoryPrice, TimeSpan introductoryPricePeriod, long introductoryPriceCycles) TryParseAppleIntroOffer(string introJson)
+        {
+            if (string.IsNullOrEmpty(introJson))
+            {
+                return ("not available", TimeSpan.Zero, 0);
+            }
+
+            var introWrapper = (Dictionary<string, object>)MiniJson.JsonDecode(introJson);
+            var nunit = -1;
+            var unit = SubscriptionPeriodUnit.NotAvailable;
+            var introductoryPrice = introWrapper.TryGetString("introductoryPrice") + introWrapper.TryGetString("introductoryPriceLocale");
+            long introductoryPriceCycles = 0;
+            TimeSpan introductoryPricePeriod;
+            if (string.IsNullOrEmpty(introductoryPrice))
+            {
+                introductoryPrice = "not available";
+            }
+            else
+            {
+                try
+                {
+                    introductoryPriceCycles = Convert.ToInt64(introWrapper.TryGetString("introductoryPriceNumberOfPeriods"));
+                    nunit = Convert.ToInt32(introWrapper.TryGetString("numberOfUnits"));
+                    unit = (SubscriptionPeriodUnit)Convert.ToInt32(introWrapper.TryGetString("unit"));
+                }
+                catch (Exception e)
+                {
+                    Debug.unityLogger.LogIAP("Unable to parse introductory period cycles and duration, " +
+                        $"this product does not have configuration of introductory price period: {e}");
+                    unit = SubscriptionPeriodUnit.NotAvailable;
+                }
+            }
+            var now = DateTime.Now;
+            switch (unit)
+            {
+                case SubscriptionPeriodUnit.Day:
+                    introductoryPricePeriod = TimeSpan.FromTicks(TimeSpan.FromDays(1).Ticks * nunit);
+                    break;
+                case SubscriptionPeriodUnit.Month:
+                    var monthSpan = now.AddMonths(1) - now;
+                    introductoryPricePeriod = TimeSpan.FromTicks(monthSpan.Ticks * nunit);
+                    break;
+                case SubscriptionPeriodUnit.Week:
+                    introductoryPricePeriod = TimeSpan.FromTicks(TimeSpan.FromDays(7).Ticks * nunit);
+                    break;
+                case SubscriptionPeriodUnit.Year:
+                    var yearSpan = now.AddYears(1) - now;
+                    introductoryPricePeriod = TimeSpan.FromTicks(yearSpan.Ticks * nunit);
+                    break;
+                default:
+                    introductoryPricePeriod = TimeSpan.Zero;
+                    introductoryPriceCycles = 0;
+                    break;
+            }
+
+            return (introductoryPrice, introductoryPricePeriod, introductoryPriceCycles);
         }
 
         /// <summary>
@@ -172,10 +219,9 @@ namespace UnityEngine.Purchasing
             }
 
             m_PurchaseDate = purchaseDate;
-            m_IsSubscribed = Result.True;
-            m_IsAutoRenewing = isAutoRenewing ? Result.True : Result.False;
-            m_IsExpired = Result.False;
-            m_IsCancelled = isAutoRenewing ? Result.False : Result.True;
+            m_SupportsTimeBasedFields = true;
+            m_IsAutoRenewingSubscription = isAutoRenewing ? Result.True : Result.False;
+            m_IsAutoRenewCancelled = isAutoRenewing ? Result.False : Result.True;
             m_IsFreeTrial = Result.False;
 
 
@@ -264,7 +310,6 @@ namespace UnityEngine.Purchasing
                 m_SubscriptionExpireDate = NextBillingDate(billingBeginDate, ParsePeriodTimeSpanUnits(subPeriod));
             }
 
-            m_RemainedTime = m_SubscriptionExpireDate.Subtract(DateTime.UtcNow);
             m_SKUDetails = skuDetails;
         }
 
@@ -273,15 +318,14 @@ namespace UnityEngine.Purchasing
         /// Note this is intended to be called internally.
         /// </summary>
         /// <param name="productId">This subscription's product identifier</param>
+        [Obsolete("This constructor is not used internally and returns placeholder values. Use a constructor with receipt data instead.")]
         public SubscriptionInfo(string productId)
         {
             m_ProductId = productId;
-            m_IsSubscribed = Result.True;
-            m_IsExpired = Result.False;
-            m_IsCancelled = Result.Unsupported;
+            m_SupportsTimeBasedFields = false;
             m_IsFreeTrial = Result.Unsupported;
-            m_IsAutoRenewing = Result.Unsupported;
-            m_RemainedTime = TimeSpan.MaxValue;
+            m_IsAutoRenewingSubscription = Result.Unsupported;
+            m_IsAutoRenewCancelled = Result.Unsupported;
             m_IsIntroductoryPricePeriod = Result.Unsupported;
             m_IntroductoryPricePeriod = TimeSpan.MaxValue;
             m_IntroductoryPrice = null;
@@ -338,7 +382,14 @@ namespace UnityEngine.Purchasing
         /// </returns>
         /// <seealso cref="IsExpired"/>
         /// <seealso cref="DateTime.UtcNow"/>
-        public Result IsSubscribed() { return m_IsSubscribed; }
+        public Result IsSubscribed()
+        {
+            if (!m_SupportsTimeBasedFields)
+            {
+                return Result.Unsupported;
+            }
+            return m_SubscriptionExpireDate.Ticks >= DateTime.UtcNow.Ticks ? Result.True : Result.False;
+        }
 
         /// <summary>
         /// Indicates whether this auto-renewable subscription Product is currently subscribed or not.
@@ -375,7 +426,15 @@ namespace UnityEngine.Purchasing
         /// </returns>
         /// <seealso cref="IsSubscribed"/>
         /// <seealso cref="DateTime.UtcNow"/>
-        public Result IsExpired() { return m_IsExpired; }
+        public Result IsExpired()
+        {
+            if (!m_SupportsTimeBasedFields)
+            {
+                return Result.Unsupported;
+            }
+            var currentDate = DateTime.UtcNow;
+            return (m_SubscriptionExpireDate.Ticks > 0 && m_SubscriptionExpireDate.Ticks < currentDate.Ticks) ? Result.True : Result.False;
+        }
 
         /// <summary>
         /// Indicates whether this auto-renewable subscription Product is currently unsubscribed or not.
@@ -405,7 +464,22 @@ namespace UnityEngine.Purchasing
         /// <typeparamref name="Result.False"/> otherwise.
         /// Non-renewable subscriptions in the Apple store return a <typeparamref name="Result.Unsupported"/> value.
         /// </returns>
-        public Result IsCancelled() { return m_IsCancelled; }
+        public Result IsCancelled()
+        {
+            // For Google, cancelled state is determined by isAutoRenewing flag
+            if (m_IsAutoRenewCancelled != Result.Unsupported)
+            {
+                return m_IsAutoRenewCancelled;
+            }
+            // For Apple non-renewing and product-id-only constructor, return Unsupported
+            if (!m_SupportsTimeBasedFields)
+            {
+                return Result.Unsupported;
+            }
+            // For Apple auto-renewing, compute from cancellation date
+            var currentDate = DateTime.UtcNow;
+            return (m_SubscriptionCancelDate.Ticks > 0 && m_SubscriptionCancelDate.Ticks < currentDate.Ticks) ? Result.True : Result.False;
+        }
 
         /// <summary>
         /// Indicates whether this Product has been cancelled by Apple customer support or
@@ -452,7 +526,21 @@ namespace UnityEngine.Purchasing
         /// <typeparamref name="Result.False"/> The store receipt's indicates this subscription is not auto-renewing.
         /// Non-renewable subscriptions in the Apple store return a <typeparamref name="Result.Unsupported"/> value.
         /// </returns>
-        public Result IsAutoRenewing() { return m_IsAutoRenewing; }
+        public Result IsAutoRenewing()
+        {
+            // For Google, m_IsAutoRenewingSubscription is set directly from the isAutoRenewing flag
+            if (m_IsAutoRenewCancelled != Result.Unsupported)
+            {
+                return m_IsAutoRenewingSubscription;
+            }
+            // For Apple, compute based on product type + cancelled + expired state
+            if (!m_IsAutoRenewingProduct)
+            {
+                return Result.Unsupported;
+            }
+            // Auto-renewing only if not cancelled and not expired
+            return (IsCancelled() == Result.False && IsExpired() == Result.False) ? Result.True : Result.False;
+        }
 
         /// <summary>
         /// Indicates whether this Product is expected to auto-renew. The product must be auto-renewable, not canceled, and not expired.
@@ -476,7 +564,15 @@ namespace UnityEngine.Purchasing
         /// Google subscriptions queried on devices with version lower than 6 of the Android in-app billing API return <typeparamref name="TimeSpan.MaxValue"/>.
         /// </returns>
         /// <seealso cref="DateTime.UtcNow"/>
-        public TimeSpan GetRemainingTime() { return m_RemainedTime; }
+        public TimeSpan GetRemainingTime()
+        {
+            if (!m_SupportsTimeBasedFields)
+            {
+                return TimeSpan.Zero;
+            }
+            var remaining = m_SubscriptionExpireDate.Subtract(DateTime.UtcNow);
+            return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+        }
 
         /// <summary>
         /// Indicates how much time remains until the next billing date.
@@ -736,7 +832,7 @@ namespace UnityEngine.Purchasing
                 { "productId", m_ProductId },
                 { "is_free_trial", m_IsFreeTrial },
                 { "is_introductory_price_period", m_IsIntroductoryPricePeriod == Result.True },
-                { "remaining_time_in_seconds", m_RemainedTime.TotalSeconds }
+                { "remaining_time_in_seconds", GetRemainingTime().TotalSeconds }
             };
             return MiniJson.JsonEncode(dict);
         }
@@ -894,13 +990,5 @@ namespace UnityEngine.Purchasing
         /// Default value when no value is available.
         /// </summary>
         NotAvailable = 4,
-    }
-
-    enum AppleStoreProductType
-    {
-        NonConsumable = 0,
-        Consumable = 1,
-        NonRenewingSubscription = 2,
-        AutoRenewingSubscription = 3,
     }
 }

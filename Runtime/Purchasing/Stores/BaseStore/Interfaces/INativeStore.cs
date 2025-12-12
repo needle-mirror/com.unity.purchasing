@@ -52,4 +52,9 @@ namespace UnityEngine.Purchasing
 
     delegate void UnityPurchasingCallback(IntPtr subjectPtr, IntPtr payloadPtr, int entitlementStatus);
     delegate bool StorefrontChangeCallback(string storefrontCountryCode, string storefrontId);
+
+#region StoreKit1
+    delegate void Sk1UnityPurchasingCallback(string subject, string payload, string receipt, string transactionId,
+        string originalTransactionId, bool isRestored);
+#endregion
 }

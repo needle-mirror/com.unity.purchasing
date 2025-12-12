@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     public interface IPurchasedProductInfo
     {
         /// <summary>
-        /// Identifier of the purchased product.
+        /// Store-specific identifier of the purchased product.
         /// </summary>
         string productId { get; }
 

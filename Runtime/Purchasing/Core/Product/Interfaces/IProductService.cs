@@ -18,7 +18,7 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// Fetches products matching the set of definitions passed as input.
-        /// Be sure to first register callbacks via `AddProductsUpdatedAction` and `AddProductsFetchFailedAction`.
+        /// Be sure to first register callbacks via `OnProductsFetched` and `OnProductsFetchFailed`.
         /// </summary>
         /// <param name="productDefinitions">The definitions of the products to be fetched.</param>
         void FetchProductsWithNoRetries(List<ProductDefinition> productDefinitions);

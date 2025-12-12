@@ -55,7 +55,9 @@ namespace UnityEngine.Purchasing
         {
             var productDescription = purchase.productDescriptions.FirstOrDefault();
 
-            return new Product(new ProductDefinition(purchase.sku, purchase.sku, ProductType.Unknown),
+            var productId = purchase.sku ?? "";
+
+            return new Product(new ProductDefinition(productId, productId, ProductType.Unknown),
                 productDescription?.metadata);
         }
     }

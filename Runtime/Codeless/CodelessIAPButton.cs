@@ -284,9 +284,9 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Invoked on a failed purchase of the product associated with this button
+        /// Invoked on a pending purchase of the product associated with this button
         /// </summary>
-        /// <param name="order">The <typeparamref name="Product"/> which failed to purchase</param>
+        /// <param name="order">The <typeparamref name="Product"/> which purchase is pending</param>
         public void OnOrderPending(PendingOrder order)
         {
             onOrderPending?.Invoke(order);
@@ -298,9 +298,9 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Invoked on a failed purchase of the product associated with this button
+        /// Invoked on a confirmed purchase of the product associated with this button
         /// </summary>
-        /// <param name="order">The <typeparamref name="Product"/> which failed to purchase</param>
+        /// <param name="order">The <typeparamref name="Product"/> which purchase is confirmed</param>
         public void OnOrderConfirmed(ConfirmedOrder order)
         {
             onOrderConfirmed?.Invoke(order);

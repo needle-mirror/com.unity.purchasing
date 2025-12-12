@@ -73,6 +73,15 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Gets the current default store
+        /// </summary>
+        /// <returns>The default store name as a string</returns>
+        public static string GetDefaultStore()
+        {
+            return DefaultStoreHelper.GetDefaultStoreName();
+        }
+
+        /// <summary>
         /// Add a new custom store which can then be referenced by name to get its services. This will register the store with IAP.
         /// If no custom services are added via the other functions, a generic StoreService, ProductService and PurchaseService will be created to drive the custom store with no extended features.
         /// </summary>

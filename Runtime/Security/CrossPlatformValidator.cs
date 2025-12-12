@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Extension;
+using Purchasing.Utilities;
 
 namespace UnityEngine.Purchasing.Security
 {
@@ -74,12 +75,16 @@ namespace UnityEngine.Purchasing.Security
 
     /// <summary>
     /// Class that validates receipts on multiple platforms that support the Security module.
+    ///
     /// Note that this currently only supports GooglePlay and Apple platforms.
+    /// For Apple, this is only needed for StoreKit 1 since StoreKit 2 already performs local validation.
     /// </summary>
 	public class CrossPlatformValidator
     {
         private GooglePlayValidator google;
-        private string googleBundleId;
+        private AppleValidator apple;
+        private string googleBundleId, appleBundleId;
+        private static bool useStoreKit1 = StoreKitSelector.UseStoreKit1();
 
         /// <summary>
         /// Constructs an instance and checks the validity of the certification keys for GooglePlay.
@@ -111,9 +116,9 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="googlePublicKey"> The GooglePlay public key. </param>
         /// <param name="appleRootCert"> The Apple certification key. </param>
         /// <param name="appBundleId"> The bundle ID for all platforms. </param>
-        [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
+        [Obsolete("Use the CrossPlatformValidator for Google Play Store and Apple App Store only.")]
 	    public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert,
-            string appBundleId) : this(googlePublicKey, appBundleId)
+            string appBundleId) : this(googlePublicKey, appleRootCert, appBundleId, appBundleId)
         {
         }
 
@@ -125,10 +130,10 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="appleRootCert"> The Apple certification key. </param>
         /// <param name="unityChannelPublicKey_not_used"> The Unity Channel public key. Not used because Unity Channel is no longer supported. </param>
         /// <param name="appBundleId"> The bundle ID for all platforms. </param>
-        [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
+        [Obsolete("Use the CrossPlatformValidator for Google Play Store and Apple App Store only.")]
 	    public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert, byte[] unityChannelPublicKey_not_used,
             string appBundleId)
-            : this(googlePublicKey, appBundleId)
+            : this(googlePublicKey, appleRootCert, appBundleId, appBundleId)
         {
         }
 
@@ -140,11 +145,29 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="appleRootCert"> The Apple certification key. </param>
         /// <param name="googleBundleId"> The GooglePlay bundle ID. </param>
         /// <param name="appleBundleId"> The Apple bundle ID. </param>
-        [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
 	    public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert,
             string googleBundleId, string appleBundleId)
-            : this(googlePublicKey, googleBundleId)
         {
+            try
+            {
+                if (googlePublicKey != null)
+                {
+                    google = new GooglePlayValidator(googlePublicKey);
+                }
+
+                if (appleRootCert != null)
+                {
+                    apple = new AppleValidator(appleRootCert);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidPublicKeyException("Cannot instantiate self with an invalid public key. (" +
+                    ex.ToString() + ")");
+            }
+
+            this.googleBundleId = googleBundleId;
+            this.appleBundleId = appleBundleId;
         }
 
         /// <summary>
@@ -158,7 +181,7 @@ namespace UnityEngine.Purchasing.Security
         /// <param name="xiaomiBundleId_not_used"> The Xiaomi bundle ID. Not used because Xiaomi is no longer supported. </param>
         [Obsolete("Use the CrossPlatformValidator for Google Play Store only.")]
 		public CrossPlatformValidator(byte[] googlePublicKey, byte[] appleRootCert, byte[] unityChannelPublicKey_not_used,
-            string googleBundleId, string appleBundleId, string xiaomiBundleId_not_used) : this(googlePublicKey, googleBundleId)
+            string googleBundleId, string appleBundleId, string xiaomiBundleId_not_used) : this(googlePublicKey, appleRootCert, googleBundleId, appleBundleId)
         {
         }
 
@@ -173,7 +196,7 @@ namespace UnityEngine.Purchasing.Security
             try
             {
                 var wrapper = (Dictionary<string, object>)MiniJson.JsonDecode(unityIAPReceipt);
-                if (null == wrapper)
+                if (wrapper == null)
                 {
                     throw new InvalidReceiptDataException();
                 }
@@ -185,7 +208,7 @@ namespace UnityEngine.Purchasing.Security
                 {
                     case "GooglePlay":
                         {
-                            if (null == google)
+                            if (google == null)
                             {
                                 throw new MissingStoreSecretException(
                                     "Cannot validate a Google Play receipt without a Google Play public key.");
@@ -208,6 +231,23 @@ namespace UnityEngine.Purchasing.Security
                     case "AppleAppStore":
                     case "MacAppStore":
                         {
+                            if (useStoreKit1)
+                            {
+                                if (apple == null)
+                                {
+                                    throw new MissingStoreSecretException(
+                                        "Cannot validate an Apple receipt without supplying an Apple root certificate");
+                                }
+
+                                var r = apple.Validate(Convert.FromBase64String(payload));
+                                if (!appleBundleId.Equals(r.bundleID))
+                                {
+                                    throw new InvalidBundleIdException();
+                                }
+
+                                return r.inAppPurchaseReceipts.ToArray();
+                            }
+
                             return new IPurchaseReceipt[] {};
                         }
                     default:

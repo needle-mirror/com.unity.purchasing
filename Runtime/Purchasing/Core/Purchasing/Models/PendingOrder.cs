@@ -21,15 +21,37 @@ namespace UnityEngine.Purchasing
             info.PurchasedProductInfo = FillPurchasedProductInfo();
         }
 
-        List<IPurchasedProductInfo> FillPurchasedProductInfo()
+        internal PendingOrder(ICart cart, IOrderInfo info, IAppleTransactionSubscriptionInfo? subscriptionInfo) : base(cart, info)
         {
+            info.PurchasedProductInfo = FillPurchasedProductInfo(subscriptionInfo);
+        }
+
+        List<IPurchasedProductInfo> FillPurchasedProductInfo(IAppleTransactionSubscriptionInfo? appleTransactionSubscriptionInfo = null)
+        {
+            // TODO: ULO-8118 Move IOrderInfo population to outside of orders.
             var purchasedProductInfo = new List<IPurchasedProductInfo>();
-            var productDefinition = CartOrdered.Items()?.FirstOrDefault()?.Product.definition;
-            var productId = productDefinition?.storeSpecificId;
-            var productType = productDefinition?.type;
-            if (productId != null)
+
+            var cartItems = CartOrdered.Items();
+            if (cartItems == null)
             {
-                purchasedProductInfo.Add(new PurchasedProductInfo(productId, Info.Receipt, productType ?? ProductType.Unknown));
+                return purchasedProductInfo;
+            }
+
+            foreach (var cartItem in cartItems)
+            {
+                var productDefinition = cartItem?.Product.definition;
+
+                var productId = productDefinition?.storeSpecificId;
+                var productType = productDefinition?.type;
+
+                if (productId != null)
+                {
+                    purchasedProductInfo.Add(new PurchasedProductInfo(productId, Info.Receipt, productType ?? ProductType.Unknown, appleTransactionSubscriptionInfo));
+                }
+                else
+                {
+                    purchasedProductInfo.Add(new UnknownPurchasedProductInfo());
+                }
             }
 
             return purchasedProductInfo;
