@@ -20,5 +20,6 @@ namespace UnityEngine.Purchasing
         void DeallocateMemory(IntPtr pointer);
         void RefreshAppReceipt();
         void SetApplicationUsername(string guid);
+        void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws);
     }
 }

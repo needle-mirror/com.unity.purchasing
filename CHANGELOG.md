@@ -1,5 +1,9 @@
 # Changelog
 
+## [5.1.1] - 2025-12-19
+### Fixed
+- Apple - Fixed SubscriptionInfo being lost when confirming a PendingOrder.
+
 ## [5.1.0] - 2025-12-12
 ### Added
 - Custom Stores - Added a new constructor `CartItem(Product product, int quantity)` to support specifying the quantity of items in the cart.

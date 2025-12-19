@@ -26,6 +26,12 @@ namespace UnityEngine.Purchasing
             info.PurchasedProductInfo = FillPurchasedProductInfo(subscriptionInfo);
         }
 
+        internal ConfirmedOrder(PendingOrder pendingOrder)
+            : base(pendingOrder.CartOrdered, pendingOrder.Info)
+        {
+            // Don't overwrite PurchasedProductInfo - it's already populated from PendingOrder
+        }
+
         List<IPurchasedProductInfo> FillPurchasedProductInfo(IAppleTransactionSubscriptionInfo? appleTransactionSubscriptionInfo = null)
         {
             // TODO: ULO-8118 Move IOrderInfo population to outside of orders.

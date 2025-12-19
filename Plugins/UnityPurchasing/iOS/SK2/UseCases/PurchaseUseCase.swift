@@ -37,28 +37,13 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
         purchaseIntentTask?.cancel()
     }
 
-    // Helper method to create PurchaseDetails with product information for Ads SDK
+    // Helper method to create PurchaseDetails with product information for Attribution SDK
     private func createPurchaseDetails(from verificationResult: VerificationResult<Transaction>) async -> PurchaseDetails {
         do {
             let transaction = try checkVerified(verificationResult)
             // Fetch the product first
             if let product = await StoreKitManager.instance.getProduct(for: transaction.productID) {
-                let purchaseDetails = PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
-
-                // Log for debugging Ads SDK integration
-                if let productJson = purchaseDetails.productJsonRepresentation {
-                    printLog("Product JSON available for Ads SDK: \(product.id) (\(productJson.prefix(50))...)")
-                } else {
-                    printLog("Missing product JSON for: \(product.id)")
-                }
-
-                if let transactionJson = purchaseDetails.transactionJsonRepresentation {
-                    printLog("Transaction JSON available for Ads SDK: (\(transactionJson.prefix(50))...)")
-                } else {
-                    printLog("Missing transaction JSON")
-                }
-
-                return purchaseDetails
+                return PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
             } else {
                 // Fallback without product
                 printLog("Warning: Product not available for: \(transaction.productID)")

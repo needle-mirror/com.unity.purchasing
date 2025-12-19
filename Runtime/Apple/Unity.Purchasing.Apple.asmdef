@@ -30,6 +30,12 @@
     "precompiledReferences": [],
     "autoReferenced": false,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.ads",
+            "expression": "4.16.4",
+            "define": "IAP_UNITY_ATTRIBUTION"
+        }
+    ],
     "noEngineReferences": false
 }

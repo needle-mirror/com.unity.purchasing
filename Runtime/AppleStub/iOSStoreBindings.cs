@@ -115,6 +115,11 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
+        public void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws)
+        {
+            throw new NotImplementedException();
+        }
+
         public void FetchPurchases(string json)
         {
             throw new NotImplementedException();

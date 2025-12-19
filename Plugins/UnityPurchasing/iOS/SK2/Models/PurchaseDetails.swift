@@ -20,7 +20,6 @@ public struct PurchaseDetails: Codable {
     var reason: Int?
     var isFree: Bool?
 
-    // Json representation keys for Ads SDK
     var productJsonRepresentation: String?
     var transactionJsonRepresentation: String?
 
@@ -100,7 +99,7 @@ public struct PurchaseDetails: Codable {
             self.appAccountToken = appAccountToken
         }
 
-        // Json representation for Ads SDK
+        // Json representation for Attribution SDK
         if let product = nativeProduct {
             generateProductJsonRepresentation(from: product)
         }
@@ -109,6 +108,7 @@ public struct PurchaseDetails: Codable {
             generateTransactionJsonRepresentation(from: transaction)
         }
     }
+
     init(productId: String, verificationError: String, reason: Int) {
         self.productId = productId
         self.verificationError = verificationError
