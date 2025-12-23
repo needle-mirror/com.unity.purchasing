@@ -24,8 +24,17 @@ static UnityEarlyTransactionObserver *s_Observer = nil;
 }
 
 - (void)registerLifeCycleListener {
+#if UNITY_XCODE_PROJECT_TYPE_SWIFT
+    [[NSNotificationCenter defaultCenter]   addObserver:self
+                                            selector:@selector(didFinishLaunching:)
+                                            name:UIApplicationDidFinishLaunchingNotification
+                                            object:nil
+    ];
+    Log(@"Registered for didFinishLaunching event");
+#else
     UnityRegisterLifeCycleListener(self);
     Log(@"Registered for lifecycle events");
+#endif
 }
 
 - (void)didFinishLaunching:(NSNotification*)notification {

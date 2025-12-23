@@ -1,4 +1,8 @@
 # Changelog
+## [4.14.1] - 2025-12-23
+### Changed
+- Added support for Unity 6.5+ build compatibility for StoreKit 1
+
 ## [4.14.0] - 2025-11-07
 ### Changed
 - GooglePlay - Billing Library updated to 8.0.0 (was previously 7.1.1). No new feature support was added.
