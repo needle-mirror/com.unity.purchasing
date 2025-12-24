@@ -1,10 +1,12 @@
 import Foundation
 import StoreKit
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 public enum StoreError: Error {
     case failedVerification
 }
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 public enum PurchaseState: Int {
     case NotPurchased = 0
     case Purchased = 1

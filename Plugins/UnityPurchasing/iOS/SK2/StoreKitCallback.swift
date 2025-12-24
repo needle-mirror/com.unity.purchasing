@@ -1,11 +1,11 @@
 import Foundation
 
-@available(iOS 13.0.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 public protocol StoreKitCallbackDelegate {
     func callback(subject: String, payload: String, entitlementStatus: Int) async
 }
 
-@available(iOS 13.0.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 public class StoreKitCallback: StoreKitCallbackDelegate {
     var storeKitCallbackDelegate: UnityPurchasingCallbackDelegateType? = nil
 

@@ -377,7 +377,9 @@ namespace UnityEngine.Purchasing
             var revocationDate = TryGetDateTimeFromSecondsString(purchaseDetails.TryGetString("revocationDate"));
             var purchaseDate = TryGetDateTimeFromSecondsString(purchaseDetails.TryGetString("purchaseDate"));
 
-            return new AppleTransactionSubscriptionInfo(offerType, offerId, isFree, expirationDate, revocationDate, purchaseDate, productType);
+            var renewalProductId = purchaseDetails.TryGetString("autoRenewPreference");
+
+            return new AppleTransactionSubscriptionInfo(offerType, offerId, isFree, expirationDate, revocationDate, purchaseDate, productType, renewalProductId);
         }
 
         static DateTime? TryGetDateTimeFromSecondsString(string? secondsString)
@@ -839,11 +841,25 @@ namespace UnityEngine.Purchasing
 
         void InvokeDuplicateTransactionError(ConfirmedOrder confirmedOrder)
         {
-            var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
-                PurchaseFailureReason.DuplicateTransaction,
-                "Purchase has already been confirmed.");
-
-            PurchaseCallback?.OnPurchaseFailed(failedOrder);
+            var subscriptionInfo = confirmedOrder.Info.PurchasedProductInfo.FirstOrDefault()?.subscriptionInfo;
+            if (subscriptionInfo != null)
+            {
+                var renewalProductId = subscriptionInfo.m_SubscriptionRenewalProductId;
+                if (renewalProductId != string.Empty && renewalProductId != confirmedOrder.Info.PurchasedProductInfo.First().productId)
+                {
+                    var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
+                        PurchaseFailureReason.DuplicateTransaction,
+                        "Subscription was downgraded from " + confirmedOrder.Info.PurchasedProductInfo.First().productId + " to " + renewalProductId);
+                    PurchaseCallback?.OnPurchaseFailed(failedOrder);
+                }
+            }
+            else
+            {
+                var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
+                    PurchaseFailureReason.DuplicateTransaction,
+                    "Purchase has already been confirmed.");
+                PurchaseCallback?.OnPurchaseFailed(failedOrder);
+            }
         }
 
 #region StoreKit1

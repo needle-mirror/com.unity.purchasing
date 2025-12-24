@@ -1,6 +1,6 @@
 import Foundation
 
-@available(iOS 13.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 func encodeToData<T: Encodable>(_ item: T) -> Data? {
     do {
         let encoder = JSONEncoder()
@@ -12,7 +12,7 @@ func encodeToData<T: Encodable>(_ item: T) -> Data? {
     }
 }
 
-@available(iOS 13.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 func encodeToJSON<T: Encodable>(_ item: T) -> String {
     let encoder = JSONEncoder()
     encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes]

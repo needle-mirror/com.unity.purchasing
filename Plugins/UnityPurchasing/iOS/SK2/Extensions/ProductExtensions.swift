@@ -1,7 +1,7 @@
 import Foundation
 import StoreKit
 
-@available(iOS 15.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 extension Product : Encodable {
 
     enum CodingKeys: String, CodingKey {

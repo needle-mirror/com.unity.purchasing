@@ -15,9 +15,9 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Fixed\n- Apple - Fixed SubscriptionInfo being lost when confirming a PendingOrder."
+    "changelog": "### Changed\n- Added support for Unity 6.5+ build compatibility.\n\n### Fixed\n- Apple - Fixed `OnPurchaseFailed` invoked with `DuplicateTransaction` a few seconds after confirming a renewed subscription.\n- Apple - Fixed macOS native bundle failing to load on macOS 11.x when using StoreKit 1."
   },
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.1.1"
+    "com.unity.purchasing.tests": "5.1.2"
   },
   "upmCi": {
-    "footprint": "705b1b2ef1025df58bc2aa5e757518cd11328f7c"
+    "footprint": "88bcb154e97d603c74e004c22b8015e440c637a3"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.1/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "243573f30534ddad70736eeea03ba8e869fd7441"
+    "revision": "4a0a1572736abfe80e252614aa7b34cf40f81118"
   },
   "samples": [
     {

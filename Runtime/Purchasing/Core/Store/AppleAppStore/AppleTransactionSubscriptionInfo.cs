@@ -12,8 +12,9 @@ namespace UnityEngine.Purchasing
         public DateTime? RevocationDate { get; }
         public DateTime? PurchaseDate { get; }
         public AppleStoreProductType ProductType { get; }
+        public string? RenewalProductId { get; }
 
-        internal AppleTransactionSubscriptionInfo(OfferType offerType, string? offerId, bool? isFree, DateTime? expirationDate, DateTime? revocationDate, DateTime? purchaseDate, AppleStoreProductType productType)
+        internal AppleTransactionSubscriptionInfo(OfferType offerType, string? offerId, bool? isFree, DateTime? expirationDate, DateTime? revocationDate, DateTime? purchaseDate, AppleStoreProductType productType, string renewalProductId)
         {
             OfferType = offerType;
             OfferId = offerId;
@@ -22,6 +23,7 @@ namespace UnityEngine.Purchasing
             RevocationDate = revocationDate;
             PurchaseDate = purchaseDate;
             ProductType = productType;
+            RenewalProductId = renewalProductId;
         }
     }
 }

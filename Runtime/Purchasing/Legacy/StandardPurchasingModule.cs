@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool useFakeStoreAlways { get; set; }
 
-        internal readonly string k_Version = "5.1.1"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
+        internal readonly string k_Version = "5.1.2"; // NOTE: Changed using GenerateUnifiedIAP.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>

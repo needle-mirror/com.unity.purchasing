@@ -20,6 +20,8 @@ public struct PurchaseDetails: Codable {
     var reason: Int?
     var isFree: Bool?
 
+    var autoRenewPreference: String?
+
     var productJsonRepresentation: String?
     var transactionJsonRepresentation: String?
 
@@ -41,11 +43,12 @@ public struct PurchaseDetails: Codable {
         case appAccountToken
         case reason
         case isFree
+        case autoRenewPreference
         case productJsonRepresentation
         case transactionJsonRepresentation
     }
 
-    init(verificationResult: VerificationResult<Transaction>, nativeProduct: Product? = nil) {
+    init(verificationResult: VerificationResult<Transaction>) {
         var verificationError: VerificationResult<Transaction>.VerificationError?
         var nativeTransaction: Transaction?
         var decodedPayload: JWSTransactionDecodedPayload?
@@ -99,13 +102,31 @@ public struct PurchaseDetails: Codable {
             self.appAccountToken = appAccountToken
         }
 
-        // Json representation for Attribution SDK
-        if let product = nativeProduct {
-            generateProductJsonRepresentation(from: product)
-        }
-
         if let transaction = nativeTransaction {
             generateTransactionJsonRepresentation(from: transaction)
+        }
+    }
+
+    init(verificationResult: VerificationResult<Transaction>, nativeProduct: Product) async {
+        self.init(verificationResult: verificationResult)
+
+        // Json representation for Attribution SDK
+        generateProductJsonRepresentation(from: nativeProduct)
+
+        if let subscription = nativeProduct.subscription {
+            do {
+                let statuses = try await subscription.status
+                if let status = statuses.first {
+                    switch status.renewalInfo {
+                    case .verified(let info):
+                        self.autoRenewPreference = info.autoRenewPreference
+                    case .unverified(_, _):
+                        break // Ignore unverified renewal info
+                    }
+                }
+            } catch {
+                // Ignore errors fetching subscription status
+            }
         }
     }
 
@@ -126,3 +147,4 @@ public struct PurchaseDetails: Codable {
         self.productJsonRepresentation = product.jsonRepresentation.base64EncodedString()
     }
 }
+

@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.1.2] - 2025-12-24
+### Changed
+- Added support for Unity 6.5+ build compatibility.
+
+### Fixed
+- Apple - Fixed `OnPurchaseFailed` invoked with `DuplicateTransaction` a few seconds after confirming a renewed subscription.
+- Apple - Fixed macOS native bundle failing to load on macOS 11.x when using StoreKit 1.
+
 ## [5.1.1] - 2025-12-19
 ### Fixed
 - Apple - Fixed SubscriptionInfo being lost when confirming a PendingOrder.

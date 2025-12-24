@@ -21,6 +21,7 @@ namespace UnityEngine.Purchasing
         readonly DateTime m_PurchaseDate;
         readonly DateTime m_SubscriptionExpireDate;
         readonly DateTime m_SubscriptionCancelDate;
+        internal readonly string m_SubscriptionRenewalProductId;
         readonly string m_IntroductoryPrice;
         readonly TimeSpan m_IntroductoryPricePeriod;
         readonly long m_IntroductoryPriceCycles;
@@ -104,6 +105,7 @@ namespace UnityEngine.Purchasing
             m_PurchaseDate = transactionSubscriptionInfo.PurchaseDate ?? DateTime.MinValue;
             m_SubscriptionCancelDate = transactionSubscriptionInfo.RevocationDate ?? DateTime.MinValue;
             m_SubscriptionExpireDate = transactionSubscriptionInfo.ExpirationDate ?? DateTime.MinValue;
+            m_SubscriptionRenewalProductId = transactionSubscriptionInfo.RenewalProductId ?? string.Empty;
 
             // Apple subscriptions don't use the Google-style cancelled flag
             m_IsAutoRenewCancelled = Result.Unsupported;

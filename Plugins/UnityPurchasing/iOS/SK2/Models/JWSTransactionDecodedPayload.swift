@@ -2,6 +2,8 @@
 // Modified on September 5th, 2025; Removed all fields, except price.
 
 import Foundation
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 ///A decoded payload containing transaction information.
 ///
 ///[JWSTransactionDecodedPayload](https://developer.apple.com/documentation/appstoreserverapi/jwstransactiondecodedpayload)

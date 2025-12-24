@@ -12,5 +12,6 @@ namespace UnityEngine.Purchasing
         DateTime? RevocationDate { get; }
         DateTime? PurchaseDate { get; }
         AppleStoreProductType ProductType { get; }
+        string? RenewalProductId { get; }
     }
 }

@@ -3,7 +3,7 @@
 		{
 			"ValidationTest": "Manifest Validation",
 			"ExceptionMessage": "In package.json, \"displayName\" cannot have any special characters. Read more about this error and potential solutions at https://docs.unity3d.com/Packages/com.unity.package-validation-suite@latest/index.html?preview=1&subfolder=/manual/manifest_validation_error.html#displayName-cannot-have-any-special-characters",
-			"PackageVersion": "5.1.1"
+			"PackageVersion": "5.1.2"
 		}
 	],
 	"WarningExceptions": []

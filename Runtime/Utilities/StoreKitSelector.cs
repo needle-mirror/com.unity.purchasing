@@ -58,14 +58,14 @@ namespace Purchasing.Utilities
 #else
             var major = ExtractFirstInteger(SystemInfo.operatingSystem);
             if (major >= 0)
-                return major < 13;
+                return major < 12;
 
             // Fallback: map Darwin kernel major to macOS major
             // Darwin 22 => macOS 13, 21 => 12, 20 => 11, <=19 => 10.x
             try
             {
                 var darwinMajor = Environment.OSVersion.Version.Major;
-                return darwinMajor < 22;
+                return darwinMajor < 21;
             }
             catch
             {

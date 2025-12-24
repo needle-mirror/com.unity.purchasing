@@ -30,7 +30,7 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
 
             // StoreKitManager.getProduct now handles both cache and direct network lookup efficiently
             if let product = await StoreKitManager.instance.getProduct(for: transaction.productID) {
-                return PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
+                return await PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
             }
 
             // Fallback without product
@@ -114,7 +114,6 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
                         // Do nothing, there is an active transaction
                         // for a higher level of service.
                         await transaction.finish()
-                        StoreKitManager.instance.recordTransactionForAttribution(purchaseDetails)
                     } else {
                         // Provide access to the product identified by
                         // transaction.productID.

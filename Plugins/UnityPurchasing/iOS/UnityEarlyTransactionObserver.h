@@ -1,6 +1,8 @@
 #if !MAC_APPSTORE
 #import <StoreKit/StoreKit.h>
+#if !UNITY_XCODE_PROJECT_TYPE_SWIFT
 #import "LifeCycleListener.h"
+#endif
 
 @protocol UnityEarlyTransactionObserverDelegate <NSObject>
 
@@ -8,7 +10,11 @@
 
 @end
 
+#if UNITY_XCODE_PROJECT_TYPE_SWIFT
+@interface UnityEarlyTransactionObserver : NSObject<SKPaymentTransactionObserver> {
+#else
 @interface UnityEarlyTransactionObserver : NSObject<SKPaymentTransactionObserver, LifeCycleListener> {
+#endif
     NSMutableSet *m_QueuedPayments;
 }
 

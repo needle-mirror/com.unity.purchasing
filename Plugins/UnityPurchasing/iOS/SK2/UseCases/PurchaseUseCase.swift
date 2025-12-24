@@ -1,6 +1,7 @@
 import Foundation
 import StoreKit
 
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 enum PurchaseVerificationError: Error {
     case failedVerification
 }
@@ -43,7 +44,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             let transaction = try checkVerified(verificationResult)
             // Fetch the product first
             if let product = await StoreKitManager.instance.getProduct(for: transaction.productID) {
-                return PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
+                return await PurchaseDetails(verificationResult: verificationResult, nativeProduct: product)
             } else {
                 // Fallback without product
                 printLog("Warning: Product not available for: \(transaction.productID)")
