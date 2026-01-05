@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.14.1"; // NOTE: Automatically changed by UpdatePackageVersion.sh to match package.json.
+        internal readonly string k_Version = "4.14.2"; // NOTE: Automatically changed by UpdatePackageVersion.sh to match package.json.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>

@@ -4,6 +4,10 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>Resources/PrivacyInfo.xcprivacy</key>
+		<data>
+		BSe7dA2A0q6N2VGxT2SF7Oy149g=
+		</data>
 		<key>Resources/en.lproj/InfoPlist.strings</key>
 		<dict>
 			<key>hash</key>
@@ -16,6 +20,13 @@
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>Resources/PrivacyInfo.xcprivacy</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ypUg+o/JVoPaJiD7VYBBbdZxKZLYtc3fcbWpAeSU9/E=
+			</data>
+		</dict>
 		<key>Resources/en.lproj/InfoPlist.strings</key>
 		<dict>
 			<key>hash2</key>

@@ -1,4 +1,8 @@
 # Changelog
+## [4.14.2] - 2026-01-05
+### Fixed
+- Apple - Fixed macOS support (broken in 4.13.1)
+
 ## [4.14.1] - 2025-12-23
 ### Changed
 - Added support for Unity 6.5+ build compatibility for StoreKit 1
