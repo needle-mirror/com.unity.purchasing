@@ -1,13 +1,14 @@
-using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Scripting;
+
 namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreConnectionUseCase : IGooglePlayStoreConnectionUseCase
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
 
         [Preserve]
-        public GooglePlayStoreConnectionUseCase(IGoogleBillingClient billingClient)
+        public GooglePlayStoreConnectionUseCase(IBillingClient billingClient)
         {
             m_BillingClient = billingClient;
         }

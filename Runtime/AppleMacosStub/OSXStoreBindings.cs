@@ -128,6 +128,11 @@ namespace UnityEngine.Purchasing
         {
             throw new NotImplementedException();
         }
+
+        public void FetchStorefront()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
 

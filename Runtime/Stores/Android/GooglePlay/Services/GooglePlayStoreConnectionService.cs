@@ -1,3 +1,4 @@
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Scripting;
@@ -6,12 +7,12 @@ namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreConnectionService : IGooglePlayStoreConnectionService
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IBillingClientStateListener m_BillingClientStateListener;
         IStoreConnectCallback m_ConnectCallback;
 
         [Preserve]
-        public GooglePlayStoreConnectionService(IGoogleBillingClient billingClient,
+        public GooglePlayStoreConnectionService(IBillingClient billingClient,
             IBillingClientStateListener billingClientStateListener)
         {
             m_BillingClient = billingClient;

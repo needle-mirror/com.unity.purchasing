@@ -66,6 +66,9 @@ namespace UnityEngine.Purchasing
         [DllImport("__Internal")]
         private static extern void unityPurchasing_PresentCodeRedemptionSheet();
 
+        [DllImport("__Internal")]
+        private static extern void unityPurchasing_FetchStorefront();
+
         // TODO: IAP-3929
         [DllImport("__Internal")]
         private static extern void unityPurchasing_RefreshAppReceipt();
@@ -389,6 +392,17 @@ namespace UnityEngine.Purchasing
             }
 
             unityPurchasing_RefreshAppReceipt();
+        }
+
+        public void FetchStorefront()
+        {
+            // Storefront is only available in StoreKit 2
+            if (useStoreKit1)
+            {
+                return;
+            }
+
+            unityPurchasing_FetchStorefront();
         }
 
         public void TransactionObserved(

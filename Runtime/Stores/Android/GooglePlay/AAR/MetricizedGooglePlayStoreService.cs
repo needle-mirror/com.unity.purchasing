@@ -4,8 +4,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
-using UnityEngine.Purchasing.Models;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Scripting;
 
@@ -16,7 +16,7 @@ namespace UnityEngine.Purchasing
         readonly ITelemetryMetricsService m_TelemetryMetricsService;
 
         [Preserve]
-        internal MetricizedGooglePlayStoreService(IGoogleBillingClient billingClient,
+        internal MetricizedGooglePlayStoreService(IBillingClient billingClient,
             IGooglePlayStoreConnectionService connectionService,
             IQueryProductDetailsService queryProductDetailsService,
             IGoogleLastKnownProductService lastKnownProductService,

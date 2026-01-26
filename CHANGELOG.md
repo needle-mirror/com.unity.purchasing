@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.2.0-pre.1] - 2026-01-26
+### Added
+- Apple - Added `FetchStorefront` API to retrieve the user's App Store storefront country code (StoreKit 2 only).
+- GooglePlay - Added a new class, `ExternalBillingProgramClient`, to support [external content links](https://developer.android.com/google/play/billing/externalcontentlinks). This is a standalone class that supports external content links in the US and is not connected to Unity In-App Purchasing.
+
+### Changed
+- GooglePlay - Billing Library updated to 8.3.0 (was previously 8.0.0).
+- Apple - Fixed visionOS `purchaseProductExceptionCallbacks` compilation issue.
+
 ## [5.1.2] - 2025-12-24
 ### Changed
 - Added support for Unity 6.5+ build compatibility.

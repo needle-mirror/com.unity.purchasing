@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Scripting;
@@ -13,12 +14,12 @@ namespace UnityEngine.Purchasing
 {
     class QueryProductDetailsService : IQueryProductDetailsService
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IGoogleCachedQueryProductDetailsService m_GoogleCachedQueryProductDetailsService;
         readonly IProductDetailsConverter m_ProductDetailsConverter;
 
         [Preserve]
-        internal QueryProductDetailsService(IGoogleBillingClient billingClient,
+        internal QueryProductDetailsService(IBillingClient billingClient,
             IGoogleCachedQueryProductDetailsService googleCachedQueryProductDetailsService,
             IProductDetailsConverter productDetailsConverter)
         {

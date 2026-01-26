@@ -7,6 +7,7 @@ using Stores.Android.GooglePlay.AAR.Interfaces;
 using Uniject;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.Utilities;
 using UnityEngine.Purchasing.Utils;
@@ -219,7 +220,7 @@ namespace UnityEngine.Purchasing
             di.AddService<GooglePurchaseStateEnumProvider>();
             di.AddService<GooglePurchaseBuilder>();
             di.AddService<GooglePurchasesUpdatedListener>();
-            di.AddService<GoogleBillingClient>();
+            di.AddService<BillingClient>();
             di.AddService<GoogleCachedQueryProductDetailsService>();
             di.AddService<QueryProductDetailsService>();
             di.AddService<GooglePurchaseService>();

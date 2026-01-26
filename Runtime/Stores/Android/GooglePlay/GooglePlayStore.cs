@@ -1,9 +1,10 @@
 #nullable enable
-using System;
+
 using System.Collections.Generic;
 using System.Linq;
 using Purchasing.Extension;
 using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Scripting;
 
@@ -20,7 +21,7 @@ namespace UnityEngine.Purchasing
         readonly IGooglePlayStoreChangeSubscriptionService m_ChangeSubscriptionService;
         readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
         readonly ICartValidator m_CartValidator;
-        internal IGoogleBillingClient m_BillingClient;
+        internal IBillingClient m_BillingClient;
 
         [Preserve]
         internal GooglePlayStore(IGooglePlayStoreFetchProductsService fetchProductsService,
@@ -32,7 +33,7 @@ namespace UnityEngine.Purchasing
             IGooglePurchaseCallback googlePurchaseCallback,
             ICartValidator cartValidator,
             IGooglePlayStoreConnectionService connectionService,
-            IGoogleBillingClient billingClient)
+            IBillingClient billingClient)
         {
             m_FetchProductsService = fetchProductsService;
             m_StorePurchaseService = storePurchaseService;

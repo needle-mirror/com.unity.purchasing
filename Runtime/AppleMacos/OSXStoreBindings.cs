@@ -70,6 +70,9 @@ namespace UnityEngine.Purchasing
         [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_RefreshAppReceipt();
 
+        [DllImport("unitypurchasing")]
+        private static extern void unityPurchasing_FetchStorefront();
+
 
 #region StoreKit1Bindings
         [DllImport("unitypurchasing")]
@@ -386,6 +389,17 @@ namespace UnityEngine.Purchasing
             string transactionJsonRepresentation,
             string signatureJws)
         {
+        }
+
+        public void FetchStorefront()
+        {
+            // Storefront is only available in StoreKit 2
+            if (useStoreKit1)
+            {
+                return;
+            }
+
+            unityPurchasing_FetchStorefront();
         }
     }
 }

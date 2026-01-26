@@ -100,14 +100,14 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             case .success(let verification):
                  return await createPurchaseDetails(from: verification)
             case .userCancelled:
-                purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: 4 /* 4 = UserCancelled */)
+                await purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: 4 /* 4 = UserCancelled */)
                 return nil
             case .pending:
                 let jsonString = encodeToJSON( ["products": [product]])
                 await storeKitCallback.callback(subject: "OnPurchaseDeferred", payload: jsonString, entitlementStatus: 0)
                 return nil
             default:
-                purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
+                await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
                 return nil
             }
 #else

@@ -16,5 +16,7 @@ namespace UnityEngine.Purchasing
         event Action<Product>? OnPromotionalPurchaseIntercepted;
         void SetRefreshAppReceiptCallbacks(Action<string> successCallback, Action<string> errorCallback);
         void SetRefreshAppReceipt(bool refreshAppReceipt);
+        void SetFetchStorefrontCallbacks(Action<AppleStorefront> successCallback, Action<string> errorCallback);
+        void FetchStorefront();
     }
 }

@@ -35,6 +35,9 @@ namespace UnityEngine.Purchasing
         TaskCompletionSource<bool>? m_RefreshAppReceiptTask;
         bool m_RefreshAppReceipt = false;
 
+        Action<AppleStorefront>? m_FetchStorefrontSuccessCallback;
+        Action<string>? m_FetchStorefrontErrorCallback;
+
         INativeAppleStore? m_Native;
         readonly IAppleFetchProductsService m_FetchProductsService;
         readonly ITransactionLog m_TransactionLog;
@@ -563,6 +566,12 @@ namespace UnityEngine.Purchasing
                     OnTransactionObserved(payload);
                     break;
 #endif
+                case "OnFetchStorefrontSucceeded":
+                    OnFetchStorefrontSucceeded(payload);
+                    break;
+                case "OnFetchStorefrontFailed":
+                    OnFetchStorefrontFailed(payload);
+                    break;
             }
         }
 
@@ -606,6 +615,56 @@ namespace UnityEngine.Purchasing
         {
             m_RefreshAppReceiptTask?.TrySetResult(false);
             m_RefreshAppReceiptErrorCallback?.Invoke(error);
+        }
+
+        public void SetFetchStorefrontCallbacks(Action<AppleStorefront> successCallback, Action<string> errorCallback)
+        {
+            m_FetchStorefrontSuccessCallback = successCallback;
+            m_FetchStorefrontErrorCallback = errorCallback;
+        }
+
+        public void FetchStorefront()
+        {
+            if (StoreKitSelector.UseStoreKit1())
+            {
+                m_FetchStorefrontErrorCallback?.Invoke("Storefront is only available with StoreKit 2");
+                return;
+            }
+
+            if (m_Native == null)
+            {
+                m_FetchStorefrontErrorCallback?.Invoke("Native Apple store is not available");
+                return;
+            }
+
+            m_Native.FetchStorefront();
+        }
+
+        void OnFetchStorefrontSucceeded(string json)
+        {
+            var storefrontData = Json.Deserialize(json) as Dictionary<string, object>;
+            if (storefrontData == null)
+            {
+                m_FetchStorefrontErrorCallback?.Invoke("Failed to parse storefront response");
+                return;
+            }
+
+            var id = storefrontData.TryGetString("id");
+            var countryCode = storefrontData.TryGetString("countryCode");
+
+            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(countryCode))
+            {
+                m_FetchStorefrontErrorCallback?.Invoke("Storefront response missing required fields");
+                return;
+            }
+
+            var storefront = new AppleStorefront(id, countryCode);
+            m_FetchStorefrontSuccessCallback?.Invoke(storefront);
+        }
+
+        void OnFetchStorefrontFailed(string error)
+        {
+            m_FetchStorefrontErrorCallback?.Invoke(error);
         }
 
 #if IAP_UNITY_ATTRIBUTION

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Purchasing.Telemetry;
@@ -21,11 +22,11 @@ namespace UnityEngine.Purchasing
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
         readonly IGoogleQueryPurchasesUseCase m_GoogleQueryPurchasesUseCase;
         readonly IGooglePlayCheckEntitlementUseCase m_GoogleCheckEntitlementUseCase;
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IGooglePlayStoreConnectionService m_GooglePlayStoreConnectionService;
 
         internal GooglePlayStoreService(
-            IGoogleBillingClient billingClient,
+            IBillingClient billingClient,
             IGooglePlayStoreConnectionService connectionService,
             IQueryProductDetailsService queryProductDetailsService,
             IGoogleLastKnownProductService lastKnownProductService,

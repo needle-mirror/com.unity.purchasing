@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Scripting;
@@ -10,11 +11,11 @@ namespace UnityEngine.Purchasing
 {
     class GoogleFinishTransactionUseCase : IGoogleFinishTransactionUseCase
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IGoogleQueryPurchasesUseCase m_GoogleQueryPurchasesUseCase;
 
         [Preserve]
-        internal GoogleFinishTransactionUseCase(IGoogleBillingClient billingClient,
+        internal GoogleFinishTransactionUseCase(IBillingClient billingClient,
             IGoogleQueryPurchasesUseCase googleQueryPurchasesUseCase)
         {
             m_BillingClient = billingClient;

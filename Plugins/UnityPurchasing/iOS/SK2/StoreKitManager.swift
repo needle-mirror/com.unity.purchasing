@@ -29,6 +29,7 @@ public protocol StoreKitManagerProtocol {
     func fetchTransactions(for productIds: [String]) async
     func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async
     func checkEntitlement(productId: String) async
+    func fetchStorefront() async
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
@@ -497,6 +498,22 @@ public class StoreKitManager: StoreKitManagerProtocol {
     public func continuePromotionalPurchases() async
     {
         await purchaseUseCase.continuePromotionalPurchases()
+    }
+
+    // MARK: Storefront
+
+    /**
+     Fetch the current storefront information.
+     Returns the storefront ID and country code for the user's App Store region.
+     */
+    public func fetchStorefront() async {
+        if let storefront = await Storefront.current {
+            let response = StorefrontResponse(storefront: storefront)
+            let jsonString = encodeToJSON(response)
+            await storeKitCallback.callback(subject: "OnFetchStorefrontSucceeded", payload: jsonString, entitlementStatus: 0)
+        } else {
+            await storeKitCallback.callback(subject: "OnFetchStorefrontFailed", payload: "No storefront available", entitlementStatus: 0)
+        }
     }
 }
 

@@ -1,9 +1,9 @@
 #nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 using UnityEngine.Scripting;
@@ -12,11 +12,11 @@ namespace UnityEngine.Purchasing
 {
     class GoogleQueryPurchasesUseCase : IGoogleQueryPurchasesUseCase
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IGooglePurchaseBuilder m_PurchaseBuilder;
 
         [Preserve]
-        internal GoogleQueryPurchasesUseCase(IGoogleBillingClient billingClient, IGooglePurchaseBuilder purchaseBuilder)
+        internal GoogleQueryPurchasesUseCase(IBillingClient billingClient, IGooglePurchaseBuilder purchaseBuilder)
         {
             m_BillingClient = billingClient;
             m_PurchaseBuilder = purchaseBuilder;

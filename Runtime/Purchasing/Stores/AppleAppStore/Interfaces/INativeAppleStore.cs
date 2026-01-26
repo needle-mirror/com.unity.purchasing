@@ -21,5 +21,6 @@ namespace UnityEngine.Purchasing
         void RefreshAppReceipt();
         void SetApplicationUsername(string guid);
         void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws);
+        void FetchStorefront();
     }
 }

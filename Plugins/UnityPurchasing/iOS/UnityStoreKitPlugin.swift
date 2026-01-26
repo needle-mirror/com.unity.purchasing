@@ -217,3 +217,11 @@ public func unityPurchasing_ContinuePromotionalPurchases() {
         await StoreKitManager.instance.continuePromotionalPurchases()
     })
 }
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
+@_cdecl("unityPurchasing_FetchStorefront")
+public func unityPurchasing_FetchStorefront() {
+    Task.detached (priority: .background, operation : {
+        await StoreKitManager.instance.fetchStorefront()
+    })
+}

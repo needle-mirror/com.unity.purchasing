@@ -25,5 +25,15 @@ namespace UnityEngine.Purchasing
         /// Available in debug only.
         /// </summary>
         void ClearTransactionLog();
+
+        /// <summary>
+        /// Fetches the current App Store storefront information.
+        /// The storefront contains the ID and country code for the user's App Store region.
+        /// This is useful for determining the user's payment provider region.
+        /// Only available with StoreKit 2.
+        /// </summary>
+        /// <param name="successCallback">Called with the storefront information when successful.</param>
+        /// <param name="errorCallback">Called with an error message if the operation fails.</param>
+        void FetchStorefront(Action<AppleStorefront> successCallback, Action<string> errorCallback);
     }
 }

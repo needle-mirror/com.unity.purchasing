@@ -1,14 +1,14 @@
-using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
 {
     class GooglePlayStoreSetObfuscatedIdUseCase : IGooglePlayStoreSetObfuscatedIdUseCase
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
 
         [Preserve]
-        internal GooglePlayStoreSetObfuscatedIdUseCase(IGoogleBillingClient billingClient)
+        internal GooglePlayStoreSetObfuscatedIdUseCase(IBillingClient billingClient)
         {
             m_BillingClient = billingClient;
         }
