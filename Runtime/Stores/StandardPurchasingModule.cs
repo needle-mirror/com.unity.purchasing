@@ -5,6 +5,7 @@ using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.GoogleBilling.Models;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.Utils;
 
@@ -25,7 +26,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         [Obsolete("Not accurate. Use Version instead.", false)]
         public const string k_PackageVersion = "3.0.1";
-        internal readonly string k_Version = "4.14.2"; // NOTE: Automatically changed by UpdatePackageVersion.sh to match package.json.
+        internal readonly string k_Version = "4.15.0-pre.1"; // NOTE: Automatically changed by UpdatePackageVersion.sh to match package.json.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
@@ -321,7 +322,7 @@ namespace UnityEngine.Purchasing
                 googlePurchaseCallback, googlePurchaseBuilder, googleCachedQueryProductDetailsService,
                 googlePurchaseStateEnumProvider);
             var telemetryDiagnostics = new TelemetryDiagnostics(telemetryDiagnosticsInstanceWrapper);
-            var googleBillingClient = new GoogleBillingClient(googlePurchaseUpdatedListener, util, telemetryDiagnostics);
+            var googleBillingClient = new BillingClient(googlePurchaseUpdatedListener, util, telemetryDiagnostics);
             var productDetailsConverter = new ProductDetailsConverter();
             var retryPolicy = new ExponentialRetryPolicy();
             var googleRetryPolicy = new GoogleConnectionRetryPolicy();

@@ -7,6 +7,7 @@ using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Stores.Util;
 using UnityEngine.Purchasing.Telemetry;
 
@@ -18,7 +19,7 @@ namespace UnityEngine.Purchasing
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
         internal MetricizedGooglePlayStoreService(
-            IGoogleBillingClient billingClient,
+            IBillingClient billingClient,
             IQueryProductDetailsService queryProductDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,

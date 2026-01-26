@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing
     /// This is C# representation of the Java Class Purchase
     /// <a href="https://developer.android.com/reference/com/android/billingclient/api/Purchase">See more</a>
     /// </summary>
-    enum GoogleBillingConnectionState
+    public enum GoogleBillingConnectionState
     {
         Disconnected = 0,
         Connecting = 1,

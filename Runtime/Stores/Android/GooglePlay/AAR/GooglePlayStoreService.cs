@@ -9,6 +9,7 @@ using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Stores.Util;
 using UnityEngine.Purchasing.Telemetry;
 
@@ -18,7 +19,7 @@ namespace UnityEngine.Purchasing
     {
         int m_CurrentConnectionAttempts;
         int m_MaxConnectionAttempts = 3;
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IBillingClientStateListener m_BillingClientStateListener;
         readonly IQueryProductDetailsService m_QueryProductDetailsService;
         readonly ConcurrentQueue<ProductDescriptionQuery> m_ProductsToQuery = new ConcurrentQueue<ProductDescriptionQuery>();
@@ -33,7 +34,7 @@ namespace UnityEngine.Purchasing
         readonly IUtil m_Util;
 
         internal GooglePlayStoreService(
-            IGoogleBillingClient billingClient,
+            IBillingClient billingClient,
             IQueryProductDetailsService queryProductDetailsService,
             IGooglePurchaseService purchaseService,
             IGoogleFinishTransactionService finishTransactionService,

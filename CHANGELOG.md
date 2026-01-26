@@ -1,4 +1,9 @@
 # Changelog
+## [4.15.0-pre.1] - 2026-01-26
+### Changed
+- GooglePlay - Billing Library updated to 8.3.0 (was previously 8.0.0).
+- GooglePlay - Added a new class, `ExternalBillingProgramClient`, to support [external content links](https://developer.android.com/google/play/billing/externalcontentlinks). This is a standalone class to support external content links in the US and is not connected to Unity In-App Purchasing.
+
 ## [4.14.2] - 2026-01-05
 ### Fixed
 - Apple - Fixed macOS support (broken in 4.13.1)

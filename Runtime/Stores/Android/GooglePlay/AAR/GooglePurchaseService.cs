@@ -4,16 +4,17 @@ using System.Collections.Generic;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 
 namespace UnityEngine.Purchasing
 {
     class GooglePurchaseService : IGooglePurchaseService
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IGooglePurchaseCallback m_GooglePurchaseCallback;
         readonly IQueryProductDetailsService m_QueryProductDetailsService;
 
-        internal GooglePurchaseService(IGoogleBillingClient billingClient, IGooglePurchaseCallback googlePurchaseCallback, IQueryProductDetailsService queryProductDetailsService)
+        internal GooglePurchaseService(IBillingClient billingClient, IGooglePurchaseCallback googlePurchaseCallback, IQueryProductDetailsService queryProductDetailsService)
         {
             m_BillingClient = billingClient;
             m_GooglePurchaseCallback = googlePurchaseCallback;

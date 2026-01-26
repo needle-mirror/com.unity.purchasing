@@ -5,15 +5,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 
 namespace UnityEngine.Purchasing
 {
     class GoogleFinishTransactionService : IGoogleFinishTransactionService
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IGoogleQueryPurchasesService m_GoogleQueryPurchasesService;
 
-        internal GoogleFinishTransactionService(IGoogleBillingClient billingClient,
+        internal GoogleFinishTransactionService(IBillingClient billingClient,
             IGoogleQueryPurchasesService googleQueryPurchasesService)
         {
             m_BillingClient = billingClient;

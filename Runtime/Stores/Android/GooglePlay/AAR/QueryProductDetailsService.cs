@@ -8,6 +8,7 @@ using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Stores.Util;
 using UnityEngine.Purchasing.Telemetry;
 
@@ -15,7 +16,7 @@ namespace UnityEngine.Purchasing
 {
     class QueryProductDetailsService : IQueryProductDetailsService
     {
-        readonly IGoogleBillingClient m_BillingClient;
+        readonly IBillingClient m_BillingClient;
         readonly IGoogleCachedQueryProductDetailsService m_GoogleCachedQueryProductDetailsService;
         readonly IProductDetailsConverter m_ProductDetailsConverter;
         readonly IRetryPolicy m_RetryPolicy;
@@ -23,7 +24,7 @@ namespace UnityEngine.Purchasing
         readonly IUtil m_Util;
         readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
 
-        internal QueryProductDetailsService(IGoogleBillingClient billingClient, IGoogleCachedQueryProductDetailsService googleCachedQueryProductDetailsService,
+        internal QueryProductDetailsService(IBillingClient billingClient, IGoogleCachedQueryProductDetailsService googleCachedQueryProductDetailsService,
             IProductDetailsConverter productDetailsConverter, IRetryPolicy retryPolicy, IGoogleProductCallback googleProductCallback, IUtil util,
             ITelemetryDiagnostics telemetryDiagnostics)
         {
