@@ -1,4 +1,7 @@
 # Changelog
+## [4.15.0-pre.2] - 2026-02-03
+- GooglePlay - Fixed an exception that can occur when calling `ExternalBillingProgramClient.CreateBillingProgramReportingDetailsAsync`
+
 ## [4.15.0-pre.1] - 2026-01-26
 ### Changed
 - GooglePlay - Billing Library updated to 8.3.0 (was previously 8.0.0).
