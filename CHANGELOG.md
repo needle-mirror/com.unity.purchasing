@@ -1,5 +1,8 @@
 # Changelog
 
+## [5.2.0-pre.2] - 2026-02-03
+- GooglePlay - Fixed an exception that can occur when calling `ExternalBillingProgramClient.CreateBillingProgramReportingDetailsAsync`
+
 ## [5.2.0-pre.1] - 2026-01-26
 ### Added
 - Apple - Added `FetchStorefront` API to retrieve the user's App Store storefront country code (StoreKit 2 only).

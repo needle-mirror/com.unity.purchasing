@@ -35,7 +35,7 @@ namespace UnityEngine.Purchasing
                     externalTransactionToken = billingProgramReportingDetails.Call<string>("getExternalTransactionToken");
                 m_OnCreateBillingProgramReportingDetailsResponseAction(new GoogleBillingResult(billingResult), externalTransactionToken);
                 billingResult.Dispose();
-                billingProgramReportingDetails.Dispose();
+                billingProgramReportingDetails?.Dispose();
             });
         }
     }
