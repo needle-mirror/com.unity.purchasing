@@ -36,5 +36,11 @@ namespace UnityEngine.Purchasing
             add => m_StoreConnectUseCase.OnStoreDisconnection += value;
             remove => m_StoreConnectUseCase.OnStoreDisconnection -= value;
         }
+
+        public event Action? OnStoreConnected
+        {
+            add => m_StoreConnectUseCase.OnStoreConnection += value;
+            remove => m_StoreConnectUseCase.OnStoreConnection -= value;
+        }
     }
 }

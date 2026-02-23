@@ -44,6 +44,12 @@ namespace UnityEngine.Purchasing
         {
             m_GooglePlayChangeSubscriptionUseCase = googlePlayChangeSubscriptionUseCase;
             m_RestoreTransactionsUseCase = restoreTransactionsUseCase;
+            Application.focusChanged += OnFocusChanged;
+        }
+
+        ~GooglePlayStoreExtendedPurchaseService()
+        {
+            Application.focusChanged -= OnFocusChanged;
         }
 
         public void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct)
@@ -118,6 +124,14 @@ namespace UnityEngine.Purchasing
         protected override void RestoreTransactionsInternal(Action<bool, string?>? callback)
         {
             m_RestoreTransactionsUseCase.RestoreTransactions(callback);
+        }
+
+        void OnFocusChanged(bool hasFocus)
+        {
+            if (hasFocus)
+            {
+                TryFetchPurchases(OnFetchSuccessProcessAndCache);
+            }
         }
     }
 }

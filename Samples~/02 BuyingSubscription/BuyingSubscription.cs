@@ -28,10 +28,11 @@ namespace Samples.Purchasing.Core.BuyingSubscription
             m_StoreController.OnPurchasePending += OnPurchasePending;
             m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
             m_StoreController.OnCheckEntitlement += OnCheckEntitlement;
+            
+            m_StoreController.OnStoreConnected += OnStoreConnected;
             m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
 
             await m_StoreController.Connect();
-            FetchProducts();
         }
 
         void FetchProducts()
@@ -59,6 +60,12 @@ namespace Samples.Purchasing.Core.BuyingSubscription
         {
             var product = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == subscriptionProductId);
             m_StoreController.CheckEntitlement(product);
+        }
+
+        void OnStoreConnected()
+        {
+             Debug.Log($"Store connected.");
+             FetchProducts();
         }
 
         void OnStoreDisconnected(StoreConnectionFailureDescription storeConnectionFailureDescription)

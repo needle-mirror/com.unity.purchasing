@@ -11,8 +11,8 @@ namespace UnityEditor.Purchasing
         const string m_GeneratedCredentialsTemplateFilename = "IAPGeneratedCredentials.cs.template";
         const string m_GeneratedCredentialsTemplateFilenameNoExtension = "IAPGeneratedCredentials.cs";
 
-        const string k_AppleCertPath = "Packages/com.unity.purchasing/Editor/Apple/AppleIncRootCertificate.cer";
-        const string k_AppleStoreKitTestCertPath = "Packages/com.unity.purchasing/Editor/Apple/StoreKitTestCertificate.cer";
+        internal const string k_AppleCertPath = "Packages/com.unity.purchasing/Editor/Apple/AppleIncRootCertificate.cer";
+        internal const string k_AppleStoreKitTestCertPath = "Packages/com.unity.purchasing/Editor/Apple/StoreKitTestCertificate.cer";
 
         const string k_AppleClassIncompleteErr = "Invalid Apple Root Certificate";
         const string k_AppleStoreKitTestClassIncompleteErr = "Invalid Apple StoreKit Test Certificate";

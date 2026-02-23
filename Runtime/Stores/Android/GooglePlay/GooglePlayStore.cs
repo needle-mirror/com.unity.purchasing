@@ -149,14 +149,6 @@ namespace UnityEngine.Purchasing
             m_ConnectionService.SetConnectionCallback(storeConnectCallback);
         }
 
-        public void OnPause(bool isPaused)
-        {
-            if (!isPaused)
-            {
-                FetchPurchasesInternal();
-            }
-        }
-
         public IGooglePurchase GetGooglePurchase(string purchaseToken)
         {
             return m_PlayStoreFetchPurchasesService.GetGooglePurchase(purchaseToken);

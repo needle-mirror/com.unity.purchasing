@@ -28,6 +28,7 @@ namespace Samples.Purchasing.Core.CatalogProvider
 
         void Awake()
         {
+            UnityIAPServices.DefaultStore().OnStoreConnected += OnStoreConnected;
             UnityIAPServices.DefaultStore().OnStoreDisconnected += OnStoreDisconnected;
             InitDefaultCatalog();
             InitSeasonalCatalog();
@@ -35,11 +36,16 @@ namespace Samples.Purchasing.Core.CatalogProvider
             ConfigureProductServiceCallbacks();
 
             ConnectToStore();
-            FetchProducts();
-
-            FakeFetchProducts();
         }
 
+        void OnStoreConnected()
+        {
+            Debug.Log($"Store connected.");
+            
+            FetchProducts();
+            FakeFetchProducts();
+            
+        }
         void OnStoreDisconnected(StoreConnectionFailureDescription storeConnectionFailureDescription)
         {
             Debug.Log($"Store disconnected. Reason: {storeConnectionFailureDescription}");

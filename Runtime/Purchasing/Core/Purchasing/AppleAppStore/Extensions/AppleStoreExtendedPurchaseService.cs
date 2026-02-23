@@ -62,11 +62,11 @@ namespace UnityEngine.Purchasing.Services
             m_SimulateAskToBuyUseCase = simulateAskToBuyUseCase;
             m_OnEntitlementRevokedUseCase = onEntitlementRevokedUseCase;
 
-            m_OnEntitlementRevokedUseCase.OnEntitlementRevoked += OnEntitlementOnEntitlementRevokedUseCaseOnOnEntitlementRevoked;
+            m_OnEntitlementRevokedUseCase.OnEntitlementRevoked += OnEntitlementRevokedUseCaseOnOnEntitlementRevoked;
             m_RefreshAppReceiptUseCase = refreshAppReceiptUseCase;
         }
 
-        void OnEntitlementOnEntitlementRevokedUseCaseOnOnEntitlementRevoked(string productId)
+        void OnEntitlementRevokedUseCaseOnOnEntitlementRevoked(string productId)
         {
             var ordersToRemove = new List<Order>();
 
@@ -80,7 +80,7 @@ namespace UnityEngine.Purchasing.Services
 
             foreach (var order in ordersToRemove)
             {
-                m_Purchases.Remove(order);
+                m_PurchaseCache.Remove(order);
             }
         }
 

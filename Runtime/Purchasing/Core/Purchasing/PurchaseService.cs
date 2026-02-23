@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using UnityEngine.Purchasing.Extension;
 #if IAP_TX_VERIFIER_ENABLED
 using UnityEngine.Purchasing.TransactionVerifier;
 using UnityEngine.Purchasing.TransactionVerifier.Http;
@@ -22,12 +23,16 @@ namespace UnityEngine.Purchasing
         readonly IPurchaseUseCase m_PurchaseUseCase;
         readonly IConfirmOrderUseCase m_ConfirmOrderUseCase;
         readonly ICheckEntitlementUseCase m_CheckEntitlementUseCase;
-        internal readonly ObservableCollection<Order> m_Purchases = new();
-        readonly ReadOnlyObservableCollection<Order> m_PurchasesReadOnly;
+        internal readonly IPurchaseCache m_PurchaseCache;
         readonly IStoreWrapper m_StoreWrapper;
         readonly IAnalyticsClient m_AnalyticsClient;
         bool m_ProcessFetchedPendingOrders = true;
+        // TODO: ULO-9339
+        bool m_IsBuiltinStore;
+        readonly IReadOnlyList<string> BuiltinStores = new[] { GooglePlay.Name, AppleAppStore.Name, MacAppStore.Name, FakeAppStore.Name };
         readonly HashSet<string> m_PurchasesProcessedInSession = new();
+
+        bool m_AnyPurchaseStarted = false;
 
         #if IAP_TX_VERIFIER_ENABLED
             readonly Store m_StoreName;
@@ -36,7 +41,6 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// Configures whether pending orders should be automatically processed when purchases are fetched from the store.
-        /// Note: This is currently only applicable to the Google Play Store
         /// </summary>
         /// <param name="shouldProcess">True to automatically process pending orders after fetching purchases, false to skip processing.</param>
         public void ProcessPendingOrdersOnPurchasesFetched(bool shouldProcess)
@@ -101,13 +105,14 @@ namespace UnityEngine.Purchasing
             m_PurchaseUseCase = purchaseUseCase;
             m_ConfirmOrderUseCase = confirmOrderUseCase;
             m_CheckEntitlementUseCase = checkEntitlementUseCase;
-            m_PurchasesReadOnly = new ReadOnlyObservableCollection<Order>(m_Purchases);
 
             purchaseUseCase.OnPurchaseSuccess += PurchaseSucceeded;
             purchaseUseCase.OnPurchaseFail += PurchaseFailed;
             purchaseUseCase.OnPurchaseDefer += PurchaseDeferred;
             m_StoreWrapper = storeWrapper;
+            m_PurchaseCache = m_StoreWrapper.instance.PurchaseCache;
             m_AnalyticsClient = analyticsClient;
+            m_IsBuiltinStore = BuiltinStores.Contains(storeWrapper.name);
 #if IAP_TX_VERIFIER_ENABLED
             m_TransactionVerifier = transactionVerifier;
 #endif
@@ -175,6 +180,7 @@ namespace UnityEngine.Purchasing
 
             try
             {
+                m_AnyPurchaseStarted = true;
                 m_PurchaseUseCase.Purchase(cart);
             }
             catch (Exception e)
@@ -227,7 +233,12 @@ namespace UnityEngine.Purchasing
             {
                 RemoveDeferredOrders(order);
                 RemovePendingOrders(order);
-                m_Purchases.Add(order);
+                m_PurchaseCache.Add(order);
+
+                if (ShouldSkipProcessingPendingOrder(order))
+                {
+                    return;
+                }
 
                 ProcessPendingOrder(order);
             }
@@ -239,23 +250,23 @@ namespace UnityEngine.Purchasing
 
         void RemovePendingOrders(PendingOrder order)
         {
-            var pendingOrders = m_Purchases.OfType<PendingOrder>().ToList().AsReadOnly();
+            var pendingOrders = m_PurchaseCache.GetOrders().OfType<PendingOrder>().ToList().AsReadOnly();
             var ordersToRemove = pendingOrders.Where(pendingOrder => Equals(order.Info.TransactionID, pendingOrder.Info.TransactionID));
             foreach (var orderToRemove in ordersToRemove)
             {
-                m_Purchases.Remove(orderToRemove);
+                m_PurchaseCache.Remove(orderToRemove);
             }
         }
 
         void RemoveDeferredOrders(PendingOrder pendingOrder)
         {
             var pendingOrderItems = pendingOrder.CartOrdered;
-            var deferredOrders = m_Purchases.OfType<DeferredOrder>().ToList().AsReadOnly();
+            var deferredOrders = m_PurchaseCache.GetOrders().OfType<DeferredOrder>().ToList().AsReadOnly();
             var ordersToRemove = deferredOrders.Where(deferredOrder => Equals(deferredOrder.CartOrdered, pendingOrderItems)).Cast<Order>().ToList();
 
             foreach (var order in ordersToRemove)
             {
-                m_Purchases.Remove(order);
+                m_PurchaseCache.Remove(order);
             }
         }
 
@@ -267,7 +278,7 @@ namespace UnityEngine.Purchasing
 
         void PurchaseDeferred(DeferredOrder order)
         {
-            m_Purchases.Add(order);
+            m_PurchaseCache.Add(order);
             OnPurchaseDeferred?.Invoke(order);
         }
 
@@ -356,7 +367,7 @@ namespace UnityEngine.Purchasing
         void OnConfirmSucceeded(PendingOrder pendingOrder, ConfirmedOrder confirmedOrder)
         {
             RemovePendingOrders(pendingOrder);
-            m_Purchases.Add(confirmedOrder);
+            m_PurchaseCache.Add(confirmedOrder);
 
             m_AnalyticsClient.OnPurchaseSucceeded(confirmedOrder);
             OnPurchaseConfirmed?.Invoke(confirmedOrder);
@@ -385,6 +396,11 @@ namespace UnityEngine.Purchasing
             }
 #endif
 
+            TryFetchPurchases(OnFetchSuccess);
+        }
+
+        internal void TryFetchPurchases(Action<Orders> successCallback)
+        {
             if (!IsStoreConnected())
             {
                 OnFetchFailure(new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.StoreNotConnected, "Store not connected."));
@@ -392,7 +408,7 @@ namespace UnityEngine.Purchasing
 
             try
             {
-                m_FetchPurchasesUseCase.FetchPurchases(OnFetchSuccess, OnFetchFailure);
+                m_FetchPurchasesUseCase.FetchPurchases(successCallback, OnFetchFailure);
             }
             catch (Exception e)
             {
@@ -402,17 +418,23 @@ namespace UnityEngine.Purchasing
 
         void OnFetchSuccess(Orders fetchedPurchases)
         {
-            m_Purchases.Clear();
+            OnFetchSuccessProcessAndCache(fetchedPurchases);
+            OnPurchasesFetched?.Invoke(fetchedPurchases);
+        }
+
+        internal void OnFetchSuccessProcessAndCache(Orders fetchedPurchases)
+        {
+            m_PurchaseCache.Clear();
             foreach (var fetchedPurchase in fetchedPurchases.ConfirmedOrders)
             {
-                m_Purchases.Add(fetchedPurchase);
+                m_PurchaseCache.Add(fetchedPurchase);
             }
 
             foreach (var fetchedPurchase in fetchedPurchases.PendingOrders)
             {
-                m_Purchases.Add(fetchedPurchase);
-                // TODO: ULO-7772
-                if (m_ProcessFetchedPendingOrders && !WasPurchaseAlreadyProcessed(fetchedPurchase.Info.TransactionID) && m_StoreWrapper.name == GooglePlay.Name)
+                m_PurchaseCache.Add(fetchedPurchase);
+
+                if (ShouldRouteFetchedPurchasesToOnPurchasePending(fetchedPurchase.Info.TransactionID))
                 {
                     ProcessPendingOrder(fetchedPurchase);
                 }
@@ -420,10 +442,30 @@ namespace UnityEngine.Purchasing
 
             foreach (var fetchedPurchase in fetchedPurchases.DeferredOrders)
             {
-                m_Purchases.Add(fetchedPurchase);
+                m_PurchaseCache.Add(fetchedPurchase);
             }
+        }
 
-            OnPurchasesFetched?.Invoke(fetchedPurchases);
+        bool ShouldRouteFetchedPurchasesToOnPurchasePending(string transactionId)
+        {
+            return
+                ShouldUseFetchedPendingPurchaseReroute()
+                && !WasPurchaseAlreadyProcessed(transactionId);
+        }
+
+        bool ShouldSkipProcessingPendingOrder(PendingOrder order)
+        {
+            return
+                ShouldUseFetchedPendingPurchaseReroute()
+                && !m_AnyPurchaseStarted
+                && WasPurchaseAlreadyProcessed(order.Info.TransactionID);
+        }
+
+        bool ShouldUseFetchedPendingPurchaseReroute()
+        {
+            return
+                m_ProcessFetchedPendingOrders
+                && m_IsBuiltinStore;
         }
 
         bool WasPurchaseAlreadyProcessed(string transactionId)
@@ -584,12 +626,20 @@ namespace UnityEngine.Purchasing
         /// <returns>The read-only observable collection of all purchases made.</returns>
         public ReadOnlyObservableCollection<Order> GetPurchases()
         {
-            return m_PurchasesReadOnly;
+            return m_PurchaseCache.GetOrders();
         }
 
         internal bool IsStoreConnected()
         {
             return m_StoreWrapper.GetStoreConnectionState() == ConnectionState.Connected;
+        }
+
+        /// <summary>
+        /// Function for testing only. Forces the processing of fetched purchases as if they were from Apple or Google, deduplicating as appropriate.
+        /// </summary>
+        internal void ForceProcessPurchases()
+        {
+            m_IsBuiltinStore = true;
         }
     }
 }

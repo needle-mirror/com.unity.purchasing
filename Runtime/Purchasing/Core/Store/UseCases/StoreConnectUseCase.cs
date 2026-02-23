@@ -12,6 +12,7 @@ namespace UnityEngine.Purchasing
         readonly IRetryService m_RetryService;
         IRetryPolicy m_RetryPolicyOnDisconnect;
         public event Action<StoreConnectionFailureDescription>? OnStoreDisconnection;
+        public event Action? OnStoreConnection;
 
         TaskCompletionSource<object?>? m_CurrentConnectionCompletion;
         IRetryRequest? m_CurrentRequest;
@@ -29,6 +30,11 @@ namespace UnityEngine.Purchasing
             try
             {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
+                if (OnStoreConnection == null)
+                {
+                    Debug.unityLogger.LogIAPWarning("IStoreService.Connect called without a callback defined for IStoreService.OnStoreConnected.");
+                }
+                
                 if (OnStoreDisconnection == null)
                 {
                     Debug.unityLogger.LogIAPWarning("IStoreService.Connect called without a callback defined for IStoreService.OnStoreDisconnected.");
@@ -60,6 +66,7 @@ namespace UnityEngine.Purchasing
         public void OnStoreConnectionSucceeded()
         {
             (m_Store as IInternalStore)?.SetStoreConnectionState(ConnectionState.Connected);
+            OnStoreConnection?.Invoke(); 
             m_CurrentConnectionCompletion?.TrySetResult(null);
             m_CurrentRequest = null;
         }

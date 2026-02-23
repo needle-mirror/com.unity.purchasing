@@ -10,5 +10,6 @@ namespace UnityEngine.Purchasing
         Task Connect();
         void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy retryPolicy);
         event Action<StoreConnectionFailureDescription>? OnStoreDisconnection;
+        event Action? OnStoreConnection; 
     }
 }

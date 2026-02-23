@@ -37,6 +37,7 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
             m_StoreController = UnityIAPServices.StoreController();
             m_StoreController.OnPurchasePending += OnPurchasePending;
             m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_StoreController.OnStoreConnected += OnStoreConnected;
             m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
 
             await m_StoreController.Connect();
@@ -109,6 +110,11 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
             Debug.Log($"Purchase failed - Product: '{product.definition.id}'," +
                 $" Purchase failure reason: {failureDescription.reason}," +
                 $" Purchase failure details: {failureDescription.message}");
+        }
+
+        void OnStoreConnected()
+        {
+            Debug.Log($"Store connected.");
         }
 
         void OnStoreDisconnected(StoreConnectionFailureDescription storeConnectionFailureDescription)

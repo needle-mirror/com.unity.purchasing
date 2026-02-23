@@ -59,5 +59,14 @@ namespace UnityEngine.Purchasing
             add => m_BaseInternalStoreService.OnStoreDisconnected += value;
             remove => m_BaseInternalStoreService.OnStoreDisconnected -= value;
         }
+
+        /// <summary>
+        /// Callback for when the store successfully connects.
+        /// </summary>
+        public virtual event Action? OnStoreConnected
+        {
+            add => m_BaseInternalStoreService.OnStoreConnected += value;
+            remove => m_BaseInternalStoreService.OnStoreConnected -= value;
+        }
     }
 }

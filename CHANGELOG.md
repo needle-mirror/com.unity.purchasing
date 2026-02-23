@@ -1,6 +1,21 @@
 # Changelog
 
+## [5.2.0] - 2026-02-23
+### Added
+- Added `OnStoreConnected` callback to complement the existing `OnStoreDisconnected` callback, to provide symmetrical connection state handling.
+
+### Fixed
+- Apple - Fixed `StorefrontResponse` not being found on VisionOS.
+- Apple -`IPurchaseService.ProcessPendingOrdersOnPurchasesFetched` applies to `AppleAppStore` and `MacAppStore`.
+  - This resolves a issue on iOS 26.2+, where `OnPurchasePending` was not invoked for existing pending orders during startup.
+  - Setting `IPurchaseService.ProcessPendingOrdersOnPurchasesFetched` to `false` on Apple platforms may result in missing `OnPurchasePending` events for iOS versions 26.2+.
+- Apple - Fixed `InvalidPublicKeyException` exception being thrown when creating a `CrossPlatformValidator`.
+  - If you experienced this issue, regenerate your `AppleTangle.cs` via Services > In-app Purchasing > Configure, and selecting `Obfuscate Apple License Key`. 
+- Google - Fixed purchases made while the application is backgrounded not invoking the `OnPurchasePending` when foregrounding the application.
+- Fixed `DuplicatedTransaction` happening on first time purchasing Consumables/Non-Consumables.
+
 ## [5.2.0-pre.2] - 2026-02-03
+### Fixed
 - GooglePlay - Fixed an exception that can occur when calling `ExternalBillingProgramClient.CreateBillingProgramReportingDetailsAsync`
 
 ## [5.2.0-pre.1] - 2026-01-26

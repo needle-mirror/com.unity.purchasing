@@ -80,6 +80,15 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Event triggered when the store connection is successfully established.
+        /// </summary>
+        public event Action? OnStoreConnected
+        {
+            add => m_StoreService.OnStoreConnected += value;
+            remove => m_StoreService.OnStoreConnected -= value;
+        }
+
+        /// <summary>
         /// Configures whether pending orders should be automatically processed when purchases are fetched.
         /// </summary>
         /// <param name="shouldProcess">True to automatically process pending orders, false otherwise.</param>

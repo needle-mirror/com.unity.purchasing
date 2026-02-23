@@ -49,6 +49,7 @@ namespace UnityEngine.Purchasing.Extension
         protected IOnEntitlementRevokedCallback? EntitlementRevokedCallback;
 
         internal IProductCache ProductCache;
+        internal IPurchaseCache PurchaseCache;
 
         /// <summary>
         /// Read-only cache of products specific to the store.
@@ -62,6 +63,7 @@ namespace UnityEngine.Purchasing.Extension
         protected Store()
         {
             ProductCache = new ProductCache();
+            PurchaseCache = new PurchaseCache();
         }
 
         /// <summary>

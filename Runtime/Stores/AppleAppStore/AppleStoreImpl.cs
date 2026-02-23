@@ -45,6 +45,7 @@ namespace UnityEngine.Purchasing
         static IUtil? s_Util;
         static AppleStoreImpl? s_Instance;
 
+        string? m_LastPurchaseTransactionId;
         string? appReceipt;
 
         bool m_IsTransactionObserverEnabled;
@@ -117,6 +118,8 @@ namespace UnityEngine.Purchasing
             m_CartValidator.Validate(cart);
             var productDefinition = cart.Items().First().Product.definition;
             var purchaseOptions = PurchaseOptions();
+            // Resets the last purchase transaction id to avoid discarding real duplicated transactions.
+            m_LastPurchaseTransactionId = string.Empty;
             Purchase(productDefinition, purchaseOptions);
         }
 
@@ -706,7 +709,7 @@ namespace UnityEngine.Purchasing
             {
                 var entitlementStatus = 0;
                 var storeName = Application.platform == RuntimePlatform.OSXPlayer? MacAppStore.Name : AppleAppStore.Name;
-                var orders = UnityIAPServices.Purchase(storeName).GetPurchases();
+                var orders = PurchaseCache.GetOrders();
                 switch (productDefinition.type)
                 {
                     case ProductType.NonConsumable:
@@ -809,6 +812,8 @@ namespace UnityEngine.Purchasing
 
             var productId = purchaseDetails.TryGetString("productId");
             var transactionId = purchaseDetails.TryGetString("transactionId");
+            // Saves the current transactionId to prevent firing a DuplicatedTransaction event if the listener sends the transaction currently being processed.
+            m_LastPurchaseTransactionId = transactionId;
             var originalTransactionId = purchaseDetails.TryGetString("originalTransactionId");
             var expirationDate = purchaseDetails.TryGetString("expirationDate");
             var ownershipType = OwnershipTypeFromString(purchaseDetails.TryGetString("ownershipType"));
@@ -914,6 +919,11 @@ namespace UnityEngine.Purchasing
             }
             else
             {
+                if (m_LastPurchaseTransactionId == confirmedOrder.Info.TransactionID)
+                {
+                    // Prevents duplicated transaction error when processing the same confirmed order multiple times, which can happen when the listener sends transactions that have already been processed by the user.
+                    return;
+                }
                 var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
                     PurchaseFailureReason.DuplicateTransaction,
                     "Purchase has already been confirmed.");

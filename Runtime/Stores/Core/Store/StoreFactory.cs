@@ -185,7 +185,6 @@ namespace UnityEngine.Purchasing
         {
             di.GetInstance<GooglePurchasesUpdatedHandler>().SubscribeToPurchasesUpdatedEvent(di.GetInstance<GooglePurchasesUpdatedListener>());
             LinkProductCache(di);
-            m_Util.AddPauseListener(di.GetInstance<IGooglePlayStore>().OnPause);
         }
 
         static void LinkProductCache(IDependencyInjectionService di)

@@ -7,7 +7,6 @@ namespace UnityEngine.Purchasing
     {
         void SetChangeSubscriptionCallback(IGooglePlayChangeSubscriptionCallback changeSubscriptionCallback);
         void ChangeSubscription(ProductDefinition product, Order currentOrder, GooglePlayReplacementMode? desiredReplacementMode);
-        void OnPause(bool isPaused);
         public IGooglePurchase GetGooglePurchase(string purchaseToken);
     }
 }

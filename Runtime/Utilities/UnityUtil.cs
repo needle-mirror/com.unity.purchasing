@@ -117,13 +117,6 @@ namespace UnityEngine.Purchasing.Extension
             return s_PcControlledPlatforms.Contains(Application.platform);
         }
 
-        readonly List<Action<bool>> pauseListeners = new List<Action<bool>>();
-
-        public void AddPauseListener(Action<bool> runnable)
-        {
-            pauseListeners.Add(runnable);
-        }
-
         public bool IsClassOrSubclass(Type potentialBase, Type potentialDescendant)
         {
             return potentialDescendant.IsSubclassOf(potentialBase) || potentialDescendant == potentialBase;

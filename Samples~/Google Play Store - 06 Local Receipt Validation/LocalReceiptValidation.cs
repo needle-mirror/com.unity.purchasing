@@ -51,15 +51,15 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
             m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
             m_StoreController.OnPurchaseDeferred += OnPurchaseDeferred;
 
+            m_StoreController.OnStoreConnected += OnStoreConnected;
             m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
-            Debug.Log("Connecting to store.");
-            await m_StoreController.Connect();
 
             m_StoreController.OnProductsFetchFailed += OnProductsFetchedFailed;
             m_StoreController.OnProductsFetched += OnProductsFetched;
-            FetchProducts();
 
-            InitializeValidator();
+            Debug.Log("Connecting to store.");
+            await m_StoreController.Connect();
+
         }
 
         void InitializeValidator()
@@ -192,6 +192,16 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
         string GetIdFromProduct(Product product)
         {
             return product?.definition.id ?? "no product found";
+        }
+
+        // Calling StoreController.Connect without a listener on StoreController.OnStoreConnected will result in warnings.
+        void OnStoreConnected()
+        {
+            Debug.Log($"Store connected.");
+
+            FetchProducts();
+
+            InitializeValidator();
         }
 
         // Calling StoreController.Connect without a listener on StoreController.OnStoreDisconnected will result in warnings.

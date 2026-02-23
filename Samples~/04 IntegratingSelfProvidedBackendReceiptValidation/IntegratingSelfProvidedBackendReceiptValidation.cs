@@ -39,13 +39,14 @@ namespace Samples.Purchasing.Core.IntegratingSelfProvidedBackendReceiptValidatio
             m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
             m_StoreController.OnPurchaseDeferred += OnPurchaseDeferred;
 
+            m_StoreController.OnStoreConnected += OnStoreConnected;
             m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
-            Debug.Log("Connecting to store.");
-            await m_StoreController.Connect();
 
             m_StoreController.OnProductsFetchFailed += OnProductsFetchedFailed;
             m_StoreController.OnProductsFetched += OnProductsFetched;
-            FetchProducts();
+
+            Debug.Log("Connecting to store.");
+            await m_StoreController.Connect();
         }
 
         void FetchProducts()
@@ -144,6 +145,14 @@ namespace Samples.Purchasing.Core.IntegratingSelfProvidedBackendReceiptValidatio
         {
             return product?.definition.id ?? "no product found";
         }
+
+        // Calling StoreController.Connect without a listener on the StoreController.OnStoreDisconnected event will result in warnings.
+        void OnStoreConnected()
+        {
+            Debug.Log($"Store connected.");
+            FetchProducts();
+        }
+
         // Calling StoreController.Connect without a listener on the StoreController.OnStoreDisconnected event will result in warnings.
         void OnStoreDisconnected(StoreConnectionFailureDescription description)
         {

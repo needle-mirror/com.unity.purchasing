@@ -42,6 +42,11 @@ namespace UnityEngine.Purchasing
         /// Callback when connection is lost to the current store.
         /// </summary>
         event Action<StoreConnectionFailureDescription>? OnStoreDisconnected;
+
+        /// <summary>
+        /// Callback when connection to the store is successfully established.
+        /// </summary>
+        event Action? OnStoreConnected; 
     }
 }
 
