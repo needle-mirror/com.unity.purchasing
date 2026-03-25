@@ -1,4 +1,6 @@
 # Changelog
+## [4.15.0] - 2026-03-25
+
 ## [4.15.0-pre.2] - 2026-02-03
 - GooglePlay - Fixed an exception that can occur when calling `ExternalBillingProgramClient.CreateBillingProgramReportingDetailsAsync`
 
