@@ -396,23 +396,24 @@ namespace UnityEngine.Purchasing
             }
 #endif
 
-            TryFetchPurchases(OnFetchSuccess);
+            TryFetchPurchases(OnFetchSuccess, OnFetchFailure);
         }
 
-        internal void TryFetchPurchases(Action<Orders> successCallback)
+        internal void TryFetchPurchases(Action<Orders> successCallback, Action<PurchasesFetchFailureDescription>? failureCallback)
         {
             if (!IsStoreConnected())
             {
-                OnFetchFailure(new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.StoreNotConnected, "Store not connected."));
+                failureCallback?.Invoke(new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.StoreNotConnected, "Store not connected."));
+                return;
             }
 
             try
             {
-                m_FetchPurchasesUseCase.FetchPurchases(successCallback, OnFetchFailure);
+                m_FetchPurchasesUseCase.FetchPurchases(successCallback, failureCallback ?? (_ => {}));
             }
             catch (Exception e)
             {
-                OnFetchFailure(new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.Unknown, e.Message));
+                failureCallback?.Invoke(new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.Unknown, e.Message));
             }
         }
 

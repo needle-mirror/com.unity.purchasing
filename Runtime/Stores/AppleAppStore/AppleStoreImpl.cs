@@ -39,7 +39,7 @@ namespace UnityEngine.Purchasing
         Action<string>? m_FetchStorefrontErrorCallback;
 
         INativeAppleStore? m_Native;
-        readonly IAppleFetchProductsService m_FetchProductsService;
+        internal readonly IAppleFetchProductsService m_FetchProductsService;
         readonly ITransactionLog m_TransactionLog;
 
         static IUtil? s_Util;
@@ -812,8 +812,6 @@ namespace UnityEngine.Purchasing
 
             var productId = purchaseDetails.TryGetString("productId");
             var transactionId = purchaseDetails.TryGetString("transactionId");
-            // Saves the current transactionId to prevent firing a DuplicatedTransaction event if the listener sends the transaction currently being processed.
-            m_LastPurchaseTransactionId = transactionId;
             var originalTransactionId = purchaseDetails.TryGetString("originalTransactionId");
             var expirationDate = purchaseDetails.TryGetString("expirationDate");
             var ownershipType = OwnershipTypeFromString(purchaseDetails.TryGetString("ownershipType"));
@@ -834,6 +832,10 @@ namespace UnityEngine.Purchasing
             OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
 #endif
             ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+            
+            // Saves the current transactionId to prevent firing a DuplicatedTransaction event if the listener sends the transaction currently being processed.
+            // After processing, so DuplicateTransactions are only blocked after the initial purchase event has been handled.
+            m_LastPurchaseTransactionId = transactionId;
         }
 
         // TODO: IAP-3929

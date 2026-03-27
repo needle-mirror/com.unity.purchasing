@@ -125,7 +125,8 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Event triggered when a purchase has been deferred for later processing.
+        /// Event triggered when a purchase has been deferred by the store.
+        /// This typically occurs when parental approval is required for the purchase.
         /// </summary>
         public event Action<DeferredOrder>? OnPurchaseDeferred
         {

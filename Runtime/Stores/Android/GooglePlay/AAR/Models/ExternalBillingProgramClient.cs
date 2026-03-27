@@ -2,6 +2,8 @@
 
 using System;
 using System.Threading.Tasks;
+using Uniject;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
 
@@ -13,11 +15,20 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
     /// </summary>
     public class ExternalBillingProgramClient
     {
-        private readonly ExternalBillingProgramClientInternal billingClient;
+        readonly IExternalBillingProgramClientInternal billingClient;
+        readonly IUtil m_Util;
 
         public ExternalBillingProgramClient()
         {
-            billingClient = BillingClientFactory.Instance().CreateExternalBillingProgramClient();
+            var factory = BillingClientFactory.Instance();
+            billingClient = factory.CreateExternalBillingProgramClient();
+            m_Util = factory.m_Util;
+        }
+
+        internal ExternalBillingProgramClient(IBillingClientFactory factory, IUtil util)
+        {
+            billingClient = factory.CreateExternalBillingProgramClient();
+            m_Util = util;
         }
 
         /// <summary>
@@ -27,7 +38,7 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
         /// <param name="onDisconnected">A callback that will be triggered when the client disconnects.</param>
         public void StartConnection(Action? onConnected = null, Action<GoogleBillingResponseCode>? onDisconnected = null)
         {
-            IBillingClientStateListener listener = new BillingClientStateListener(billingClient.m_Util);
+            IBillingClientStateListener listener = new BillingClientStateListener(m_Util);
             listener.RegisterOnConnected(onConnected);
             listener.RegisterOnDisconnected(onDisconnected);
             billingClient.StartConnection(listener);

@@ -29,7 +29,7 @@ public class ProductUseCase: ProductUseCaseProtocol {
         var response: ProductResponse
         do {
             let products = try await Product.products(for: productIds)
-            response = ProductResponse(products: products)
+            response = await ProductResponse(products: products)
         } catch let error as StoreKitError {
             response = ProductResponse(error: error)
         } catch let error {

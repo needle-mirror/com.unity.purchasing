@@ -87,12 +87,13 @@ namespace UnityEngine.Purchasing
         event Action<Order>? OnPurchaseConfirmed;
 
         /// <summary>
-        /// Callback when products orders fail.
+        /// Callback when a purchase fails.
         /// </summary>
         event Action<FailedOrder>? OnPurchaseFailed;
 
         /// <summary>
-        /// Callback when products orders are deferred.
+        /// Callback when a purchase is deferred.
+        /// This typically occurs when parental approval is required for the purchase.
         /// </summary>
         event Action<DeferredOrder>? OnPurchaseDeferred;
 

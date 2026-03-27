@@ -15,9 +15,9 @@
       "Android",
       "iOS"
     ],
-    "changelog": "### Added\n- Added `OnStoreConnected` callback to complement the existing `OnStoreDisconnected` callback, to provide symmetrical connection state handling.\n\n### Fixed\n- Apple - Fixed `StorefrontResponse` not being found on VisionOS.\n- Apple -`IPurchaseService.ProcessPendingOrdersOnPurchasesFetched` applies to `AppleAppStore` and `MacAppStore`.\n  - This resolves a issue on iOS 26.2+, where `OnPurchasePending` was not invoked for existing pending orders during startup.\n  - Setting `IPurchaseService.ProcessPendingOrdersOnPurchasesFetched` to `false` on Apple platforms may result in missing `OnPurchasePending` events for iOS versions 26.2+.\n- Apple - Fixed `InvalidPublicKeyException` exception being thrown when creating a `CrossPlatformValidator`.\n  - If you experienced this issue, regenerate your `AppleTangle.cs` via Services > In-app Purchasing > Configure, and selecting `Obfuscate Apple License Key`. \n- Google - Fixed purchases made while the application is backgrounded not invoking the `OnPurchasePending` when foregrounding the application.\n- Fixed `DuplicatedTransaction` happening on first time purchasing Consumables/Non-Consumables."
+    "changelog": "### Fixed\n- Apple - Fixed an issue where `OnPurchaseFailed` would not trigger when re-purchasing non-consumables.\n- Apple - Fixed tvOS build failure caused by missing `tvOS 15.0` availability on the `SKPaymentTransactionObserver` extension in `PurchaseUseCase.swift`.\n- Apple - Fixed `GetProductDetails` returning an empty dictionary.\n- Google - Fixed an issue where `OnPurchasesFetchFailed` could be triggered when foregrounding the application while the store connection wasn't established.\n- Updated description of `OnPurchaseDeferred` in `IPurchaseService` and `StoreController`."
   },
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,16 +34,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.2.0"
+    "com.unity.purchasing.tests": "5.2.1"
   },
   "upmCi": {
-    "footprint": "306374df5da0f401fba73804bfb7887de54773ed"
+    "footprint": "195307446e17e6fb9434ce65403d54a196f3bd12"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.2/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "4e7ac99a45c76e8df34c2fc754ce332bd42b5bb0"
+    "revision": "52d51028c632deb429407ae5d1c577986281fd6e"
   },
   "samples": [
     {

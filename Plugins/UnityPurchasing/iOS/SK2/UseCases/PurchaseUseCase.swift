@@ -204,7 +204,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
     }
 }
 
-@available(iOS 15.0, macOS 12.0, *)
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 extension PurchaseUseCase: SKPaymentTransactionObserver {
     public func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
 

@@ -140,7 +140,7 @@ public class StoreKitManager: StoreKitManagerProtocol {
             // Populate productsByID dictionary for quick access
             updateProductsLookup(products)
 
-            let jsonString = encodeToJSON( ["products": products])
+            let jsonString = encodeToJSON(response)
             await storeKitCallback.callback(subject: "OnProductsFetched", payload: jsonString, entitlementStatus: 0)
         } catch {
             Task(priority: .background, operation: {

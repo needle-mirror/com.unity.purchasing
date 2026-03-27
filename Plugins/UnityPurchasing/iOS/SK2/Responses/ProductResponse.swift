@@ -8,12 +8,12 @@ public class ProductResponse: ResponseProtocol, Encodable {
     let error: Error?
     var responseError: SKResponseError?
 
-    public init(products: [Product]) {
+    public init(products: [Product]) async {
         self.products = products
         error = nil
 
-        products.forEach { product in
-            let (key, value) = createProduct(product)
+        for product in products {
+            let (key, value) = await createProduct(product)
             productDetails[key] = value
         }
     }
@@ -42,8 +42,9 @@ extension ProductResponse: CustomStringConvertible {
         return try! String(data: encoder.encode(self), encoding: .utf8)!
     }
 
-    func createProduct(_ product: Product) -> (String, ProductDetail) {
-        return (product.id, ProductDetail(product: product))
+    func createProduct(_ product: Product) async -> (String, ProductDetail) {
+        let isEligible = await product.subscription?.isEligibleForIntroOffer ?? false
+        return (product.id, ProductDetail(product: product, isEligibleForIntroOffer: isEligible))
     }
 
     func createResponseError(_ error: Error) -> SKResponseError {

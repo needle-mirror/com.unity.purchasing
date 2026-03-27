@@ -78,7 +78,7 @@ namespace UnityEngine.Purchasing
         /// <returns> A string representation of the product metadata.</returns>
         public override string ToString()
         {
-            return $"ProductMetaData: {localizedPriceString}, {localizedTitle}, {localizedDescription}, {isoCurrencyCode}, {localizedPrice}";
+            return $"ProductMetadata: {localizedPriceString}, {localizedTitle}, {localizedDescription}, {isoCurrencyCode}, {localizedPrice}";
         }
     }
 }

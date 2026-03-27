@@ -128,9 +128,9 @@ namespace UnityEngine.Purchasing
 
         void OnFocusChanged(bool hasFocus)
         {
-            if (hasFocus)
+            if (hasFocus && IsStoreConnected())
             {
-                TryFetchPurchases(OnFetchSuccessProcessAndCache);
+                TryFetchPurchases(OnFetchSuccessProcessAndCache, null);
             }
         }
     }

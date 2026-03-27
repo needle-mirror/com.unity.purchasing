@@ -1,17 +1,18 @@
 #nullable enable
 
 using Uniject;
+using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.GoogleBilling.Models;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.Utilities;
 
 namespace UnityEngine.Purchasing.GoogleBilling
 {
-    internal class BillingClientFactory
+    internal class BillingClientFactory : IBillingClientFactory
     {
-        static BillingClientFactory? s_Instance;
-        readonly IUtil m_Util;
-        readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
+        internal static BillingClientFactory? s_Instance;
+        internal IUtil m_Util { get; }
+        internal ITelemetryDiagnostics m_TelemetryDiagnostics { get; }
 
         BillingClientFactory(IUtil util, ITelemetryDiagnostics telemetryDiagnostics)
         {
@@ -33,7 +34,7 @@ namespace UnityEngine.Purchasing.GoogleBilling
             return s_Instance;
         }
 
-        internal ExternalBillingProgramClientInternal CreateExternalBillingProgramClient()
+        public IExternalBillingProgramClientInternal CreateExternalBillingProgramClient()
         {
             return new ExternalBillingProgramClientInternal(m_Util, m_TelemetryDiagnostics);
         }

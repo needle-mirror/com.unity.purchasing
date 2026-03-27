@@ -85,7 +85,7 @@ namespace UnityEngine.Purchasing
             di.AddService<FetchStorePromotionVisibilityUseCase>();
             di.AddInstance(StoreFactory.Instance().TelemetryDiagnosticsInstanceWrapper);
             di.AddService<TelemetryDiagnostics>();
-            di.AddService<AppleFetchProductsService>();
+            di.AddInstance(((AppleStoreImpl)store.instance).m_FetchProductsService);
             di.AddService<GetIntroductoryPriceDictionaryUseCase>();
             di.AddService<GetProductDetailsUseCase>();
             di.AddService<SetStorePromotionOrderUseCase>();

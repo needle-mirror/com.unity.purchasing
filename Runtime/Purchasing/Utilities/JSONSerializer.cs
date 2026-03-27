@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Purchasing.Utilities;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -107,9 +108,30 @@ namespace UnityEngine.Purchasing
 
         public static List<ProductDescription> DeserializeProductDescriptionsFromFetchProductsSk2(string json)
         {
+            try
+            {
+                return TryDeserializeProductDescriptionsFromFetchProductsSk2(json);
+            }
+            catch (Exception e)
+            {
+                Debug.unityLogger.LogIAPError($"DeserializeProductDescriptionsFromFetchProductsSk2 - Error decoding json: {e}");
+                return new List<ProductDescription>();
+            }
+        }
+
+        static List<ProductDescription> TryDeserializeProductDescriptionsFromFetchProductsSk2(string json)
+        {
             var results = new List<ProductDescription>();
             var dict = MiniJson.JsonDecode(json) as Dictionary<string, object>;
-            if (dict?["products"] is List<object> products)
+            var detailsDictionary = new Dictionary<string, IAppleSubscriptionInfo>();
+            if (dict != null && dict.TryGetValue("productDetails", out var productDetailsObj) && productDetailsObj is Dictionary<string, object> productDetails)
+            {
+                var deserializer = new AppleJsonProductDetailsDeserializer();
+                var response = deserializer.DeserializeAppleProductDetailsResponse(productDetails);
+                var converter = new AppleDataConverter();
+                detailsDictionary = converter.ConvertAppleProductDetailsResponseToSubscriptionInfoMap(response);
+            }
+            if (dict != null && dict.TryGetValue("products", out var productsObj) && productsObj is List<object> products)
             {
                 foreach (var product in products)
                 {
@@ -119,7 +141,14 @@ namespace UnityEngine.Purchasing
                         break;
                     }
 
-                    var id = productDetail["id"] as string;
+                    var id = productDetail.TryGetString("id");
+
+                    IAppleSubscriptionInfo subscriptionInfo = null;
+                    if (id != null && detailsDictionary.ContainsKey(id))
+                    {
+                        subscriptionInfo = detailsDictionary[id];
+                    }
+
                     var priceString = productDetail.TryGetString("displayPrice");
                     var title = productDetail.TryGetString("displayName");
                     var description = productDetail.TryGetString("description");
@@ -135,7 +164,7 @@ namespace UnityEngine.Purchasing
                     }
                     var isFamilyShareable = Convert.ToBoolean(productDetail.TryGetString("isFamilyShareable"));
                     var metadata = new AppleProductMetadata(priceString, title, description, currencyCode,
-                        localizedPrice, isFamilyShareable);
+                        localizedPrice, isFamilyShareable, subscriptionInfo);
                     var type = productDetail.TryGetString("type").ToProductType();
                     var productDescription = new ProductDescription(id, metadata, "", "", type);
 
@@ -212,7 +241,20 @@ namespace UnityEngine.Purchasing
             return result;
         }
 
-        public static Dictionary<string, string> DeserializeProductDetails(string json)
+        public static Dictionary<string, string> DeserializeProductDetailsSK1(string json)
+        {
+            try
+            {
+                return TryDeserializeProductDetailsSK1(json);
+            }
+            catch (Exception e)
+            {
+                Debug.unityLogger.LogIAPError($"DeserializeProductDetailsSK1 - Error decoding json: {e}");
+                return new Dictionary<string, string>();
+            }
+        }
+
+        static Dictionary<string, string> TryDeserializeProductDetailsSK1(string json)
         {
             var objects = MiniJson.JsonDecode(json) as List<object>;
             var result = new Dictionary<string, string>();
@@ -265,6 +307,128 @@ namespace UnityEngine.Purchasing
                 {
                     Debug.unityLogger.LogIAPWarning("storeSpecificId key not found in product details json");
                 }
+            }
+
+            return result;
+        }
+
+        public static Dictionary<string, string> DeserializeProductDetailsSK2(string json)
+        {
+            var result = new Dictionary<string, string>();
+            var root = MiniJson.JsonDecode(json) as Dictionary<string, object>;
+            if (root == null)
+            {
+                return result;
+            }
+
+            // Build a lookup from the products array (has currencyCode, etc.)
+            var productsLookup = new Dictionary<string, Dictionary<string, object>>();
+            if (root.TryGetValue("products", out var productsObj) &&
+                productsObj is List<object> products)
+            {
+                foreach (var item in products)
+                {
+                    if (item is Dictionary<string, object> product)
+                    {
+                        var id = product.TryGetString("id");
+                        if (id != null)
+                        {
+                            productsLookup[id] = product;
+                        }
+                    }
+                }
+            }
+
+            // Build subscription info lookup from productDetails (has subscriptionInfo)
+            var detailsLookup = new Dictionary<string, Dictionary<string, object>>();
+            if (root.TryGetValue("productDetails", out var productDetailsObj) &&
+                productDetailsObj is Dictionary<string, object> productDetails)
+            {
+                foreach (var kvp in productDetails)
+                {
+                    if (kvp.Value is Dictionary<string, object> detail)
+                    {
+                        detailsLookup[kvp.Key] = detail;
+                    }
+                }
+            }
+
+            // Use whichever source has entries as the key set
+            var allIds = productsLookup.Count > 0 ? productsLookup.Keys : detailsLookup.Keys;
+
+            foreach (var productId in allIds)
+            {
+                productsLookup.TryGetValue(productId, out var product);
+                detailsLookup.TryGetValue(productId, out var detail);
+
+                var details = new Dictionary<string, string>();
+
+                // Fields from the products array
+                if (product != null)
+                {
+                    details["localizedPrice"] = product.TryGetString("price");
+                    details["isoCurrencyCode"] = product.TryGetString("currencyCode");
+                    details["localizedPriceString"] = product.TryGetString("displayPrice");
+                    details["localizedTitle"] = product.TryGetString("displayName");
+                    details["localizedDescription"] = product.TryGetString("description");
+                    details["type"] = product.TryGetString("type");
+                    details["isFamilyShareable"] = product.TryGetString("isFamilyShareable");
+                }
+
+                // Fields from the productDetails dictionary (overrides/supplements products)
+                if (detail != null)
+                {
+                    var value = detail.TryGetString("price");
+                    if (value != null) details["localizedPrice"] = value;
+
+                    value = detail.TryGetString("displayPrice");
+                    if (value != null) details["localizedPriceString"] = value;
+
+                    value = detail.TryGetString("displayName");
+                    if (value != null) details["localizedTitle"] = value;
+
+                    value = detail.TryGetString("description");
+                    if (value != null) details["localizedDescription"] = value;
+
+                    value = detail.TryGetString("type");
+                    if (value != null) details["type"] = value;
+
+                    value = detail.TryGetString("isFamilyShareable");
+                    if (value != null) details["isFamilyShareable"] = value;
+
+                    if (detail.TryGetValue("subscriptionInfo", out var subInfoObj) &&
+                        subInfoObj is Dictionary<string, object> subInfo)
+                    {
+                        details["subscriptionNumberOfUnits"] = subInfo.TryGetString("subscriptionPeriod.value");
+                        details["subscriptionPeriodUnit"] = subInfo.TryGetString("subscriptionPeriod.unit");
+                        details["subscriptionGroupID"] = subInfo.TryGetString("subscriptionGroupID");
+
+                        // this is a double check for Apple side's bug
+                        if (!string.IsNullOrEmpty(details["subscriptionNumberOfUnits"]) && string.IsNullOrEmpty(details["subscriptionPeriodUnit"]))
+                        {
+                            details["subscriptionPeriodUnit"] = "0";
+                        }
+
+                        if (subInfo.TryGetValue("introductoryOffer", out var introOfferObj) &&
+                            introOfferObj is Dictionary<string, object> introOffer)
+                        {
+                            details["introductoryPrice"] = introOffer.TryGetString("price");
+                            details["introductoryType"] = introOffer.TryGetString("paymentMode");
+                            details["introductoryOfferId"] = introOffer.TryGetString("id");
+                            details["introductoryPriceNumberOfPeriods"] = introOffer.TryGetString("periodCount");
+                            details["numberOfUnits"] = introOffer.TryGetString("period.value");
+                            details["unit"] = introOffer.TryGetString("period.unit");
+
+                            // this is a double check for Apple side's bug
+                            if (!string.IsNullOrEmpty(details["numberOfUnits"]) && string.IsNullOrEmpty(details["unit"]))
+                            {
+                                details["unit"] = "0";
+                            }
+                        }
+                    }
+                }
+
+                result.Add(productId, MiniJson.JsonEncode(details));
             }
 
             return result;

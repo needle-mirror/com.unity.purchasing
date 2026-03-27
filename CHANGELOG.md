@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.1] - 2026-03-27
+### Fixed
+- Apple - Fixed an issue where `OnPurchaseFailed` would not trigger when re-purchasing non-consumables.
+- Apple - Fixed tvOS build failure caused by missing `tvOS 15.0` availability on the `SKPaymentTransactionObserver` extension in `PurchaseUseCase.swift`.
+- Apple - Fixed `GetProductDetails` returning an empty dictionary.
+- Google - Fixed an issue where `OnPurchasesFetchFailed` could be triggered when foregrounding the application while the store connection wasn't established.
+- Updated description of `OnPurchaseDeferred` in `IPurchaseService` and `StoreController`.
+
 ## [5.2.0] - 2026-02-23
 ### Added
 - Added `OnStoreConnected` callback to complement the existing `OnStoreDisconnected` callback, to provide symmetrical connection state handling.

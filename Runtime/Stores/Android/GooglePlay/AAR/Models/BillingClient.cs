@@ -207,12 +207,12 @@ namespace UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models
 
         static AndroidJavaObject BuildSubscriptionUpdateParams(string oldPurchaseToken, GooglePlayReplacementMode replacementMode)
         {
-            var subscriptionUpdateParams = GetSubscriptionUpdateParamClass().CallStatic<AndroidJavaObject>("newBuilder");
+            using var subscriptionUpdateParamsBuilder = GetSubscriptionUpdateParamClass().CallStatic<AndroidJavaObject>("newBuilder");
 
-            subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("setSubscriptionReplacementMode", (int)replacementMode);
-            subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("setOldPurchaseToken", oldPurchaseToken);
+            subscriptionUpdateParamsBuilder.Call<AndroidJavaObject>("setSubscriptionReplacementMode", (int)replacementMode).Dispose();
+            subscriptionUpdateParamsBuilder.Call<AndroidJavaObject>("setOldPurchaseToken", oldPurchaseToken).Dispose();
 
-            subscriptionUpdateParams = subscriptionUpdateParams.Call<AndroidJavaObject>("build");
+            var subscriptionUpdateParams = subscriptionUpdateParamsBuilder.Call<AndroidJavaObject>("build");
             return subscriptionUpdateParams;
         }
 

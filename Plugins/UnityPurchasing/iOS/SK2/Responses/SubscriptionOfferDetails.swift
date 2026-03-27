@@ -31,7 +31,16 @@ struct SubscriptionOfferDetails: Codable {
         paymentMode = subscriptionOffer.paymentMode.rawValue
         price = subscriptionOffer.price
         displayPrice = subscriptionOffer.displayPrice
-        periodUnit = subscriptionOffer.period.unit.rawValue
+        // To match the GetProductDetails on SK1, we don't return the rawValue
+        //subscriptionPeriodUnit = subscriptionInfo.subscriptionPeriod.unit.rawValue
+        switch subscriptionOffer.period.unit {
+        case .day:   periodUnit = "0"
+        case .week:  periodUnit = "1"
+        case .month: periodUnit = "2"
+        case .year:  periodUnit = "3"
+        @unknown default:
+            periodUnit = "0"
+        }
         periodValue = subscriptionOffer.period.value
         periodCount = subscriptionOffer.periodCount
         type = subscriptionOffer.type.rawValue

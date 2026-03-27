@@ -7,13 +7,14 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
 {
     internal abstract class BillingClientBase : IBillingClientBase
     {
-        public AndroidJavaObject m_BillingClient { get; protected set; }
+        protected AndroidJavaObject m_BillingClient { get; set; }
         protected string m_ObfuscatedAccountId;
         protected string m_ObfuscatedProfileId;
-        protected internal readonly IUtil m_Util;
-        protected readonly ITelemetryDiagnostics m_TelemetryDiagnostics;
         const string k_AndroidBillingClientClassName = "com.android.billingclient.api.BillingClient";
         static AndroidJavaClass s_BillingClientClass;
+
+        protected IUtil m_Util { get; }
+        protected ITelemetryDiagnostics m_TelemetryDiagnostics { get; }
 
         protected BillingClientBase(IUtil util, ITelemetryDiagnostics telemetryDiagnostics)
         {

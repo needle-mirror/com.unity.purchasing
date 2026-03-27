@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using Purchasing.Utilities;
 using UnityEngine.Purchasing.UseCases.Interfaces;
 using UnityEngine.Scripting;
 
@@ -19,7 +20,10 @@ namespace UnityEngine.Purchasing.UseCases
 
         public Dictionary<string, string> GetProductDetails()
         {
-            return JSONSerializer.DeserializeProductDetails(m_FetchProductsService.LastRequestProductsJson);
+            var json = m_FetchProductsService.LastRequestProductsJson;
+            return StoreKitSelector.UseStoreKit1()
+                ? JSONSerializer.DeserializeProductDetailsSK1(json)
+                : JSONSerializer.DeserializeProductDetailsSK2(json);
         }
     }
 }

@@ -13,7 +13,7 @@ struct ProductDetail: Codable {
     let subscriptionInfo: SubscriptionInfoDetails?
 
 
-    init(product: Product) {
+    init(product: Product, isEligibleForIntroOffer: Bool = false) {
         productId = product.id
         displayName = product.displayName
         description = product.description
@@ -27,6 +27,6 @@ struct ProductDetail: Codable {
             return
         }
 
-        self.subscriptionInfo = SubscriptionInfoDetails(subscriptionInfo)
+        self.subscriptionInfo = SubscriptionInfoDetails(subscriptionInfo, isEligibleForIntroOffer: isEligibleForIntroOffer)
     }
 }
