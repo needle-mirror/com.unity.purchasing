@@ -1,4 +1,8 @@
 # Changelog
+## [4.15.1] - 2026-04-20
+### Fixed
+- Apple - Restored visionOS platform support in iOS plugin meta files, which was accidentally removed in 4.13.0.
+
 ## [4.15.0] - 2026-03-25
 
 ## [4.15.0-pre.2] - 2026-02-03
