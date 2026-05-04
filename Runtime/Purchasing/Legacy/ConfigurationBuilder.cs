@@ -37,6 +37,12 @@ namespace UnityEngine.Purchasing
             return instance;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            instance = null;
+        }
+
         internal CatalogProvider m_CatalogProvider = new CatalogProvider();
         internal ConfigurationProvider m_ConfigurationProvider = new ConfigurationProvider();
 

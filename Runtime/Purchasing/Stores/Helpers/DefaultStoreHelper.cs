@@ -8,6 +8,13 @@ namespace UnityEngine.Purchasing
     public static class DefaultStoreHelper
     {
         static string s_DefaultCustomStoreOverrideName = string.Empty;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_DefaultCustomStoreOverrideName = string.Empty;
+        }
+
         /// <summary>
         /// Override the default store name.
         /// </summary>
@@ -40,6 +47,12 @@ namespace UnityEngine.Purchasing
                     return AppleAppStore.Name;
                 case RuntimePlatform.Android:
                     return SelectedAndroidStoreHelper.GetSelectedAndroidStoreName();
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+                case RuntimePlatform.WindowsPlayer:
+                case RuntimePlatform.GameCoreXboxOne:
+                case RuntimePlatform.GameCoreXboxSeries:
+                    return XboxStore.Name;
+#endif
                 default:
                     return FakeAppStore.Name;
             }
@@ -59,6 +72,12 @@ namespace UnityEngine.Purchasing
                     return AppStore.AppleAppStore;
                 case RuntimePlatform.Android:
                     return SelectedAndroidStoreHelper.GetSelectedAndroidStore();
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+                case RuntimePlatform.WindowsPlayer:
+                case RuntimePlatform.GameCoreXboxOne:
+                case RuntimePlatform.GameCoreXboxSeries:
+                    return AppStore.XboxStore;
+#endif
                 default:
                     return AppStore.fake;
             }

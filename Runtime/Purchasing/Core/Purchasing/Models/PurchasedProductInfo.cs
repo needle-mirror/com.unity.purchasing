@@ -1,6 +1,9 @@
 #nullable enable
 
 using System;
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+using Unity.XGamingRuntime;
+#endif
 using UnityEngine;
 
 namespace UnityEngine.Purchasing
@@ -16,6 +19,17 @@ namespace UnityEngine.Purchasing
                 TryInitSubscriptionInfo(subscriptionInfoHelper);
             }
         }
+
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+        public PurchasedProductInfo(string productId, ProductType productType, XStoreProduct xStoreProduct)
+        {
+            this.productId = productId;
+            if (productType == ProductType.Subscription)
+            {
+                subscriptionInfo = new SubscriptionInfo(productId, xStoreProduct);
+            }
+        }
+#endif
 
         void TryInitSubscriptionInfo(SubscriptionInfoHelper subscriptionInfoHelper)
         {

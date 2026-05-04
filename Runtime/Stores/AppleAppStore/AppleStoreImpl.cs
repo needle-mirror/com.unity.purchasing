@@ -44,6 +44,7 @@ namespace UnityEngine.Purchasing
 
         static IUtil? s_Util;
         static AppleStoreImpl? s_Instance;
+        static Action? s_QuittingHandler;
 
         string? m_LastPurchaseTransactionId;
         string? appReceipt;
@@ -66,6 +67,18 @@ namespace UnityEngine.Purchasing
             m_FetchProductsService = fetchProductsService;
             m_TransactionLog = transactionLog;
         }
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            if (s_QuittingHandler != null)
+            {
+                Application.quitting -= s_QuittingHandler;
+                s_QuittingHandler = null;
+            }
+            s_Util = null;
+            s_Instance = null;
+        }
+
         public void SetNativeStore(INativeAppleStore apple)
         {
             base.SetNativeStore(apple);
@@ -73,7 +86,8 @@ namespace UnityEngine.Purchasing
             m_FetchProductsService.SetNativeStore(apple);
 
             //TODO: IAP-4089: Add test
-            Application.quitting += () => apple.SetUnityPurchasingCallback(null);
+            s_QuittingHandler = () => apple.SetUnityPurchasingCallback(null);
+            Application.quitting += s_QuittingHandler;
             if (StoreKitSelector.UseStoreKit1())
             {
                 apple.Sk1SetUnityPurchasingCallback(Sk1MessageCallback);
@@ -181,6 +195,7 @@ namespace UnityEngine.Purchasing
             var appleReceipt = GetAppleReceiptFromBase64String(receipt);
             if (appleReceipt == null || !HasInAppPurchaseReceipts(appleReceipt))
             {
+                PurchaseFetchCallback?.OnAllPurchasesRetrieved(new List<Order>());
                 return;
             }
 

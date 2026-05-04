@@ -15,6 +15,12 @@ namespace UnityEngine.Purchasing
             return s_Instance;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         public void SetServiceFactory(IStoreServiceFactory serviceFactory)
         {
             m_Factory = serviceFactory;

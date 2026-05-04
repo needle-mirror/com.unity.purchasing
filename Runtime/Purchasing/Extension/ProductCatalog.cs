@@ -672,6 +672,12 @@ namespace UnityEngine.Purchasing
 
         private static string[] LabelsWithSupportedPlatforms;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            LabelsWithSupportedPlatforms = null;
+        }
+
         /// <summary>
         /// For every enum value in TranslationLocale, build a string with Labels + GoogleLocales for
         /// each platform supported.
@@ -1237,6 +1243,12 @@ namespace UnityEngine.Purchasing
         public static void Initialize(IProductCatalogImpl productCatalogImpl)
         {
             instance = productCatalogImpl;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            instance = null;
         }
 
         /// <summary>

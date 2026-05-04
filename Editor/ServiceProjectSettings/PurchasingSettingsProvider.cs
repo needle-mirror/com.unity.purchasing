@@ -87,6 +87,9 @@ namespace UnityEditor.Purchasing
             {
                 rootVisualElement.Add(uiStateElement);
             }
+
+            var aiSkillsBlock = new AISkillsSettingsBlock();
+            rootVisualElement.Add(aiSkillsBlock.GetUIBlockElement());
         }
 
         public override void OnActivate(string searchContext, VisualElement rootElement)

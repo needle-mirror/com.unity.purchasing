@@ -14,7 +14,6 @@ namespace UnityEditor.Purchasing
             m_UIBlocks = new List<IPurchasingSettingsUIBlock>
             {
                 PlatformsAndStoresServiceSettingsBlock.CreateStateSpecificBlock(IsEnabled()),
-                new AnalyticsWarningSettingsBlock()
             };
         }
 

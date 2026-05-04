@@ -13,6 +13,13 @@ namespace UnityEngine.Purchasing
             return s_UnityPlayerClass;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_UnityPlayerClass?.Dispose();
+            s_UnityPlayerClass = null;
+        }
+
         internal static AndroidJavaObject GetCurrentActivity()
         {
             return GetUnityPlayerClass().GetStatic<AndroidJavaObject>("currentActivity");

@@ -28,6 +28,10 @@ namespace UnityEngine.Purchasing.Extension
             RuntimePlatform.WindowsPlayer,
         };
 
+        // s_PcControlledPlatforms is static readonly — its value never changes at runtime.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad() { }
+
         public T[] GetAnyComponentsOfType<T>() where T : class
         {
             var objects = m_MonoBehaviourUtils.GetGameObjects();

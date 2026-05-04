@@ -503,16 +503,20 @@ namespace UnityEditor.Purchasing
                     ? string.Empty
                     : " - " + Item.defaultDescription.Title);
 
-                if (string.IsNullOrEmpty(productLabel) || Item.id.Trim().Length == 0)
+                if (string.IsNullOrWhiteSpace(Item.id))
                 {
                     productLabel = "Product ID is Empty";
+                    GUIStyle errorLabelStyle = new GUIStyle(EditorStyles.boldLabel);
+                    errorLabelStyle.normal.textColor = Color.red;
+                    EditorGUILayout.LabelField(productLabel, errorLabelStyle);
                 }
                 else
                 {
+                    GUIStyle idLabelStyle = new GUIStyle(EditorStyles.boldLabel);
+                    EditorGUILayout.LabelField(productLabel, idLabelStyle);
                     idInvalid = false;
                 }
 
-                EditorGUILayout.LabelField(productLabel);
                 EditorGUILayout.Space();
 
                 var idRect = EditorGUILayout.GetControlRect(true);

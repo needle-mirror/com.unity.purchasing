@@ -24,10 +24,10 @@ static class BuildTargetGroupExtensions
         switch (value)
         {
             case BuildTargetGroup.Android:
-                {
-                    storesArray = ToAndroidAppStores(value);
-                    break;
-                }
+            {
+                storesArray = ToAndroidAppStores(value);
+                break;
+            }
 
             case BuildTargetGroup.iOS:
             case BuildTargetGroup.tvOS:
@@ -37,10 +37,24 @@ static class BuildTargetGroupExtensions
                 storesArray = new[] { AppStore.AppleAppStore };
                 break;
 
+            case BuildTargetGroup.GameCoreXboxOne:
+            case BuildTargetGroup.GameCoreXboxSeries:
+                storesArray = new[] { AppStore.XboxStore };
+                break;
+
             case BuildTargetGroup.Standalone:
                 if (Application.platform == RuntimePlatform.OSXEditor)
                 {
                     storesArray = new[] { AppStore.MacAppStore };
+                    break;
+                }
+                else if (Application.platform == RuntimePlatform.WindowsEditor)
+                {
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+                    storesArray = new[] { AppStore.XboxStore };
+#else
+                    storesArray = new[] { AppStore.fake };
+#endif
                     break;
                 }
                 goto default;
@@ -76,22 +90,23 @@ static class BuildTargetGroupExtensions
         switch (value)
         {
             case BuildTargetGroup.iOS:
-                {
-                    // TRICKY: Prefer an "iOS" string on BuildTarget, to avoid the unwanted "BuildTargetGroup.iPhone"
-                    return BuildTarget.iOS.ToString();
-                }
+            {
+                // TRICKY: Prefer an "iOS" string on BuildTarget, to avoid the unwanted "BuildTargetGroup.iPhone"
+                return BuildTarget.iOS.ToString();
+            }
             case BuildTargetGroup.Standalone:
+            {
+                switch (EditorUserBuildSettings.activeBuildTarget)
                 {
-                    switch (EditorUserBuildSettings.activeBuildTarget)
-                    {
-                        case BuildTarget.StandaloneOSX:
-                            return "macOS";
-                        case BuildTarget.StandaloneWindows:
-                            return "Windows";
-                        default:
-                            return BuildTargetGroup.Standalone.ToString();
-                    }
+                    case BuildTarget.StandaloneOSX:
+                        return "macOS";
+                    case BuildTarget.StandaloneWindows:
+                    case BuildTarget.StandaloneWindows64:
+                        return "Windows";
+                    default:
+                        return BuildTargetGroup.Standalone.ToString();
                 }
+            }
             default:
                 return value.ToString();
         }

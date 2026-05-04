@@ -13,7 +13,8 @@
         "Unity.Purchasing.TransactionVerifier",
         "Unity.Services.Core",
         "Unity.Services.Core.Internal",
-        "Unity.Services.Analytics"
+        "Unity.Services.Analytics",
+        "Unity.Microsoft.GDK"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -37,6 +38,11 @@
             "name": "com.unity.ads",
             "expression": "4.16.4",
             "define": "IAP_UNITY_ATTRIBUTION"
+        },
+        {
+            "name": "com.unity.microsoft.gdk",
+            "expression": "1.4.5",
+            "define": "IAP_GDK"
         }
     ],
     "noEngineReferences": false

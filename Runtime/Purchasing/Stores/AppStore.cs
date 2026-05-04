@@ -30,7 +30,12 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// A fake store used for testing and Play-In-Editor.
         /// </summary>
-        fake
+        fake,
+
+        /// <summary>
+        /// Xbox store for Xbox or Windows
+        /// </summary>
+        XboxStore
     }
 
     // Note these must be synchronized with constants in the AndroidStore enum.

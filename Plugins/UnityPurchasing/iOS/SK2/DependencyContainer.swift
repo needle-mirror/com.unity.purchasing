@@ -9,9 +9,9 @@ struct Dependency<T> {
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
-class DependencyContainer {
+class DependencyContainer: @unchecked Sendable {
     private var dependencies = [String: AnyObject]()
-    private static var shared = DependencyContainer()
+    private static let shared = DependencyContainer()
 
     static func register<T>(_ dependency: T) {
         shared.register(dependency)

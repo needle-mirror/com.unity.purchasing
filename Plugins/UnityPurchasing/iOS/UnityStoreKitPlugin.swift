@@ -14,18 +14,20 @@ Set NativeCallback delegate from C#. The function is declared in C# as: static e
  - Parameters:
         - callback: A callback delegate that the native plugin will call in C#
  */
-@_cdecl("unityPurchasing_SetNativeCallback")
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
+@_cdecl("unityPurchasing_SetNativeCallback")
 public func unityPurchasing_SetNativeCallback(_ callback: UnityPurchasingCallbackDelegateType) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     DependencyInjector.InitialiseWithCallback(callback)
 }
 
 /**
  Add TransactionObserver
  */
-@_cdecl("unityPurchasing_AddTransactionObserver")
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
+@_cdecl("unityPurchasing_AddTransactionObserver")
 public func unityPurchasing_AddTransactionObserver() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     StoreKitManager.instance.addTransactionObserver()
 }
 
@@ -35,6 +37,7 @@ public func unityPurchasing_AddTransactionObserver() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FetchProducts")
 public func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CChar>) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productJson = String(cString: productJsonCString)
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.fetchProducts(productJson: productJson)
@@ -47,6 +50,7 @@ public func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CC
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_PurchaseProduct")
 public func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<CChar>, optionsJsonCString: UnsafePointer<CChar>) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productJson = String(cString: productJsonCString)
     let optionsDict = dictionaryFromJSONCstr(optionsJsonCString) ?? [:]
     Task.detached(priority: .background, operation: {
@@ -56,11 +60,12 @@ public func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<
 
 /**
  Fetch receipt.
- - note The receipt isn’t necessary if you use AppTransaction to validate the app download, or Transaction to validate in-app purchases. Only use the receipt if your app uses the Original API for In-App Purchase, or needs the receipt to validate the app download because it can’t use AppTransaction.
+ - note The receipt isn't necessary if you use AppTransaction to validate the app download, or Transaction to validate in-app purchases. Only use the receipt if your app uses the Original API for In-App Purchase, or needs the receipt to validate the app download because it can't use AppTransaction.
  */
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FetchAppReceipt")
 public func unityPurchasing_FetchAppReceipt() -> UnsafeMutablePointer<CChar>? {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return nil }
     let receiptString = StoreKitManager.instance.fetchAppReceipt()
     return unityPurchasingMakeHeapAllocatedStringCopy(receiptString)
 }
@@ -96,6 +101,7 @@ public func unityPurchasing_DeallocateMemory(_ pointer: UnsafeMutablePointer<CCh
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FetchPurchases")
 public func unityPurchasing_FetchPurchases() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.fetchPurchasedProducts()
     })
@@ -104,6 +110,7 @@ public func unityPurchasing_FetchPurchases() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FetchTransactionForProductId")
 public func unityPurchasing_FetchTransactionForProductId(_ productIdCString: UnsafePointer<CChar>) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productIdCString)
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.fetchTransactions(for: [productId])
@@ -113,12 +120,14 @@ public func unityPurchasing_FetchTransactionForProductId(_ productIdCString: Uns
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_CanMakePayments")
 public func unityPurchasing_CanMakePayments() -> Bool {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return false }
     return StoreKitManager.instance.canMakePayment()
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_PresentCodeRedemptionSheet")
 public func unityPurchasing_PresentCodeRedemptionSheet() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.presentCodeRedemptionSheet()
     })
@@ -127,6 +136,7 @@ public func unityPurchasing_PresentCodeRedemptionSheet() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_RefreshAppReceipt")
 public func unityPurchasing_RefreshAppReceipt() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.refreshAppReceipt()
     })
@@ -135,6 +145,7 @@ public func unityPurchasing_RefreshAppReceipt() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FinishTransaction")
 public func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar>, logFinishTransaction: Bool) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     if let transactionIdUInt64 = UInt64(String(cString: transactionId))
     {
         Task.detached(priority: .background, operation: {
@@ -146,6 +157,7 @@ public func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_checkEntitlement")
 public func unityPurchasing_checkEntitlement(_ productJsonCString: UnsafePointer<CChar>) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productJsonCString)
     Task.detached(priority: .background, operation: {
         await StoreKitManager.instance.checkEntitlement(productId: productId)
@@ -155,6 +167,7 @@ public func unityPurchasing_checkEntitlement(_ productJsonCString: UnsafePointer
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_RestoreTransactions")
 public func unityPurchasing_RestoreTransactions() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.restoreTransactions()
     })
@@ -163,6 +176,7 @@ public func unityPurchasing_RestoreTransactions() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FetchStorePromotionOrder")
 public func unityPurchasing_FetchStorePromotionOrder() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.fetchStorePromotionOrder()
     })
@@ -171,6 +185,7 @@ public func unityPurchasing_FetchStorePromotionOrder() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_UpdateStorePromotionOrder")
 public func unityPurchasing_UpdateStorePromotionOrder(_ jsonCString: UnsafePointer<CChar>) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     do {
         let jsonString = String(cString: jsonCString)
 
@@ -186,6 +201,7 @@ public func unityPurchasing_UpdateStorePromotionOrder(_ jsonCString: UnsafePoint
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FetchStorePromotionVisibility")
 public func unityPurchasing_FetchStorePromotionVisibility(productIdCString: UnsafePointer<CChar>) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productIdCString)
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.fetchStorePromotionVisibility(productId: productId)
@@ -195,6 +211,7 @@ public func unityPurchasing_FetchStorePromotionVisibility(productIdCString: Unsa
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_UpdateStorePromotionVisibility")
 public func unityPurchasing_UpdateStorePromotionVisibility(productIdCString: UnsafePointer<CChar>, visibilityCString: UnsafePointer<CChar>) {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productIdCString)
     let visibility = String(cString: visibilityCString)
     Task.detached (priority: .background, operation : {
@@ -205,6 +222,7 @@ public func unityPurchasing_UpdateStorePromotionVisibility(productIdCString: Uns
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_InterceptPromotionalPurchases")
 public func unityPurchasing_InterceptPromotionalPurchases() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.interceptPromotionalPurchases()
     })
@@ -213,6 +231,7 @@ public func unityPurchasing_InterceptPromotionalPurchases() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_ContinuePromotionalPurchases")
 public func unityPurchasing_ContinuePromotionalPurchases() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.continuePromotionalPurchases()
     })
@@ -221,6 +240,7 @@ public func unityPurchasing_ContinuePromotionalPurchases() {
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_FetchStorefront")
 public func unityPurchasing_FetchStorefront() {
+    guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     Task.detached (priority: .background, operation : {
         await StoreKitManager.instance.fetchStorefront()
     })

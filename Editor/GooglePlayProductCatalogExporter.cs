@@ -25,6 +25,9 @@ namespace UnityEditor.Purchasing
 
         public bool SaveCompletePackage => false;
 
+        readonly string baseIdField = "id";
+        readonly string overrideFieldIdPrefix = "storeID.";
+
         public string Export(ProductCatalog catalog)
         {
             var fileContents = new StringBuilder();
@@ -135,29 +138,22 @@ namespace UnityEditor.Purchasing
         {
             var results = new ExporterValidationResults();
 
-            // Check for missing IDs
+            // Validate base ID
             if (string.IsNullOrEmpty(item.id))
             {
-                results.errors.Add("ID is required");
-            }
-
-            // A product ID must start with a lowercase letter or a number and must be composed
-            // of only lowercase letters (a-z), numbers (0-9), underscores (_), and periods (.)
-            var actualID = item.GetStoreID(GooglePlay.Name) ?? item.id;
-            var field = (actualID == item.GetStoreID(GooglePlay.Name)) ? "storeID." + GooglePlay.Name : "id";
-            if (Char.IsNumber(actualID[0]) || (Char.IsLower(actualID[0]) && Char.IsLetter(actualID[0])))
-            {
-                foreach (var c in actualID)
-                {
-                    if (c != '_' && c != '.' && !Char.IsNumber(c) && !(Char.IsLetter(c) && Char.IsLower(c)))
-                    {
-                        results.fieldErrors[field] = "Product ID \"" + actualID + "\" must contain only lowercase letters, numbers, underscores, and periods";
-                    }
-                }
+                results.fieldErrors[baseIdField] = "ID is required";
             }
             else
             {
-                results.fieldErrors[field] = "Product ID \"" + actualID + "\" must start with a lowercase letter or a number";
+                ValidateIdField(item.id, baseIdField, ref results);
+            }
+
+            // Validate ID override if necessary
+            var overrideFieldId = (overrideFieldIdPrefix + GooglePlay.Name);
+            var idOverride = item.GetStoreID(GooglePlay.Name);
+            if (!string.IsNullOrEmpty(idOverride))
+            {
+                ValidateIdField(idOverride, overrideFieldId, ref results);
             }
 
             ValidateDescription(item.defaultDescription, ref results, "defaultDescription");
@@ -173,6 +169,31 @@ namespace UnityEditor.Purchasing
             }
 
             return results;
+        }
+
+        private void ValidateIdField(string itemId, string fieldId, ref ExporterValidationResults results)
+        {
+            // Validate base ID
+            if (!string.IsNullOrEmpty(itemId))
+            {
+                // A product ID must start with a lowercase letter or a number and must be composed
+                // of only lowercase letters (a-z), numbers (0-9), underscores (_), and periods (.)
+                if ((Char.IsNumber(itemId[0]) || (Char.IsLower(itemId[0]))))
+                {
+                    foreach (var c in itemId)
+                    {
+                        if (c != '_' && c != '.' && !Char.IsNumber(c) && !(Char.IsLetter(c) && Char.IsLower(c)))
+                        {
+                            results.fieldErrors[fieldId] = "Product ID \"" + itemId + "\" must contain only lowercase letters, numbers, underscores, and periods";
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    results.fieldErrors[fieldId] = "Product ID \"" + itemId + "\" must start with a lowercase letter or a number";
+                }
+            }
         }
 
         private void ValidateDescription(LocalizedProductDescription desc, ref ExporterValidationResults results, string fieldPrefix = null)

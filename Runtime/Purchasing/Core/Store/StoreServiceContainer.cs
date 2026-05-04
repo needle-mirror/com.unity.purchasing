@@ -18,6 +18,12 @@ namespace UnityEngine.Purchasing
             return s_Instance ??= new StoreServiceContainer();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         internal IStoreService? FindService(string storeName)
         {
             return !m_InstantiatedServices.ContainsKey(storeName) ? null : m_InstantiatedServices[storeName];

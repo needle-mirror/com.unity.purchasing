@@ -1,7 +1,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml;
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+using Unity.XGamingRuntime;
+#endif
 using UnityEngine;
 using UnityEngine.Purchasing.Security;
 
@@ -130,6 +134,38 @@ namespace UnityEngine.Purchasing
                 m_IsIntroductoryPricePeriod = transactionSubscriptionInfo.OfferType == OfferType.Introductory ? Result.True : Result.False;
             }
         }
+
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+        // It is assumed that xStoreProduct is a subscription product here
+        public SubscriptionInfo(string productId, XStoreProduct xStoreProduct)
+        {
+            m_ProductId = productId;
+
+            var sku = xStoreProduct.Skus.FirstOrDefault(sku =>
+            {
+                return sku.IsInUserCollection;
+            });
+
+            if (sku != null)
+            {
+                var data = sku.CollectionData;
+                m_PurchaseDate = DateTimeOffset.FromUnixTimeSeconds(data.AcquiredDate).UtcDateTime;
+                m_SubscriptionExpireDate = DateTimeOffset.FromUnixTimeSeconds(data.EndDate).UtcDateTime;
+
+                // ULO-9663 Test GDK free trial subscriptions and add more context to SubscriptionInfo
+                m_IsFreeTrial = data.IsTrial ? Result.True : Result.False;
+            }
+
+            m_SubscriptionCancelDate = DateTime.MinValue;
+            m_SubscriptionRenewalProductId = string.Empty;
+            // m_SubscriptionPeriod is not provided
+            m_SupportsTimeBasedFields = true;
+
+            m_IsAutoRenewingProduct = false;
+            m_IsAutoRenewingSubscription = Result.Unsupported;
+            m_IsAutoRenewCancelled = Result.Unsupported;
+        }
+#endif
 
         private static (string introductoryPrice, TimeSpan introductoryPricePeriod, long introductoryPriceCycles) TryParseAppleIntroOffer(string introJson)
         {

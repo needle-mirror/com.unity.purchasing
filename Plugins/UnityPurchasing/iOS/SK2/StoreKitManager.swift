@@ -33,7 +33,7 @@ public protocol StoreKitManagerProtocol {
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
-public class StoreKitManager: StoreKitManagerProtocol {
+public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
     @Dependency private(set) var productUseCase: ProductUseCaseProtocol
     @Dependency private(set) var purchaseUseCase: PurchaseUseCaseProtocol
     @Dependency private(set) var transactionObserver: TransactionObserverUseCaseProtocol
@@ -42,10 +42,6 @@ public class StoreKitManager: StoreKitManagerProtocol {
 
     private(set) var products: [Product] = []
     var purchasedProducts: [Product] = []
-    var receiptData: Data?
-
-    // Dictionary to store products by ID for quick access
-    private var productsByID: [String: Product] = [:]
 
     // MARK: Singleton
     static let instance: StoreKitManager = {
@@ -137,23 +133,12 @@ public class StoreKitManager: StoreKitManagerProtocol {
             let response = await productUseCase.fetchProducts(for: storeSpecificIds)
             products = response.products
 
-            // Populate productsByID dictionary for quick access
-            updateProductsLookup(products)
-
             let jsonString = encodeToJSON(response)
             await storeKitCallback.callback(subject: "OnProductsFetched", payload: jsonString, entitlementStatus: 0)
         } catch {
             Task(priority: .background, operation: {
                 await self.storeKitCallback.callback(subject: "OnProductsFetchFailed", payload: "JSONDecoder An error occurred - \(error.localizedDescription)", entitlementStatus: 0)
             })
-        }
-    }
-
-    // Helper method to update products lookup dictionary
-    private func updateProductsLookup(_ products: [Product]) {
-        productsByID.removeAll()
-        for product in products {
-            productsByID[product.id] = product
         }
     }
 
@@ -196,11 +181,8 @@ public class StoreKitManager: StoreKitManagerProtocol {
         if let appStoreReceiptURL = Bundle.main.appStoreReceiptURL,
             FileManager.default.fileExists(atPath: appStoreReceiptURL.path) {
             do {
-                receiptData = try Data(contentsOf: appStoreReceiptURL, options: .alwaysMapped)
-                guard let receiptString = receiptData?.base64EncodedString(options: [.endLineWithCarriageReturn]) else {
-                    return ""
-                }
-                return receiptString
+                let receiptData = try Data(contentsOf: appStoreReceiptURL, options: .alwaysMapped)
+                return receiptData.base64EncodedString(options: [.endLineWithCarriageReturn])
             }
             catch {
                 printLog("Couldn't read receipt data with error: " + error.localizedDescription)
@@ -255,7 +237,13 @@ public class StoreKitManager: StoreKitManagerProtocol {
                     }
                 }
 
-                struct AssociatedKeys { static var delegateKey = 0 }
+                struct AssociatedKeys {
+                    #if swift(>=5.10)
+                    static nonisolated(unsafe) var delegateKey = 0
+                    #else
+                    static var delegateKey = 0
+                    #endif
+                }
 
                 enum ReceiptRefreshError: Error {
                     case requestThrottled

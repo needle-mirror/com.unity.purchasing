@@ -24,6 +24,12 @@ namespace UnityEngine.Purchasing
             return s_Instance;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         public void SubscribeToUpdatesAndGetCurrent(ICoreServicesEnvironmentObserver newObserver)
         {
             if (!m_Observers.Contains(newObserver))

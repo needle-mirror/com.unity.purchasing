@@ -13,11 +13,13 @@
     },
     "supportedPlatforms": [
       "Android",
-      "iOS"
+      "iOS",
+      "PC",
+      "Xbox"
     ],
-    "changelog": "### Fixed\n- Apple - Fixed an issue where `OnPurchaseFailed` would not trigger when re-purchasing non-consumables.\n- Apple - Fixed tvOS build failure caused by missing `tvOS 15.0` availability on the `SKPaymentTransactionObserver` extension in `PurchaseUseCase.swift`.\n- Apple - Fixed `GetProductDetails` returning an empty dictionary.\n- Google - Fixed an issue where `OnPurchasesFetchFailed` could be triggered when foregrounding the application while the store connection wasn't established.\n- Updated description of `OnPurchaseDeferred` in `IPurchaseService` and `StoreController`."
+    "changelog": "### Added\n- Added support for [disabled domain reload](https://docs.unity3d.com/2023.2/Documentation/Manual/DomainReloading.html) in the Editor.\n- Xbox - Added integration with Xbox Store for Xbox Series, Xbox One, and Windows. Get started with [Unity GDK integration](https://learn.microsoft.com/en-us/gaming/gdk/docs/gdk-dev/pc-dev/tutorials/get-started-with-unity-pc/gdk-unity-end-to-end-guide?view=gdk-2510).\n- Project Settings allow you to access IAP AI skill with migration capabilities from v4 to v5\n\n### Fixed\n- Apple - Fixed Swift 6 strict concurrency warnings that caused build failures when `SWIFT_STRICT_CONCURRENCY` is set to `complete`.\n- Apple - Fixed `RestorePurchases`/`FetchPurchases` callback never firing on StoreKit 1 when the user has no purchase history.\n- Apple - Fixed visionOS incorrectly defaulting to StoreKit 1 instead of StoreKit 2.\n  - To continue using the previous behaviour, set `StoreKitSelector.forceStoreKit1` to `true` on visionOS.\n- Fixed `IndexOutOfRangeException` happening in the catalog editor when exporting with an empty catalog item."
   },
-  "version": "5.2.1",
+  "version": "5.3.0",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -34,16 +36,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.2.1"
+    "com.unity.purchasing.tests": "5.3.0"
   },
   "upmCi": {
-    "footprint": "195307446e17e6fb9434ce65403d54a196f3bd12"
+    "footprint": "8722be98ce421ac5bf0c97e4fcf3d558562f7f79"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.2/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.3/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "52d51028c632deb429407ae5d1c577986281fd6e"
+    "revision": "d58ece5786d5f2849a44978e60a1abefb4c02be0"
   },
   "samples": [
     {

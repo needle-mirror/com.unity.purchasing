@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Purchasing;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Purchasing
@@ -10,9 +11,10 @@ namespace UnityEditor.Purchasing
     {
         static readonly List<string> k_StoreNames = new List<string>()
         {
-            "Google Play",
-            "Apple App Store",
-            "Mac App Store"
+            GooglePlay.DisplayName,
+            AppleAppStore.DisplayName,
+            MacAppStore.DisplayName,
+            XboxStore.DisplayName
         };
 
         static readonly string k_TagClass = "platform-tag";

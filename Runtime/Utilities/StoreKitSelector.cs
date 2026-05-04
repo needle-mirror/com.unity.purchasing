@@ -54,7 +54,7 @@ namespace Purchasing.Utilities
             var t = int.TryParse(majorStr, out var major) && major < 15;
             return t;
 #elif UNITY_VISIONOS
-            return true;
+            return false;
 #else
             var major = ExtractFirstInteger(SystemInfo.operatingSystem);
             if (major >= 0)

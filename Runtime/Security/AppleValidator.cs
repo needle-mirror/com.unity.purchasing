@@ -51,6 +51,15 @@ namespace UnityEngine.Purchasing.Security
     {
         // Cache the AppleReceipt object, PKCS7, and raw data for the most recently parsed data.
         static Dictionary<string, object> _mostRecentReceiptData = new Dictionary<string, object>();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            if (_mostRecentReceiptData != null)
+            {
+                _mostRecentReceiptData.Clear();
+            }
+        }
         const string k_AppleReceiptKey = "k_AppleReceiptKey";
         const string k_PKCS7Key = "k_PKCS7Key";
         const string k_ReceiptBytesKey = "k_ReceiptBytesKey";

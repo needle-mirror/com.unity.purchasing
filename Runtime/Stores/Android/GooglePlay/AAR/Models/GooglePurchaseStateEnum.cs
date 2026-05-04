@@ -34,5 +34,12 @@ namespace UnityEngine.Purchasing.Models
             }
             return s_Pending.Value;
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Purchased = null;
+            s_Pending = null;
+        }
     }
 }

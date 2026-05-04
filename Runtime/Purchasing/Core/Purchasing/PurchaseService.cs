@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
         bool m_ProcessFetchedPendingOrders = true;
         // TODO: ULO-9339
         bool m_IsBuiltinStore;
-        readonly IReadOnlyList<string> BuiltinStores = new[] { GooglePlay.Name, AppleAppStore.Name, MacAppStore.Name, FakeAppStore.Name };
+        readonly IReadOnlyList<string> BuiltinStores = new[] { GooglePlay.Name, AppleAppStore.Name, MacAppStore.Name, XboxStore.Name, FakeAppStore.Name };
         readonly HashSet<string> m_PurchasesProcessedInSession = new();
 
         bool m_AnyPurchaseStarted = false;

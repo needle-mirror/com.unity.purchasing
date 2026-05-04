@@ -21,6 +21,12 @@ namespace UnityEngine.Purchasing
             return s_Instance ??= new StoreManager();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         public IStoreWrapper GetStore(string name)
         {
             if (!m_InstantiatedStores.ContainsKey(name))

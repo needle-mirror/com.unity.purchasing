@@ -20,5 +20,11 @@ namespace UnityEngine.Purchasing.Utilities
 
             return s_UnityUtilInstance;
         }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_UnityUtilInstance = null;
+        }
     }
 }

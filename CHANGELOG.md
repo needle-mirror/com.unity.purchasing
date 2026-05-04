@@ -1,4 +1,16 @@
 # Changelog
+## [5.3.0] - 2026-05-04
+### Added
+- Added support for [disabled domain reload](https://docs.unity3d.com/2023.2/Documentation/Manual/DomainReloading.html) in the Editor.
+- Xbox - Added integration with Xbox Store for Xbox Series, Xbox One, and Windows. Get started with [Unity GDK integration](https://learn.microsoft.com/en-us/gaming/gdk/docs/gdk-dev/pc-dev/tutorials/get-started-with-unity-pc/gdk-unity-end-to-end-guide?view=gdk-2510).
+- Project Settings allow you to access IAP AI skill with migration capabilities from v4 to v5
+
+### Fixed
+- Apple - Fixed Swift 6 strict concurrency warnings that caused build failures when `SWIFT_STRICT_CONCURRENCY` is set to `complete`.
+- Apple - Fixed `RestorePurchases`/`FetchPurchases` callback never firing on StoreKit 1 when the user has no purchase history.
+- Apple - Fixed visionOS incorrectly defaulting to StoreKit 1 instead of StoreKit 2.
+  - To continue using the previous behaviour, set `StoreKitSelector.forceStoreKit1` to `true` on visionOS.
+- Fixed `IndexOutOfRangeException` happening in the catalog editor when exporting with an empty catalog item.
 
 ## [5.2.1] - 2026-03-27
 ### Fixed

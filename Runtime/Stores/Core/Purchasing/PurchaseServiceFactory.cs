@@ -25,6 +25,12 @@ namespace UnityEngine.Purchasing
             return s_Instance ??= new PurchaseServiceFactory();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         PurchaseServiceFactory()
         {
             m_PurchaseServiceInstantiationByName.Add(GooglePlay.Name, CreateGooglePurchaseService);

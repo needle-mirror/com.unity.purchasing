@@ -53,6 +53,13 @@ namespace UnityEngine.Purchasing
         [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
         public static bool initializationComplete;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+            initializationComplete = false;
+        }
+
         [RuntimeInitializeOnLoadMethod]
         static async void InitializeCodelessPurchasingOnLoad()
         {

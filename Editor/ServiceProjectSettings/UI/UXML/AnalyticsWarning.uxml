@@ -1,9 +1,0 @@
-<UXML xmlns="UnityEngine.UIElements">
-    <VisualElement name="AnalyticsWarningBlock" class="project-settings-title-container">
-        <VisualElement class="warning-label-container">
-            <Label text="Warning: Do not disable the Legacy Analytics service if you intend to use it for revenue and transaction\n tracking. After June 22nd, 2022, the opt-in period for Legacy Analytics will be closed. After this date,\n any project that has disabled it will no longer be able to re-enable the Legacy Analytics service"
-                   class="note-tag"/>
-        </VisualElement>
-    </VisualElement>
-    <VisualElement class="separator"/>
-</UXML>

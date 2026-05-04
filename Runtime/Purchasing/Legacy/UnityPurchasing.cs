@@ -15,7 +15,17 @@ namespace UnityEngine.Purchasing
         internal static bool shouldFetchProductsAtInit = true;
         static bool isInitialized = false;
 
-        internal static PurchasingManager m_PurchasingManager= new PurchasingManager();
+        internal static PurchasingManager m_PurchasingManager;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            m_ConfigurationBuilder = null;
+            m_StoreListener = null;
+            shouldFetchProductsAtInit = true;
+            isInitialized = false;
+            m_PurchasingManager = null;
+        }
         /// <summary>
         /// The main initialization call for Unity Purchasing.
         /// </summary>
@@ -23,6 +33,7 @@ namespace UnityEngine.Purchasing
         /// <param name="configurationBuilder"> The <c>ConfigurationBuilder</c> containing the product definitions mapped to stores </param>
         public static void Initialize(IStoreListener storeListener, ConfigurationBuilder configurationBuilder)
         {
+            m_PurchasingManager = new PurchasingManager();
             m_StoreListener = storeListener;
             m_ConfigurationBuilder = configurationBuilder;
             ConnectToStoreAndFetchProducts();

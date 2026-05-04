@@ -50,12 +50,21 @@ namespace UnityEngine.Purchasing
             return s_Instance;
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         void RegisterBaseStores()
         {
             RegisterStore(AppleAppStore.Name, InstantiateAppleStore);
             RegisterStore(FakeAppStore.Name, InstantiateFakeStore);
             RegisterStore(MacAppStore.Name, InstantiateMacAppStore);
             RegisterStore(GooglePlay.Name, InstantiateGooglePlayStore);
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+            RegisterStore(XboxStore.Name, InstantiateXboxStore);
+#endif
         }
 
         public void RegisterStore(string storeName, Func<IStoreWrapper> function)
@@ -231,5 +240,17 @@ namespace UnityEngine.Purchasing
             di.AddService<GooglePurchasesUpdatedHandler>();
             di.AddService<MetricizedGooglePlayStoreService>();
         }
+
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+        IStoreWrapper InstantiateXboxStore()
+        {
+            var di = CreateBaseDiService();
+            di.AddService<XboxFetchProductsService>();
+            di.AddService<XboxQueryEntitlementsService>();
+            di.AddService<XboxPurchaseService>();
+            di.AddService<XboxStoreImpl>();
+            return CreateStoreWrapper(XboxStore.Name, di);
+        }
+#endif
     }
 }

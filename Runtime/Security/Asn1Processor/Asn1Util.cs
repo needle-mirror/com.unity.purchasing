@@ -28,6 +28,7 @@ using System;
 using System.IO;
 using System.Text;
 using Microsoft.Win32;
+using UnityEngine;
 
 namespace LipingShare.LCLib.Asn1Processor
 {
@@ -188,8 +189,13 @@ namespace LipingShare.LCLib.Asn1Processor
         /// <summary>
         /// Constant hex digits array.
         /// </summary>
-        static char[] hexDigits = { '0', '1', '2', '3', '4', '5', '6', '7',
+        static readonly char[] hexDigits = { '0', '1', '2', '3', '4', '5', '6', '7',
                                     '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
+
+        // hexDigits is static readonly — its value never changes at runtime.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad() { }
 
         /// <summary>
         /// Convert a byte array to hex string.

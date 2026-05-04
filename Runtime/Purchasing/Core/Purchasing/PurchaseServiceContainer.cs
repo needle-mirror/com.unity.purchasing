@@ -18,6 +18,12 @@ namespace UnityEngine.Purchasing
             return s_Instance ??= new PurchaseServiceContainer();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         internal IPurchaseService? FindService(string storeName)
         {
             if (!m_InstantiatedServices.ContainsKey(storeName))

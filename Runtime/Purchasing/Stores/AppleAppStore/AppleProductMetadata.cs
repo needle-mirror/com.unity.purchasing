@@ -103,7 +103,6 @@ namespace UnityEngine.Purchasing
         public string id;
     }
 
-    [Serializable]
     internal struct AppleIntroOfferDTO
     {
         public string introductoryPrice;

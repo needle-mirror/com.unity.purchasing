@@ -20,6 +20,12 @@ namespace UnityEngine.Purchasing
             return s_Instance ??= new ProductServiceFactory();
         }
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         ProductServiceFactory()
         {
             m_ProductServiceInstantiationByName.Add(AppleAppStore.Name, CreateAppleProductService);

@@ -11,6 +11,7 @@ namespace UnityEditor.Purchasing
             {AppStore.AppleAppStore, AppleAppStore.DisplayName},
             {AppStore.GooglePlay, GooglePlay.DisplayName},
             {AppStore.MacAppStore, MacAppStore.DisplayName},
+            {AppStore.XboxStore, XboxStore.DisplayName},
             {AppStore.fake, FakeAppStore.DisplayName}
         };
 

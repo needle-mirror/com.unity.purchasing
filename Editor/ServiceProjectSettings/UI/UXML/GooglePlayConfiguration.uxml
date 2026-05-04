@@ -35,9 +35,7 @@
                     <Label text="There was an error retrieving the key from the backend. Please try again later." class="warning-message"/>
                 </VisualElement>
                 <VisualElement name="error-fetch-key">
-                    <Label text="There seems to be no existing key set on the backend." class="warning-message"/>
-                    <VisualElement class="warning-info-icon2x"/>
-                    <Label text="Please verify the key in your Dashboard's Project Settings via the link above. Under In-App Purchasing Settings, set the Google License Key for this application, in order to ensure revenue numbers reflect verified payments for Google." class="warning-message"/>
+                    <HelpBox text="No Google License Key found in the backend. Set it in the Unity Dashboard under Project Settings to ensure Google Play revenue is verified." message-type="Warning" />
                 </VisualElement>
             </VisualElement>
         </VisualElement>
