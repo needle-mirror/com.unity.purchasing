@@ -9,6 +9,7 @@ namespace UnityEditor.Purchasing
         {
             m_UIBlocks.Add(new GooglePlayConfigurationSettingsBlock());
             m_UIBlocks.Add(new AppleConfigurationSettingsBlock());
+            m_UIBlocks.Add(new XboxConfigurationSettingsBlock());
             m_UIBlocks.Add(new IapCatalogServiceSettingsBlock());
 
             ModifyActionForEvent(false, HandleDisabling);

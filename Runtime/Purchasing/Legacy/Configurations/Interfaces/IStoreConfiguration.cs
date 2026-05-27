@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing.Extension
     /// <summary>
     /// Common interface for all extended configuration.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public interface IStoreConfiguration
     {
     }

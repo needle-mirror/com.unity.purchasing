@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Access GooglePlay store specific functionality.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public interface IGooglePlayStoreExtensions : IStoreExtension
     {
         /// <summary>
@@ -67,7 +67,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the purchase state when successful, otherwise an exception is thrown.</returns>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         GooglePurchaseState GetPurchaseState(Product product);
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the obfuscated account id if it exists, otherwise null is returned.</returns>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         string GetObfuscatedAccountId(Product product);
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Product</param>
         /// <returns>Returns the obfuscated profile id if it exists, otherwise null is returned.</returns>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         string GetObfuscatedProfileId(Product product);
     }
 }

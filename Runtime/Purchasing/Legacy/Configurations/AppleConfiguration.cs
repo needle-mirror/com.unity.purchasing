@@ -4,9 +4,15 @@ using System.Linq;
 
 namespace UnityEngine.Purchasing
 {
+// Obsolete: IAppleConfiguration
+#pragma warning disable 618, 612
     class AppleConfiguration: IAppleConfiguration
+#pragma warning restore 618, 612
     {
+// Obsolete: IAppleStoreExtendedPurchaseService.appReceipt
+#pragma warning disable 618, 612
         public string appReceipt => UnityIAPServices.DefaultPurchase().Apple?.appReceipt;
+#pragma warning restore 618, 612
 
         public bool canMakePayments => UnityIAPServices.DefaultStore().Apple?.canMakePayments != null && UnityIAPServices.DefaultStore().Apple!.canMakePayments;
 

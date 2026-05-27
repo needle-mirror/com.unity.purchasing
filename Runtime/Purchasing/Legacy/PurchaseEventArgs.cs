@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// A purchase that succeeded, including the purchased product
     /// along with its purchase receipt.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class PurchaseEventArgs
     {
         internal PurchaseEventArgs(Product purchasedProduct)

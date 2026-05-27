@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing
     /// Provides helper methods to retrieve products by
     /// store independent/store specific id.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class ProductCollection
     {
         private Dictionary<string, Product> m_IdToProduct;

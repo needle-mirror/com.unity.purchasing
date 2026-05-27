@@ -75,9 +75,13 @@ namespace UnityEngine.Purchasing
 
         static Product CompleteProductInfoWithPurchase(Product product, IGooglePurchase purchase)
         {
-            return new Product(product.definition, product.metadata, purchase.receipt)
+            return new Product(product.definition, product.metadata)
             {
+// Obsolete: Product.receipt, Product.transactionID
+#pragma warning disable 618, 612
+                receipt = purchase.receipt,
                 transactionID = purchase.purchaseToken,
+#pragma warning restore 618, 612
             };
         }
 
@@ -139,8 +143,11 @@ namespace UnityEngine.Purchasing
             var product = m_ProductCache?.Find(sku);
             if (product != null)
             {
+// Obsolete: Product.receipt, Product.transactionID
+#pragma warning disable 618, 612
                 product.receipt = deferredPurchase.receipt;
                 product.transactionID = deferredPurchase.purchaseToken;
+#pragma warning restore 618, 612
             }
         }
     }

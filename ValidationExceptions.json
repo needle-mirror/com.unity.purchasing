@@ -3,7 +3,17 @@
 		{
 			"ValidationTest": "Manifest Validation",
 			"ExceptionMessage": "In package.json, \"displayName\" cannot have any special characters. Read more about this error and potential solutions at https://docs.unity3d.com/Packages/com.unity.package-validation-suite@latest/index.html?preview=1&subfolder=/manual/manifest_validation_error.html#displayName-cannot-have-any-special-characters",
-			"PackageVersion": "5.3.0"
+			"PackageVersion": "5.3.1"
+		},
+		{
+			"ValidationTest": "API Validation",
+			"ExceptionMessage": "New assembly \"Unity.Purchasing.Stores.XboxCloudServices\" may only be added in a new minor or major version.",
+			"PackageVersion": "5.3.1"
+		},
+		{
+			"ValidationTest": "API Validation",
+			"ExceptionMessage": "Additions require a new minor or major version.",
+			"PackageVersion": "5.3.1"
 		}
 	],
 	"WarningExceptions": []

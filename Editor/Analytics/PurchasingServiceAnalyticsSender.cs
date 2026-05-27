@@ -40,7 +40,10 @@ namespace UnityEditor.Purchasing
 
         static void SendEventInternal(EditorAnalyticsDataSignature eventSignature, object eventStruct)
         {
+// ULO-10313 Obsolete: EditorAnalytics.SendEventWithLimit
+#pragma warning disable 618, 612
             EditorAnalytics.SendEventWithLimit(eventSignature.eventName, eventStruct, eventSignature.version);
+#pragma warning restore 618, 612
         }
     }
 }

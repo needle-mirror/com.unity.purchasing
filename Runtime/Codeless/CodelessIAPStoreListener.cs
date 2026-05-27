@@ -32,17 +32,17 @@ namespace UnityEngine.Purchasing
         /// For advanced scripted IAP actions, use this session's <typeparamref name="IStoreController"/> after initialization.
         /// </summary>
         /// <seealso cref="StoreController"/>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         protected IStoreController controller = new PurchasingManager();
 
         /// <summary>
         /// For advanced scripted store-specific IAP actions, use this session's <typeparamref name="IExtensionProvider"/> after initialization.
         /// </summary>
         /// <seealso cref="ExtensionProvider"/>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         protected IExtensionProvider extensions = null!;
 
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         ConfigurationBuilder m_Builder = null!;
 
         bool m_InitializationComplete;
@@ -50,14 +50,17 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Allows outside sources to know whether the successful initialization has completed.
         /// </summary>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         public static bool initializationComplete;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStaticsOnLoad()
         {
             s_Instance = null;
+// Obsolete: CodelessIAPStoreListener.initializationComplete
+#pragma warning disable 618, 612
             initializationComplete = false;
+#pragma warning restore 618, 612
         }
 
         [RuntimeInitializeOnLoadMethod]
@@ -77,7 +80,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <typeparam name="T">A subclass of <typeparamref name="IStoreConfiguration"/> such as <typeparamref name="IAppleConfiguration"/></typeparam>
         /// <returns>Returns the store configuration.</returns>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         public T GetStoreConfiguration<T>() where T : IStoreConfiguration
         {
             return m_Builder.Configure<T>();
@@ -88,7 +91,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <typeparam name="T">A subclass of <typeparamref name="IStoreExtension"/> such as <typeparamref name="IAppleExtensions"/></typeparam>
         /// <returns>Returns the store extension.</returns>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         public T GetStoreExtensions<T>() where T : IStoreExtension
         {
             return extensions.GetExtension<T>();
@@ -126,8 +129,11 @@ namespace UnityEngine.Purchasing
 
         async Task InitializePurchasing()
         {
+// Obsolete: CodelessIAPStoreListener.m_Builder, ConfigurationBuilder, CodelessIAPStoreListener.extensions
+#pragma warning disable 618, 612
             m_Builder = new ConfigurationBuilder();
             extensions = new ExtensionProvider();
+#pragma warning restore 618, 612
             CreateServices();
             InitCatalog();
 
@@ -196,7 +202,10 @@ namespace UnityEngine.Purchasing
 
             ChangeProductServiceCallbacks();
             m_InitializationComplete = true;
+// Obsolete: CodelessIAPStoreListener.initializationComplete
+#pragma warning disable 618, 612
             initializationComplete = true;
+#pragma warning restore 618, 612
             HandleOnInitForAllButtons();
             InvokeOnProductsFetched(products);
         }
@@ -542,7 +551,7 @@ namespace UnityEngine.Purchasing
         /// initialization.
         /// </summary>
         /// <seealso cref="StoreController"/>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         public IStoreController StoreController => controller;
 
         /// <summary>

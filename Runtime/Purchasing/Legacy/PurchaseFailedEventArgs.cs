@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// A purchase that failed including the product under purchase,
     /// the reason for the failure and any additional information.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class PurchaseFailedEventArgs
     {
         internal PurchaseFailedEventArgs(Product purchasedProduct, PurchaseFailureReason reason, string message)

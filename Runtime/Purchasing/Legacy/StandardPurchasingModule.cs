@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// Module for the standard stores covered by Unity;
     /// Apple App store, Google Play and more.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class StandardPurchasingModule
     {
         static StandardPurchasingModule instance = null;
@@ -53,7 +53,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool useFakeStoreAlways { get; set; }
 
-        internal readonly string k_Version = "5.3.0"; // NOTE: Changed using UpdatePackageVersion.sh before pack step.
+        internal readonly string k_Version = "5.3.1"; // NOTE: Changed using UpdatePackageVersion.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>

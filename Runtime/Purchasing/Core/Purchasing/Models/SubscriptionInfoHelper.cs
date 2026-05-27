@@ -59,9 +59,13 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Subscription to be inspected</param>
         /// <param name="introJson">From <typeparamref name="IAppleStoreExtendedProductService.GetIntroductoryPriceDictionary"/></param>
+        // TODO ULO-10516 Mark this constructor as obsolete/deprecated. It relies on the obsolete Product.receipt API.
         public SubscriptionInfoHelper(Product product, string introJson)
         {
+// Obsolete: Product.receipt
+#pragma warning disable 618, 612
             m_Receipt = product.receipt;
+#pragma warning restore 618, 612
             m_ProductId = product.definition.storeSpecificId;
             m_IntroJson = introJson;
         }

@@ -125,8 +125,5 @@ namespace UnityEngine.Purchasing.Extension
         {
             return potentialDescendant.IsSubclassOf(potentialBase) || potentialDescendant == potentialBase;
         }
-
-        internal const string ObsoleteUpgradeToIAPV5Message =
-            "This API is deprecated. Please upgrade to the new APIs introduced in IAP v5. For more information, visit the IAP manual: https://docs.unity.com/ugs/en-us/manual/iap/manual/upgrade-to-iap-v5";
     }
 }

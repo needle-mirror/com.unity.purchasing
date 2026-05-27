@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// The core abstract implementation for Unity Purchasing.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class UnityPurchasing
     {
         internal static ConfigurationBuilder m_ConfigurationBuilder;

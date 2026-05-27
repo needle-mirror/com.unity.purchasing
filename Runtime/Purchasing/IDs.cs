@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
     ///
     /// The name is deliberately terse for use as a collection initializer.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class IDs : IEnumerable<KeyValuePair<string, string>>
     {
         private readonly Dictionary<string, string> m_Dic = new Dictionary<string, string>();

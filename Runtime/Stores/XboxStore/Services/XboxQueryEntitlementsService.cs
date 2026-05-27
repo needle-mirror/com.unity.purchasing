@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using Unity.XGamingRuntime;
-using UnityEngine.Purchasing.Extension;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing

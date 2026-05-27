@@ -6,7 +6,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Implemented by Application developers using Unity Purchasing.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public interface IStoreListener
     {
         /// <summary>

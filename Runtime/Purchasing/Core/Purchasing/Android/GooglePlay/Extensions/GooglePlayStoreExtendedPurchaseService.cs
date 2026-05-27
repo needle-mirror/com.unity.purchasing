@@ -54,10 +54,13 @@ namespace UnityEngine.Purchasing
 
         public void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct)
         {
-            UpgradeDowngradeSubscription(oldProduct, newProduct, GooglePlayProrationMode.ImmediateWithoutProration);
+            UpgradeDowngradeSubscription(oldProduct, newProduct, GooglePlayReplacementMode.WithoutProration);
         }
 
+// Obsolete: GooglePlayProrationMode
+#pragma warning disable 618, 612
         public void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayProrationMode desiredProrationMode)
+#pragma warning restore 618, 612
         {
             UpgradeDowngradeSubscription(oldProduct, newProduct, (GooglePlayReplacementMode)desiredProrationMode);
         }
@@ -68,7 +71,11 @@ namespace UnityEngine.Purchasing
             {
                 var purchaseService = UnityIAPServices.Purchase(GooglePlay.Name);
                 var orders = purchaseService.GetPurchases();
+                //TODO: Eventually remove the oldProduct.transactionID usage — likely no benefit, but kept for now just in case.
+// Obsolete: Product.transactionID
+#pragma warning disable 618, 612
                 var order = orders.First(order => order.CartOrdered.Items().Contains(oldProduct)) ?? new ConfirmedOrder(new Cart(new CartItem(oldProduct)), new OrderInfo("", oldProduct.transactionID, ""));
+#pragma warning restore 618, 612
                 UpgradeDowngradeSubscription(order, newProduct, desiredReplacementMode);
             }
             catch (Exception e)

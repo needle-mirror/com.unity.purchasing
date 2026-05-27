@@ -107,7 +107,8 @@ namespace UnityEngine.Purchasing.Utils
             // TODO: IAP-2833 - Clean for one time vs subscription
             var productId = productDetails.Call<string>("getProductId");
             using var oneTimePurchaseOffer = productDetails.Call<AndroidJavaObject>("getOneTimePurchaseOfferDetails");
-            using var subscriptionOffer = productDetails.Call<AndroidJavaObject>("getSubscriptionOfferDetails").Enumerate().FirstOrDefault();
+            using var subscriptionOfferDetailsList = productDetails.Call<AndroidJavaObject>("getSubscriptionOfferDetails");
+            using var subscriptionOffer = subscriptionOfferDetailsList?.Enumerate().FirstOrDefault();
             using var subscriptionPricingPhases = subscriptionOffer?.Call<AndroidJavaObject>("getPricingPhases");
             using var subscriptionPricingPhasesList = subscriptionPricingPhases?.Call<AndroidJavaObject>("getPricingPhaseList");
             var subscriptionPricingPhasesListEnum = subscriptionPricingPhasesList?.Enumerate().ToList();

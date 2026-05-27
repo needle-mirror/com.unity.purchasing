@@ -3,11 +3,17 @@ using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
 {
+// Obsolete: IAppleExtensions
+#pragma warning disable 618, 612
     class AppleExtensions : IAppleExtensions
+#pragma warning restore 618, 612
     {
         public void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)
         {
+// Obsolete: IAppleStoreExtendedPurchaseService.RefreshAppReceipt(Action<string>, Action<string>)
+#pragma warning disable 618, 612
             UnityIAPServices.DefaultPurchase().Apple?.RefreshAppReceipt(successCallback, errorCallback);
+#pragma warning restore 618, 612
         }
 
         public void RestoreTransactions(Action<bool, string> callback)
@@ -37,7 +43,10 @@ namespace UnityEngine.Purchasing
 
         public string GetTransactionReceiptForProduct(Product _)
         {
+// Obsolete: IAppleStoreExtendedPurchaseService.appReceipt
+#pragma warning disable 618, 612
             return UnityIAPServices.DefaultPurchase().Apple?.appReceipt;
+#pragma warning restore 618, 612
         }
 
         public void SetApplicationUsername(string applicationUsername)

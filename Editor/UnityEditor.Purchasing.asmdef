@@ -7,6 +7,7 @@
         "Unity.Purchasing.SecurityCore",
         "Unity.Purchasing.SecurityStub",
         "Unity.Purchasing.Stores",
+        "Unity.Purchasing.Stores.XboxCloudServices",
         "Unity.Purchasing.Codeless",
         "Unity.Purchasing.Utilities",
         "Unity.Services.Core.Editor"
@@ -25,6 +26,16 @@
             "name": "com.unity.services.core",
             "expression": "1.0.0-pre",
             "define": "SERVICES_SDK_CORE_ENABLED"
+        },
+        {
+            "name": "com.unity.microsoft.gdk",
+            "expression": "1.4.5",
+            "define": "IAP_GDK"
+        },
+        {
+            "name": "com.unity.services.cloudcode",
+            "expression": "2.3.0",
+            "define": "IAP_CLOUDCODE_ENABLED"
         }
     ],
     "noEngineReferences": false

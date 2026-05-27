@@ -11,7 +11,10 @@ namespace UnityEditor.Purchasing
 
         internal static AnalyticsResult RegisterEvent(EditorAnalyticsDataSignature eventSig)
         {
+// ULO-10313 Obsolete: EditorAnalytics.RegisterEventWithLimit
+#pragma warning disable 618, 612
             return EditorAnalytics.RegisterEventWithLimit(eventSig.eventName, k_MaxEventsPerHour, k_MaxItems, k_VendorKey, eventSig.version);
+#pragma warning restore 618, 612
         }
     }
 }

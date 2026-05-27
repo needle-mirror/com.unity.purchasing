@@ -38,14 +38,14 @@ namespace UnityEngine.Purchasing
             return GetCachedQueriedProductDetails(products.Select(product => product.storeSpecificId).ToList());
         }
 
-        bool Contains(string productId)
+        public bool ContainsSku(string sku)
         {
-            return m_CachedQueriedProductDetails.ContainsKey(productId);
+            return !string.IsNullOrEmpty(sku) && m_CachedQueriedProductDetails.ContainsKey(sku);
         }
 
         public bool Contains(ProductDefinition products)
         {
-            return Contains(products.storeSpecificId);
+            return products != null && ContainsSku(products.storeSpecificId);
         }
 
         public void AddCachedQueriedProductDetails(IEnumerable<AndroidJavaObject> queriedProducts)

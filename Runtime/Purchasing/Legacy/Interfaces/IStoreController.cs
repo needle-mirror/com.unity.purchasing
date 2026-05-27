@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Used by Applications to control Unity Purchasing.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public interface IStoreController
     {
         /// <summary>

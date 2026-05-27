@@ -201,7 +201,10 @@ namespace UnityEngine.Purchasing
         public void OnProductsFetched(List<Product> products)
         {
             onProductsFetched.Invoke(products);
+// Obsolete: IAPListener.onProductsFetchedLegacy, ProductCollection
+#pragma warning disable 618, 612
             onProductsFetchedLegacy.Invoke(new ProductCollection());
+#pragma warning restore 618, 612
         }
 
         /// <summary>
@@ -238,7 +241,10 @@ namespace UnityEngine.Purchasing
         public void OnOrderPending(PendingOrder pendingOrder)
         {
             onOrderPending.Invoke(pendingOrder);
+// Obsolete: IAPListener.onPurchaseCompleteLegacy
+#pragma warning disable 618, 612
             onPurchaseCompleteLegacy.Invoke(pendingOrder.CartOrdered.Items().FirstOrDefault()?.Product);
+#pragma warning restore 618, 612
         }
 
         /// <summary>
@@ -259,8 +265,11 @@ namespace UnityEngine.Purchasing
             onPurchaseFailed.Invoke(failedOrder);
 
             var product = failedOrder.CartOrdered.Items().FirstOrDefault()?.Product;
+// Obsolete: IAPListener.onPurchaseFailedLegacy, IAPListener.onPurchaseDetailedFailedLegacy
+#pragma warning disable 618, 612
             onPurchaseFailedLegacy.Invoke(product, failedOrder.FailureReason);
             onPurchaseDetailedFailedLegacy.Invoke(product, new PurchaseFailureDescription(failedOrder.CartOrdered.Items().FirstOrDefault(), failedOrder.FailureReason, failedOrder.Details));
+#pragma warning restore 618, 612
         }
 
         /// <summary>

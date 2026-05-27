@@ -4,7 +4,10 @@ using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
+// Obsolete: IGooglePlayConfiguration
+#pragma warning disable 618, 612
     class GooglePlayConfiguration: IGooglePlayConfiguration
+#pragma warning restore 618, 612
     {
         public void SetServiceDisconnectAtInitializeListener(Action action)
         {
@@ -54,10 +57,13 @@ namespace UnityEngine.Purchasing
 
         public void SetFetchPurchasesAtInitialize(bool enable)
         {
+// Obsolete: UnityPurchasing
+#pragma warning disable 618, 612
             UnityPurchasing.shouldFetchProductsAtInit = enable;
+#pragma warning restore 618, 612
         }
 
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         public void SetFetchPurchasesExcludeDeferred(bool exclude)
         {
         }

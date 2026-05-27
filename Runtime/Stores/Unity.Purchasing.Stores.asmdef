@@ -9,6 +9,7 @@
         "Unity.Purchasing.Security",
         "Unity.Purchasing.SecurityCore",
         "Unity.Purchasing.SecurityStub",
+        "Unity.Purchasing.Stores.XboxCloudServices",
         "Unity.Purchasing.Utilities",
         "Unity.Purchasing.TransactionVerifier",
         "Unity.Services.Core",
@@ -43,6 +44,11 @@
             "name": "com.unity.microsoft.gdk",
             "expression": "1.4.5",
             "define": "IAP_GDK"
+        },
+        {
+            "name": "com.unity.services.cloudcode",
+            "expression": "2.3.0",
+            "define": "IAP_CLOUDCODE_ENABLED"
         }
     ],
     "noEngineReferences": false

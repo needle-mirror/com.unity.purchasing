@@ -12,7 +12,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     /// <seealso cref="IAppleExtensions.GetIntroductoryPriceDictionary"/>
     /// <seealso cref="UpdateSubscription"/>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class SubscriptionManager : SubscriptionInfoHelper
     {
         /// <summary>
@@ -120,7 +120,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Subscription to be inspected</param>
         /// <param name="intro_json">From <typeparamref name="IAppleExtensions.GetIntroductoryPriceDictionary"/></param>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         public SubscriptionManager(Product product, string intro_json)
             : base(product, intro_json)
         {

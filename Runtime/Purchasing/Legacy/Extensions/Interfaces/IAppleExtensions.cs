@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// Access iOS specific functionality.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public interface IAppleExtensions : IStoreExtension
     {
         /// <summary>

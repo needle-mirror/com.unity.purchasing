@@ -248,6 +248,9 @@ namespace UnityEngine.Purchasing
             di.AddService<XboxFetchProductsService>();
             di.AddService<XboxQueryEntitlementsService>();
             di.AddService<XboxPurchaseService>();
+#if IAP_CLOUDCODE_ENABLED
+            di.AddService<XboxPurchaseValidatorService>();
+#endif
             di.AddService<XboxStoreImpl>();
             return CreateStoreWrapper(XboxStore.Name, di);
         }

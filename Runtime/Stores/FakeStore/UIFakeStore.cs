@@ -165,7 +165,7 @@ namespace UnityEngine.Purchasing
 
         private void EnsureEventSystemCreated(Transform rootTransform)
         {
-            if (Object.FindObjectOfType<EventSystem>() == null)
+            if (Object.FindAnyObjectByType<EventSystem>() == null)
             {
                 CreateEventSystem(rootTransform);
             }

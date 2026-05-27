@@ -58,6 +58,45 @@ namespace UnityEngine.Purchasing
             return GetCachedProductDetails(products).ToList();
         }
 
+        public async Task QueryProductDetailsByRawSkus(IEnumerable<string> skus)
+        {
+            if (skus == null)
+            {
+                return;
+            }
+
+            var skuList = skus.Distinct().ToList();
+            if (skuList.Count == 0)
+            {
+                return;
+            }
+
+            // Each product type caches independently. A failure or empty response on one
+            // (e.g. a developer with no subscriptions configured) must not block caching
+            // of the other — otherwise the pre-fetch is defeated for the working type.
+            // Exceptions are swallowed per-type so that Task.WhenAll resolves successfully
+            // even on partial failure: the successful type's cache update is preserved,
+            // and the overall pre-fetch is reported as best-effort-complete to the caller.
+            async Task QueryAndCache(string productType)
+            {
+                try
+                {
+                    var (_, productDetails) = await QueryProductDetails(skuList, productType);
+                    m_GoogleCachedQueryProductDetailsService.AddCachedQueriedProductDetails(productDetails);
+                }
+                catch
+                {
+                    // Per-type best-effort. Surface nothing here; the caller's own catch
+                    // would re-swallow regardless, and silent recovery matches the rest of
+                    // the pre-fetch path's "no worse than pre-fix behavior" guarantee.
+                }
+            }
+
+            await Task.WhenAll(
+                QueryAndCache(GoogleProductTypeEnum.InApp()),
+                QueryAndCache(GoogleProductTypeEnum.Sub()));
+        }
+
         async Task<ProductDetailsQueryResponse> QueryInAppsAndSubsProductDetails(IReadOnlyCollection<ProductDefinition> products)
         {
             var tasks = new List<Task<(IGoogleBillingResult, IEnumerable<AndroidJavaObject>)>>()

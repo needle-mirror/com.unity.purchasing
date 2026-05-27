@@ -222,7 +222,7 @@ namespace UnityEngine.Purchasing
                 switch (productType)
                 {
                     // if the product is auto-renewing subscription, filter the expired products
-                    case AppleStoreProductType.AutoRenewingSubscription when new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True:
+                    case AppleStoreProductType.AutoRenewingSubscription when new SubscriptionInfo(mostRecentReceipt, null).IsExpired() == Result.True:
                         continue;
                     case AppleStoreProductType.Consumable:
                         // Nothing to do, a consumable with a receipt is Pending and will be sent to OnPurchaseSucceeded on launch
@@ -1089,7 +1089,7 @@ namespace UnityEngine.Purchasing
                 if (productType == AppleStoreProductType.AutoRenewingSubscription)
                 {
                     // if the product is auto-renewing subscription, check if this transaction is expired
-                    if (new SubscriptionInfo(mostRecentReceipt, null).isExpired() == Result.True)
+                    if (new SubscriptionInfo(mostRecentReceipt, null).IsExpired() == Result.True)
                     {
                         isValid = false;
                     }
@@ -1117,14 +1117,20 @@ namespace UnityEngine.Purchasing
             static bool IsSubscriptionRestored(AppleInAppPurchaseReceipt? productReceipt, Product previousProduct)
             {
                 var isRestored = false;
+// Obsolete: Product.hasReceipt
+#pragma warning disable 618, 612
                 if (previousProduct.hasReceipt)
+#pragma warning restore 618, 612
                 {
                     var subscriptionExpirationDate = productReceipt?.subscriptionExpirationDate;
+// Obsolete: SubscriptionManager, SubscriptionManager.SubscriptionManager(Product, string)
+#pragma warning disable 618, 612
                     var subscriptionManager = new SubscriptionManager(previousProduct, null);
+#pragma warning restore 618, 612
                     var previousSubscriptionInfo = subscriptionManager.getSubscriptionInfo();
                     if (previousSubscriptionInfo != null &&
-                        previousSubscriptionInfo.isCancelled() == Result.False &&
-                        previousSubscriptionInfo.getExpireDate() >= subscriptionExpirationDate)
+                        previousSubscriptionInfo.IsCancelled() == Result.False &&
+                        previousSubscriptionInfo.GetExpireDate() >= subscriptionExpirationDate)
                     {
                         isRestored = true;
                     }
@@ -1146,8 +1152,11 @@ namespace UnityEngine.Purchasing
             var product = FindProductById(id);
             if (product.definition.type != ProductType.Unknown)
             {
+// Obsolete: Product.appleProductIsRestored, Product.appleOriginalTransactionID
+#pragma warning disable 618, 612
                 product.appleProductIsRestored = isRestored;
                 product.appleOriginalTransactionID = originalTransactionId;
+#pragma warning restore 618, 612
             }
         }
 

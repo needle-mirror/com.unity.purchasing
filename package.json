@@ -17,9 +17,9 @@
       "PC",
       "Xbox"
     ],
-    "changelog": "### Added\n- Added support for [disabled domain reload](https://docs.unity3d.com/2023.2/Documentation/Manual/DomainReloading.html) in the Editor.\n- Xbox - Added integration with Xbox Store for Xbox Series, Xbox One, and Windows. Get started with [Unity GDK integration](https://learn.microsoft.com/en-us/gaming/gdk/docs/gdk-dev/pc-dev/tutorials/get-started-with-unity-pc/gdk-unity-end-to-end-guide?view=gdk-2510).\n- Project Settings allow you to access IAP AI skill with migration capabilities from v4 to v5\n\n### Fixed\n- Apple - Fixed Swift 6 strict concurrency warnings that caused build failures when `SWIFT_STRICT_CONCURRENCY` is set to `complete`.\n- Apple - Fixed `RestorePurchases`/`FetchPurchases` callback never firing on StoreKit 1 when the user has no purchase history.\n- Apple - Fixed visionOS incorrectly defaulting to StoreKit 1 instead of StoreKit 2.\n  - To continue using the previous behaviour, set `StoreKitSelector.forceStoreKit1` to `true` on visionOS.\n- Fixed `IndexOutOfRangeException` happening in the catalog editor when exporting with an empty catalog item."
+    "changelog": "### Added\n- Xbox - Added purchase verification support through the Microsoft Store Collections service. See [In-app purchases for Xbox games](https://docs.unity3d.com/6000.4/Documentation/Manual/xbox-games-on-windows-iap.html) for more details.\n\n### Fixed\n- Fixed compile errors caused by naming collisions when a project imports a third-party package that exposes a top-level `UnityUtil` namespace.\n- Google - Fixed a race condition where purchases could be silently lost when `FetchPurchases` completed before `FetchProducts` populated the product details cache. Missing product details are now pre-fetched before purchases are built.\n- Google - Fixed a `NullReferenceException` when constructing a `GooglePurchase` for an owned purchase whose `AccountIdentifiers` are null (test purchases or apps that don't call `SetObfuscatedAccountId`).\n- Google - Fixed a `NullReferenceException` in `ProductDetailsConverter.BuildProductDescription` when a product has no subscription offer details (returned as null by Google Play for non-subscription products).\n- Google - Fixed a `NullReferenceException` where `Purchase` references received from `QueryPurchasesAsync` could become invalid across an async boundary. The references are now cloned to long-lived global JNI references inside the billing-client callback."
   },
-  "version": "5.3.0",
+  "version": "5.3.1",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -36,16 +36,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.3.0"
+    "com.unity.purchasing.tests": "5.3.1"
   },
   "upmCi": {
-    "footprint": "8722be98ce421ac5bf0c97e4fcf3d558562f7f79"
+    "footprint": "9417345f0f44629c0753bef8b905c287636d1a97"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.3/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "d58ece5786d5f2849a44978e60a1abefb4c02be0"
+    "revision": "ab287aeb340cc2bc1b03ada4decc6648b5cd779b"
   },
   "samples": [
     {

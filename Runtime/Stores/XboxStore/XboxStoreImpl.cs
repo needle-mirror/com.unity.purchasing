@@ -5,7 +5,6 @@ using System.Linq;
 using Purchasing.Extension;
 using Unity.XGamingRuntime;
 using UnityEngine.Purchasing.Extension;
-using UnityEngine.Purchasing.Utilities;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
@@ -24,14 +23,26 @@ namespace UnityEngine.Purchasing
         private readonly IXboxFetchProductsService m_FetchProductsService;
         private readonly IXboxQueryEntitlementsService m_QueryEntitlementsService;
         private readonly IXboxPurchaseService m_PurchaseService;
+        protected XboxCloudSettings m_Settings;
+#if IAP_CLOUDCODE_ENABLED
+        private readonly IXboxPurchaseValidatorService m_PurchaseValidatorService;
+#endif
 
         [Preserve]
-        internal XboxStoreImpl(ILogger logger, IXboxFetchProductsService fetchProductsService, IXboxQueryEntitlementsService queryEntitlementsService, IXboxPurchaseService purchaseService)
+        internal XboxStoreImpl(ILogger logger, IXboxFetchProductsService fetchProductsService, IXboxQueryEntitlementsService queryEntitlementsService, IXboxPurchaseService purchaseService
+#if IAP_CLOUDCODE_ENABLED
+            , IXboxPurchaseValidatorService purchaseValidatorService
+#endif
+            )
         {
             Logger = logger;
             m_FetchProductsService = fetchProductsService;
             m_QueryEntitlementsService = queryEntitlementsService;
             m_PurchaseService = purchaseService;
+            m_Settings = Resources.Load<XboxCloudSettings>(XboxCloudSettings.k_AssetName);
+#if IAP_CLOUDCODE_ENABLED
+            m_PurchaseValidatorService = purchaseValidatorService;
+#endif
         }
 
         ~XboxStoreImpl()
@@ -243,6 +254,15 @@ namespace UnityEngine.Purchasing
             // ULO-9667 CartValidator
             // m_CartValidator.Validate(cart);
             var productDefinition = cart.Items().First().Product.definition;
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            if (XboxCloudSettings.TestSkipPurchase)
+            {
+                XboxCloudSettings.TestSkipPurchase = false;
+                // Skip the purchase flow
+                ShowPurchaseCallback(HR.S_OK, productDefinition.storeSpecificId);
+                return;
+            }
+#endif
             m_PurchaseService.ShowPurchaseUIAsync(_storeContext, productDefinition.storeSpecificId, ShowPurchaseCallback);
         }
 
@@ -251,11 +271,40 @@ namespace UnityEngine.Purchasing
             var product = FindProduct(storeSpecificId);
             if (HR.FAILED(hResult))
             {
-                PurchaseCallback?.OnPurchaseFailed(CreateFailedOrder(product == null ? null : new Cart(product), hResult));
+                var cart = product == null ? null : new Cart(product);
+                PurchaseCallback?.OnPurchaseFailed(CreateFailedOrder(cart, hResult));
                 return;
             }
 
-            // hResult is successful, so respect a successful purchase
+#if IAP_CLOUDCODE_ENABLED
+            if (m_Settings != null && m_Settings.EnablePurchaseValidation)
+            {
+                m_PurchaseValidatorService.ValidatePurchaseAsync(_storeContext, _userHandle, m_Settings, storeSpecificId,
+                    (validated, errorMessage) => PurchaseValidationCallback(validated, errorMessage, storeSpecificId, product));
+                return;
+            }
+#endif
+            PurchaseSucceeded(storeSpecificId, product);
+        }
+
+#if IAP_CLOUDCODE_ENABLED
+        private void PurchaseValidationCallback(bool validated, string errorMessage, string storeSpecificId, Product product)
+        {
+            if (validated)
+            {
+                PurchaseSucceeded(storeSpecificId, product);
+            }
+            else
+            {
+                var cart = product == null ? new Cart(Product.CreateUnknownProduct(storeSpecificId)) : new Cart(product);
+                PurchaseCallback?.OnPurchaseFailed(new FailedOrder(cart, PurchaseFailureReason.ValidationFailure, errorMessage));
+            }
+        }
+#endif
+
+        private void PurchaseSucceeded(string storeSpecificId, Product product)
+        {
+            // Purchase flow has completed, so respect a successful purchase even without a product
             product ??= Product.CreateUnknownProduct(storeSpecificId);
 
             // ULO-9664 Track Receipts and Transaction IDs

@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
     /// Builds configuration for Unity Purchasing,
     /// consisting of products and store specific configuration details.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class ConfigurationBuilder
     {
         static ConfigurationBuilder instance = null;

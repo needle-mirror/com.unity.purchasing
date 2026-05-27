@@ -9,7 +9,7 @@ namespace Purchasing.Utilities
     {
         public GameObject[] GetGameObjects()
         {
-            return (GameObject[])FindObjectsOfType(typeof(GameObject));
+            return FindObjectsByType<GameObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         }
 
         public IEnumerator DelayedCoroutine(IEnumerator coroutine, int delay)

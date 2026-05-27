@@ -1,4 +1,15 @@
 # Changelog
+## [5.3.1] - 2026-05-27
+### Added
+- Xbox - Added purchase verification support through the Microsoft Store Collections service. See [In-app purchases for Xbox games](https://docs.unity3d.com/6000.4/Documentation/Manual/xbox-games-on-windows-iap.html) for more details.
+
+### Fixed
+- Fixed compile errors caused by naming collisions when a project imports a third-party package that exposes a top-level `UnityUtil` namespace.
+- Google - Fixed a race condition where purchases could be silently lost when `FetchPurchases` completed before `FetchProducts` populated the product details cache. Missing product details are now pre-fetched before purchases are built.
+- Google - Fixed a `NullReferenceException` when constructing a `GooglePurchase` for an owned purchase whose `AccountIdentifiers` are null (test purchases or apps that don't call `SetObfuscatedAccountId`).
+- Google - Fixed a `NullReferenceException` in `ProductDetailsConverter.BuildProductDescription` when a product has no subscription offer details (returned as null by Google Play for non-subscription products).
+- Google - Fixed a `NullReferenceException` where `Purchase` references received from `QueryPurchasesAsync` could become invalid across an async boundary. The references are now cloned to long-lived global JNI references inside the billing-client callback.
+
 ## [5.3.0] - 2026-05-04
 ### Added
 - Added support for [disabled domain reload](https://docs.unity3d.com/2023.2/Documentation/Manual/DomainReloading.html) in the Editor.

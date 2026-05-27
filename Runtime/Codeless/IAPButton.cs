@@ -16,7 +16,7 @@ namespace UnityEngine.Purchasing
     [RequireComponent(typeof(Button))]
     [AddComponentMenu("In-App Purchasing/IAP Button")]
     [HelpURL("https://docs.unity.com/ugs/en-us/manual/iap/manual/overview")]
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public class IAPButton : MonoBehaviour
     {
         /// <summary>

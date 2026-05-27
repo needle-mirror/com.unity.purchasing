@@ -8,7 +8,7 @@ namespace UnityEngine.Purchasing
     /// <summary>
     /// The main controller for Applications using Unity Purchasing.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     class PurchasingManager: IStoreController
     {
         /// <summary>

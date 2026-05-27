@@ -1,7 +1,6 @@
 #if IAP_GDK && MICROSOFT_GDK_SUPPORT
 using System;
 using Unity.XGamingRuntime;
-using UnityEngine.Purchasing.Extension;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing

@@ -7,7 +7,7 @@ namespace UnityEngine.Purchasing
     /// Informs Unity Purchasing as to whether an Application
     /// has finished processing a purchase.
     /// </summary>
-    [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+    [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
     public enum PurchaseProcessingResult
     {
         /// <summary>

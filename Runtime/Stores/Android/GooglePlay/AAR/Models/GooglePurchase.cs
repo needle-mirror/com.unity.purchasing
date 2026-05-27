@@ -39,9 +39,12 @@ namespace UnityEngine.Purchasing.Models
             originalJson = purchase.Call<string>("getOriginalJson");
             signature = purchase.Call<string>("getSignature");
             purchaseToken = purchase.Call<string>("getPurchaseToken");
-            var accountIdentifiers = purchase.Call<AndroidJavaObject>("getAccountIdentifiers");
-            obfuscatedAccountId = accountIdentifiers.Call<string>("getObfuscatedAccountId");
-            obfuscatedProfileId = accountIdentifiers.Call<string>("getObfuscatedProfileId");
+            using var accountIdentifiers = purchase.Call<AndroidJavaObject>("getAccountIdentifiers");
+            if (accountIdentifiers != null)
+            {
+                obfuscatedAccountId = accountIdentifiers.Call<string>("getObfuscatedAccountId");
+                obfuscatedProfileId = accountIdentifiers.Call<string>("getObfuscatedProfileId");
+            }
             productDescriptions = productDetailsEnum.Select(productDetails => ProductDetailsConverter.BuildProductDescription(productDetails));
 
             var productDetailsJson = productDescriptions.Select(productDescription => productDescription.metadata.GetGoogleProductMetadata().originalJson).ToList();

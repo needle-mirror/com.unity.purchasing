@@ -293,7 +293,10 @@ namespace UnityEngine.Purchasing
             var cartItem = order.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == productId);
             if (cartItem != null)
             {
+// Obsolete: CodelessIAPButton.onPurchaseCompleteLegacy
+#pragma warning disable 618, 612
                 onPurchaseCompleteLegacy?.Invoke(cartItem.Product);
+#pragma warning restore 618, 612
             }
         }
 
@@ -316,7 +319,10 @@ namespace UnityEngine.Purchasing
             var cartItem = failedOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == productId);
             if (cartItem != null)
             {
+// Obsolete: CodelessIAPButton.onPurchaseFailedLegacy
+#pragma warning disable 618, 612
                 onPurchaseFailedLegacy?.Invoke(cartItem.Product, new PurchaseFailureDescription(cartItem, failedOrder.FailureReason, failedOrder.Details));
+#pragma warning restore 618, 612
             }
         }
 

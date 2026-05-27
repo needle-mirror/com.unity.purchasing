@@ -561,3 +561,16 @@
 #PollFooter {
     display:none;
 }
+
+/* Xbox Configuration */
+.xbox-toggle > .unity-toggle__input {
+    flex-direction:row-reverse;
+}
+
+.xbox-toggle > .unity-toggle__input > .unity-toggle__text {
+    flex-grow:1;
+}
+
+.xbox-text-field > .unity-base-field__label {
+    min-width:200px;
+}

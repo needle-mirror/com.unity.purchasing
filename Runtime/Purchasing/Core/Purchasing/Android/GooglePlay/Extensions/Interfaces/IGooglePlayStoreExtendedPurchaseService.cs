@@ -16,7 +16,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="oldProduct">current subscription</param>
         /// <param name="newProduct">new subscription to subscribe</param>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct);
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace UnityEngine.Purchasing
         /// <param name="desiredProrationMode">Specifies the mode of proration.
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
 		/// </param>
-		[Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+		[Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayProrationMode desiredProrationMode);
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace UnityEngine.Purchasing
         /// <param name="desiredReplacementMode">Specifies the replacement mode.
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
 		/// </param>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayReplacementMode desiredReplacementMode);
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="order">Order</param>
         /// <returns><c>true</c>if the input contains a receipt for a deferred or a pending transaction for a Google Play billing purchase, and <c>false</c> otherwise.</returns>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         bool IsOrderDeferred(Order order);
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="order">Order</param>
         /// <returns>Returns the purchase state when successful, otherwise null is returned.</returns>
-        [Obsolete(UnityUtil.ObsoleteUpgradeToIAPV5Message, false)]
+        [Obsolete(IAPObsoleteMessages.UpgradeToIAPV5, false)]
         GooglePurchaseState? GetPurchaseState(Order order);
 
         /// <summary>

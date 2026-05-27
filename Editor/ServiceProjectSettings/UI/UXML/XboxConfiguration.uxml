@@ -1,0 +1,11 @@
+<UXML xmlns="UnityEngine.UIElements">
+    <VisualElement name="XboxConfigBlock" class="project-settings-title-container">
+        <Label text="Xbox Configuration" class="project-settings-title"/>
+        <Label name="CloudCodeRequiredLabel" text="Install the Cloud Code package to enable purchase validation." class="label-container"/>
+        <Toggle name="PurchaseValidationToggle" binding-path="m_EnablePurchaseValidation" text="Validate purchases using Microsoft Store Services" class="xbox-toggle"/>
+        <TextField name="CloudCodeModuleNameField" label="Cloud Code Module Name" binding-path="m_CloudCodeModuleName" class="xbox-text-field"/>
+        <TextField name="ServiceTicketFunctionNameField" label="Service Ticket Function Name" binding-path="m_ServiceTicketFunctionName" class="xbox-text-field"/>
+        <TextField name="ValidatePurchaseFunctionNameField" label="Validate Purchase Function Name" binding-path="m_ValidatePurchaseFunctionName" class="xbox-text-field"/>
+    </VisualElement>
+    <VisualElement class="separator" />
+</UXML>

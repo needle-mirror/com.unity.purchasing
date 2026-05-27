@@ -43,9 +43,13 @@ namespace UnityEngine.Purchasing
         {
             var product = productCache?.Find(purchase.sku) ?? DefaultProduct(purchase);
 
-            var updatedProduct = new Product(product.definition, product.metadata, purchase.receipt)
+            var updatedProduct = new Product(product.definition, product.metadata)
             {
+// Obsolete: Product.receipt, Product.transactionID
+#pragma warning disable 618, 612
+                receipt = purchase.receipt,
                 transactionID = purchase.purchaseToken
+#pragma warning restore 618, 612
             };
 
             return new Cart(updatedProduct);
