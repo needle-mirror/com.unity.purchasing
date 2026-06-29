@@ -17,5 +17,11 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <returns>true if the request was retried, false otherwise</returns>
         public Task<bool> Retry(IRetryableRequestFailureDescription requestFailureDescription);
+
+        /// <summary>
+        /// Verifies if the request should be retried based on the <see cref="IRetryPolicy"/>.
+        /// </summary>
+        /// <returns>true if the request should retry, false otherwise</returns>
+        public Task<bool> ShouldRetry();
     }
 }

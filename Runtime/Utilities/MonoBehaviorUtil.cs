@@ -9,7 +9,14 @@ namespace Purchasing.Utilities
     {
         public GameObject[] GetGameObjects()
         {
-            return FindObjectsByType<GameObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+#if UNITY_6000_4_OR_NEWER
+            return FindObjectsByType<GameObject>();
+#else
+// Obsolete: FindObjectsSortMode
+#pragma warning disable 618, 612
+            return FindObjectsByType<GameObject>(FindObjectsSortMode.None);
+#pragma warning restore 618, 612
+#endif
         }
 
         public IEnumerator DelayedCoroutine(IEnumerator coroutine, int delay)

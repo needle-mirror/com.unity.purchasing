@@ -30,17 +30,18 @@ namespace UnityEngine.Purchasing
         TransactionParameters BuildTransactionParameters(CartItem item,
             UnifiedReceipt unifiedReceipt, AnalyticsTransactionReceipt analyticsReceipt)
         {
+            item.Product.catalogListings.TryGetValue(item.CatalogListingId, out var listing);
             return new TransactionParameters
             {
-                ProductID = item.Product.definition.storeSpecificId,
-                TransactionName = CommonTransactionEventHelper.GetTransactionName(item.Product),
+                ProductID = listing?.definition?.storeSpecificId,
+                TransactionName = CommonTransactionEventHelper.GetTransactionName(listing),
                 TransactionID = unifiedReceipt.TransactionID,
                 TransactionType = TransactionType.PURCHASE,
                 TransactionReceipt = analyticsReceipt.transactionReceipt,
                 TransactionReceiptSignature = analyticsReceipt.transactionReceiptSignature,
                 TransactionServer = analyticsReceipt.transactionServer,
                 ProductsReceived = GenerateItemReceivedForPurchase(item),
-                ProductsSpent = GenerateRealCurrencySpentOnPurchase(item.Product)
+                ProductsSpent = GenerateRealCurrencySpentOnPurchase(listing)
             };
         }
 
@@ -53,13 +54,14 @@ namespace UnityEngine.Purchasing
         TransactionFailedParameters BuildTransactionFailedParameters(CartItem item,
             string failureReason)
         {
+            item.Product.catalogListings.TryGetValue(item.CatalogListingId, out var listing);
             return new TransactionFailedParameters
             {
-                ProductID = item.Product.definition.storeSpecificId,
-                TransactionName = CommonTransactionEventHelper.GetTransactionName(item.Product),
+                ProductID = listing?.definition?.storeSpecificId,
+                TransactionName = CommonTransactionEventHelper.GetTransactionName(listing),
                 TransactionType = TransactionType.PURCHASE,
-                ProductsReceived = GenerateItemReceivedForPurchase(item.Product),
-                ProductsSpent = GenerateRealCurrencySpentOnPurchase(item.Product),
+                ProductsReceived = GenerateItemReceivedForPurchase(item),
+                ProductsSpent = GenerateRealCurrencySpentOnPurchase(listing),
                 FailureReason = failureReason
             };
         }
@@ -72,28 +74,28 @@ namespace UnityEngine.Purchasing
                 {
                     new Item
                     {
-                        ItemName = item.Product.definition.id,
-                        ItemType = item.Product.definition.type.ToString(),
+                        ItemName = item.Product.uSku,
+                        ItemType = item.Product.type.ToString(),
                         ItemAmount = item.Quantity
                     }
                 }
             };
         }
 
-        Unity.Services.Analytics.Product GenerateRealCurrencySpentOnPurchase(Product product)
+        Unity.Services.Analytics.Product GenerateRealCurrencySpentOnPurchase(CatalogListing listing)
         {
             return new Unity.Services.Analytics.Product
             {
-                RealCurrency = CreateRealCurrencyFromProduct(product)
+                RealCurrency = CreateRealCurrencyFromListing(listing)
             };
         }
 
-        RealCurrency CreateRealCurrencyFromProduct(Product product)
+        RealCurrency CreateRealCurrencyFromListing(CatalogListing listing)
         {
             return new RealCurrency
             {
-                RealCurrencyType = product.metadata.isoCurrencyCode ?? "",
-                RealCurrencyAmount = m_TransactionEventHelper.CheckCurrencyCodeAndExtractRealCurrencyAmount(product)
+                RealCurrencyType = listing?.metadata?.isoCurrencyCode ?? "",
+                RealCurrencyAmount = m_TransactionEventHelper.CheckCurrencyCodeAndExtractRealCurrencyAmount(listing)
             };
         }
     }

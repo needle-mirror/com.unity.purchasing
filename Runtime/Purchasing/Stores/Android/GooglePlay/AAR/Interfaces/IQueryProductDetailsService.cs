@@ -11,6 +11,5 @@ namespace UnityEngine.Purchasing.Interfaces
         Task<List<AndroidJavaObject>> QueryProductDetails(ProductDefinition product);
         Task<List<ProductDescription>> QueryProductDescriptions(IReadOnlyCollection<ProductDefinition> products);
         Task<List<AndroidJavaObject>> QueryProductDetails(IReadOnlyCollection<ProductDefinition> products);
-        Task QueryProductDetailsByRawSkus(IEnumerable<string> skus);
     }
 }

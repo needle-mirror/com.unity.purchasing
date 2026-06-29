@@ -189,7 +189,7 @@ namespace UnityEngine.Purchasing
         bool CheckIfProductEntitled(ProductDefinition definition)
         {
             var purchasedProducts = m_ConfirmedOrders.SelectMany(order => order.CartOrdered.Items()).Select(item => item.Product);
-            return purchasedProducts.Any(product => product.definition.id == definition.id);
+            return purchasedProducts.Any(product => product.uSku == definition.id);
         }
 
         public void RestoreTransactions(Action<bool, string> callback)

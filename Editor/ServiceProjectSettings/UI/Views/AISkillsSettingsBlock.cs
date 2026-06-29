@@ -9,7 +9,7 @@ namespace UnityEditor.Purchasing
     {
         const string k_OpenSkillsFolderBtn = "OpenSkillsFolderButton";
         const string k_InstallSkillsBtn = "InstallSkillsButton";
-        const string k_PackageSkillsRelativePath = "Packages/com.unity.purchasing/Editor/AI/skills/packages/unity-iap";
+        const string k_PackageSkillsRelativePath = "Packages/com.unity.purchasing/AiAssistantSkills/in-app-purchases";
         const string k_ClaudeSkillsDestFolder = "skills/in-app-purchases";
 
         VisualElement m_Block;

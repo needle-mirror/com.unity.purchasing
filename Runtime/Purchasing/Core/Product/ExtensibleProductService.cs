@@ -57,13 +57,18 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Gets a product by its identifier.
+        /// Gets a product by its catalog listing id.
         /// </summary>
-        /// <param name="productId">The identifier of the product to retrieve.</param>
-        /// <returns>The product with the specified identifier, or null if not found.</returns>
-        public virtual Product? GetProductById(string productId)
+        /// <param name="catalogListingId">The catalog listing id of the product to retrieve.</param>
+        /// <returns>The product with the specified catalog listing id, or null if not found.</returns>
+        public virtual Product? GetProductById(string catalogListingId)
         {
-            return m_BaseInternalProductService.GetProductById(productId);
+            return m_BaseInternalProductService.GetProductById(catalogListingId);
+        }
+
+        public Product? GetProductByCatalogListingId(string catalogListingId)
+        {
+            return m_BaseInternalProductService.GetProductByCatalogListingId(catalogListingId);
         }
 
         /// <summary>

@@ -1,5 +1,6 @@
 #nullable enable
 
+using Stores.Android.GooglePlay.AAR.Models;
 using Uniject;
 using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.GoogleBilling.Models;
@@ -36,7 +37,19 @@ namespace UnityEngine.Purchasing.GoogleBilling
 
         public IExternalBillingProgramClientInternal CreateExternalBillingProgramClient()
         {
-            return new ExternalBillingProgramClientInternal(m_Util, m_TelemetryDiagnostics);
+            return new ExternalBillingProgramClientInternal(
+                m_Util,
+                m_TelemetryDiagnostics
+            );
+        }
+
+        public IExternalBillingProgramClientInternal CreateExternalBillingProgramClient(BillingProgram billingProgram)
+        {
+            return new ExternalBillingProgramClientInternal(
+                m_Util,
+                m_TelemetryDiagnostics,
+                billingProgram
+            );
         }
     }
 }

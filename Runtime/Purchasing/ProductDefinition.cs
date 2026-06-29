@@ -68,6 +68,7 @@ namespace UnityEngine.Purchasing
             this.storeSpecificId = storeSpecificId;
             this.type = type;
             this.enabled = enabled;
+            catalogListingId = id;
             SetPayouts(payouts);
         }
 
@@ -81,7 +82,36 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Store independent ID.
+        /// Parametrized constructor that takes an explicit <paramref name="catalogListingId"/>
+        /// separate from the product <paramref name="id"/>. Use when describing a specific catalog
+        /// listing on a product where the listing id differs from the owning product's uSku.
+        /// <para>
+        /// <paramref name="catalogListingId"/> is placed after <paramref name="type"/> so the
+        /// <see cref="ProductType"/> separator prevents accidental swaps between
+        /// <paramref name="id"/>, <paramref name="storeSpecificId"/>, and <paramref name="catalogListingId"/>.
+        /// </para>
+        /// </summary>
+        /// <param name="id"> The product id (== owning <see cref="Product.uSku"/>). </param>
+        /// <param name="storeSpecificId"> The product's id for a specific store. </param>
+        /// <param name="type"> The product type. </param>
+        /// <param name="catalogListingId"> The id of the catalog listing this definition describes. </param>
+        /// <param name="enabled"> Whether the product is enabled for purchase or not. </param>
+        /// <param name="payouts"> The payout definitions for the product once purchased. </param>
+        public ProductDefinition(string id, string storeSpecificId, ProductType type, string catalogListingId,
+            bool enabled = true, IEnumerable<PayoutDefinition>? payouts = null)
+            : this(id, storeSpecificId, type, enabled, payouts)
+        {
+            this.catalogListingId = catalogListingId;
+        }
+
+        /// <summary>
+        /// The id of the catalog listing this definition describes.
+        /// Defaults to <see cref="id"/> when catalog listings aren't used.
+        /// </summary>
+        public string catalogListingId { get; internal set; }
+
+        /// <summary>
+        /// Store independent ID. Equivalent to the owning <see cref="Product.uSku"/>.
         /// </summary>
         public string id { get; private set; }
 

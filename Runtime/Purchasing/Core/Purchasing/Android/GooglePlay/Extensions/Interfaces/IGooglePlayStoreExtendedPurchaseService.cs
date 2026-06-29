@@ -42,7 +42,7 @@ namespace UnityEngine.Purchasing
         void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayReplacementMode desiredReplacementMode);
 
         /// <summary>
-        /// Upgrade or downgrade subscriptions
+        /// Upgrade or downgrade subscriptions.
         /// </summary>
         /// <param name="currentOrder">current order associated with the subscription</param>
         /// <param name="newProduct">new subscription to subscribe</param>
@@ -50,6 +50,20 @@ namespace UnityEngine.Purchasing
         /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
         /// </param>
         void UpgradeDowngradeSubscription(Order currentOrder, Product newProduct, GooglePlayReplacementMode desiredReplacementMode);
+
+        /// <summary>
+        /// Convenience wrapper for <see cref="UpgradeDowngradeSubscription(Order, Product, GooglePlayReplacementMode)"/>
+        /// that resolves the new subscription product from its catalog listing id. Looks up the
+        /// product via <c>productCache.FindByCatalogListingId(newCatalogListingId)</c>; falls back
+        /// to an unknown product (which the underlying call will fail) if no match is found.
+        /// Prefer the <see cref="Product"/> overload when you already hold a Product reference.
+        /// </summary>
+        /// <param name="currentOrder">current order associated with the subscription</param>
+        /// <param name="newCatalogListingId">catalog listing id of the new subscription to subscribe</param>
+        /// <param name="desiredReplacementMode">Specifies the replacement mode.
+        /// <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingFlowParams.SubscriptionUpdateParams.ReplacementMode">See more</a>
+        /// </param>
+        void UpgradeDowngradeSubscription(Order currentOrder, string newCatalogListingId, GooglePlayReplacementMode desiredReplacementMode);
 
         /// <summary>
         /// Determines if the purchase of a product in the Google Play Store is deferred based on its receipt. This indicates if there is an additional step to complete a transaction in between when a user initiates a purchase and when the payment method for the purchase is processed.

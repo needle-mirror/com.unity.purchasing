@@ -76,7 +76,8 @@ namespace UnityEngine.Purchasing
         public override void Purchase(ICart cart)
         {
             m_CartValidator.Validate(cart);
-            var productDefinition = cart.Items().First().Product.definition;
+            var cartItem = cart.Items().First();
+            var productDefinition = cartItem.Product.catalogListings[cartItem.CatalogListingId].definition;
             m_StorePurchaseService.Purchase(productDefinition);
         }
 
@@ -95,7 +96,8 @@ namespace UnityEngine.Purchasing
         public override void FinishTransaction(PendingOrder pendingOrder)
         {
             m_CartValidator.Validate(pendingOrder.CartOrdered);
-            var productDefinition = pendingOrder.CartOrdered.Items().First().Product.definition;
+            var cartItem = pendingOrder.CartOrdered.Items().First();
+            var productDefinition = cartItem.Product.catalogListings[cartItem.CatalogListingId].definition;
             m_FinishTransactionService.FinishTransaction(productDefinition, pendingOrder.Info.TransactionID);
         }
 

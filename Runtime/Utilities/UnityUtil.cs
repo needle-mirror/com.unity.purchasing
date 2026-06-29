@@ -63,6 +63,17 @@ namespace UnityEngine.Purchasing.Extension
 
         public string cloudProjectId => Application.cloudProjectId;
 
+        public event Action<bool> focusChanged
+        {
+            add => Application.focusChanged += value;
+            remove => Application.focusChanged -= value;
+        }
+
+        public void OpenURL(string url)
+        {
+            Application.OpenURL(url);
+        }
+
         public string userId => PlayerPrefs.GetString("unity.cloud_userid", String.Empty);
 
         public string gameVersion => Application.version;

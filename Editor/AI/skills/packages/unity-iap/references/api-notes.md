@@ -220,7 +220,7 @@ store.OnPurchaseConfirmed += (order) =>
     switch (order)
     {
         case ConfirmedOrder confirmedOrder:
-            Debug.Log($"Purchase confirmed: {confirmedOrder.CartOrdered.Items().First().Product.definition.id}");
+            Debug.Log($"Purchase confirmed: {confirmedOrder.CartOrdered.Items().First().Product.uSku}");
             break;
         case FailedOrder failedOrder:
             Debug.LogError($"Confirmation failed: {failedOrder.FailureReason} - {failedOrder.Details}");
@@ -267,7 +267,7 @@ store.CheckEntitlement(product);
 store.OnCheckEntitlement += (entitlement) =>
 {
     if (entitlement.Status == EntitlementStatus.FullyEntitled)
-        Debug.Log($"Player owns: {entitlement.Product.definition.id}");
+        Debug.Log($"Player owns: {entitlement.Product.uSku}");
 };
 ```
 
@@ -281,7 +281,7 @@ store.OnPurchasesFetched += (orders) =>
     foreach (var confirmedOrder in orders.ConfirmedOrders)
     {
         var product = confirmedOrder.CartOrdered.Items().FirstOrDefault()?.Product;
-        Debug.Log($"Existing purchase: {product?.definition.id}");
+        Debug.Log($"Existing purchase: {product?.uSku}");
     }
 };
 ```
@@ -474,7 +474,7 @@ namespace Unity.AI.Assistant.Agent.Dynamic.Extension.Editor
                 store.OnProductsFetched += (fetched) =>
                 {
                     foreach (var p in fetched)
-                        result.Log($"{p.definition.id}: {p.metadata.localizedPriceString}");
+                        result.Log($"{p.uSku}: {p.catalogListings[p.uSku].metadata.localizedPriceString}");
                 };
                 store.OnProductsFetchFailed += (failure) => result.LogError($"Product fetch failed: {failure.FailureReason}");
 

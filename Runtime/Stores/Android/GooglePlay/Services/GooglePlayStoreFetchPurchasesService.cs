@@ -69,20 +69,24 @@ namespace UnityEngine.Purchasing
 
         IEnumerable<Product> BuildProductsFromPurchase(IGooglePurchase purchase)
         {
-            var products = purchase.skus.Select(sku => m_ProductCache?.Find(sku)).NonNull();
-            return products.Select(product => CompleteProductInfoWithPurchase(product!, purchase));
+            return purchase.skus
+                .Select(sku => (sku, product: m_ProductCache?.Find(sku)))
+                .Where(t => t.product != null)
+                .Select(t => CompleteProductInfoWithPurchase(t.product!, t.sku, purchase));
         }
 
-        static Product CompleteProductInfoWithPurchase(Product product, IGooglePurchase purchase)
+        Product CompleteProductInfoWithPurchase(Product product, string sku, IGooglePurchase purchase)
         {
-            return new Product(product.definition, product.metadata)
-            {
-// Obsolete: Product.receipt, Product.transactionID
+            // Multi-listing aware: pick the listing whose storeSpecificId matches the SKU we're
+            // building for (falls back to the base listing in the single-listing case).
+            var sourceListing = m_ProductCache?.FindCatalogListingByStoreSpecificId(sku) ?? product.baseListing;
+// Obsolete: Product(ProductDefinition, ProductMetadata, string), Product.transactionID
 #pragma warning disable 618, 612
-                receipt = purchase.receipt,
+            return new Product(sourceListing?.definition, sourceListing?.metadata, purchase.receipt)
+            {
                 transactionID = purchase.purchaseToken,
-#pragma warning restore 618, 612
             };
+#pragma warning restore 618, 612
         }
 
         void OnPurchasesFetched(List<IGooglePurchase>? purchases)

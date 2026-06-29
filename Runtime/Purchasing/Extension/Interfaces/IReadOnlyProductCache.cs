@@ -13,16 +13,28 @@ namespace UnityEngine.Purchasing.Extension
         /// </summary>
         ReadOnlyObservableCollection<Product> GetProducts();
         /// <summary>
-        /// Gets a product by its product ID.
+        /// Gets a product by its <see cref="Product.uSku"/>.
         /// </summary>
-        /// <param name="productId">Product ID to query by.</param>
+        /// <param name="uSku">The product's <c>uSku</c>.</param>
         /// <returns>The matching product if found, otherwise returns null.</returns>
-        Product? Find(string? productId);
+        Product? Find(string? uSku);
         /// <summary>
-        /// Find a matching product by its ID.
+        /// Gets a product by its <see cref="Product.uSku"/>. Returns an unknown product when no match is found.
         /// </summary>
-        /// <param name="productId">Product ID to query by.</param>
+        /// <param name="uSku">The product's <c>uSku</c>.</param>
         /// <returns>The matching product if found, otherwise returns an Unknown Product.</returns>
-        Product FindOrDefault(string? productId);
+        Product FindOrDefault(string? uSku);
+        /// <summary>
+        /// Gets the product that owns the catalog listing with the given id.
+        /// </summary>
+        /// <param name="catalogListingId">The <see cref="CatalogListing.id"/> to query by.</param>
+        /// <returns>The owning product if found, otherwise returns null.</returns>
+        Product? FindByCatalogListingId(string? catalogListingId);
+        /// <summary>
+        /// Gets the product that owns a catalog listing with the given store-specific id.
+        /// </summary>
+        /// <param name="storeSpecificId">The <c>ProductDefinition.storeSpecificId</c> to query by.</param>
+        /// <returns>The owning product if found, otherwise returns null.</returns>
+        Product? FindByStoreSpecificId(string? storeSpecificId);
     }
 }

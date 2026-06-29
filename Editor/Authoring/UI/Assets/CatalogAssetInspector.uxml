@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns="UnityEngine.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.unity.purchasing/Editor/Authoring/UI/Assets/CatalogAssetInspectorStyle.uss?fileID=7433441132597879392&amp;guid=b2fd217989fdc48d6a9db2a20dce00e3&amp;type=3#CatalogAssetInspectorStyle" />
+    <ui:VisualElement name="ContainerConfig" />
+    <ui:Label name="InfoLabel" enabled="true" style="margin-top: 10px; margin-bottom: 10px;" />
+    <ui:VisualElement name="ContainerApplyRevert" class="apply-revert">
+        <ui:Button name="ApplyButton" text="Apply" class="grow-button" />
+        <ui:Button name="RevertButton" text="Revert" class="grow-button" />
+    </ui:VisualElement>
+</ui:UXML>

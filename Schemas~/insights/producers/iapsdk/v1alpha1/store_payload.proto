@@ -1,0 +1,85 @@
+syntax = "proto3";
+
+package insights.producers.iapsdk.v1alpha1;
+
+// AppStorePayload carries Apple App Store receipt data and Apple-specific
+// transaction metadata exposed by the Unity IAP SDK.
+//
+// The SDK supports both StoreKit 1 (app-level receipt blob) and StoreKit 2
+// (per-transaction signed JWS). Either or both may be populated depending
+// on which path the SDK took on this device. Backend re-verifies and
+// decodes structured fields server-side (subscription period, offer info,
+// expiration date, ownership_type, etc.) — they are NOT duplicated here.
+message AppStorePayload {
+  // StoreKit 1 app-level App Store receipt blob (base64).
+  // Sourced from `IAppleStoreExtendedPurchaseService.appReceipt`. Sent to
+  // Apple `verifyReceipt` server-side. Optional.
+  optional string app_receipt = 1;
+
+  // StoreKit 2 signed JWS for this individual transaction
+  // (`AppleOrderInfo.jwsRepresentation`). Decoded server-side for
+  // canonical transaction info, subscription period, offer details, etc.
+  optional string jws_representation = 2;
+
+  // Apple-issued original transaction identifier
+  // (`AppleOrderInfo.OriginalTransactionID`), used to link
+  // auto-renewable subscription renewals to the initial purchase.
+  // Decodable server-side from `jws_representation`, but carried here for
+  // direct access without JWS parsing.
+  optional string original_transaction_id = 3;
+
+  // Developer-supplied account token associated with this transaction
+  // (`AppleOrderInfo.AppAccountToken`), formatted as a UUID string.
+  // Surfaces when the developer set `Product.appAccountToken` on the
+  // purchase to link the transaction to their own user account.
+  //
+  // The legacy StoreKit 1 path in `AppleStoreImpl` pushes `Guid.Empty`
+  // (`00000000-0000-0000-0000-000000000000`) into the metadata dictionary
+  // when no token was set, rather than leaving the slot null. The runtime
+  // module MUST treat the all-zeros GUID as "not set" and leave this field
+  // unpopulated — do not stringify it.
+  optional string app_account_token = 4;
+
+  // How the player came to own this product
+  // (`AppleOrderInfo.OwnershipType`).
+  //
+  // The SDK enum and this proto enum are NOT numerically aligned — a naive
+  // `(int)sdkValue` cast silently shifts every value. The runtime module
+  // MUST translate via the mapping below, not cast:
+  //
+  //   SDK `AppleOwnershipType.Undefined    (-1)` → `OWNERSHIP_TYPE_UNSPECIFIED`
+  //   SDK `AppleOwnershipType.Purchased    ( 0)` → `OWNERSHIP_TYPE_PURCHASED`
+  //   SDK `AppleOwnershipType.FamilyShared ( 1)` → `OWNERSHIP_TYPE_FAMILY_SHARED`
+  OwnershipType ownership_type = 5;
+}
+
+// Mirrors StoreKit 2 `Transaction.OwnershipType` as surfaced by the IAP SDK.
+// Numbering deliberately diverges from the SDK enum so that the proto3
+// zero-default is `UNSPECIFIED` rather than `PURCHASED`. See the
+// `ownership_type` field comment for the required SDK → proto mapping.
+enum OwnershipType {
+  OWNERSHIP_TYPE_UNSPECIFIED = 0;
+  // The player purchased the product themselves.
+  OWNERSHIP_TYPE_PURCHASED = 1;
+  // The player has access to the product via Apple's Family Sharing.
+  OWNERSHIP_TYPE_FAMILY_SHARED = 2;
+}
+
+// GooglePlayPayload carries Google Play Billing receipt data exposed by
+// the Unity IAP SDK.
+//
+// The signed receipt is the (`original_json`, `signature`) pair, parsed by
+// the SDK from `UnifiedReceipt.Payload` into `GoogleReceipt { json,
+// signature }`. Backend re-verifies the RSA signature against the
+// developer's Play Console public key and decodes structured fields
+// (purchase token, obfuscated account id, subscription period, etc.)
+// server-side from `original_json`.
+message GooglePlayPayload {
+  // Original JSON receipt as returned by `Purchase.getOriginalJson()`,
+  // signed by `signature`.
+  string original_json = 1;
+
+  // RSA signature over `original_json`, as returned by
+  // `Purchase.getSignature()`.
+  string signature = 2;
+}

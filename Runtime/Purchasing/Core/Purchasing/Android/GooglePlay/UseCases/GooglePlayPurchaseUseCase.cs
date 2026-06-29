@@ -22,12 +22,13 @@ namespace UnityEngine.Purchasing
             OnPurchaseFail += OnSubscriptionChangeFailed;
         }
 
-        public void ChangeSubscription(Order currentOrder, Product newSubscription,
+        public void ChangeSubscription(Order currentOrder, CartItem newSubscriptionItem,
             GooglePlayReplacementMode replacementMode)
         {
+            var newSubscription = newSubscriptionItem.Product;
             if (!IsSubscriptionChangeValid(currentOrder, newSubscription))
             {
-                OnPurchaseFailed(new FailedOrder(new Cart(new CartItem(newSubscription)), PurchaseFailureReason.Unknown,
+                OnPurchaseFailed(new FailedOrder(new Cart(newSubscriptionItem), PurchaseFailureReason.Unknown,
                     "Invalid SubscriptionProducts requested for purchase. Please pass a valid `SubscriptionProduct` object."));
                 return;
             }
@@ -39,7 +40,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                var subscriptionChangeRequest = new SubscriptionChangeRequest(currentOrder, newSubscription,
+                var subscriptionChangeRequest = new SubscriptionChangeRequest(currentOrder, newSubscriptionItem,
                     replacementMode);
                 AddAndSendSubscriptionChangeRequest(subscriptionChangeRequest);
             }
@@ -59,7 +60,7 @@ namespace UnityEngine.Purchasing
 
         static bool IsSubscriptionProductValid(Product? subscription)
         {
-            return subscription?.definition != null;
+            return subscription?.baseListing != null;
         }
 
         bool ConflictingSubscriptionChangeRequestExists(Order currentOrder, Product newSubscription)
@@ -73,7 +74,11 @@ namespace UnityEngine.Purchasing
         {
             m_PendingRequests.Add(subscriptionChangeRequest);
 
-            GooglePlayStore()?.ChangeSubscription(subscriptionChangeRequest.NewSubscription.definition,
+            var cartItem = subscriptionChangeRequest.NewSubscriptionItem;
+            var listingDefinition = cartItem.Product.catalogListings.TryGetValue(cartItem.CatalogListingId, out var listing)
+                ? listing.definition
+                : null;
+            GooglePlayStore()?.ChangeSubscription(listingDefinition,
                 subscriptionChangeRequest.CurrentOrder, subscriptionChangeRequest.ReplacementMode);
         }
 
@@ -86,11 +91,16 @@ namespace UnityEngine.Purchasing
         {
             try
             {
-                var request = GetMatchingRequest(order.CartOrdered.Items().First().Product.definition.storeSpecificId);
-
-                if (request != null)
+                var orderItem = order.CartOrdered.Items().First();
+                var storeSpecificId = orderItem.Product.catalogListings.TryGetValue(orderItem.CatalogListingId, out var orderListing) ? orderListing.definition.storeSpecificId : null;
+                if (storeSpecificId != null)
                 {
-                    m_PendingRequests.Remove(request);
+                    var request = GetMatchingRequest(storeSpecificId);
+
+                    if (request != null)
+                    {
+                        m_PendingRequests.Remove(request);
+                    }
                 }
             }
             catch (Exception)
@@ -150,7 +160,11 @@ namespace UnityEngine.Purchasing
         SubscriptionChangeRequest? GetMatchingRequest(string productId)
         {
             return m_PendingRequests.FirstOrDefault(request =>
-                request.NewSubscription.definition.storeSpecificId == productId);
+            {
+                var ci = request.NewSubscriptionItem;
+                return ci.Product.catalogListings.TryGetValue(ci.CatalogListingId, out var listing)
+                    && listing.definition.storeSpecificId == productId;
+            });
         }
 
         bool FindExistingPurchaseRequest(Product productToCheckFor)

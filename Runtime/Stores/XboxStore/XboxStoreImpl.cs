@@ -254,7 +254,7 @@ namespace UnityEngine.Purchasing
             // ULO-9667 CartValidator
             // m_CartValidator.Validate(cart);
             var productDefinition = cart.Items().First().Product.definition;
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
             if (XboxCloudSettings.TestSkipPurchase)
             {
                 XboxCloudSettings.TestSkipPurchase = false;

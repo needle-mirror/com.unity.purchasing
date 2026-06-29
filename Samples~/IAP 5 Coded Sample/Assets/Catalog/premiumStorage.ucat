@@ -1,0 +1,18 @@
+{
+  "uSKU": "com.unity.iap.test.premium.storage",
+  "type": "NonConsumable",
+  "productDetails": [
+    {
+      "title": "Premium Storage",
+      "description": "Unlock permanent premium storage capacity.",
+      "language": "en-US"
+    }
+  ],
+  "pricing": [
+    {
+      "currencyCode": "USD",
+      "amount": 4.99
+    }
+  ],
+  "imageUrl": "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Ffake&psig=AOvVaw0TBtTEGywqRYe95jBV5AHH&ust=1764194045674000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCPCil42ljpEDFQAAAAAdAAAAABAE"
+}

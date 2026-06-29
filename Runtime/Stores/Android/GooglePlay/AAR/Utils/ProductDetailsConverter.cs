@@ -22,15 +22,7 @@ namespace UnityEngine.Purchasing.Utils
 
             foreach (var definition in productDefinitions)
             {
-                try
-                {
-                    productTypes.Add(definition.storeSpecificId, definition.type);
-                }
-                catch (ArgumentException ex) when (ex.Message.Contains("same key"))
-                {
-                    Debug.LogError($"Duplicate product definition found with store specific ID: {definition.storeSpecificId}. " +
-                        $"Only the first definition will be used.");
-                }
+                productTypes.TryAdd(definition.storeSpecificId, definition.type);
             }
 
             foreach (var detail in productDetails)
@@ -47,9 +39,6 @@ namespace UnityEngine.Purchasing.Utils
                     // Skip duplicate product IDs
                     if (!processedIds.Add(productId))
                     {
-                        Debug.LogError($"Duplicate product ID found in Google Play store response: {productId}. " +
-                            $"This product will be ignored to prevent dictionary key conflicts. " +
-                            $"Please ensure each product has a unique store-specific ID.");
                         continue;
                     }
 
@@ -107,8 +96,7 @@ namespace UnityEngine.Purchasing.Utils
             // TODO: IAP-2833 - Clean for one time vs subscription
             var productId = productDetails.Call<string>("getProductId");
             using var oneTimePurchaseOffer = productDetails.Call<AndroidJavaObject>("getOneTimePurchaseOfferDetails");
-            using var subscriptionOfferDetailsList = productDetails.Call<AndroidJavaObject>("getSubscriptionOfferDetails");
-            using var subscriptionOffer = subscriptionOfferDetailsList?.Enumerate().FirstOrDefault();
+            using var subscriptionOffer = productDetails.Call<AndroidJavaObject>("getSubscriptionOfferDetails").Enumerate().FirstOrDefault();
             using var subscriptionPricingPhases = subscriptionOffer?.Call<AndroidJavaObject>("getPricingPhases");
             using var subscriptionPricingPhasesList = subscriptionPricingPhases?.Call<AndroidJavaObject>("getPricingPhaseList");
             var subscriptionPricingPhasesListEnum = subscriptionPricingPhasesList?.Enumerate().ToList();

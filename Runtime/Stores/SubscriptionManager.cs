@@ -59,7 +59,7 @@ namespace UnityEngine.Purchasing
                                     $"valid receipt: {e}");
                                 return;
                             }
-                            var newSubscriptionId = newProduct.definition.storeSpecificId;
+                            var newSubscriptionId = newProduct.catalogListings.TryGetValue(newProduct.uSku ?? "", out var newListing) ? newListing.definition.storeSpecificId : null;
                             googleStore(oldSubscriptionInfo.GetSubscriptionInfoJsonString(), newSubscriptionId);
                             return;
                         }
@@ -99,7 +99,7 @@ namespace UnityEngine.Purchasing
                     $"receipt: {e}");
                 return;
             }
-            var newSubscriptionId = newProduct.definition.storeSpecificId;
+            var newSubscriptionId = newProduct.catalogListings.TryGetValue(newProduct.uSku ?? "", out var newListing) ? newListing.definition.storeSpecificId : null;
             googlePlayUpdateCallback(oldSubscriptionInfo.GetSubscriptionInfoJsonString(), newSubscriptionId);
         }
 

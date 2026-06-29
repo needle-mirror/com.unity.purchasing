@@ -9,13 +9,13 @@ namespace UnityEngine.Purchasing.Utilities
     {
         const string k_IAPMonoBehaviourUtil = "IAPMonoBehaviourUtil";
 
-        internal static UnityUtil CreateUnityUtils()
+        internal static UnityEngine.Purchasing.Extension.UnityUtil CreateUnityUtils()
         {
             IDependencyInjectionService di = new DependencyInjectionService();
             di.AddInstance(CreateMonoBehaviourUtil());
             di.AddService<UnityThreadUtils>();
-            di.AddService<UnityUtil>();
-            return di.GetInstance<UnityUtil>();
+            di.AddService<UnityEngine.Purchasing.Extension.UnityUtil>();
+            return di.GetInstance<UnityEngine.Purchasing.Extension.UnityUtil>();
         }
 
         static MonoBehaviourUtil CreateMonoBehaviourUtil()

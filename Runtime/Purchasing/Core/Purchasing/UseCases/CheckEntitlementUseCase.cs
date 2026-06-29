@@ -27,7 +27,7 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            var productId = product.definition?.id ?? "unknown";
+            var productId = product.uSku ?? "unknown";
             if (FindExistingEntitlementRequest(product))
             {
                 var entitlement = new Entitlement(
@@ -49,23 +49,31 @@ namespace UnityEngine.Purchasing
 
         void AddAndSendCheckEntitlementRequest(Product product, Action<Entitlement> onCheckComplete)
         {
-            var request = new CheckEntitlementRequest(product, onCheckComplete);
+            if (product.catalogListings.Count == 0)
+            {
+                var fallback = new Entitlement(product, null, EntitlementStatus.Unknown,
+                    $"No catalog listings available for product id: {product.uSku ?? "unknown"}");
+                onCheckComplete?.Invoke(fallback);
+                return;
+            }
+
+            var request = new CheckEntitlementRequest(product, onCheckComplete)
+            {
+                RemainingListings = product.catalogListings.Count
+            };
             m_OngoingRequests.Add(request);
 
-            try
+            foreach (var catalogListing in product.catalogListings.Values)
             {
-                m_Store.CheckEntitlement(product.definition);
-            }
-            catch (Exception e)
-            {
-                m_OngoingRequests.Remove(request);
-                var fallbackEntitlement = new Entitlement(
-                    product: product,
-                    order: null,
-                    status: EntitlementStatus.Unknown,
-                    message: $"Exception during CheckEntitlement: {e.Message}"
-                );
-                onCheckComplete?.Invoke(fallbackEntitlement);
+                try
+                {
+                    m_Store.CheckEntitlement(catalogListing.definition);
+                }
+                catch (Exception e)
+                {
+                    OnCheckEntitlement(catalogListing.definition, EntitlementStatus.Unknown,
+                        $"Exception during CheckEntitlement: {e.Message}");
+                }
             }
         }
 
@@ -73,24 +81,48 @@ namespace UnityEngine.Purchasing
             string message = null)
         {
             var matchingRequest = GetMatchingRequest(productDefinition);
-            if (matchingRequest != null)
+            if (matchingRequest == null)
             {
-                var entitlement = new Entitlement(matchingRequest.ProductToCheck, null, status);
-                matchingRequest.OnChecked?.Invoke(entitlement);
-                m_OngoingRequests.Remove(matchingRequest);
-            }
-            else
-            {
-                Debug.unityLogger.LogIAPWarning($"[CheckEntitlement] Missing request for productDefinition: {productDefinition.storeSpecificId}. " +
+                Debug.unityLogger.LogIAPWarning($"[CheckEntitlement] Missing request for product id: {productDefinition.id}. " +
                                                 $"Callback will not be invoked. Status: {status}. Message: {message ?? "none"}");
+                return;
             }
+
+            if (Priority(status) > Priority(matchingRequest.BestStatus))
+            {
+                matchingRequest.BestStatus = status;
+            }
+            if (!string.IsNullOrEmpty(message))
+            {
+                matchingRequest.LastMessage = message;
+            }
+            matchingRequest.RemainingListings--;
+
+            if (matchingRequest.RemainingListings > 0)
+            {
+                return;
+            }
+
+            m_OngoingRequests.Remove(matchingRequest);
+            var entitlement = new Entitlement(
+                matchingRequest.ProductToCheck, null, matchingRequest.BestStatus, matchingRequest.LastMessage);
+            matchingRequest.OnChecked?.Invoke(entitlement);
         }
 
         CheckEntitlementRequest GetMatchingRequest(ProductDefinition productDefinition)
         {
             return m_OngoingRequests.FirstOrDefault(request =>
-                request.ProductToCheck.definition.storeSpecificId
-                    .Equals(productDefinition.storeSpecificId));
+                request.ProductToCheck.uSku == productDefinition.id);
         }
+
+        static int Priority(EntitlementStatus status) => status switch
+        {
+            EntitlementStatus.FullyEntitled => 4,
+            EntitlementStatus.EntitledButNotFinished => 3,
+            EntitlementStatus.EntitledUntilConsumed => 2,
+            EntitlementStatus.NotEntitled => 1,
+            EntitlementStatus.Unknown => 0,
+            _ => 0,
+        };
     }
 }

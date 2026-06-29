@@ -35,12 +35,22 @@ namespace UnityEngine.Purchasing
         public virtual IGooglePlayStoreExtendedPurchaseService? Google => m_BaseInternalPurchaseService.Google;
 
         /// <summary>
+        /// Payment Provider Specific Purchase Extensions
+        /// </summary>
+        public virtual IPaymentProvidersExtendedPurchaseService? PaymentProviders => m_BaseInternalPurchaseService.PaymentProviders;
+
+        /// <summary>
         /// Purchases a product.
         /// </summary>
         /// <param name="product">The product to purchase.</param>
         public virtual void PurchaseProduct(Product product)
         {
             m_BaseInternalPurchaseService.PurchaseProduct(product);
+        }
+
+        public void PurchaseProduct(string catalogListingId)
+        {
+            m_BaseInternalPurchaseService.PurchaseProduct(catalogListingId);
         }
 
         /// <summary>

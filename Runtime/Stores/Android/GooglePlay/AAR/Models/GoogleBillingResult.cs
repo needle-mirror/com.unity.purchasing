@@ -19,5 +19,13 @@ namespace UnityEngine.Purchasing.Models
                 // TODO: ULO-3790: getOnPurchasesUpdatedSubResponseCode
             }
         }
+
+        // Synthetic result for code paths that need to short-circuit without
+        // a real Java BillingResult (e.g. preflight failures before the JNI call).
+        internal GoogleBillingResult(GoogleBillingResponseCode responseCode, string debugMessage)
+        {
+            this.responseCode = responseCode;
+            this.debugMessage = debugMessage;
+        }
     }
 }

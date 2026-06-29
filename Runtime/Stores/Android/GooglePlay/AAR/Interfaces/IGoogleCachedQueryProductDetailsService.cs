@@ -8,7 +8,6 @@ namespace UnityEngine.Purchasing
         IEnumerable<AndroidJavaObject> GetCachedQueriedProducts();
         IEnumerable<AndroidJavaObject> GetCachedQueriedProductDetails(IEnumerable<ProductDefinition> products);
         bool Contains(ProductDefinition products);
-        bool ContainsSku(string sku);
         void AddCachedQueriedProductDetails(IEnumerable<AndroidJavaObject> queriedProducts);
     }
 }

@@ -1,0 +1,24 @@
+{
+    "name": "Unity.Purchasing.LiveContentAdapterService",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Services.Core",
+        "Unity.Services.Core.Environments",
+        "Unity.Services.Core.Internal",
+        "Unity.Purchasing.Utilities"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "versionDefines": [
+        {
+            "name": "com.unity.services.authentication",
+            "expression": "3.7.0",
+            "define": "IAP_UNITY_AUTH_TARGETING_ENABLED"
+        }
+    ],
+    "noEngineReferences": false
+}

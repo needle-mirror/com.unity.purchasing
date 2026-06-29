@@ -96,7 +96,7 @@ namespace UnityEngine.Purchasing
                 new PurchaseFailureDescription(
                     m_ProductCache?.FindOrDefault(productToBuy.id) ?? Product.CreateUnknownProduct(productToBuy.id),
                     PurchaseFailureReason.ProductUnavailable,
-                    "Invalid transaction id for old product: " + currentProduct?.definition.id
+                    "Invalid transaction id for old product: " + currentProduct?.uSku
                 )
             );
         }

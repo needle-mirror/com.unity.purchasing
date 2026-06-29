@@ -1,0 +1,5 @@
+{
+  "displayName": "IAP 5 Coded Sample",
+  "description": "This sample showcases how to use Coded IAP and Payment Providers.",
+  "createSeparatePackage": false
+}

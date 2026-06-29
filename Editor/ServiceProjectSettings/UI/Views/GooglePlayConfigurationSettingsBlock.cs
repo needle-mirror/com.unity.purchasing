@@ -2,6 +2,9 @@ using System;
 using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine;
 using UnityEngine.UIElements;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Services.Core.Editor.Environments;
 
 namespace UnityEditor.Purchasing
 {
@@ -15,6 +18,8 @@ namespace UnityEditor.Purchasing
         const string k_ErrorUnauthorized = "error-unauthorized-user";
         const string k_ErrorServer = "error-server-error";
         const string k_ErrorFetchKey = "error-fetch-key";
+        const string k_CodaPaymentProviderLink = "CodaPaymentProviderLink";
+        const string k_StripePaymentProviderLink = "StripePaymentProviderLink";
 
         readonly GoogleConfigurationData m_GooglePlayDataRef;
         readonly GoogleConfigurationWebRequests m_WebRequests;
@@ -57,6 +62,25 @@ namespace UnityEditor.Purchasing
         {
             ToggleGoogleKeyStateDisplay();
             SetupLinkActions();
+            SetupFoldOutActions();
+        }
+
+        void SetupFoldOutActions() {
+            List<VisualElement> clickableHeaders = m_ConfigurationBlock.Query(className: "configuration-item-header").ToList();
+
+            foreach (VisualElement element in clickableHeaders)
+            {
+                if (element != null)
+                {
+                    // Register a callback for the clicked event
+                    element.RegisterCallback<ClickEvent>(onFoldOutAction);
+                }
+            }
+        }
+
+        void onFoldOutAction(ClickEvent evt) {
+            VisualElement currentHandler = evt.currentTarget as VisualElement;
+            currentHandler.parent.ToggleInClassList("expanded");
         }
 
         void PopulateObfuscatorBlock()
@@ -93,6 +117,46 @@ namespace UnityEditor.Purchasing
                 var clickable = new Clickable(OpenProjectSettingsUnityDashboard);
                 projectSettingsDashboardLink.AddManipulator(clickable);
             }
+            SetupPaymentProviderLink(k_CodaPaymentProviderLink);
+            SetupPaymentProviderLink(k_StripePaymentProviderLink);
+        }
+
+        void SetupPaymentProviderLink(string elementName)
+        {
+            var link = m_ConfigurationBlock.Q(elementName);
+            if (link != null)
+            {
+                var clickable = new Clickable(OpenPaymentProviderUnityDashboard);
+                link.AddManipulator(clickable);
+            }
+        }
+
+        void OpenPaymentProviderUnityDashboard()
+        {
+            Application.OpenURL(BuildPaymentProviderUri());
+        }
+
+        string BuildPaymentProviderUri()
+        {
+            var environmentId = EnvironmentsApi.Instance.ActiveEnvironmentId;
+            if (environmentId == Guid.Empty)
+            {
+                try
+                {
+                    environmentId = EnvironmentsApi.Instance.Environments.First(envInfo => envInfo.Name == "production").Id;
+                }
+                catch (Exception)
+                {
+                    // ignored
+                }
+
+                if (environmentId == Guid.Empty)
+                {
+                    return string.Format(PurchasingUrls.inAppPurchasesUrl, OrganizationProvider.Organization.Key);
+                }
+            }
+
+            return string.Format(PurchasingUrls.paymentProviderUrl, OrganizationProvider.Organization.Key, CloudProjectSettings.projectId, environmentId);
         }
 
         static void OpenGooglePlayDevConsole()

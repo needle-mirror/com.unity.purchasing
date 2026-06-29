@@ -2,12 +2,11 @@ namespace UnityEngine.Purchasing
 {
     class CommonTransactionEventHelper
     {
-        internal static string GetTransactionName(Product product)
+        internal static string GetTransactionName(CatalogListing listing)
         {
-            return string.IsNullOrEmpty(product.metadata.localizedTitle) ?
-                product.definition.storeSpecificId :
-                product.metadata.localizedTitle;
+            return string.IsNullOrEmpty(listing?.metadata?.localizedTitle) ?
+                listing?.definition?.storeSpecificId :
+                listing.metadata.localizedTitle;
         }
-
     }
 }

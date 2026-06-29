@@ -1,0 +1,23 @@
+.deployment-inspector-container {
+    padding-top:8px;
+    padding-bottom:8px;
+}
+
+.deployment-title-label {
+    padding-top:8px;
+    font-size:16px;
+    -unity-font-style:bold;
+    flex-grow:1;
+}
+
+.deployment-content-container {
+    display:flex;
+    flex-direction:row;
+    padding-top:8px
+}
+
+.separator {
+    margin-top:5px;
+    margin-bottom:5px;
+    height:2px;
+}

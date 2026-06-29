@@ -1,0 +1,16 @@
+generatorName: csharp-unity
+outputDir: ./tmp-client
+inputSpec: ./spec.yaml
+packageName: com.unity.purchasing.liveContentAdapter
+additionalProperties:
+  unityVersion: "2022.3"
+  packageVersion: "0.0.1-preview"
+  unityPackageNamespace: "UnityEngine.Purchasing.LiveContentAdapterService"
+  unityServiceName: "LiveContentAdapter"
+  unityPackageDescription: Unity IAP LiveContentAdapter Service
+  useUnityAuthentication: true
+  usePhpStyleQueryParams: false
+  publicAccess: []
+  releaseDate: 2026-06-16
+  generateMarkdownDocumentation: false
+  outputFormat: code-only

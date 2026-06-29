@@ -1,0 +1,25 @@
+{
+    "name": "Unity.Purchasing.WebshopService",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Services.Core",
+        "Unity.Services.Core.Environments",
+        "Unity.Services.Core.Internal",
+        "Unity.Purchasing.Utilities",
+        "Unity.Services.Authentication"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "versionDefines": [
+        {
+            "name": "com.unity.services.authentication",
+            "expression": "3.7.1",
+            "define": "IAP_UNITY_AUTH_RESTRICTED_TOKEN_ENABLED"
+        }
+    ],
+    "noEngineReferences": false
+}

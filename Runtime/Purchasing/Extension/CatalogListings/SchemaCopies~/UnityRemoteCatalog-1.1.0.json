@@ -1,0 +1,148 @@
+{
+  "properties": {
+    "imageUrl": {
+      "format": "uri",
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "pricing": {
+      "contains": {
+        "properties": {
+          "currencyCode": {
+            "const": "USD"
+          }
+        },
+        "required": [
+          "currencyCode"
+        ],
+        "type": "object"
+      },
+      "items": {
+        "properties": {
+          "amount": {
+            "description": "The amount charged for the product, in micros (1,000,000 micros = 1 unit of currency)",
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          "currencyCode": {
+            "description": "The product's currency in ISO 4217 format e.g. GBP, USD",
+            "type": "string"
+          },
+          "webshopPrice": {
+            "description": "The price shown on the webshop, in micros (1,000,000 micros = 1 unit of currency)",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "currencyCode",
+          "amount"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "productDetails": {
+      "items": {
+        "properties": {
+          "badge": {
+            "properties": {
+              "imageUrl": {
+                "description": "The badge image URL",
+                "format": "uri",
+                "type": "string"
+              },
+              "text": {
+                "description": "The badge text",
+                "minLength": 1,
+                "type": "string"
+              }
+            },
+            "required": [
+              "text"
+            ],
+            "type": "object"
+          },
+          "description": {
+            "description": "The description of the product for this language",
+            "maxLength": 250,
+            "minLength": 1,
+            "type": "string"
+          },
+          "language": {
+            "description": "The language this product detail is set for",
+            "minLength": 1,
+            "type": "string"
+          },
+          "subtitle": {
+            "description": "The subtitle of the product for this language",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": {
+            "description": "The title of this product for this language",
+            "maxLength": 50,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "language",
+          "title"
+        ],
+        "type": "object"
+      },
+      "minItems": 1,
+      "type": "array"
+    },
+    "storeIdOverrides": {
+      "items": {
+        "properties": {
+          "store": {
+            "enum": [
+              "apple",
+              "google"
+            ],
+            "type": "string"
+          },
+          "value": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "store",
+          "value"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "type": {
+      "description": "The type of product: consumable, non-consumable or subscription",
+      "enum": [
+        "Consumable",
+        "NonConsumable",
+        "Subscription"
+      ],
+      "type": "string"
+    },
+    "uSKU": {
+      "description": "The SKU (identifier) for this product",
+      "maxLength": 100,
+      "minLength": 1,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9._-]*$",
+      "type": "string"
+    }
+  },
+  "required": [
+    "uSKU",
+    "type",
+    "productDetails",
+    "pricing"
+  ],
+  "type": "object"
+}

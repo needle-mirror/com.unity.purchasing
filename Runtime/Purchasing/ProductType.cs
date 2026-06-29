@@ -1,3 +1,5 @@
+using System.Runtime.Serialization;
+
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -26,6 +28,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Unknown product type.
         /// </summary>
+        [InspectorName(null)]
         Unknown
     }
 }

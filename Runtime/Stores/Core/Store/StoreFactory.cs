@@ -6,8 +6,14 @@ using Purchasing.Extension;
 using Stores.Android.GooglePlay.AAR.Interfaces;
 using Uniject;
 using UnityEngine.Purchasing.Interfaces;
+using UnityEngine.Purchasing.CatalogListings;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.PaymentProviderService;
+using UnityEngine.Purchasing.WebshopService;
+using UnityEngine.Purchasing.Registration;
+using UnityEngine.Purchasing.Stores;
 using UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models;
+using UnityEngine.Purchasing.Stores.PaymentProviderCurrencyFormatters;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.Utilities;
 using UnityEngine.Purchasing.Utils;
@@ -23,6 +29,7 @@ namespace UnityEngine.Purchasing
         readonly INativeStoreProvider m_NativeStoreProvider;
         public readonly ITelemetryMetricsInstanceWrapper TelemetryMetricsInstanceWrapper;
         public readonly ITelemetryDiagnosticsInstanceWrapper TelemetryDiagnosticsInstanceWrapper;
+        internal readonly StoreLocationContext StoreLocationContext;
         readonly Dictionary<string?, Func<IStoreWrapper>> m_StoreInstantiationByName = new Dictionary<string?, Func<IStoreWrapper>>();
 
         internal StoreFactory(IUtil util, ILogger logger, INativeStoreProvider nativeStoreProvider, ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper, ITelemetryMetricsInstanceWrapper telemetryMetricsInstanceWrapper)
@@ -32,6 +39,7 @@ namespace UnityEngine.Purchasing
             m_NativeStoreProvider = nativeStoreProvider;
             TelemetryDiagnosticsInstanceWrapper = telemetryDiagnosticsInstanceWrapper;
             TelemetryMetricsInstanceWrapper = telemetryMetricsInstanceWrapper;
+            StoreLocationContext = new StoreLocationContext();
             RegisterBaseStores();
         }
 
@@ -62,6 +70,7 @@ namespace UnityEngine.Purchasing
             RegisterStore(FakeAppStore.Name, InstantiateFakeStore);
             RegisterStore(MacAppStore.Name, InstantiateMacAppStore);
             RegisterStore(GooglePlay.Name, InstantiateGooglePlayStore);
+            RegisterStore(PaymentProvider.Name, InstantiatePaymentProviderStore);
 #if IAP_GDK && MICROSOFT_GDK_SUPPORT
             RegisterStore(XboxStore.Name, InstantiateXboxStore);
 #endif
@@ -77,6 +86,10 @@ namespace UnityEngine.Purchasing
             try
             {
                 return m_StoreInstantiationByName[storeName]();
+            }
+            catch (KeyNotFoundException keyNotFoundException)
+            {
+                throw new StoreException($"No store with name '{storeName}' is registered", keyNotFoundException);
             }
             catch (Exception ex)
             {
@@ -125,6 +138,7 @@ namespace UnityEngine.Purchasing
         IStoreWrapper InstantiateAppleAppStore(string storeName, string storeDisplayName)
         {
             var di = CreateBaseDiService();
+            di.AddInstance(StoreLocationContext);
             di.AddInstance(new AppleAppStoreCartValidator(storeDisplayName));
             AddMetricizedAppleStoreDependencies(di);
             CreateAndAssignNativeAppleStore(di.GetInstance<AppleStoreImpl>());
@@ -145,7 +159,7 @@ namespace UnityEngine.Purchasing
 
         void CreateAndAssignNativeAppleStore(AppleStoreImpl store)
         {
-            var appleBindings = m_NativeStoreProvider.GetStorekit(store);
+            var appleBindings = m_NativeStoreProvider.GetStorekit();
             store.SetNativeStore(appleBindings);
         }
 
@@ -178,11 +192,37 @@ namespace UnityEngine.Purchasing
         IStoreWrapper InstantiateGooglePlayStore()
         {
             var di = CreateBaseDiService();
+            di.AddInstance(StoreLocationContext);
             AddGooglePlayStoreServices(di);
             AddGooglePlayStoreServiceAars(di);
             LinkGooglePlayStoreDependencies(di);
 
             return CreateStoreWrapper(GooglePlay.Name, di);
+        }
+
+        IStoreWrapper InstantiatePaymentProviderStore()
+        {
+            var di = CreateBaseDiService();
+            di.AddInstance(UnityUtilContainer.Instance());
+            di.AddService<RetryService>();
+            di.AddInstance(new CoreRegistryHelper());
+            di.AddInstance(StoreLocationContext);
+            di.AddService<PlayerData>();
+#if UNITY_ANDROID && !UNITY_EDITOR
+            di.AddService<AndroidCurrencyFormatter>();
+#elif (UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS) && !UNITY_EDITOR
+            di.AddService<IosCurrencyFormatter>();
+#elif UNITY_STANDALONE_OSX && !UNITY_EDITOR
+            di.AddService<DotNetCurrencyFormatter>();
+#else
+            di.AddService<DotNetCurrencyFormatter>();
+#endif
+            di.AddService<PaymentProviderImpl>();
+
+            di.AddInstance(PaymentProviderServiceProvider.Instance());
+            di.AddInstance(WebshopServiceProvider.Instance());
+            di.AddInstance(CatalogListingClientProvider.Instance());
+            return CreateStoreWrapper(PaymentProvider.Name, di);
         }
 
         static IStoreWrapper CreateStoreWrapper(string storeName, IDependencyInjectionService di)

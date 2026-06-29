@@ -35,12 +35,6 @@ namespace UnityEngine.Purchasing
             return Instance();
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        static void ResetStaticsOnLoad()
-        {
-            instance  = null;
-        }
-
         /// <summary>
         /// The UI mode for the Fake store, if it's in use.
         /// Currently non-functional. FakeStore will use StandardUser UI Mode regardless of value.
@@ -53,11 +47,10 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool useFakeStoreAlways { get; set; }
 
-        internal readonly string k_Version = "5.3.1"; // NOTE: Changed using UpdatePackageVersion.sh before pack step.
         /// <summary>
         /// The version of com.unity.purchasing installed and the app was built using.
         /// </summary>
-        public string Version => k_Version;
+        public string Version => IAPVersion.Current;
 
         /// <summary>
         /// A property that retrieves the <c>AppStore</c> type.

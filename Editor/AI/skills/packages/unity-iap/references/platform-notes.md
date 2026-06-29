@@ -22,7 +22,7 @@ store.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += (pro
 {
     // Player tapped "Buy" on App Store product page
     // You can delay the purchase (e.g., show a loading screen first)
-    Debug.Log($"Promotional purchase intercepted: {product.definition.id}");
+    Debug.Log($"Promotional purchase intercepted: {product.uSku}");
 
     // When ready, continue the purchase
     store.AppleStoreExtendedPurchaseService.ContinuePromotionalPurchases();
@@ -142,7 +142,7 @@ string profileId = store.GooglePlayStoreExtendedPurchaseService.GetObfuscatedPro
 ```csharp
 store.GooglePlayStoreExtendedPurchaseService.OnDeferredPaymentUntilRenewalDate += (deferredOrder) =>
 {
-    Debug.Log($"Payment deferred until renewal: {deferredOrder.SubscriptionOrdered.definition.id}");
+    Debug.Log($"Payment deferred until renewal: {deferredOrder.SubscriptionOrdered.uSku}");
 };
 ```
 

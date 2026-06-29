@@ -39,7 +39,7 @@ namespace UnityEngine.Purchasing
 
             foreach (var cartItem in cartItems)
             {
-                var productDefinition = cartItem?.Product.definition;
+                var productDefinition = cartItem != null && cartItem.Product.catalogListings.TryGetValue(cartItem.CatalogListingId, out var listing) ? listing.definition : null;
 
                 var productId = productDefinition?.storeSpecificId;
                 var productType = productDefinition?.type;

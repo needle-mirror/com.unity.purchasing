@@ -84,5 +84,11 @@ namespace UnityEngine.Purchasing
 
             return false;
         }
+
+        public Task<bool> ShouldRetry()
+        {
+            var retryInfo = new RetryPolicyInformation(m_NumberOfAttempts, Time.time - m_StartTime);
+            return m_RetryPolicy.ShouldRetry(retryInfo);
+        }
     }
 }

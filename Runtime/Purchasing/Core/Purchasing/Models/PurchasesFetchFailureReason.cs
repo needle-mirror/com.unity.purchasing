@@ -19,6 +19,16 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// A catch all for remaining purchase problems.
         /// </summary>
-        Unknown
+        Unknown,
+
+        /// <summary>
+        /// The current store does not support this functionality.
+        /// </summary>
+        NotSupported,
+
+        /// <summary>
+        /// The user is not authenticated.
+        /// </summary>
+        UserNotAuthenticated
     }
 }

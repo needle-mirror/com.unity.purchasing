@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Uniject;
+using UnityEngine.Purchasing.Stores;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Scripting;
 
@@ -17,8 +18,9 @@ namespace UnityEngine.Purchasing
         internal MetricizedAppleStoreImpl(ICartValidator cartValidator,
             IAppleFetchProductsService fetchProductsService,
             ITransactionLog transactionLog, IUtil util, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics,
+            IStoreLocationContext storeLocationContext,
             ITelemetryMetricsService telemetryMetricsService)
-            : base(cartValidator, fetchProductsService, transactionLog, util, logger, telemetryDiagnostics)
+            : base(cartValidator, fetchProductsService, transactionLog, util, logger, telemetryDiagnostics, storeLocationContext)
         {
             m_TelemetryMetricsService = telemetryMetricsService;
         }

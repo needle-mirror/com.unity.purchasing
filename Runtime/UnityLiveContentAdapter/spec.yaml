@@ -1,0 +1,435 @@
+openapi: 3.0.0
+info:
+  contact:
+    name: 'Team: Car | Slack: #ask-liveops'
+  description: Live Content is a unified service for management and runtime delivery of both assets (binaries, bundles, files) and configuration (JSON data backed by schemas).
+  title: Live Content Client API
+  version: 1.3.4
+tags:
+  - description: Client-facing operations
+    name: Client
+servers:
+  - url: https://services.api.unity.com/live-content/client/v1
+  - url: https://staging.services.api.unity.com/live-content/client/v1
+  - url: https://test.services.api.unity.com/live-content/client/v1
+paths:
+  /projects/{projectId}/configs/content:
+    get:
+      security:
+        - Client: []
+      summary: Get player configs with inline content
+      description: Gets all configs (metadata + inline content) for the resolved release / variant tags. Pagination and filtering semantics mirror /configs/info.
+      operationId: GetPlayerConfigsContent
+      tags:
+        - Client
+      parameters:
+        - description: Project ID
+          in: path
+          name: projectId
+          required: true
+          schema:
+            example: '{{projectId}}'
+            type: string
+        - deprecated: true
+          description: 'Current Page. Deprecated: use the `next` cursor instead for efficient pagination.'
+          in: query
+          name: page
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - description: Items Per Page
+          in: query
+          name: limit
+          schema:
+            default: 10
+            format: int64
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: Path
+          in: query
+          name: path
+          schema:
+            type: string
+        - description: URI-escaped Schema identifier
+          in: query
+          name: schema
+          schema:
+            example: https%3A%2F%2Fservices.unity.com%2Fapi%2Fschema-registry%2Fv1%2Forganizations%2ForgId%2Fprojects%2FprojectId%2Fschemas%2FschemaName
+            type: string
+        - description: 'TEMPORARY DESCRIPTION: schema version filter. Examples: "1.*", ">=1.1.0", "1.0.0", ">=1.0.0,<2.0.0".'
+          in: query
+          name: schemaVersion
+          schema:
+            type: string
+        - description: Opaque cursor token returned in the `X-Next` response header from a previous request. When provided, returns the next page of results. Takes precedence over `after` and `start`.
+          in: query
+          name: next
+          schema:
+            type: string
+        - description: Path-based cursor - returns configs listed alphabetically after this config path
+          in: query
+          name: after
+          schema:
+            type: string
+        - description: Path-based cursor - Start from the alphabetically first config path
+          in: query
+          name: start
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/FilterQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/clientFileWithContent'
+                type: array
+          description: OK
+          headers:
+            Content-Range:
+              description: paging in the format - configs [start]-[end]/[total]
+              schema:
+                type: string
+            X-Next:
+              description: Opaque cursor token for the next page of results. Present only when more results exist. Pass as `?next=<token>` to retrieve the next page.
+              schema:
+                type: string
+  /projects/{projectId}/configs/content/(.+)$:
+    get:
+      summary: Get config content
+      description: Returns the structured JSON content of a single config by its path.
+      operationId: GetPlayerConfigContent
+      tags:
+        - Client
+      parameters:
+        - description: Project ID
+          in: path
+          name: projectId
+          required: true
+          schema:
+            example: '{{projectId}}'
+            type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                description: The structured config body.
+                example:
+                  items:
+                    - id: sword
+                      price: 100
+                type: object
+          description: The structured config body.
+  /projects/{projectId}/configs/info:
+    get:
+      summary: Get player configs
+      description: |
+        Gets all configs information, filtered by path or schema.
+        For example, to search by path you can do "/configs/info?path=levels.json". To search by schema you can do "/files/info?schema=https%3A%2F%2Fservices.unity.com%2Fapi%2Fschema-registry%2Fv1%2Forganizations%2ForgId%2Fprojects%2FprojectId%2Fschemas%2FschemaName" (must be URI-escaped).
+      operationId: GetPlayerConfigs
+      tags:
+        - Client
+      parameters:
+        - description: Project ID
+          in: path
+          name: projectId
+          required: true
+          schema:
+            example: '{{projectId}}'
+            type: string
+        - deprecated: true
+          description: 'Current Page. Deprecated: use the `next` cursor instead for efficient pagination.'
+          in: query
+          name: page
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - description: Items Per Page
+          in: query
+          name: limit
+          schema:
+            default: 10
+            format: int64
+            maximum: 500
+            minimum: 1
+            type: integer
+        - description: Path
+          in: query
+          name: path
+          schema:
+            type: string
+        - description: URI-escaped Schema identifier
+          in: query
+          name: schema
+          schema:
+            example: https%3A%2F%2Fservices.unity.com%2Fapi%2Fschema-registry%2Fv1%2Forganizations%2ForgId%2Fprojects%2FprojectId%2Fschemas%2FschemaName
+            type: string
+        - description: Opaque cursor token returned in the `X-Next` response header from a previous request. When provided, returns the next page of results. Takes precedence over `after` and `start`.
+          in: query
+          name: next
+          schema:
+            type: string
+        - description: Path-based cursor - returns configs listed alphabetically after this config path
+          in: query
+          name: after
+          schema:
+            type: string
+        - description: Path-based cursor - Start from the alphabetically first config path
+          in: query
+          name: start
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/FilterQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/clientFile'
+                type: array
+          description: OK
+          headers:
+            Content-Range:
+              description: paging in the format - configs [start]-[end]/[total]
+              schema:
+                type: string
+            X-Next:
+              description: Opaque cursor token for the next page of results. Present only when more results exist. Pass as `?next=<token>` to retrieve the next page.
+              schema:
+                type: string
+  /projects/{projectId}/files/content/(.+)$:
+    get:
+      summary: Get file content
+      description: Retrieve the content of a single file.
+      operationId: GetPlayerFileContent
+      tags:
+        - Client
+      parameters:
+        - description: Project ID
+          in: path
+          name: projectId
+          required: true
+          schema:
+            example: '{{projectId}}'
+            type: string
+      responses:
+        '307':
+          description: Temporary Redirect - Redirects the client to the new content location.
+          headers:
+            Location:
+              description: The URL to which the client should be redirected to access the file content.
+              schema:
+                type: string
+  /projects/{projectId}/files/info:
+    get:
+      summary: Get player files
+      description: |
+        Gets all files information, filtered by path or variant tag.
+        For example, to search by path you can do "/files/info?path=asset.bundle". To search by variant tag you can do "/files/info?variantTag=android". To search for files with no variant tags, use "/files/info?variantTag". To get all files regardless of variant tags, use "/files/info" (omit the variantTag parameter).
+      operationId: GetPlayerFiles
+      tags:
+        - Client
+      parameters:
+        - description: Project ID
+          in: path
+          name: projectId
+          required: true
+          schema:
+            example: '{{projectId}}'
+            type: string
+        - deprecated: true
+          description: 'Current Page. Deprecated: use the `next` cursor instead for efficient pagination.'
+          in: query
+          name: page
+          schema:
+            format: int64
+            minimum: 1
+            type: integer
+        - description: Items Per Page
+          in: query
+          name: limit
+          schema:
+            default: 10
+            format: int64
+            maximum: 100
+            minimum: 1
+            type: integer
+        - description: Path
+          in: query
+          name: path
+          schema:
+            type: string
+        - description: Opaque cursor token returned in the `X-Next` response header from a previous request.  When provided, returns the next page of results. Takes precedence over `after` and `start`.
+          in: query
+          name: next
+          schema:
+            type: string
+        - description: Path-based cursor - returns files listed alphabetically after this file path
+          in: query
+          name: after
+          schema:
+            type: string
+        - description: Path-based cursor - Start from the alphabetically first file path
+          in: query
+          name: start
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/FilterQuery'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/clientFile'
+                type: array
+          description: OK
+          headers:
+            Content-Range:
+              description: paging in the format - files [start]-[end]/[total]
+              schema:
+                type: string
+            X-Next:
+              description: Opaque cursor token for the next page of results. Present only when more results exist.  Pass as `?next=<token>` to retrieve the next page.
+              schema:
+                type: string
+components:
+  parameters:
+    FilterQuery:
+      description: |-
+        AIP-160 filter expression scoped to the metadata object. Field paths are relative to the metadata object — do not include a "metadata." prefix. Supported operators: = != < <= > >= : (has/contains) AND OR NOT. Wildcards: use * in string values for glob matching (e.g. "io*" matches "ios"). Examples:
+          ?metadata=platform="ios"
+          ?metadata=platform="ios" AND version>3
+          ?metadata=platform="ios" OR platform="android"
+          ?metadata=NOT platform="web"
+          ?metadata=tags:"mobile"
+          ?metadata=version:*
+      in: query
+      name: metadata
+      schema:
+        maxLength: 1000
+        type: string
+  schemas:
+    clientFile:
+      properties:
+        contentHash:
+          description: Base64-encoded SHA-256 hash of the file content (44 characters in Base64, including padding). MD5 (deprecated) is accepted for legacy compatibility.
+          example: LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ=
+          type: string
+          x-go-custom-tag: bson:"contentHash,omitempty"
+          x-isnullable: true
+          x-order: 8
+        contentSize:
+          example: 1234567
+          format: int64
+          type: integer
+          x-go-custom-tag: bson:"contentSize,omitempty"
+          x-isnullable: true
+          x-order: 7
+        contentType:
+          example: image/jpeg
+          type: string
+          x-go-custom-tag: bson:"contentType,omitempty"
+          x-isnullable: true
+          x-order: 9
+        contentUri:
+          type: string
+          x-go-custom-tag: bson:"contentUri,omitempty"
+          x-isnullable: true
+          x-order: 10
+        id:
+          $ref: '#/components/schemas/id'
+        path:
+          example: ios/character1.bundle
+          maxLength: 65535
+          pattern: ^\S.*$
+          type: string
+          x-go-custom-tag: bson:"path,omitempty"
+          x-isnullable: true
+          x-order: 2
+        type:
+          $ref: '#/components/schemas/resourceType'
+        variantTag:
+          items:
+            maxLength: 250
+            type: string
+            x-isnullable: true
+          type: array
+          x-go-custom-tag: bson:"variantTag,omitempty"
+          x-order: 16
+      type: object
+    clientFileWithContent:
+      description: A player-facing config with metadata + inline JSON content (returned by /configs/content endpoints).
+      properties:
+        content:
+          additionalProperties: true
+          description: The structured config body inlined into the response.
+          example:
+            items:
+              - id: sword
+                price: 100
+          type: object
+        contentHash:
+          description: Base64-encoded SHA-256 hash of the config content.
+          example: LPJNul+wow4m6DsqxbninhsWHlwfp0JecwQzYpOLmCQ=
+          type: string
+        contentSize:
+          example: 1234
+          format: int64
+          type: integer
+        id:
+          $ref: '#/components/schemas/id'
+        path:
+          example: catalog/items.json
+          maxLength: 65535
+          pattern: ^\S.*$
+          type: string
+        schemas:
+          items:
+            example: https://services.unity.com/api/schema-registry/v1/organizations/orgId/projects/projectId/schemas/schemaName
+            type: string
+          type: array
+        variantTag:
+          items:
+            maxLength: 250
+            type: string
+          type: array
+      required:
+        - id
+        - path
+        - contentSize
+        - contentHash
+        - content
+      type: object
+    id:
+      example: b9a0657d-b223-4507-9206-ead33ac06c6d
+      format: string
+      type: string
+      x-go-custom-tag: bson:"_id,omitempty"
+      x-go-name: Id
+      x-order: 1
+    resourceType:
+      description: Resource type enumeration
+      enum:
+        - file
+        - config
+        - all
+      example: file
+      type: string
+      x-go-custom-tag: db-model:"Type"
+      x-go-name: ResourceType
+      x-isnullable: true
+      x-order: 3
+  securitySchemes:
+    Client:
+      type: http
+      scheme: bearer
+      description: |-
+        To get started with Authentication, please visit the [Client Authentication section](https://services.docs.unity.com/docs/client-auth).

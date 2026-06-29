@@ -46,7 +46,7 @@
 
 .project-settings-title-container,
 .project-settings-section-container {
-    padding:4px 4px 4px 8px;
+    padding:4px 8px 4px 8px;
     flex-direction:column;
     flex-wrap:wrap;
 }
@@ -294,7 +294,10 @@
 .label-container {
     white-space:normal;
     padding-top:5px;
-    padding-bottom:5px;
+}
+
+.external-link-icon {
+    margin-left: 0px;
 }
 
 .service-link-button,
@@ -560,6 +563,107 @@
 
 #PollFooter {
     display:none;
+}
+
+.configuration-item {
+    background-color: var(--unity-theme-background-color-6);
+    border-color: var(--unity-theme-border-color-21);
+    border-width: 1px;
+    border-radius: 3px;
+    padding: 8px;
+    margin: 4px 0;
+}
+
+.configuration-item.expanded .configuration-item-body {
+    display: flex;
+}
+
+.configuration-item.expanded .configuration-toggle {
+    rotate: -90deg;
+}
+
+.configuration-item-header {
+    display: flex;
+    flex-direction: row;
+    padding: 4px;
+    align-items: center;
+}
+
+.configuration-icon {
+    width: 48px;
+    height: 48px;
+    background-color: white;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.configuration-icon.google-play {
+    background-image: url("/Packages/com.unity.purchasing/Icons/Icon-GooglePlay.png");
+}
+
+.configuration-icon.stripe {
+    background-image: url("/Packages/com.unity.purchasing/Icons/Icon-Stripe.png");
+}
+
+.configuration-icon.coda {
+    background-image: url("/Packages/com.unity.purchasing/Icons/Icon-Coda.png");
+}
+
+.configuration-info {
+    padding-left: 8px;
+    padding-right: 8px;
+    flex-grow: 1;
+    min-height: 48px;
+}
+
+.configuration-name {
+    -unity-font-style: bold;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.configuration-description {
+    margin: 4px 0 8px 0;
+    white-space: normal;
+}
+
+.configuration-badge {
+    border-width: 1px;
+    border-color: var(--unity-theme-background-color-11);
+    padding: 2px 4px;
+    margin-left: 4px;
+    background-color: var(--unity-theme-background-color-53);
+    -unity-font-style: normal;
+    font-size: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    display: none;
+}
+
+.configuration-badge.configured {
+    color: var(--unity-theme-border-color-25);
+    border-color: var(--unity-theme-border-color-25);
+}
+
+.configuration-toggle {
+    width: 16px;
+    height: 16px;
+    rotate: 90deg;
+}
+
+.configuration-item-body {
+    border-top-width: 1px;
+    border-top-color: var(--unity-theme-background-color-11);
+    padding: 8px 4px;
+    margin-top: 8px;
+    display: none;
+}
+
+.configuration-title {
+    -unity-font-style: bold;
+    font-size: 14px;
+    margin-bottom: 8px;
 }
 
 /* Xbox Configuration */

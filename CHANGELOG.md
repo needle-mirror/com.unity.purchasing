@@ -1,4 +1,79 @@
 # Changelog
+## [5.4.0] - 2026-06-29
+### Added
+- [Direct to Consumer (D2C) payment providers](https://docs.unity.com/en-us/iap/payment-providers) - Integrate D2C payment providers with Unity In-App Purchasing to sell and fulfill products through off-platform transactions.
+- [Unity Webshops](https://docs.unity.com/iap/webshop) - Launch a branded web storefront for your In-App Purchasing catalog from the Unity Dashboard, with theming, hosting, and payments handled for you.
+- [Remote Catalog](https://docs.unity.com/en-us/iap/payment-providers/configure-remote-catalog) - Define your product catalog and upload it to the Remote Catalog service.
+- [Purchase Options UI](https://docs.unity.com/en-us/iap/payment-providers/initiate-purchase) - Start a purchase from your application and let players choose how to pay with the Purchase Options UI.
+- These new features listed above all require `com.unity.services.authentication` 3.7.1 and above.
+- [Catalog Listings](https://docs.unity.com/en-us/iap/payment-providers/configure-remote-catalog#products-and-catalog-listings) - A single product can now expose multiple purchasable offers via `CatalogListing`. Catalog Listings are defined in the Remote Catalog.
+   - All functions previously using a `Product` now have a new overload using `CatalogListing`
+   - All functions previously using a productId now use a catalogListingId
+   - Entitlement checks now query every `CatalogListing` on a product and report the highest `EntitlementStatus`, so multi-listing products (for example, `no_ads` and `no_ads_discounted`) resolve correctly regardless of which listing the player originally purchased.
+   - Products without a catalog listing are backward compatible - a default catalog listing will be created where the `catalogListingId` matches the Product's uSku.
+- [Compliance with Apple and Google external purchase requirements](https://docs.unity.com/en-us/iap/payment-providers/external-purchase-compliance) - Comply with Apple and Google's requirements for external purchases.
+
+### Changed
+- GooglePlay - Billing Library updated to 9.0.0 (was 8.3.0).
+- Updated `com.unity.services.core` dependency to 1.18.0.
+- The minimum Unity Editor version supported is 2022.3.
+- Authentication - The IAP SDK will clear products and purchases before raising the `OnAuthAccountChanged` event to prevent stale prices/listings/orders. From this callback, re-run your initialization flow for the new account: `FetchCatalog` → `FetchProducts` → `FetchPurchases`. Cached purchases and products will only be cleared on Authentication sign-in events when StoreController.OnAuthAccountChanged has at least one listener set.
+
+### Fixed
+- Fixed compile errors caused by naming collisions when a project imports a third-party package that exposes a top-level `UnityUtil` namespace.
+
+### API changes
+#### Payment Providers
+- New `PaymentProvidersExtendedPurchaseService` exposed on `StoreController`; new `PaymentProviders` property on `PurchaseService` / `IPurchaseService`.
+- `IPaymentProvidersExtendedPurchaseService.SetPaymentProviderOverride(string)` — overrides which payment provider is used in purchases.
+- `IPaymentProvidersExtendedService.GetEligiblePaymentProviders()` — returns providers in priority order; empty list means none eligible.
+- `IPaymentProvidersExtendedPurchaseService.SetComplianceCheck(Func<PaymentProviderComplianceContext, Task<bool>>)` — gates Payment Provider purchases on your compliance rules; returning `false` fails the purchase with `PurchasingUnavailable`.
+- `IPaymentProvidersExtendedPurchaseService.GenerateURL(string sku, IReadOnlyList<PaymentProviderToken>?)` — fetches the redirect URL up front (e.g. for compliance display) without opening it.
+- `IPaymentProvidersExtendedPurchaseService.Purchase(ICart, string)` and `PurchaseProduct(string catalogListingId, string)` — route a single purchase through a specific provider without mutating the value set by `SetPaymentProviderOverride`.
+- `IPaymentProvidersExtendedPurchaseService.RedirectToWebshop(string? catalogListingId = null, IReadOnlyList<PaymentProviderToken>? externalTokens = null)` — opens the Unity webshop for a catalog listing, running the registered compliance callback first. When no catalog listing id is specified, redirects to the webshop's frontpage.
+- In-app webview support for checkout URLs:
+  - New `CheckoutPresentationMode` enum (`ExternalBrowser` default, `WebView`).
+  - `IPaymentProvidersExtendedService.SetWebshopPresentationMode(CheckoutPresentationMode)`
+  - `IPaymentProvidersExtendedService.SetCheckoutPresentationMode(CheckoutPresentationMode)`
+  - `IPaymentProvidersExtendedService.SetWebViewLauncher(IWebViewLauncher?)` — plug in a custom webview implementation.
+  - `IPaymentProvidersExtendedService.SetDeepLinkScheme(string?)` — Configure a deep-link URL scheme that the IAP SDK will listen for while a webview checkout is open.
+  - Built-in launchers on iOS (SFSafariViewController) and Android (Chrome Custom Tabs); Standalone/Editor/WebGL fall back to the external browser.
+- `PaymentProviderProductMetadata` — exposes `hasWebshop`, `localizedWebshopPrice`, `webshopPriceString`. Retrieve via `productMetadata.GetPaymentProviderProductMetadata()`.
+
+#### Purchase Options UI
+- New public API: `IPaymentOptionProvider`, `PurchaseOption`.
+- Obtained via `IPaymentProvidersExtendedService.GetPaymentOptionProviderUGUI()` or `GetPaymentOptionProviderUITK(UIDocument?)` (pass an explicit `UIDocument` in scenes with multiple documents; default auto-discovers the first one).
+  - UI Toolkit implementation requires `com.unity.modules.uielements`, gated on a new `IAP_UIELEMENTS` versionDefine; the UGUI implementation and the interface compile without that module.
+- Entry points: `ShowPurchaseOption(catalogListingId)` (native and top eligible provider for a single listing) and `ShowPurchaseOption(IReadOnlyList<PurchaseOption>)` (cross-product picker). A webshop button is appended to the single-listing form when `PaymentProviderProductMetadata.hasWebshop` is true.
+
+#### Catalog Listings
+- Added support for `CatalogListing` — a single product can expose multiple purchasable offers, and all purchase flows target the specific listing requested. Existing products remain fully backward compatible with a single catalog listing whose `catalogListingId` equals `uSku`.
+- New public API:
+  - `CatalogListing`
+  - `Product.uSku` (returns what `Product.definition.id` used to return)
+  - `Product.type` (returns what `Product.definition.type` used to return)
+  - `Product.catalogListings`
+  - `ProductDefinition.catalogListingId`
+  - `ProductDefinition(string id, string storeSpecificId, ProductType type, string catalogListingId, bool enabled = true, IEnumerable<PayoutDefinition>? payouts = null)`
+  - `CartItem.CatalogListingId`
+  - `CartItem(Product, string catalogListingId, int quantity = 1)`
+  - `CartItem(Product, CatalogListing, int quantity = 1)`
+  - `IReadOnlyProductCache.FindByCatalogListingId(string?)`
+  - `IReadOnlyProductCache.FindByStoreSpecificId(string?)`
+  - `IProductService.GetProductByCatalogListingId(string catalogListingId)`
+  - `IPurchaseService.PurchaseProduct(string catalogListingId)`
+  - `IAppleStoreExtendedProductService.FetchStorePromotionVisibility(string catalogListingId, …)`
+  - `IAppleStoreExtendedProductService.SetStorePromotionVisibility(string catalogListingId, AppleStorePromotionVisibility)`
+  - `IAppleStoreExtendedProductService.SetStorePromotionOrder(List<string> catalogListingIds)`
+  - `IGooglePlayStoreExtendedPurchaseService.UpgradeDowngradeSubscription(Order, string newCatalogListingId, GooglePlayReplacementMode)`
+
+#### Compliance
+- Apple - Added `ExternalPurchaseClient` to support [external purchase custom links](https://developer.apple.com/documentation/storekit/externalpurchasecustomlink).
+- GooglePlay - `ExternalBillingProgramClient` now also supports [external offers](https://developer.android.com/google/play/billing/external).
+
+#### Authentication
+- Authentication - `IStoreService.OnAuthAccountChanged` triggered when the end-user account switches mid-session.
+
 ## [5.3.1] - 2026-05-27
 ### Added
 - Xbox - Added purchase verification support through the Microsoft Store Collections service. See [In-app purchases for Xbox games](https://docs.unity3d.com/6000.4/Documentation/Manual/xbox-games-on-windows-iap.html) for more details.

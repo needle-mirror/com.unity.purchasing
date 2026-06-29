@@ -39,9 +39,11 @@ namespace UnityEngine.Purchasing
 #region ExtendedServices
         IAppleStoreExtendedService? IStoreService.Apple => m_StoreService.Apple;
         IGooglePlayStoreExtendedService? IStoreService.Google => m_StoreService.Google;
+        IPaymentProvidersExtendedService? IStoreService.PaymentProviders => m_StoreService.PaymentProviders;
         IAppleStoreExtendedProductService? IProductService.Apple => m_ProductService.Apple;
         IAppleStoreExtendedPurchaseService? IPurchaseService.Apple => m_PurchaseService.Apple;
         IGooglePlayStoreExtendedPurchaseService? IPurchaseService.Google => m_PurchaseService.Google;
+        IPaymentProvidersExtendedPurchaseService? IPurchaseService.PaymentProviders => m_PurchaseService.PaymentProviders;
 
         /// <summary>
         /// Gets the Apple Store extended store service for platform-specific operations.
@@ -52,6 +54,11 @@ namespace UnityEngine.Purchasing
         /// Gets the Google Play Store extended service for platform-specific operations.
         /// </summary>
         public IGooglePlayStoreExtendedService? GooglePlayStoreExtendedService => m_StoreService.Google;
+
+        /// <summary>
+        /// Gets the Payment Provider Store extended service for platform-specific operations.
+        /// </summary>
+        public IPaymentProvidersExtendedService? PaymentProviderStoreExtendedService => m_StoreService.PaymentProviders;
 
         /// <summary>
         /// Gets the Apple Store extended product service for platform-specific product operations.
@@ -67,6 +74,11 @@ namespace UnityEngine.Purchasing
         /// Gets the Google Play Store extended purchase service for platform-specific purchase operations.
         /// </summary>
         public IGooglePlayStoreExtendedPurchaseService? GooglePlayStoreExtendedPurchaseService => m_PurchaseService.Google;
+
+        /// <summary>
+        /// Gets the Payment Providers extended purchase service for platform-specific purchase operations.
+        /// </summary>
+        public IPaymentProvidersExtendedPurchaseService? PaymentProvidersExtendedPurchaseService => m_PurchaseService.PaymentProviders;
 #endregion
 
 #region Callbacks
@@ -86,6 +98,16 @@ namespace UnityEngine.Purchasing
         {
             add => m_StoreService.OnStoreConnected += value;
             remove => m_StoreService.OnStoreConnected -= value;
+        }
+
+        /// <summary>
+        /// Event triggered after the authenticated end-user account has changed and the
+        /// store's product and purchase caches have been cleared.
+        /// </summary>
+        public event Action? OnAuthAccountChanged
+        {
+            add => m_StoreService.OnAuthAccountChanged += value;
+            remove => m_StoreService.OnAuthAccountChanged -= value;
         }
 
         /// <summary>
@@ -162,6 +184,13 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Gets a specific product by its catalog listing id.
+        /// </summary>
+        /// <param name="catalogListingId">The catalog listing id to search for.</param>
+        /// <returns>The product if found, or null if not found.</returns>
+        public Product? GetProductByCatalogListingId(string catalogListingId) => m_ProductService.GetProductByCatalogListingId(catalogListingId);
+
+        /// <summary>
         /// Event triggered when products have been successfully fetched from the store.
         /// </summary>
         public event Action<List<Product>>? OnProductsFetched
@@ -192,6 +221,12 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="retryPolicy">The retry policy to use, or null to disable automatic reconnection.</param>
         public void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy? retryPolicy) => m_StoreService.SetStoreReconnectionRetryPolicyOnDisconnection(retryPolicy);
+
+        /// <summary>
+        /// Gets the current connection state of the store.
+        /// </summary>
+        /// <returns>The state of the connection to the store.</returns>
+        public ConnectionState GetConnectionState() => m_StoreService.GetConnectionState();
 #endregion
 
 #region ProductService
@@ -215,11 +250,11 @@ namespace UnityEngine.Purchasing
         public ReadOnlyObservableCollection<Product> GetProducts() => m_ProductService.GetProducts();
 
         /// <summary>
-        /// Gets a specific product by its identifier.
+        /// Gets a specific product by its catalog listing id.
         /// </summary>
-        /// <param name="productId">The product identifier to search for.</param>
+        /// <param name="catalogListingId">The catalog listing id to search for.</param>
         /// <returns>The product if found, or null if not found.</returns>
-        public Product? GetProductById(string productId) => m_ProductService.GetProductById(productId);
+        public Product? GetProductById(string catalogListingId) => m_ProductService.GetProductById(catalogListingId);
 #endregion
 
 #region PurchaseService
@@ -273,15 +308,13 @@ namespace UnityEngine.Purchasing
 #region IStoreController
         // TODO: IAP-3929 - Move to IStoreController
         /// <summary>
-        /// Purchase a product by product id
+        /// Purchase a product by its catalog listing id.
         /// Be sure to first register callbacks via `OnPurchasePending` and `OnPurchaseFailed`.
         /// </summary>
-        /// <param name="productId">The product id to purchase.</param>
-        public void PurchaseProduct(string? productId)
+        /// <param name="catalogListingId">The catalog listing id of the product to purchase.</param>
+        public void PurchaseProduct(string catalogListingId)
         {
-            var products = m_ProductService.GetProducts();
-            var product = products?.FirstOrDefault(product => product.definition.id == productId) ?? Product.CreateUnknownProduct(productId);
-            m_PurchaseService.PurchaseProduct(product);
+            m_PurchaseService.PurchaseProduct(catalogListingId);
         }
 #endregion
     }

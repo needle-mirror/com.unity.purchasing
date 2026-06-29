@@ -5,7 +5,7 @@ namespace UnityEngine.Purchasing
     public class XboxCloudSettings : ScriptableObject
     {
         public const string k_AssetName = "XboxCloudSettings";
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
         // A test hook that skips the purchase. Then purchase validation will fail.
         // If there's no purchase validation, purchase will succeed
         public static bool TestSkipPurchase { get; set; }

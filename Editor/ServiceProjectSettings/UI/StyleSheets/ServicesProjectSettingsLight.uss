@@ -118,3 +118,7 @@
 .warning-info-icon2x {
     -unity-background-image-tint-color:#5a0000; /*from light.uss --theme-console-status-error-text-color*/
 }
+
+.configuration-toggle {
+    background-image: resource("tab_next@2x");
+}

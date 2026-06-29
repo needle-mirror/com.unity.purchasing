@@ -24,12 +24,12 @@ namespace UnityEngine.Purchasing
         readonly IConfirmOrderUseCase m_ConfirmOrderUseCase;
         readonly ICheckEntitlementUseCase m_CheckEntitlementUseCase;
         internal readonly IPurchaseCache m_PurchaseCache;
-        readonly IStoreWrapper m_StoreWrapper;
+        protected readonly IStoreWrapper m_StoreWrapper;
         readonly IAnalyticsClient m_AnalyticsClient;
         bool m_ProcessFetchedPendingOrders = true;
         // TODO: ULO-9339
         bool m_IsBuiltinStore;
-        readonly IReadOnlyList<string> BuiltinStores = new[] { GooglePlay.Name, AppleAppStore.Name, MacAppStore.Name, XboxStore.Name, FakeAppStore.Name };
+        readonly IReadOnlyList<string> BuiltinStores = new[] { GooglePlay.Name, AppleAppStore.Name, MacAppStore.Name, XboxStore.Name, PaymentProvider.Name, FakeAppStore.Name };
         readonly HashSet<string> m_PurchasesProcessedInSession = new();
 
         bool m_AnyPurchaseStarted = false;
@@ -131,6 +131,12 @@ namespace UnityEngine.Purchasing
         public IGooglePlayStoreExtendedPurchaseService? Google => this as IGooglePlayStoreExtendedPurchaseService;
 
         /// <summary>
+        /// Gets the Payment Provider-specific purchase service extensions and functionality.
+        /// Provides access to Payment Provider specific features and operations.
+        /// </summary>
+        public IPaymentProvidersExtendedPurchaseService? PaymentProviders => this as IPaymentProvidersExtendedPurchaseService;
+
+        /// <summary>
         /// Initiates a purchase for the specified product.
         /// </summary>
         /// <param name="product">The product to purchase. Must be a valid, purchasable product from the store.</param>
@@ -149,12 +155,48 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Convenience wrapper for <see cref="PurchaseProduct(Product)"/> that resolves the product
+        /// from a catalog listing id. Looks up the product by <see cref="CatalogListing.id"/> first,
+        /// falling back to <see cref="Product.uSku"/> for back-compat with callers that pass a uSku.
+        /// If no product matches, an Unknown product is constructed and the underlying call fails via
+        /// <see cref="OnPurchaseFailed"/>.
+        /// </summary>
+        /// <param name="catalogListingId">Catalog listing id of the product to purchase (uSku also accepted for back-compat).</param>
+        public void PurchaseProduct(string catalogListingId)
+        {
+            var cache = m_StoreWrapper.instance.ProductCache;
+            var product = cache.FindByCatalogListingId(catalogListingId);
+            if (product == null && cache.productsByUSku.TryGetValue(catalogListingId, out var byUSku))
+            {
+                product = byUSku;
+            }
+            if (product == null)
+            {
+
+                OnPurchaseFailed?.Invoke(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
+                    "Attempting to purchase an invalid catalog listing: " + catalogListingId));
+                return;
+            }
+
+            try
+            {
+                var cartItem = new CartItem(product, catalogListingId);
+                Purchase(new Cart(cartItem));
+            }
+            catch (InvalidCartItemException e)
+            {
+                OnPurchaseFailed?.Invoke(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
+                    "Attempting to purchase an invalid product: " + e.Message));
+            }
+        }
+
+        /// <summary>
         /// Initiates a purchase for all products in the specified cart.
         /// </summary>
         /// <param name="cart">The cart containing products to purchase. All products in the cart will be processed for purchase.</param>
         public void Purchase(ICart cart)
         {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
             if (OnPurchasePending == null)
             {
                 Debug.unityLogger.LogIAPError("IPurchaseService.Purchase called without a callback defined for IPurchaseService.OnPurchasePending.");
@@ -170,6 +212,8 @@ namespace UnityEngine.Purchasing
                 Debug.unityLogger.LogIAPWarning("IPurchaseService.Purchase called without a callback defined for IPurchaseService.OnPurchaseDeferred.");
             }
 #endif
+
+            SendPurchaseIntentStartEvent(cart);
 
             if (!IsStoreConnected())
             {
@@ -223,6 +267,7 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
+            SendPurchasePaidEvent(order);
             OnPurchasePending?.Invoke(order);
         }
         #endif
@@ -273,6 +318,7 @@ namespace UnityEngine.Purchasing
         internal void PurchaseFailed(FailedOrder order)
         {
             m_AnalyticsClient.OnPurchaseFailed(order);
+            SendPurchaseFailedEvent(order);
             OnPurchaseFailed?.Invoke(order);
         }
 
@@ -288,7 +334,7 @@ namespace UnityEngine.Purchasing
         /// <param name="order">The pending order to confirm. This should be a valid pending order received from a purchase event.</param>
         public void ConfirmPurchase(PendingOrder order)
         {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
             if (OnPurchaseConfirmed == null)
             {
                 Debug.unityLogger.LogIAPWarning("IPurchaseService.ConfirmPurchase called without a callback defined for IPurchaseService.OnPurchaseConfirmed.");
@@ -370,6 +416,7 @@ namespace UnityEngine.Purchasing
             m_PurchaseCache.Add(confirmedOrder);
 
             m_AnalyticsClient.OnPurchaseSucceeded(confirmedOrder);
+            SendPurchaseFulfilledEvent(confirmedOrder);
             OnPurchaseConfirmed?.Invoke(confirmedOrder);
         }
 
@@ -384,7 +431,7 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public void FetchPurchases()
         {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
             if (OnPurchasesFetched == null)
             {
                 Debug.unityLogger.LogIAPWarning("IPurchaseService.FetchPurchases called without a callback defined for IPurchaseService.OnPurchasesFetched.");
@@ -483,10 +530,26 @@ namespace UnityEngine.Purchasing
 #else
         void ProcessPendingOrder(PendingOrder fetchedPurchase)
         {
+            SendPurchasePaidEvent(fetchedPurchase);
             OnPurchasePending?.Invoke(fetchedPurchase);
             m_PurchasesProcessedInSession.Add(fetchedPurchase.Info.TransactionID);
         }
 #endif
+
+        // Hooks for subclasses that send IAP SDK events (Apple, Google,
+        // PaymentProvider). The base no-ops cover custom stores and direct
+        // PurchaseService usage where event emission is intentionally absent.
+        // Overrides receive the strongest type available at the call site
+        // (PendingOrder, FailedOrder, ConfirmedOrder) and are responsible for
+        // iterating cart items, extracting any store-specific payload, and
+        // passing their own store name to IPurchaseEventEmitter.
+        private protected virtual void SendPurchaseIntentStartEvent(ICart cart) { }
+        private protected virtual void SendPurchasePaidEvent(PendingOrder order) { }
+        private protected virtual void SendPurchaseFailedEvent(FailedOrder order) { }
+
+        // PaymentProvider overrides this — Apple/Google fold their payload in
+        // via their extended-purchase-service variant.
+        private protected virtual void SendPurchaseFulfilledEvent(ConfirmedOrder order) { }
 
         void OnFetchFailure(PurchasesFetchFailureDescription fetchFailed)
         {
@@ -502,7 +565,7 @@ namespace UnityEngine.Purchasing
         {
             if (OnCheckEntitlement == null)
             {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
                 Debug.unityLogger.LogIAPWarning("IPurchaseService.CheckEntitlement called without a callback defined for IPurchaseService.OnCheckEntitlement.");
 #endif
                 return;
@@ -532,37 +595,40 @@ namespace UnityEngine.Purchasing
 
         void UpdateEntitlementOrder(Entitlement entitlement)
         {
-            if (entitlement.Product != null)
+            if (entitlement.Product == null)
             {
-                switch (entitlement.Status)
-                {
-                    case EntitlementStatus.EntitledUntilConsumed or EntitlementStatus.EntitledButNotFinished:
-                    {
-                        foreach (var order in GetPurchases())
-                        {
-                            if (order is PendingOrder pendingOrder &&
-                                pendingOrder.CartOrdered.Items().First()?.Product.definition.storeSpecificId == entitlement.Product.definition.storeSpecificId)
-                            {
-                                entitlement.Order = pendingOrder;
-                                break;
-                            }
-                        }
+                return;
+            }
 
-                        break;
-                    }
-                    case EntitlementStatus.FullyEntitled:
+            var entitlementUSku = entitlement.Product.uSku;
+            switch (entitlement.Status)
+            {
+                case EntitlementStatus.EntitledUntilConsumed or EntitlementStatus.EntitledButNotFinished:
+                {
+                    foreach (var order in GetPurchases())
                     {
-                        foreach (var order in GetPurchases())
+                        if (order is PendingOrder pendingOrder &&
+                            pendingOrder.CartOrdered.Items().FirstOrDefault()?.Product.uSku == entitlementUSku)
                         {
-                            if (order is ConfirmedOrder confirmedOrder &&
-                                confirmedOrder.CartOrdered.Items().First()?.Product.definition.storeSpecificId == entitlement.Product.definition.storeSpecificId)
-                            {
-                                entitlement.Order = confirmedOrder;
-                                break;
-                            }
+                            entitlement.Order = pendingOrder;
+                            break;
                         }
-                        break;
                     }
+
+                    break;
+                }
+                case EntitlementStatus.FullyEntitled:
+                {
+                    foreach (var order in GetPurchases())
+                    {
+                        if (order is ConfirmedOrder confirmedOrder &&
+                            confirmedOrder.CartOrdered.Items().FirstOrDefault()?.Product.uSku == entitlementUSku)
+                        {
+                            entitlement.Order = confirmedOrder;
+                            break;
+                        }
+                    }
+                    break;
                 }
             }
         }

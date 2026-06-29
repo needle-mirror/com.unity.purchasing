@@ -32,7 +32,7 @@ namespace UnityEngine.Purchasing
             {
                 appleStoreExtendedPurchaseService.OnEntitlementRevoked += productIds =>
                 {
-                    var products = UnityIAPServices.DefaultProduct().GetProducts().Where(product => productIds.Contains(product.definition.storeSpecificId));
+                    var products = UnityIAPServices.DefaultProduct().GetProducts().Where(product => productIds.Contains(product.baseListing?.definition.storeSpecificId));
                     callback?.Invoke((List<Product>)products);
                 };
             }

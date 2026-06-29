@@ -18,6 +18,11 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// A catch all for remaining purchase problems.
         /// </summary>
-        Unknown = 2
+        Unknown = 2,
+
+        /// <summary>
+        /// The user is not authenticated.
+        /// </summary>
+        UserNotAuthenticated = 3,
     }
 }

@@ -41,7 +41,7 @@ namespace UnityEditor.Purchasing
 
         public IEditorGameServiceIdentifier Identifier => m_Identifier;
 
-        public bool RequiresCoppaCompliance => true;
+        public bool RequiresCoppaCompliance => false;
 
         public bool HasDashboard => true;
 

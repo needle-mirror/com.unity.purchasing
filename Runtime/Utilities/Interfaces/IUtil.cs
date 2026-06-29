@@ -14,6 +14,8 @@ namespace Uniject
         bool isEditor { get; }
         string persistentDataPath { get; }
         string cloudProjectId { get; }
+        event Action<bool> focusChanged;
+        void OpenURL(string url);
         /// <summary>
         /// WARNING: Reading from this may require special application privileges.
         /// </summary>

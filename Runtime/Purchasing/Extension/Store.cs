@@ -1,6 +1,11 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
+#if IAP_UNITY_AUTH_ENABLED
+using Unity.Services.Authentication;
+using Unity.Services.Core;
+#endif
 
 namespace UnityEngine.Purchasing.Extension
 {
@@ -65,6 +70,161 @@ namespace UnityEngine.Purchasing.Extension
             ProductCache = new ProductCache();
             PurchaseCache = new PurchaseCache();
         }
+
+        Action? m_OnAuthAccountChanged;
+
+        // Internal event raised after Unity Authentication reports a PlayerId change for
+        // this store. The public surface for subscribers is IStoreService.OnAuthAccountChanged
+        // (forwarded by StoreController / StoreService / ExtensibleStoreService /
+        // StoreConnectUseCase).
+        internal event Action? OnAuthAccountChanged
+        {
+            add
+            {
+                m_OnAuthAccountChanged += value;
+#if IAP_UNITY_AUTH_ENABLED
+                TryWireAuth();
+#endif
+            }
+            remove
+            {
+                m_OnAuthAccountChanged -= value;
+#if IAP_UNITY_AUTH_ENABLED
+                if (m_OnAuthAccountChanged == null)
+                {
+                    TearDownAuthWiring();
+                }
+#endif
+            }
+        }
+
+        // Internal trigger for OnAuthAccountChanged. Fired by the SDK itself when Unity
+        // Authentication reports a PlayerId change. No-op when no subscriber is present —
+        // caches are only cleared when at least one handler is listening.
+        internal void NotifyAuthAccountChanged()
+        {
+            if (m_OnAuthAccountChanged == null)
+            {
+                return;
+            }
+            ProductCache.Clear();
+            PurchaseCache.Clear();
+            m_OnAuthAccountChanged.Invoke();
+        }
+
+        internal bool HasAuthAccountChangedSubscriber => m_OnAuthAccountChanged != null;
+
+#if IAP_UNITY_AUTH_ENABLED
+        string? m_LastKnownPlayerId;
+        bool m_AuthWired;
+        bool m_AwaitingUnityServicesInit;
+
+        void TryWireAuth()
+        {
+            if (m_AuthWired)
+            {
+                return;
+            }
+
+            ServicesInitializationState state;
+            try
+            {
+                state = UnityServices.State;
+            }
+            catch
+            {
+                return;
+            }
+
+            if (state == ServicesInitializationState.Initialized)
+            {
+                WireAuth();
+                return;
+            }
+
+            if (!m_AwaitingUnityServicesInit)
+            {
+                UnityServices.Initialized += OnUnityServicesInitialized;
+                m_AwaitingUnityServicesInit = true;
+            }
+        }
+
+        void OnUnityServicesInitialized()
+        {
+            WireAuth();
+        }
+
+        void WireAuth()
+        {
+            if (m_AuthWired)
+            {
+                return;
+            }
+            try
+            {
+                m_LastKnownPlayerId = AuthenticationService.Instance.IsSignedIn
+                    ? AuthenticationService.Instance.PlayerId
+                    : null;
+                AuthenticationService.Instance.SignedIn += OnUnityAuthSignedIn;
+                m_AuthWired = true;
+            }
+            catch (Exception e)
+            {
+                Debug.unityLogger.LogIAPWarning(
+                    $"OnAuthAccountChanged: failed to wire AuthenticationService: {e.Message}");
+            }
+        }
+
+        void TearDownAuthWiring()
+        {
+            if (m_AwaitingUnityServicesInit)
+            {
+                try
+                {
+                    UnityServices.Initialized -= OnUnityServicesInitialized;
+                }
+                catch (Exception)
+                {
+                    // Services already torn down. Nothing to do.
+                }
+                m_AwaitingUnityServicesInit = false;
+            }
+            if (m_AuthWired)
+            {
+                try
+                {
+                    AuthenticationService.Instance.SignedIn -= OnUnityAuthSignedIn;
+                }
+                catch (Exception)
+                {
+                    // Auth already torn down (e.g. during shutdown). Nothing to do.
+                }
+                m_AuthWired = false;
+            }
+            m_LastKnownPlayerId = null;
+        }
+
+        void OnUnityAuthSignedIn()
+        {
+            var currentId = AuthenticationService.Instance.PlayerId;
+            if (currentId == null)
+            {
+                return;
+            }
+            // First sign-in of the session — including cold-start sign-in to the cached account —
+            // is not an account *change*, so just record the id without firing.
+            if (m_LastKnownPlayerId == null)
+            {
+                m_LastKnownPlayerId = currentId;
+                return;
+            }
+            if (currentId != m_LastKnownPlayerId)
+            {
+                m_LastKnownPlayerId = currentId;
+                NotifyAuthAccountChanged();
+            }
+        }
+#endif
 
         /// <summary>
         /// Establishes a connection to the store.

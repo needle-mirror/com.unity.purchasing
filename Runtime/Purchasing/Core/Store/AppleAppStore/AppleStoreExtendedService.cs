@@ -19,8 +19,9 @@ namespace UnityEngine.Purchasing.Services
             IClearAppleTransactionLogsUseCase clearAppleTransactionLogsUseCase,
             ISetAppAccountTokenUseCase setAppAccountTokenUseCase,
             IFetchStorefrontUseCase fetchStorefrontUseCase,
-            IStoreConnectUseCase connectUseCase)
-            : base(connectUseCase)
+            IStoreConnectUseCase connectUseCase,
+            IStoreWrapper storeWrapper)
+            : base(connectUseCase, storeWrapper)
         {
             m_CanMakePaymentsUseCase = canMakePaymentsUseCase;
             m_ClearAppleTransactionLogsUseCase = clearAppleTransactionLogsUseCase;

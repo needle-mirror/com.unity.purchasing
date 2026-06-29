@@ -20,11 +20,23 @@ namespace UnityEngine.Purchasing
         IGooglePlayStoreExtendedPurchaseService? Google { get; }
 
         /// <summary>
+        /// Payment Provider Specific Purchase Extensions
+        /// </summary>
+        IPaymentProvidersExtendedPurchaseService? PaymentProviders { get; }
+
+        /// <summary>
         /// Purchase a product.
         /// Be sure to first register callbacks via `OnPurchasePending` and `OnPurchaseFailed`.
         /// </summary>
         /// <param name="product">The Product to purchase.</param>
         void PurchaseProduct(Product product);
+
+        /// <summary>
+        /// Purchase a product.
+        /// Be sure to first register callbacks via `OnPurchasePending` and `OnPurchaseFailed`.
+        /// </summary>
+        /// <param name="catalogListingId">Catalog listing id of the product to purchase.</param>
+        void PurchaseProduct(string catalogListingId);
 
         /// <summary>
         /// Purchase a cart.

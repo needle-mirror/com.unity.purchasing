@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package insights.common.v1alpha1;
+
+// DeviceInfo contains device and application metadata collected at the point of
+// the event. This data should be extracted in the same way as the Insights Module
+// and Ads SDK to ensure consistency across data sources.
+//
+// Geo-related fields (city, timezone) are intentionally excluded from this message.
+// They are enriched at the Insights Gateway via MaxMind IP lookup on the
+// X-Forwarded-For header, ensuring a consistent server-side source of truth
+// rather than relying on client-reported geo data.
+message DeviceInfo {
+  // System language code of the device (e.g. "en", "fr", "ja").
+  string system_language = 1;
+
+  // Ordered list of installed languages/keyboards on the device (e.g. ["en", "fr"]).
+  repeated string locale_list = 2;
+
+  // Device model identifier (e.g. "iPhone14,5", "SM-G991B").
+  string model = 3;
+
+  // System boot time as an epoch timestamp string
+  string system_boot_time = 4;
+
+  // Operating system version in Major.Minor.Patch format (e.g. "17.4.1").
+  string os_version = 5;
+
+  // Total device storage capacity in bytes.
+  uint64 total_space = 6;
+}

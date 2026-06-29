@@ -12,5 +12,9 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Unity.Purchasing.SecurityStub")]
 [assembly: InternalsVisibleTo("Unity.Purchasing.Stores")]
 [assembly: InternalsVisibleTo("Unity.Purchasing.Utilities")]
+[assembly: InternalsVisibleTo("Unity.Purchasing.PaymentOption")]
+#if UNITY_INCLUDE_TESTS
 //Needed for Moq to generate mocks from internal interfaces
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
+[assembly: InternalsVisibleTo("UnityEditor.Authoring.Tests")]
+#endif

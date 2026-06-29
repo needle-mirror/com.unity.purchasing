@@ -1,0 +1,245 @@
+/* BEM: block = unity-iap-picker, element = __X, modifier = --Y.
+ * All selectors prefixed to prevent collisions with consumer USS.
+ * Tokens scoped to .unity-iap-picker so consumers can re-theme by
+ * overriding them in their own USS without forking this file:
+ *
+ *   .unity-iap-picker { --color-sheet: rgb(20,20,24); }
+ */
+
+.unity-iap-picker {
+    --color-sheet: rgb(255, 255, 255);
+    --color-title: rgb(26, 26, 26);
+    --color-button-text: rgb(26, 26, 26);
+    --color-native-bg: rgb(255, 255, 255);
+    --color-branded-bg: rgb(245, 242, 232);
+    --color-generic-bg: rgb(232, 232, 232);
+    --color-close-glyph: rgb(140, 140, 144);
+    --color-close-glyph-hover: rgb(80, 80, 90);
+    --color-badge: rgb(200, 239, 215);
+    --color-badge-text: rgb(15, 58, 31);
+
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.unity-iap-picker__overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.65);
+    align-items: center;
+    justify-content: center;
+}
+
+.unity-iap-picker__overlay--hidden {
+    display: none;
+}
+
+.unity-iap-picker__sheet {
+    width: 880px;
+    max-width: 92%;
+    background-color: var(--color-sheet);
+    padding-top: 28px;
+    padding-bottom: 28px;
+    padding-left: 36px;
+    padding-right: 36px;
+    border-radius: 32px;
+}
+
+.unity-iap-picker__header {
+    flex-direction: row;
+    align-items: center;
+    height: 56px;
+    margin-bottom: 44px;
+    padding-left: 8px;
+}
+
+.unity-iap-picker__title {
+    flex-grow: 1;
+    font-size: 30px;
+    color: var(--color-title);
+    -unity-text-align: middle-left;
+    -unity-font-style: bold;
+}
+
+.unity-iap-picker__close {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0, 0, 0, 0);
+    color: var(--color-close-glyph);
+    font-size: 36px;
+    border-width: 0;
+    padding: 0;
+    margin: 0;
+    transition-duration: 0.12s;
+}
+
+.unity-iap-picker__close:hover {
+    color: var(--color-close-glyph-hover);
+}
+
+.unity-iap-picker__button {
+    height: 96px;
+    border-radius: 18px;
+    border-width: 0;
+    margin-top: 0;
+    margin-bottom: 14px;
+    margin-left: 0;
+    margin-right: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+    color: var(--color-button-text);
+    font-size: 32px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    transition-duration: 0.12s;
+}
+
+.unity-iap-picker__button:active {
+    scale: 0.98 0.98;
+}
+
+.unity-iap-picker__button--native {
+    background-color: var(--color-native-bg);
+}
+
+.unity-iap-picker__button--branded {
+    background-color: var(--color-branded-bg);
+}
+
+.unity-iap-picker__button--generic {
+    background-color: var(--color-generic-bg);
+}
+
+/* Apple Pay brand guideline: button color contrasts the sheet
+ * (black on light sheets, white on dark sheets). The brand sprite swap
+ * is handled in C# (PaymentBrandRegistry.Tone inverted for Apple Pay). */
+.unity-iap-picker__button--apple-pay {
+    background-color: rgb(0, 0, 0);
+}
+
+.unity-iap-picker--dark .unity-iap-picker__button--apple-pay {
+    background-color: rgb(255, 255, 255);
+}
+
+/* Google Pay follows the same "contrast the sheet" pattern as Apple Pay:
+ * pure black button on light sheets, pure white on dark sheets, no outline.
+ * The colored vs white brand sprite is selected in C# via inverted tone. */
+.unity-iap-picker__button--google-pay {
+    background-color: rgb(0, 0, 0);
+}
+
+.unity-iap-picker--dark .unity-iap-picker__button--google-pay {
+    background-color: rgb(255, 255, 255);
+}
+
+/* CODA contrasts the sheet by borrowing the opposite theme's branded palette:
+ * the dark-theme branded bg + light button-text on light sheets, and the
+ * light-theme branded bg + dark button-text on dark sheets. C# inverts the
+ * brand sprite tone to match. */
+.unity-iap-picker__button--coda {
+    background-color: rgb(50, 48, 42);
+}
+
+.unity-iap-picker__button--coda .unity-iap-picker__button-label {
+    color: rgb(245, 245, 245);
+}
+
+.unity-iap-picker--dark .unity-iap-picker__button--coda {
+    background-color: rgb(245, 242, 232);
+}
+
+.unity-iap-picker--dark .unity-iap-picker__button--coda .unity-iap-picker__button-label {
+    color: rgb(26, 26, 26);
+}
+
+/* Stripe — light sheet: purple button + white wordmark (Stripe's lockup).
+ * Dark sheet: invert the swatch (white button + purple wordmark) so the
+ * lockup reads against a darker page. Brand-image tint is set in C# since
+ * the white wordmark is the only sprite shipped. */
+.unity-iap-picker__button--stripe {
+    background-color: rgb(99, 91, 255);
+}
+
+.unity-iap-picker__button--stripe .unity-iap-picker__button-label {
+    color: rgb(255, 255, 255);
+}
+
+.unity-iap-picker--dark .unity-iap-picker__button--stripe {
+    background-color: rgb(255, 255, 255);
+}
+
+.unity-iap-picker--dark .unity-iap-picker__button--stripe .unity-iap-picker__button-label {
+    color: rgb(99, 91, 255);
+}
+
+.unity-iap-picker__button-label {
+    color: var(--color-button-text);
+    font-size: 32px;
+    -unity-font-style: normal;
+    margin-right: 10px;
+    -unity-text-align: middle-center;
+}
+
+.unity-iap-picker__brand {
+    height: 40px;
+}
+
+.unity-iap-picker__brand--large {
+    height: 52px;
+}
+
+.unity-iap-picker__button--webshop {
+    /* inherits --generic background; placement and layout match other buttons */
+}
+
+/* Webshop label reads as the dominant call-to-action on its row,
+ * so it carries more weight than the generic "Pay with" labels. */
+.unity-iap-picker__button--webshop .unity-iap-picker__button-label {
+    -unity-font-style: bold;
+}
+
+.unity-iap-picker__button-glyph {
+    height: 32px;
+    margin-right: 4px;
+}
+
+/* Badge floats off the button's right edge, vertically centered on the row.
+ * position: absolute keeps it out of the row layout so the centered label/brand
+ * doesn't get pushed off-axis. Button height (96) minus badge height (36) / 2 = 30. */
+.unity-iap-picker__badge {
+    position: absolute;
+    right: -10px;
+    top: 30px;
+    height: 36px;
+    padding-left: 14px;
+    padding-right: 14px;
+    border-radius: 18px;
+    background-color: var(--color-badge);
+    color: var(--color-badge-text);
+    font-size: 22px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+}
+
+/* Dark variant — toggle via the --dark modifier class on the block. */
+.unity-iap-picker--dark {
+    --color-sheet: rgb(28, 28, 32);
+    --color-title: rgb(245, 245, 245);
+    --color-button-text: rgb(245, 245, 245);
+    --color-native-bg: rgb(45, 45, 50);
+    --color-branded-bg: rgb(50, 48, 42);
+    --color-generic-bg: rgb(60, 60, 66);
+    --color-close-glyph: rgb(180, 180, 190);
+    --color-close-glyph-hover: rgb(220, 220, 230);
+    --color-badge: rgb(28, 110, 64);
+    --color-badge-text: rgb(245, 250, 246);
+}

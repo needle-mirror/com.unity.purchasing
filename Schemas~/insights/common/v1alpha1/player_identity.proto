@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package insights.common.v1alpha1;
+
+// PlayerIdentity contains all available identity fields for a player.
+//
+// All fields are optional because not every identity type is available in every
+// context (e.g. webshop flows may lack device-level identifiers). These fields
+// are used downstream for identity resolution, where Flair maps the combination
+// of available identifiers into a single `ugid` (Unity Global ID).
+//
+message PlayerIdentity {
+  // Unity installation identifier. Uniquely identifies an app installation on a device.
+  optional string unity_installation_id = 1;
+
+  // Unity player identifier (Authentication player ID).
+  optional string player_id = 2;
+
+  // Unity user identifier. Can be provided by the Game Developer for a consistent, customer facing user identitfier. Similar to Firebase's user_id + UA2's user_id concepts.
+  optional string user_id = 3;
+
+  // Unity Analytics 2.0 identifier.
+  optional string analytics_id = 4;
+
+  // Apple Identifier for Advertisers. Available on iOS when the player has
+  // granted App Tracking Transparency (ATT) permission.
+  optional string idfa = 5;
+
+  // Google Advertising ID. Available on Android devices.
+  optional string gaid = 6;
+
+  // Apple Identifier for Vendors. Unique per device per vendor on iOS.
+  optional string idfv = 7;
+
+  // Unity Ads install identifier.
+  optional string unity_ads_idfi = 8;
+
+  // Firebase app instance identifier. Used for Connections Platform.
+  optional string app_instance_id = 9;
+}

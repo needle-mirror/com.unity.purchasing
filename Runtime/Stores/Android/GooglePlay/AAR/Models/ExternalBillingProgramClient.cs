@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Stores.Android.GooglePlay.AAR.Models;
 using Uniject;
 using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
@@ -11,24 +12,36 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
 {
     /// <summary>
     /// A billing client for use with Google's External Billing Programs.
-    /// This class only has the necessary methods for compliance with [external content links](https://developer.android.com/google/play/billing/externalcontentlinks).
+    /// This class has the necessary methods for compliance with [external content links](https://developer.android.com/google/play/billing/externalcontentlinks).
     /// </summary>
     public class ExternalBillingProgramClient
     {
         readonly IExternalBillingProgramClientInternal billingClient;
         readonly IUtil m_Util;
 
+        /// <summary>
+        /// Creates a new <see cref="ExternalBillingProgramClient"/> that will auto-detect the
+        /// available billing program when <see cref="IsBillingProgramAvailableAsync"/> is called.
+        /// </summary>
         public ExternalBillingProgramClient()
         {
             var factory = BillingClientFactory.Instance();
-            billingClient = factory.CreateExternalBillingProgramClient();
             m_Util = factory.m_Util;
+            billingClient = factory.CreateExternalBillingProgramClient();
         }
 
+        // This method is used for internal testing
         internal ExternalBillingProgramClient(IBillingClientFactory factory, IUtil util)
         {
-            billingClient = factory.CreateExternalBillingProgramClient();
             m_Util = util;
+            billingClient = factory.CreateExternalBillingProgramClient();
+        }
+
+        // This method is used for internal testing
+        internal ExternalBillingProgramClient(IBillingClientFactory factory, IUtil util, BillingProgram billingProgram)
+        {
+            m_Util = util;
+            billingClient = factory.CreateExternalBillingProgramClient(billingProgram);
         }
 
         /// <summary>
@@ -38,10 +51,24 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
         /// <param name="onDisconnected">A callback that will be triggered when the client disconnects.</param>
         public void StartConnection(Action? onConnected = null, Action<GoogleBillingResponseCode>? onDisconnected = null)
         {
-            IBillingClientStateListener listener = new BillingClientStateListener(m_Util);
-            listener.RegisterOnConnected(onConnected);
-            listener.RegisterOnDisconnected(onDisconnected);
-            billingClient.StartConnection(listener);
+            StartConnectionAsync(onConnected, onDisconnected);
+        }
+
+        async void StartConnectionAsync(Action? onConnected, Action<GoogleBillingResponseCode>? onDisconnected)
+        {
+            try
+            {
+                await TryConnect(billingClient, onConnected, onDisconnected);
+            }
+            catch (Exception)
+            {
+                onDisconnected?.Invoke(GoogleBillingResponseCode.FatalError);
+            }
+        }
+
+        internal virtual IBillingClientStateListener CreateStateListener()
+        {
+            return new BillingClientStateListener(m_Util);
         }
 
         /// <summary>
@@ -77,16 +104,7 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
         /// </summary>
         public Task<GoogleBillingResponseCode> IsBillingProgramAvailableAsync()
         {
-            var taskCompletion = new TaskCompletionSource<GoogleBillingResponseCode>();
-
-            billingClient.IsBillingProgramAvailableAsync(
-                (googleBillingResult) =>
-                {
-                    taskCompletion.TrySetResult(googleBillingResult.responseCode);
-                }
-            );
-
-            return taskCompletion.Task;
+            return CheckAvailability(billingClient);
         }
 
         /// <summary>
@@ -140,6 +158,34 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
             );
 
             return taskCompletion.Task;
+        }
+
+        Task<bool> TryConnect(
+            IExternalBillingProgramClientInternal client,
+            Action? onConnected = null,
+            Action<GoogleBillingResponseCode>? onDisconnected = null)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            var listener = CreateStateListener();
+            listener.RegisterOnConnected(() =>
+            {
+                tcs.TrySetResult(true);
+                onConnected?.Invoke();
+            });
+            listener.RegisterOnDisconnected((code) =>
+            {
+                tcs.TrySetResult(false);
+                onDisconnected?.Invoke(code);
+            });
+            client.StartConnection(listener);
+            return tcs.Task;
+        }
+
+        static Task<GoogleBillingResponseCode> CheckAvailability(IExternalBillingProgramClientInternal client)
+        {
+            var tcs = new TaskCompletionSource<GoogleBillingResponseCode>();
+            client.IsBillingProgramAvailableAsync(result => tcs.TrySetResult(result.responseCode));
+            return tcs.Task;
         }
     }
 }

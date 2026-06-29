@@ -1,0 +1,16 @@
+generatorName: csharp-unity
+outputDir: ./tmp-client
+inputSpec: ./spec.yaml
+packageName: com.unity.purchasing.webshop
+additionalProperties:
+  unityVersion: "2022.3"
+  packageVersion: "0.0.1-preview"
+  unityPackageNamespace: "UnityEngine.Purchasing.WebshopService"
+  unityServiceName: "Webshop"
+  unityPackageDescription: Unity IAP Webshop Service
+  useUnityAuthentication: true
+  usePhpStyleQueryParams: false
+  publicAccess: []
+  releaseDate: 2026-06-23
+  generateMarkdownDocumentation: false
+  outputFormat: code-only

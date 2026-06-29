@@ -11,9 +11,9 @@ namespace UnityEngine.Purchasing.UseCases.Interfaces
     interface ISetStorePromotionOrderUseCase
     {
         /// <summary>
-        /// Set store promotion order
+        /// Set store promotion order.
         /// </summary>
-        /// <param name="products">The products to promote.</param>
-        void SetStorePromotionOrder(List<Product> products);
+        /// <param name="storeSpecificIds">The Apple store-specific ids of the catalog listings to promote, in order.</param>
+        void SetStorePromotionOrder(List<string> storeSpecificIds);
     }
 }

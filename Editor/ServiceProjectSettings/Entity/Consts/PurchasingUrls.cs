@@ -7,5 +7,8 @@ namespace UnityEditor.Purchasing
         internal static readonly string iapSettingssUrl = "https://services.unity.com/api/iap-settings/v1/projects/{0}/settings";
 
         internal const string protjectSettingUrl = "https://dashboard.unity3d.com/admin-portal/organizations/{0}/projects/{1}/settings/general";
+
+        internal const string paymentProviderUrl = "https://cloud.unity.com/home/organizations/{0}/projects/{1}/environments/{2}/in-app-purchase/payment-providers";
+        internal const string inAppPurchasesUrl = "https://cloud.unity.com/home/organizations/{0}/in-app-purchase/about";
     }
 }

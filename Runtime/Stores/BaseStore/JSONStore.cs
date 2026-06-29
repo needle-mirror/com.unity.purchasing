@@ -121,7 +121,8 @@ namespace UnityEngine.Purchasing
         public override void Purchase(ICart cart)
         {
             m_CartValidator.Validate(cart);
-            var productDefinition = cart.Items().First().Product.definition;
+            var cartItem = cart.Items().First();
+            var productDefinition = cartItem.Product.catalogListings[cartItem.CatalogListingId].definition;
             Purchase(productDefinition, string.Empty);
         }
 
@@ -133,7 +134,8 @@ namespace UnityEngine.Purchasing
         public override void FinishTransaction(PendingOrder pendingOrder)
         {
             m_CartValidator.Validate(pendingOrder.CartOrdered);
-            var productDefinition = pendingOrder.CartOrdered.Items().FirstOrDefault()?.Product.definition;
+            var cartItem = pendingOrder.CartOrdered.Items().FirstOrDefault();
+            var productDefinition = cartItem != null && cartItem.Product.catalogListings.TryGetValue(cartItem.CatalogListingId, out var listing) ? listing.definition : null;
             FinishTransaction(productDefinition, pendingOrder.Info.TransactionID);
             ConfirmCallback?.OnConfirmOrderSucceeded(pendingOrder.Info.TransactionID);
         }

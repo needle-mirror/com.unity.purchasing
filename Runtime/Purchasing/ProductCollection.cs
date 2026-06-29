@@ -32,7 +32,7 @@ namespace UnityEngine.Purchasing
         /// <returns> The product matching the id, or null if not found </returns>
         public Product WithID(string id)
         {
-            var idToProduct = all.ToDictionary(x => x.definition.id);
+            var idToProduct = all.ToDictionary(x => x.uSku);
             idToProduct.TryGetValue(id, out var result);
             return result;
         }
@@ -47,7 +47,9 @@ namespace UnityEngine.Purchasing
             Product result = null;
             if (id != null)
             {
-                var storeSpecificIdToProduct = all.ToDictionary(x => x.definition.storeSpecificId);
+                var storeSpecificIdToProduct = all
+                    .Where(x => x.baseListing?.definition.storeSpecificId != null)
+                    .ToDictionary(x => x.baseListing.definition.storeSpecificId);
                 storeSpecificIdToProduct.TryGetValue(id, out result);
             }
             return result;

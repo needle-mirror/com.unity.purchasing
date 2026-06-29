@@ -1,0 +1,54 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="True">
+    <Style src="project://database/Packages/com.unity.purchasing/Editor/Authoring/Import/UI/Assets/CatalogImportWindow.uss?fileID=7433441132597879392&amp;guid=618f860a278c43e099ac48e898c78249&amp;type=3#CatalogImportWindow" />
+    <ui:VisualElement class="root-row">
+        <ui:VisualElement class="left-column">
+            <ui:VisualElement class="tab-strip">
+                <ui:VisualElement name="TabBar" class="tab-bar" />
+                <ui:VisualElement class="tab-bar-underline" />
+            </ui:VisualElement>
+            <ui:HelpBox name="ProjectNotLinkedBox" class="hidden" message-type="Error" />
+            <ui:ScrollView name="LeftScroll">
+                <ui:VisualElement name="Step2Container" class="step-container">
+                    <ui:Label text="Step 1: Fetch Catalog Data" class="section-header" />
+                    <ui:VisualElement name="FetcherConfigContainer" />
+                    <ui:Button name="FetchButton" text="Fetch Catalog" />
+                    <ui:HelpBox name="FetchStatusHelpBox" class="hidden" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Step3Container" class="step-container" />
+                <ui:HelpBox name="StatusHelpBox" class="status-box" />
+            </ui:ScrollView>
+        </ui:VisualElement>
+        <ui:VisualElement class="column-separator" />
+        <ui:VisualElement class="right-column">
+            <ui:Label name="EmptyHint" text="Import catalog items on the left" class="empty-hint" />
+            <ui:ScrollView name="RightScroll">
+                <ui:VisualElement name="NewSection" class="category-section">
+                    <ui:VisualElement name="NewHeaderContainer" class="pm-header-container">
+                        <ui:Toggle name="NewHeaderCaret" value="true" class="pm-expander" />
+                        <ui:Label name="NewHeaderLabel" text="New" class="pm-header-label" />
+                        <ui:Label name="NewHeaderTag" text="(0)" class="pm-header-tag" />
+                        <ui:Button name="NewRemoveAllBtn" text="Remove all" class="remove-all-btn" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="NewEntriesContainer" />
+                </ui:VisualElement>
+                <ui:VisualElement name="ModifiedSection" class="category-section">
+                    <ui:VisualElement name="ModifiedHeaderContainer" class="pm-header-container">
+                        <ui:Toggle name="ModifiedHeaderCaret" value="true" class="pm-expander" />
+                        <ui:Label name="ModifiedHeaderLabel" text="Modified" class="pm-header-label" />
+                        <ui:Label name="ModifiedHeaderTag" text="(0)" class="pm-header-tag" />
+                        <ui:Button name="ModifiedRemoveAllBtn" text="Remove all" class="remove-all-btn" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ModifiedEntriesContainer" />
+                </ui:VisualElement>
+                <ui:VisualElement name="UnmodifiedSection" class="category-section">
+                    <ui:VisualElement name="UnmodifiedHeaderContainer" class="pm-header-container">
+                        <ui:Toggle name="UnmodifiedHeaderCaret" value="true" class="pm-expander" />
+                        <ui:Label name="UnmodifiedHeaderLabel" text="Unmodified" class="pm-header-label" />
+                        <ui:Label name="UnmodifiedHeaderTag" text="(0)" class="pm-header-tag" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="UnmodifiedEntriesContainer" />
+                </ui:VisualElement>
+            </ui:ScrollView>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

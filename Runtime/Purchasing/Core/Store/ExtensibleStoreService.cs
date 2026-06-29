@@ -33,6 +33,8 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public virtual IGooglePlayStoreExtendedService? Google => m_BaseInternalStoreService.Google;
 
+        public IPaymentProvidersExtendedService? PaymentProviders => m_BaseInternalStoreService.PaymentProviders;
+
         /// <summary>
         /// Initiates a connection to the store.
         /// </summary>
@@ -40,6 +42,15 @@ namespace UnityEngine.Purchasing
         public virtual Task Connect()
         {
             return m_BaseInternalStoreService.Connect();
+        }
+
+        /// <summary>
+        /// Get the connection state to a given store.
+        /// </summary>
+        /// <returns>The state of the connection to the store.</returns>
+        public virtual ConnectionState GetConnectionState()
+        {
+            return m_BaseInternalStoreService.GetConnectionState();
         }
 
         /// <summary>
@@ -67,6 +78,16 @@ namespace UnityEngine.Purchasing
         {
             add => m_BaseInternalStoreService.OnStoreConnected += value;
             remove => m_BaseInternalStoreService.OnStoreConnected -= value;
+        }
+
+        /// <summary>
+        /// Callback for when the authenticated end-user account changes; product and purchase
+        /// caches have been cleared by the time this fires.
+        /// </summary>
+        public virtual event Action? OnAuthAccountChanged
+        {
+            add => m_BaseInternalStoreService.OnAuthAccountChanged += value;
+            remove => m_BaseInternalStoreService.OnAuthAccountChanged -= value;
         }
     }
 }

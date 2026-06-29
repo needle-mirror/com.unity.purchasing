@@ -12,9 +12,13 @@
         "Unity.Purchasing.Stores.XboxCloudServices",
         "Unity.Purchasing.Utilities",
         "Unity.Purchasing.TransactionVerifier",
+        "Unity.Services.Authentication",
         "Unity.Services.Core",
         "Unity.Services.Core.Internal",
         "Unity.Services.Analytics",
+        "Unity.Purchasing.PaymentProviderService",
+        "Unity.Purchasing.LiveContentAdapterService",
+        "Unity.Purchasing.WebshopService",
         "Unity.Microsoft.GDK"
     ],
     "includePlatforms": [],
@@ -41,6 +45,16 @@
             "define": "IAP_UNITY_ATTRIBUTION"
         },
         {
+            "name": "com.unity.services.authentication",
+            "expression": "3.0.0",
+            "define": "IAP_UNITY_AUTH_ENABLED"
+        },
+        {
+            "name": "com.unity.services.authentication",
+            "expression": "3.7.0-exp.3",
+            "define": "IAP_AUTH_TARGETING_ENABLED"
+        },
+        {
             "name": "com.unity.microsoft.gdk",
             "expression": "1.4.5",
             "define": "IAP_GDK"
@@ -49,6 +63,11 @@
             "name": "com.unity.services.cloudcode",
             "expression": "2.3.0",
             "define": "IAP_CLOUDCODE_ENABLED"
+        },
+        {
+          "name": "com.unity.services.authentication",
+          "expression": "3.7.1",
+          "define": "IAP_UNITY_AUTH_RESTRICTED_TOKEN_ENABLED"
         }
     ],
     "noEngineReferences": false

@@ -4,6 +4,6 @@ namespace UnityEngine.Purchasing
 {
     internal interface INativeStoreProvider
     {
-        INativeAppleStore GetStorekit(IUnityCallback callback);
+        INativeAppleStore GetStorekit();
     }
 }

@@ -503,6 +503,7 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
             await storeKitCallback.callback(subject: "OnFetchStorefrontFailed", payload: "No storefront available", entitlementStatus: 0)
         }
     }
+
 }
 
 extension String {

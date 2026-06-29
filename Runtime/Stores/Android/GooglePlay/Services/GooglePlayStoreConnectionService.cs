@@ -1,6 +1,7 @@
 using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.Stores;
 using UnityEngine.Scripting;
 
 namespace UnityEngine.Purchasing
@@ -9,14 +10,17 @@ namespace UnityEngine.Purchasing
     {
         readonly IBillingClient m_BillingClient;
         readonly IBillingClientStateListener m_BillingClientStateListener;
+        readonly IStoreLocationContext m_StoreLocationContext;
         IStoreConnectCallback m_ConnectCallback;
 
         [Preserve]
         public GooglePlayStoreConnectionService(IBillingClient billingClient,
-            IBillingClientStateListener billingClientStateListener)
+            IBillingClientStateListener billingClientStateListener,
+            IStoreLocationContext storeLocationContext)
         {
             m_BillingClient = billingClient;
             m_BillingClientStateListener = billingClientStateListener;
+            m_StoreLocationContext = storeLocationContext;
         }
 
         public void Connect()
@@ -44,6 +48,15 @@ namespace UnityEngine.Purchasing
         void OnConnected()
         {
             m_ConnectCallback.OnStoreConnectionSucceeded();
+            m_BillingClient.GetBillingConfigAsync(OnBillingConfigReceived);
+        }
+
+        void OnBillingConfigReceived(IGoogleBillingResult result, string countryCode)
+        {
+            if (result.responseCode == GoogleBillingResponseCode.Ok && !string.IsNullOrEmpty(countryCode))
+            {
+                m_StoreLocationContext.CountryCode = countryCode;
+            }
         }
 
         void OnDisconnected(GoogleBillingResponseCode responseCode)

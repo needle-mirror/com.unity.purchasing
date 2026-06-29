@@ -20,16 +20,16 @@ namespace UnityEngine.Purchasing.UseCases
             m_TelemetryDiagnostics = telemetryDiagnostics;
         }
 
-        public void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visibility)
+        public void SetStorePromotionVisibility(string storeSpecificId, AppleStorePromotionVisibility visibility)
         {
-            if (product == null)
+            if (string.IsNullOrEmpty(storeSpecificId))
             {
-                var ex = new ArgumentNullException(nameof(product));
+                var ex = new ArgumentNullException(nameof(storeSpecificId));
                 m_TelemetryDiagnostics.SendDiagnostic(TelemetryDiagnosticNames.InvalidProductError, ex);
 
                 throw ex;
             }
-            m_NativeAppleStore.SetStorePromotionVisibility(product.definition.storeSpecificId, visibility.ToString());
+            m_NativeAppleStore.SetStorePromotionVisibility(storeSpecificId, visibility.ToString());
         }
     }
 }

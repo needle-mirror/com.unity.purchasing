@@ -12,9 +12,9 @@ namespace UnityEngine.Purchasing.UseCases.Interfaces
         /// <summary>
         /// Fetch store promotion visibility
         /// </summary>
-        /// <param name="product">The event called when products are successfully fetched.</param>
+        /// <param name="storeSpecificId">The Apple store-specific id of the product whose visibility should be fetched.</param>
         /// <param name="successCallback">The event called when products are successfully fetched.</param>
         /// <param name="errorCallback">The event called when products could not be fetched.</param>
-        void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback);
+        void FetchStorePromotionVisibility(string storeSpecificId, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback);
     }
 }

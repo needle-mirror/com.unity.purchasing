@@ -1,4 +1,6 @@
 using System;
+using System.Threading.Tasks;
+using Stores.Android.GooglePlay.AAR.Models;
 using Uniject;
 using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -13,9 +15,6 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
     /// </summary>
     internal class ExternalBillingProgramClientInternal : BillingClientBase, IExternalBillingProgramClientInternal
     {
-        // From <a href="https://developer.android.com/reference/com/android/billingclient/api/BillingClient.BillingProgram#EXTERNAL_CONTENT_LINK()">
-        const int k_EXTERNAL_CONTENT_LINK = 1;
-
         const string k_BillingProgramReportingDetailsParamsClassName =
             "com.android.billingclient.api.BillingProgramReportingDetailsParams";
         const string k_LaunchExternalLinkParamsClassName =
@@ -25,26 +24,91 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
         static AndroidJavaClass s_BillingProgramReportingDetailsParamsClass;
         static AndroidJavaClass s_LaunchExternalLinkParamsClass;
         static AndroidJavaClass s_AndroidUriClass;
+        BillingProgram m_BillingProgram;
+
+        internal static readonly BillingProgram[] k_CandidatePrograms =
+        {
+            BillingProgram.EXTERNAL_CONTENT_LINK,
+            // Support for External Offers will be added in a future update
+            BillingProgram.EXTERNAL_OFFER,
+            // Support for External Payments will be added in a future update
+            // BillingProgram.EXTERNAL_PAYMENTS
+        };
 
         [Preserve]
-        internal ExternalBillingProgramClientInternal(IUtil util, ITelemetryDiagnostics telemetryDiagnostics) :
-            base(util, telemetryDiagnostics)
+        internal ExternalBillingProgramClientInternal(
+            IUtil util,
+            ITelemetryDiagnostics telemetryDiagnostics)
+            : base(util, telemetryDiagnostics)
         {
             using var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>(
                 "newBuilder",
                 UnityActivity.GetCurrentActivity()
             );
-            builder.Call<AndroidJavaObject>("enableBillingProgram", k_EXTERNAL_CONTENT_LINK).Dispose();
+            foreach (var program in k_CandidatePrograms)
+            {
+                builder.Call<AndroidJavaObject>("enableBillingProgram", (int)program).Dispose();
+            }
+            m_BillingClient = builder.Call<AndroidJavaObject>("build");
+        }
+
+        [Preserve]
+        internal ExternalBillingProgramClientInternal(
+            IUtil util,
+            ITelemetryDiagnostics telemetryDiagnostics,
+            BillingProgram billingProgram)
+            : base(util, telemetryDiagnostics)
+        {
+            using var builder = GetBillingClientClass().CallStatic<AndroidJavaObject>(
+                "newBuilder",
+                UnityActivity.GetCurrentActivity()
+            );
+            m_BillingProgram = billingProgram;
+            builder.Call<AndroidJavaObject>("enableBillingProgram", (int)m_BillingProgram).Dispose();
             m_BillingClient = builder.Call<AndroidJavaObject>("build");
         }
 
         public void IsBillingProgramAvailableAsync(Action<IGoogleBillingResult> onBillingProgramAvailabilityResponse)
         {
-            m_BillingClient.Call(
-                "isBillingProgramAvailableAsync",
-                k_EXTERNAL_CONTENT_LINK,
-                new BillingProgramAvailabilityListener(onBillingProgramAvailabilityResponse, m_Util)
-            );
+            if (m_BillingProgram != BillingProgram.UNSPECIFIED_BILLING_PROGRAM)
+            {
+                m_BillingClient.Call(
+                    "isBillingProgramAvailableAsync",
+                    (int)m_BillingProgram,
+                    new BillingProgramAvailabilityListener(onBillingProgramAvailabilityResponse, m_Util)
+                );
+            }
+            else
+            {
+                CheckCandidatePrograms(onBillingProgramAvailabilityResponse);
+            }
+        }
+
+        async void CheckCandidatePrograms(Action<IGoogleBillingResult> callback)
+        {
+            IGoogleBillingResult lastResult = null;
+
+            foreach (var program in k_CandidatePrograms)
+            {
+                var tcs = new TaskCompletionSource<IGoogleBillingResult>();
+                m_BillingClient.Call(
+                    "isBillingProgramAvailableAsync",
+                    (int)program,
+                    new BillingProgramAvailabilityListener(result => tcs.TrySetResult(result), m_Util)
+                );
+
+                var result = await tcs.Task;
+                if (result.responseCode == GoogleBillingResponseCode.Ok)
+                {
+                    m_BillingProgram = program;
+                    callback(result);
+                    return;
+                }
+
+                lastResult = result;
+            }
+
+            callback(lastResult);
         }
 
         public void LaunchExternalLink(
@@ -54,6 +118,14 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
             LaunchMode launchMode
         )
         {
+            if (m_BillingProgram == BillingProgram.UNSPECIFIED_BILLING_PROGRAM)
+            {
+                onLaunchExternalLinkResponse(new GoogleBillingResult(
+                    GoogleBillingResponseCode.BillingUnavailable,
+                    "Billing program is unspecified; call IsBillingProgramAvailableAsync first to resolve a candidate program."));
+                return;
+            }
+
             using var newLaunchExternalLinkParams = launchExternalLinkParams(externalLinkUrl, linkType, launchMode);
 
             m_BillingClient.Call(
@@ -76,7 +148,7 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
             using var builder = GetLaunchExternalLinkParamsClass()
                 .CallStatic<AndroidJavaObject>("newBuilder");
 
-            builder.Call<AndroidJavaObject>("setBillingProgram", k_EXTERNAL_CONTENT_LINK).Dispose();
+            builder.Call<AndroidJavaObject>("setBillingProgram", (int)m_BillingProgram).Dispose();
             builder.Call<AndroidJavaObject>("setLinkUri", uri).Dispose();
             builder.Call<AndroidJavaObject>("setLinkType", (int)linkType).Dispose();
             builder.Call<AndroidJavaObject>("setLaunchMode", (int)launchMode).Dispose();
@@ -87,10 +159,20 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
 
         public void CreateBillingProgramReportingDetailsAsync(Action<IGoogleBillingResult, string> onCreateBillingProgramReportingDetailsResponse)
         {
+            if (m_BillingProgram == BillingProgram.UNSPECIFIED_BILLING_PROGRAM)
+            {
+                onCreateBillingProgramReportingDetailsResponse(
+                    new GoogleBillingResult(
+                        GoogleBillingResponseCode.BillingUnavailable,
+                        "Billing program is unspecified; call IsBillingProgramAvailableAsync first to resolve a candidate program."),
+                    null);
+                return;
+            }
+
             using var builder = GetBillingProgramReportingDetailsParamsClass()
                 .CallStatic<AndroidJavaObject>("newBuilder");
-            
-            builder.Call<AndroidJavaObject>("setBillingProgram", k_EXTERNAL_CONTENT_LINK).Dispose();
+
+            builder.Call<AndroidJavaObject>("setBillingProgram", (int)m_BillingProgram).Dispose();
 
             using var reportingDetailsParams = builder.Call<AndroidJavaObject>("build");
 

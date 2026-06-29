@@ -2,7 +2,7 @@ namespace UnityEngine.Purchasing.Extension
 {
     /// <summary>
     /// Internal storage for shared [Obsolete] attribute messages.
-    /// Extracted from <see cref="UnityUtil"/> so referencing these strings in [Obsolete(...)] attributes
+    /// Extracted from <see cref="UnityEngine.Purchasing.Extension.UnityUtil"/> so referencing these strings in [Obsolete(...)] attributes
     /// across the package doesn't introduce a bare-identifier reference to "UnityUtil" in source —
     /// which can shadow against a same-named top-level namespace in any auto-referenced precompiled
     /// DLL a consumer brings in (ULO-10387). The IAP-prefixed class name further reduces the chance

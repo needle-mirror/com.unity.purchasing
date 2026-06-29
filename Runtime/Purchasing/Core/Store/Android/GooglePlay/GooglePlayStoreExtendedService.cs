@@ -14,8 +14,9 @@ namespace UnityEngine.Purchasing
         internal GooglePlayStoreExtendedService(
             IGooglePlayStoreSetObfuscatedIdUseCase googlePlayStoreSetObfuscatedIdUseCase,
             IGooglePlayStoreConnectionUseCase googlePlayStoreConnectionUseCase,
-            IStoreConnectUseCase connectUseCase)
-            : base(connectUseCase)
+            IStoreConnectUseCase connectUseCase,
+            IStoreWrapper storeWrapper)
+            : base(connectUseCase, storeWrapper)
         {
             m_GooglePlayStoreSetObfuscatedIdUseCase = googlePlayStoreSetObfuscatedIdUseCase;
             m_GooglePlayStoreConnectionUseCase = googlePlayStoreConnectionUseCase;

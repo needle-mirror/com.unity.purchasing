@@ -23,6 +23,18 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Cart"/> class with a list of <see cref="CartItem"/>.
+        /// </summary>
+        /// <param name="cartItemList">A list of cart items.</param>
+        public Cart(List<CartItem> cartItemList)
+        {
+            foreach (var cartItem in cartItemList)
+            {
+                m_CartItems.Add(cartItem);
+            }
+        }
+
+        /// <summary>
         /// Gets the items in the cart as a read-only list.
         /// </summary>
         /// <returns>A read-only list of <see cref="CartItem"/> objects.</returns>

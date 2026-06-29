@@ -16,28 +16,28 @@ namespace UnityEngine.Purchasing
             m_Logger = logger;
         }
 
-        internal long CheckCurrencyCodeAndExtractRealCurrencyAmount(Product product)
+        internal long CheckCurrencyCodeAndExtractRealCurrencyAmount(CatalogListing listing)
         {
-            if (product.metadata.isoCurrencyCode != null)
+            if (listing?.metadata?.isoCurrencyCode != null)
             {
-                return ExtractRealCurrencyAmount(product);
+                return ExtractRealCurrencyAmount(listing);
             }
             else
             {
-                m_Logger.LogIAPWarning($"The isoCurrencyCode for product ID {product.definition.id} is null. Were you trying to purchase an unavailable product? The price will be recorded as 0.");
+                m_Logger.LogIAPWarning($"The isoCurrencyCode for catalog listing '{listing?.id}' is null. Were you trying to purchase an unavailable product? The price will be recorded as 0.");
                 return 0;
             }
         }
 
-        long ExtractRealCurrencyAmount(Product product)
+        long ExtractRealCurrencyAmount(CatalogListing listing)
         {
             try
             {
-                return m_Analytics.AnalyticsServiceInstance()?.ConvertCurrencyToMinorUnits(product.metadata.isoCurrencyCode, (double)product.metadata.localizedPrice) ?? 0;
+                return m_Analytics.AnalyticsServiceInstance()?.ConvertCurrencyToMinorUnits(listing.metadata.isoCurrencyCode, (double)listing.metadata.localizedPrice) ?? 0;
             }
             catch (Exception)
             {
-                m_Logger.LogIAPWarning($"Could not convert real currency amount payable for product ID {product.definition.id}. The price will be recorded as 0.");
+                m_Logger.LogIAPWarning($"Could not convert real currency amount payable for catalog listing '{listing.id}'. The price will be recorded as 0.");
                 return 0;
             }
         }

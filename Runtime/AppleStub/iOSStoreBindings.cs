@@ -134,5 +134,40 @@ namespace UnityEngine.Purchasing
         {
             throw new NotImplementedException();
         }
+
+        public string FetchAdvertisingIdentifier()
+        {
+            return null;
+        }
+
+        public string FetchVendorIdentifier()
+        {
+            return null;
+        }
+
+        public void ExternalPurchaseCheckEligibility(ExternalPurchaseCallback callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ExternalPurchaseFetchToken(string tokenType, ExternalPurchaseCallback callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ExternalPurchaseShowNotice(string noticeType, ExternalPurchaseCallback callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ExternalPurchaseFetchStorefront(ExternalPurchaseCallback callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string FetchNativeDeviceInfo()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

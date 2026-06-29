@@ -1,15 +1,12 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using Uniject;
-using UnityEngine.Purchasing.Interfaces;
-using UnityEngine.Purchasing.Models;
+using UnityEngine.Purchasing.PaymentProviders;
 using UnityEngine.Purchasing.Services;
-using UnityEngine.Purchasing.Telemetry;
+using UnityEngine.Purchasing.Stores;
 using UnityEngine.Purchasing.UseCases;
 using UnityEngine.Purchasing.UseCases.Interfaces;
 using UnityEngine.Purchasing.Utilities;
-using UnityEngine.Purchasing.Utils;
 
 namespace UnityEngine.Purchasing
 {
@@ -35,6 +32,7 @@ namespace UnityEngine.Purchasing
             m_StoreServiceInstantiationByName.Add(GooglePlay.Name, CreateGoogleStoreService);
             m_StoreServiceInstantiationByName.Add(AppleAppStore.Name, CreateAppleStoreService);
             m_StoreServiceInstantiationByName.Add(MacAppStore.Name, CreateAppleStoreService);
+            m_StoreServiceInstantiationByName.Add(PaymentProvider.Name, CreatePaymentProvidersStoreService);
         }
 
         public void RegisterNewService(string name, Func<IStoreService> createFunction)
@@ -72,6 +70,7 @@ namespace UnityEngine.Purchasing
         static void AddStoreServiceDependencies(IDependencyInjectionService di, IRetryPolicy? retryPolicy, IStoreWrapper store)
         {
             di.AddInstance(UnityUtilContainer.Instance());
+            di.AddInstance(store);
             di.AddService<RetryService>();
             var storeConnectUseCase = new StoreConnectUseCaseFactory().CreateUseCase(store, di.GetInstance<IRetryService>());
             di.AddInstance(storeConnectUseCase);
@@ -122,5 +121,16 @@ namespace UnityEngine.Purchasing
             return di.GetInstance<AppleStoreExtendedService>();
         }
 
+        static PaymentProvidersExtendedService CreatePaymentProvidersStoreService(IRetryPolicy? retryPolicy, IStoreWrapper store)
+        {
+            IDependencyInjectionService di = new DependencyInjectionService();
+
+            di.AddInstance((PaymentProviderImpl)store.instance);
+
+            AddStoreServiceDependencies(di, retryPolicy, store);
+            di.AddService<PaymentProvidersExtendedService>();
+
+            return di.GetInstance<PaymentProvidersExtendedService>();
+        }
     }
 }

@@ -46,7 +46,9 @@ namespace UnityEngine.Purchasing
             Product oldProduct = null;
             foreach (var candidateOrder in candidateOrders)
             {
-                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.storeSpecificId == oldSku);
+                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem =>
+                    cartItem.Product.catalogListings.TryGetValue(cartItem.CatalogListingId, out var listing)
+                    && listing.definition.storeSpecificId == oldSku);
                 if (foundProduct != null)
                 {
                     oldProduct = foundProduct.Product;
@@ -54,7 +56,7 @@ namespace UnityEngine.Purchasing
                 }
             }
 
-            var newProduct = productService.GetProducts().FirstOrDefault(product => product.definition.storeSpecificId == newSku);
+            var newProduct = productService.GetProducts().FirstOrDefault(product => product.baseListing?.definition.storeSpecificId == newSku);
 
 // Obsolete: IGooglePlayStoreExtendedPurchaseService.UpgradeDowngradeSubscription(Product, Product, GooglePlayProrationMode)
 #pragma warning disable 618, 612
@@ -68,7 +70,7 @@ namespace UnityEngine.Purchasing
             var candidateOrders = purchaseService.GetPurchases().Where(order => (order is PendingOrder || order is DeferredOrder));
             foreach (var candidateOrder in candidateOrders)
             {
-                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == product.definition.id);
+                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.uSku == product.uSku);
                 if (foundProduct != null)
                 {
 // Obsolete: IGooglePlayStoreExtendedPurchaseService.IsOrderDeferred(Order)
@@ -92,7 +94,7 @@ namespace UnityEngine.Purchasing
             var candidateOrders = purchaseService.GetPurchases();
             foreach (var candidateOrder in candidateOrders)
             {
-                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == product.definition.id);
+                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.uSku == product.uSku);
                 if (foundProduct != null)
                 {
 // Obsolete: IGooglePlayStoreExtendedPurchaseService.GetPurchaseState(Order)
@@ -106,7 +108,7 @@ namespace UnityEngine.Purchasing
                 }
             }
 
-            throw new Exception($"Product {product.definition.id} was not purchased.");
+            throw new Exception($"Product {product.uSku} was not purchased.");
         }
 
         public string GetObfuscatedAccountId(Product product)
@@ -120,7 +122,7 @@ namespace UnityEngine.Purchasing
             var candidateOrders = purchaseService.GetPurchases();
             foreach (var candidateOrder in candidateOrders)
             {
-                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == product.definition.id);
+                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.uSku == product.uSku);
                 if (foundProduct != null)
                 {
                     return purchaseService.Google!.GetObfuscatedAccountId(candidateOrder);
@@ -141,7 +143,7 @@ namespace UnityEngine.Purchasing
             var candidateOrders = purchaseService.GetPurchases();
             foreach (var candidateOrder in candidateOrders)
             {
-                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.definition.id == product.definition.id);
+                var foundProduct = candidateOrder.CartOrdered.Items().FirstOrDefault(cartItem => cartItem.Product.uSku == product.uSku);
                 if (foundProduct != null)
                 {
                     return purchaseService.Google!.GetObfuscatedProfileId(candidateOrder);

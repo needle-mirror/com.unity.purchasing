@@ -102,6 +102,15 @@ namespace UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models
             m_ObfuscatedProfileId = obfuscationProfileId;
         }
 
+        public void GetBillingConfigAsync(Action<IGoogleBillingResult, string> onBillingConfigResponse)
+        {
+            using var paramsBuilder = GetBillingConfigParamsClass()
+                .CallStatic<AndroidJavaObject>("newBuilder");
+            using var billingConfigParams = paramsBuilder.Call<AndroidJavaObject>("build");
+            var listener = new BillingConfigResponseListener(onBillingConfigResponse, m_Util);
+            m_BillingClient.Call("getBillingConfigAsync", billingConfigParams, listener);
+        }
+
 #region Android Class Names
         const string k_AndroidQueryPurchasesParamsClassName = "com.android.billingclient.api.QueryPurchasesParams";
         const string k_AndroidQueryProductDetailsParamsClassName = "com.android.billingclient.api.QueryProductDetailsParams";
@@ -111,6 +120,7 @@ namespace UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models
         const string k_AndroidSubscriptionUpdateParamClassName = "com.android.billingclient.api.BillingFlowParams$SubscriptionUpdateParams";
         const string k_AndroidConsumeParamsClassName = "com.android.billingclient.api.ConsumeParams";
         const string k_AndroidAcknowledgePurchaseParamsClassName = "com.android.billingclient.api.AcknowledgePurchaseParams";
+        const string k_AndroidGetBillingConfigParamsClassName = "com.android.billingclient.api.GetBillingConfigParams";
 #endregion
 
 #region Static Class Declarations
@@ -122,6 +132,7 @@ namespace UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models
         static AndroidJavaClass s_SubscriptionUpdateParamsClass;
         static AndroidJavaClass s_ConsumeParamsClass;
         static AndroidJavaClass s_AcknowledgePurchaseParamsClass;
+        static AndroidJavaClass s_GetBillingConfigParamsClass;
 #endregion
 
 #region Helpers
@@ -265,6 +276,12 @@ namespace UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models
         {
             s_PendingPurchasesParamsClass ??= new AndroidJavaClass(k_AndroidPendingPurchasesParamsClassName);
             return s_PendingPurchasesParamsClass;
+        }
+
+        static AndroidJavaClass GetBillingConfigParamsClass()
+        {
+            s_GetBillingConfigParamsClass ??= new AndroidJavaClass(k_AndroidGetBillingConfigParamsClassName);
+            return s_GetBillingConfigParamsClass;
         }
 #endregion
     }

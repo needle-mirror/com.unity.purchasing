@@ -59,14 +59,13 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="product">Subscription to be inspected</param>
         /// <param name="introJson">From <typeparamref name="IAppleStoreExtendedProductService.GetIntroductoryPriceDictionary"/></param>
-        // TODO ULO-10516 Mark this constructor as obsolete/deprecated. It relies on the obsolete Product.receipt API.
         public SubscriptionInfoHelper(Product product, string introJson)
         {
 // Obsolete: Product.receipt
 #pragma warning disable 618, 612
             m_Receipt = product.receipt;
 #pragma warning restore 618, 612
-            m_ProductId = product.definition.storeSpecificId;
+            m_ProductId = product.catalogListings.TryGetValue(product.uSku ?? "", out var listing) ? listing.definition.storeSpecificId : null;
             m_IntroJson = introJson;
         }
 
@@ -318,7 +317,7 @@ namespace UnityEngine.Purchasing
     }
 
     /// <summary>
-    /// An error was found when an invalid <typeparamref name="Product.definition.type"/> is provided.
+    /// An error was found when an invalid <see cref="Product.type"/> is provided.
     /// </summary>
     [Serializable]
     public class InvalidProductTypeException : ReceiptParserException
@@ -343,7 +342,7 @@ namespace UnityEngine.Purchasing
     }
 
     /// <summary>
-    /// An error was found when an unexpectedly null <typeparamref name="Product.definition.id"/> is provided.
+    /// An error was found when an unexpectedly null <see cref="Product.uSku"/> is provided.
     /// </summary>
     [Serializable]
     public class NullProductIdException : ReceiptParserException

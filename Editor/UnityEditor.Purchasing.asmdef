@@ -10,7 +10,8 @@
         "Unity.Purchasing.Stores.XboxCloudServices",
         "Unity.Purchasing.Codeless",
         "Unity.Purchasing.Utilities",
-        "Unity.Services.Core.Editor"
+        "Unity.Services.Core.Editor",
+        "Unity.Services.Core.Environments.Editor"
     ],
     "includePlatforms": [
         "Editor"

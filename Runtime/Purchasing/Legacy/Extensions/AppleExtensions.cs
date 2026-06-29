@@ -80,7 +80,7 @@ namespace UnityEngine.Purchasing
 
         public void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visible)
         {
-            UnityIAPServices.DefaultProduct().Apple?.SetStorePromotionVisibility(product, visible);
+            UnityIAPServices.DefaultProduct().Apple?.SetStorePromotionVisibility(product.baseListing.id, visible);
         }
 
         public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action errorCallback)
@@ -89,7 +89,7 @@ namespace UnityEngine.Purchasing
             {
                 errorCallback.Invoke();
             }
-            UnityIAPServices.DefaultProduct().Apple?.FetchStorePromotionVisibility(product, successCallback, ErrorCallbackWrapper);
+            UnityIAPServices.DefaultProduct().Apple?.FetchStorePromotionVisibility(product.baseListing.id, successCallback, ErrorCallbackWrapper);
         }
 
         public void SetStorePromotionOrder(List<Product> products)

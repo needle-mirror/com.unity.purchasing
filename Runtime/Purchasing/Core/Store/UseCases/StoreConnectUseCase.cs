@@ -29,7 +29,7 @@ namespace UnityEngine.Purchasing
         {
             try
             {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
                 if (OnStoreConnection == null)
                 {
                     Debug.unityLogger.LogIAPWarning("IStoreService.Connect called without a callback defined for IStoreService.OnStoreConnected.");
@@ -93,6 +93,14 @@ namespace UnityEngine.Purchasing
         public void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy retryPolicy)
         {
             m_RetryPolicyOnDisconnect = retryPolicy;
+        }
+
+        // Bridge the auth-account-changed event from the underlying Store base to the public service.
+        // All real stores inherit from Store; test fakes implementing IStore directly silently no-op.
+        public event Action? OnAuthAccountChanged
+        {
+            add { if (m_Store is Store store) store.OnAuthAccountChanged += value; }
+            remove { if (m_Store is Store store) store.OnAuthAccountChanged -= value; }
         }
     }
 }

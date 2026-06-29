@@ -42,24 +42,38 @@ namespace UnityEngine.Purchasing
         {
             var unifiedReceipt = JsonUtility.FromJson<UnifiedReceipt>(receipt);
             var analyticsReceipt = unifiedReceipt.ToReceiptAndSignature();
-            return new Dictionary<string, object?>
+            item.Product.catalogListings.TryGetValue(item.CatalogListingId, out var listing);
+            var transactionParameters = new Dictionary<string, object?>
             {
                 { "transactionID", unifiedReceipt.TransactionID },
-                { "transactionName", CommonTransactionEventHelper.GetTransactionName(item.Product) },
+                { "transactionName", CommonTransactionEventHelper.GetTransactionName(listing) },
                 { "transactionReceipt", analyticsReceipt.transactionReceipt },
                 { "transactionReceiptSignature", analyticsReceipt.transactionReceiptSignature },
                 { "transactionServer", analyticsReceipt.transactionServer },
                 { "transactionType", TransactionType.PURCHASE },
-                { "productID", item.Product.definition.storeSpecificId },
-                { "productsSpent", GenerateRealCurrencySpentOnPurchase(item.Product) },
+                { "productID", listing?.definition?.storeSpecificId },
+                { "productsSpent", GenerateRealCurrencySpentOnPurchase(listing) },
                 { "productsReceived", GenerateItemReceivedForPurchase(item) }
             };
+
+            return transactionParameters;
+        }
+
+        static bool IsAppleAppStore()
+        {
+            return
+                Application.platform == RuntimePlatform.IPhonePlayer ||
+                Application.platform == RuntimePlatform.OSXPlayer ||
+#if UNITY_VISIONOS
+                Application.platform == RuntimePlatform.VisionOS ||
+#endif
+                Application.platform == RuntimePlatform.tvOS;
         }
 
         public void SendTransactionFailedEvent(PurchaseFailureDescription failureDescription)
         {
             CoreAnalyticsComponent()?.Record(k_TransactionFailedEventName,
-                BuildTransactionFailedParameters(failureDescription.product, TransactionFailedEventHelper.BuildFailureReason(failureDescription)),
+                BuildTransactionFailedParameters(failureDescription.item, TransactionFailedEventHelper.BuildFailureReason(failureDescription)),
                 k_TransactionFailedEventVersion,
                 k_PurchasingPackageName);
         }
@@ -76,16 +90,18 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        Dictionary<string, object> BuildTransactionFailedParameters(CartItem item,
+        Dictionary<string, object?> BuildTransactionFailedParameters(CartItem item,
             string failureReason)
         {
-            return new Dictionary<string, object>
+            // Listing may have been removed since the cart was built (e.g. user logged out).
+            item.Product.catalogListings.TryGetValue(item.CatalogListingId, out var listing);
+            return new Dictionary<string, object?>
             {
-                { "transactionName", CommonTransactionEventHelper.GetTransactionName(item.Product) },
+                { "transactionName", CommonTransactionEventHelper.GetTransactionName(listing) },
                 { "transactionType", TransactionType.PURCHASE },
-                { "productID", item.Product.definition.storeSpecificId },
+                { "productID", listing?.definition?.storeSpecificId },
                 { "failureReason", failureReason },
-                { "productsSpent", GenerateRealCurrencySpentOnPurchase(item.Product) },
+                { "productsSpent", GenerateRealCurrencySpentOnPurchase(listing) },
                 { "productsReceived", GenerateItemReceivedForPurchase(item) }
             };
         }
@@ -99,9 +115,9 @@ namespace UnityEngine.Purchasing
                         new Dictionary<string, object> {
                             { "item", new Dictionary<string, object>
                                 {
-                                    { "itemName", item.Product.definition.id },
+                                    { "itemName", item.Product.uSku },
                                     { "itemAmount", item.Quantity },
-                                    { "itemType", item.Product.definition.type.ToString() }
+                                    { "itemType", item.Product.type.ToString() }
                                 }
                             }
                         }
@@ -110,20 +126,20 @@ namespace UnityEngine.Purchasing
             };
         }
 
-        Dictionary<string, object> GenerateRealCurrencySpentOnPurchase(Product product)
+        Dictionary<string, object> GenerateRealCurrencySpentOnPurchase(CatalogListing? listing)
         {
             return new Dictionary<string, object>
             {
-                { "realCurrency", CreateRealCurrencyFromProduct(product) }
+                { "realCurrency", CreateRealCurrencyFromListing(listing) }
             };
         }
 
-        Dictionary<string, object> CreateRealCurrencyFromProduct(Product product)
+        Dictionary<string, object> CreateRealCurrencyFromListing(CatalogListing? listing)
         {
             return new Dictionary<string, object>
             {
-                { "realCurrencyAmount", m_TransactionEventHelper.CheckCurrencyCodeAndExtractRealCurrencyAmount(product) },
-                { "realCurrencyType", product.metadata.isoCurrencyCode ?? "" }
+                { "realCurrencyAmount", m_TransactionEventHelper.CheckCurrencyCodeAndExtractRealCurrencyAmount(listing) },
+                { "realCurrencyType", listing?.metadata?.isoCurrencyCode ?? "" }
             };
         }
     }

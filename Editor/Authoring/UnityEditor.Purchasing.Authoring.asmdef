@@ -1,0 +1,39 @@
+{
+    "name": "UnityEditor.Purchasing.Authoring",
+    "rootNamespace": "UnityEditor.Purchasing.Authoring.Editor",
+    "references": [
+        "Unity.Services.Core",
+        "Unity.Services.Core.Editor",
+        "Unity.Services.Core.Internal",
+        "Unity.Services.DeploymentApi",
+        "Unity.Services.Core.Environments.Editor",
+        "Unity.Purchasing.Editor.Shared",
+        "Unity.Purchasing",
+        "UnityEditor.Purchasing.Editor.Authoring.Core"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [
+        "UNITY_2021_3_OR_NEWER",
+        "DEPLOYMENT_API_AVAILABLE_V1_0"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.services.deployment.api",
+            "expression": "[1.0.0-pre.5,1.3.0-exp.1)",
+            "define": "DEPLOYMENT_API_AVAILABLE_V1_0"
+        },
+        {
+            "name": "com.unity.services.deployment.api",
+            "expression": "[1.1.0-exp.3,1.3.0-exp.1)",
+            "define": "DEPLOYMENT_API_AVAILABLE_V1_1"
+        }
+    ],
+    "noEngineReferences": false
+}

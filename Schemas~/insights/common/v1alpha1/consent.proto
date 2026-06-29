@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package insights.common.v1alpha1;
+
+enum ConsentState {
+  CONSENT_STATE_UNSPECIFIED = 0;
+  CONSENT_STATE_UNSET = 1;
+  CONSENT_STATE_GRANTED = 2;
+  CONSENT_STATE_DENIED = 3;
+}
+
+enum DataCollectionMode {
+  DATA_COLLECTION_MODE_UNSPECIFIED = 0;
+  DATA_COLLECTION_MODE_BASIC = 1;
+  DATA_COLLECTION_MODE_RECOMMENDED = 2;
+}

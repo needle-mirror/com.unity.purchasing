@@ -37,7 +37,7 @@ namespace UnityEngine.Purchasing
 
         public void InitiatePurchase(Product product, string payload)
         {
-            InitiatePurchase(product.definition.id);
+            InitiatePurchase(product.uSku);
         }
 
         public void InitiatePurchase(string productId, string payload)
@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing
 
         public void InitiatePurchase(Product product)
         {
-            InitiatePurchase(product.definition.id);
+            InitiatePurchase(product.uSku);
         }
 
         public void InitiatePurchase(string productId)
@@ -68,7 +68,7 @@ namespace UnityEngine.Purchasing
                 product.transactionID = pendingOrder.Info.TransactionID;
                 product.receipt = pendingOrder.Info.Receipt;
                 product.appleOriginalTransactionID = pendingOrder.Info.Apple?.OriginalTransactionID;
-                var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
+                var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.uSku == product.uSku);
                 if (localProduct != null)
                 {
                     localProduct.transactionID = pendingOrder.Info.TransactionID;
@@ -88,13 +88,13 @@ namespace UnityEngine.Purchasing
             }
 
             var product = confirmedOrder.CartOrdered.Items().FirstOrDefault()?.Product;
-            if (product != null && product.definition.type == ProductType.Consumable)
+            if (product != null && product.type == ProductType.Consumable)
             {
                 product.receipt = null;
                 product.transactionID = null;
                 product.appleOriginalTransactionID = null;
                 var localProduct = m_StoreController.GetProducts()
-                    .FirstOrDefault(p => p.definition.id == product.definition.id);
+                    .FirstOrDefault(p => p.uSku == product.uSku);
                 if (localProduct != null)
                 {
                     localProduct.receipt = null;
@@ -114,7 +114,7 @@ namespace UnityEngine.Purchasing
                     product.receipt = order.Info.Receipt;
                     product.transactionID = order.Info.TransactionID;
                     product.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
-                    var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
+                    var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.uSku == product.uSku);
                     if (localProduct != null)
                     {
                         localProduct.receipt = order.Info.Receipt;
@@ -132,7 +132,7 @@ namespace UnityEngine.Purchasing
                     product.receipt = order.Info.Receipt;
                     product.transactionID = order.Info.TransactionID;
                     product.appleOriginalTransactionID = order.Info.Apple?.OriginalTransactionID;
-                    var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == product.definition.id);
+                    var localProduct = m_StoreController.GetProducts().FirstOrDefault(p => p.uSku == product.uSku);
                     if (localProduct != null)
                     {
                         localProduct.receipt = order.Info.Receipt;
@@ -175,7 +175,7 @@ namespace UnityEngine.Purchasing
 
         Product FindProductByProductId(string productId)
         {
-            return m_StoreController.GetProducts().FirstOrDefault(product => product.definition.id == productId);
+            return m_StoreController.GetProducts().FirstOrDefault(p => p.uSku == productId);
         }
 
         public void FetchAdditionalProducts(HashSet<ProductDefinition> additionalProducts, Action successCallback, Action<InitializationFailureReason, string> failCallback)
@@ -215,18 +215,22 @@ namespace UnityEngine.Purchasing
 
         static PendingOrder CreatePendingOrderFromProduct(Product product)
         {
+            // Product-level intent: find the pending order for this product, regardless of which
+            // specific listing was purchased. Matching by uSku covers both single-listing and
+            // multi-listing (e.g. promotional) purchases for the same product.
+            var targetUSku = product.uSku;
             foreach (var order in PurchaseServiceProvider.GetDefaultPurchaseService().GetPurchases())
             {
                 if (order is PendingOrder pendingOrder)
                 {
                     var cartItem = pendingOrder.CartOrdered.Items().FirstOrDefault();
-                    if (cartItem != null && cartItem.Product.definition.storeSpecificId == product.definition.storeSpecificId)
+                    if (cartItem != null && cartItem.Product.uSku == targetUSku)
                     {
                         return pendingOrder; // Return the original instance
                     }
                 }
             }
-            Debug.LogWarning($"No pending order found for product {product.definition.id}. Returning a new PendingOrder with empty OrderInfo.");
+            Debug.LogWarning($"No pending order found for product {product.uSku}. Returning a new PendingOrder with empty OrderInfo.");
             var cartItemNew = new CartItem(product);
             var cartNew = new Cart(cartItemNew);
             return new PendingOrder(cartNew, new OrderInfo(string.Empty, string.Empty, string.Empty));

@@ -13,8 +13,8 @@ namespace UnityEngine.Purchasing.UseCases.Interfaces
         /// <summary>
         /// Override the visibility of a product on the device.
         /// </summary>
-        /// <param name="product">Product to change visibility.</param>
+        /// <param name="storeSpecificId">The Apple store-specific id of the product whose visibility should be set.</param>
         /// <param name="visibility">The new product visibility.</param>
-        void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visibility);
+        void SetStorePromotionVisibility(string storeSpecificId, AppleStorePromotionVisibility visibility);
     }
 }

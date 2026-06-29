@@ -1,0 +1,252 @@
+openapi: 3.0.3
+info:
+  title: Webshop Link Shortener API
+  contact:
+    name: 'Team: Creator Economy'
+    x-slack-channel: '#ask-creator-economy'
+  version: 1.0.0
+tags:
+  - name: Webshop link
+    description: Webshop link shortener endpoints
+
+servers:
+  - url: https://webshop.services.api.unity.com
+    x-unity-gateway:
+      environment: production
+  - url: https://webshop-stg.services.api.unity.com
+    x-unity-gateway:
+      environment: staging
+
+paths:
+  /v1/projects/{projectId}/environments/{environmentId}/webshop-link:
+    parameters:
+      - $ref: '#/components/parameters/ProjectIdPath'
+      - $ref: '#/components/parameters/EnvironmentIdPath'
+    post:
+      summary: Create a webshop link
+      description: |-
+        Generates a short `shop.unity.com/r/{code}` URL that carries the supplied player
+        tokens and parameters. The SDK mints compliance tokens and opens the returned URL;
+        the webshop frontend reads them off the URL and forwards them to IAP at order-create.
+
+        Each parameter value is URL-encoded onto the link under a query key equal to its
+        `type`. The caller never sets keys directly.
+
+        At most 2 token params total are allowed across the four token types
+        (`appleAcquisition`, `appleServices`, `appleLinkOut`, `google`).
+      operationId: createWebshopLink
+      tags:
+        - Webshop link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebshopLinkRequest'
+      responses:
+        '200':
+          description: Webshop link successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebshopLink'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        headers:
+          in:
+            - authorization
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/webshop-link
+
+components:
+  schemas:
+    ProblemDetail:
+      type: object
+      description: RFC 7807 Problem Details
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          description: A URI reference identifying the problem type
+          example: "problems/not-found"
+        title:
+          type: string
+          description: A short, human-readable summary
+          example: "Not Found"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 404
+        detail:
+          type: string
+          description: Human-readable explanation
+          example: "No webshop found for the given project-environment"
+        instance:
+          type: string
+          description: A URI reference for this specific occurrence
+    WebshopLinkRequest:
+      type: object
+      description: Parameters to carry on the generated webshop link.
+      required: [params]
+      properties:
+        params:
+          type: array
+          description: |
+            Allowlisted link parameters. Each is applied to the resulting URL as a
+            query parameter named for its type, except catalogListingId, which
+            deep-links to a product detail page.
+          maxItems: 8
+          items:
+            $ref: "#/components/schemas/WebshopLinkParam"
+    WebshopLinkParam:
+      type: object
+      required: [type, value]
+      properties:
+        type:
+          type: string
+          description: The parameter kind; determines the query key and per-type validation.
+          enum:
+            - sessionToken
+            - locale
+            - currency
+            - country
+            - catalogListingId
+            - impressionId
+            - appleAcquisition
+            - appleServices
+            - appleLinkOut
+            - google
+        value:
+          type: string
+          description: The parameter value, URL-encoded onto the link.
+          minLength: 1
+          maxLength: 4096
+    WebshopLink:
+      type: object
+      description: |
+        A shareable URL that opens the webshop, plus whether it is the live
+        published storefront.
+      required: [url, live]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: The shareable webshop URL.
+        live:
+          type: boolean
+          description: True when the URL opens the live published storefront.
+  responses:
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    Forbidden:
+      description: Insufficient scope (admin required)
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    NotFound:
+      description: No webshop configured, or primary environment not published
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    UnprocessableEntity:
+      description: A param is outside the allowlist or fails its validation rule
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    TooManyRequests:
+      description: Too Many Requests
+      headers:
+        Retry-After:
+          schema:
+            type: number
+          description: The number of seconds until a request is accepted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+    ServiceUnavailable:
+      description: Service Unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/ProblemDetail"
+  parameters:
+    ProjectIdPath:
+      name: projectId
+      in: path
+      required: true
+      description: Unity project UUID
+      schema:
+        type: string
+    EnvironmentIdPath:
+      name: environmentId
+      in: path
+      required: true
+      description: Unity environment UUID
+      schema:
+        type: string
+  securitySchemes:
+    Client:
+      type: http
+      scheme: bearer
+      description: |-
+        UPA token (anonymous or account), minted for the target {projectId, environmentId}.
+        To get started with Authentication, please visit the [Client Authentication section](https://services.docs.unity.com/docs/client-auth).

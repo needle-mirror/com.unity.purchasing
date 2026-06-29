@@ -1,7 +1,7 @@
 {
   "name": "com.unity.purchasing",
   "displayName": "In-App Purchasing",
-  "unity": "2021.3",
+  "unity": "2022.3",
   "_upm": {
     "gameService": {
       "groupIndex": 4,
@@ -17,16 +17,16 @@
       "PC",
       "Xbox"
     ],
-    "changelog": "### Added\n- Xbox - Added purchase verification support through the Microsoft Store Collections service. See [In-app purchases for Xbox games](https://docs.unity3d.com/6000.4/Documentation/Manual/xbox-games-on-windows-iap.html) for more details.\n\n### Fixed\n- Fixed compile errors caused by naming collisions when a project imports a third-party package that exposes a top-level `UnityUtil` namespace.\n- Google - Fixed a race condition where purchases could be silently lost when `FetchPurchases` completed before `FetchProducts` populated the product details cache. Missing product details are now pre-fetched before purchases are built.\n- Google - Fixed a `NullReferenceException` when constructing a `GooglePurchase` for an owned purchase whose `AccountIdentifiers` are null (test purchases or apps that don't call `SetObfuscatedAccountId`).\n- Google - Fixed a `NullReferenceException` in `ProductDetailsConverter.BuildProductDescription` when a product has no subscription offer details (returned as null by Google Play for non-subscription products).\n- Google - Fixed a `NullReferenceException` where `Purchase` references received from `QueryPurchasesAsync` could become invalid across an async boundary. The references are now cloned to long-lived global JNI references inside the billing-client callback."
+    "changelog": "### Added\n- [Direct to Consumer (D2C) payment providers](https://docs.unity.com/en-us/iap/payment-providers) - Integrate D2C payment providers with Unity In-App Purchasing to sell and fulfill products through off-platform transactions.\n- [Unity Webshops](https://docs.unity.com/iap/webshop) - Launch a branded web storefront for your In-App Purchasing catalog from the Unity Dashboard, with theming, hosting, and payments handled for you.\n- [Remote Catalog](https://docs.unity.com/en-us/iap/payment-providers/configure-remote-catalog) - Define your product catalog and upload it to the Remote Catalog service.\n- [Purchase Options UI](https://docs.unity.com/en-us/iap/payment-providers/initiate-purchase) - Start a purchase from your application and let players choose how to pay with the Purchase Options UI.\n- These new features listed above all require `com.unity.services.authentication` 3.7.1 and above.\n- [Catalog Listings](https://docs.unity.com/en-us/iap/payment-providers/configure-remote-catalog#products-and-catalog-listings) - A single product can now expose multiple purchasable offers via `CatalogListing`. Catalog Listings are defined in the Remote Catalog.\n   - All functions previously using a `Product` now have a new overload using `CatalogListing`\n   - All functions previously using a productId now use a catalogListingId\n   - Entitlement checks now query every `CatalogListing` on a product and report the highest `EntitlementStatus`, so multi-listing products (for example, `no_ads` and `no_ads_discounted`) resolve correctly regardless of which listing the player originally purchased.\n   - Products without a catalog listing are backward compatible - a default catalog listing will be created where the `catalogListingId` matches the Product's uSku.\n- [Compliance with Apple and Google external purchase requirements](https://docs.unity.com/en-us/iap/payment-providers/external-purchase-compliance) - Comply with Apple and Google's requirements for external purchases.\n\n### Changed\n- GooglePlay - Billing Library updated to 9.0.0 (was 8.3.0).\n- Updated `com.unity.services.core` dependency to 1.18.0.\n- The minimum Unity Editor version supported is 2022.3.\n- Authentication - The IAP SDK will clear products and purchases before raising the `OnAuthAccountChanged` event to prevent stale prices/listings/orders. From this callback, re-run your initialization flow for the new account: `FetchCatalog` → `FetchProducts` → `FetchPurchases`. Cached purchases and products will only be cleared on Authentication sign-in events when StoreController.OnAuthAccountChanged has at least one listener set.\n\n### Fixed\n- Fixed compile errors caused by naming collisions when a project imports a third-party package that exposes a top-level `UnityUtil` namespace.\n\n### API changes\n#### Payment Providers\n- New `PaymentProvidersExtendedPurchaseService` exposed on `StoreController`; new `PaymentProviders` property on `PurchaseService` / `IPurchaseService`.\n- `IPaymentProvidersExtendedPurchaseService.SetPaymentProviderOverride(string)` — overrides which payment provider is used in purchases.\n- `IPaymentProvidersExtendedService.GetEligiblePaymentProviders()` — returns providers in priority order; empty list means none eligible.\n- `IPaymentProvidersExtendedPurchaseService.SetComplianceCheck(Func<PaymentProviderComplianceContext, Task<bool>>)` — gates Payment Provider purchases on your compliance rules; returning `false` fails the purchase with `PurchasingUnavailable`.\n- `IPaymentProvidersExtendedPurchaseService.GenerateURL(string sku, IReadOnlyList<PaymentProviderToken>?)` — fetches the redirect URL up front (e.g. for compliance display) without opening it.\n- `IPaymentProvidersExtendedPurchaseService.Purchase(ICart, string)` and `PurchaseProduct(string catalogListingId, string)` — route a single purchase through a specific provider without mutating the value set by `SetPaymentProviderOverride`.\n- `IPaymentProvidersExtendedPurchaseService.RedirectToWebshop(string? catalogListingId = null, IReadOnlyList<PaymentProviderToken>? externalTokens = null)` — opens the Unity we"
   },
-  "version": "5.3.1",
+  "version": "5.4.0",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
     "com.unity.modules.jsonserialize": "1.0.0",
     "com.unity.modules.androidjni": "1.0.0",
-    "com.unity.services.core": "1.14.0"
+    "com.unity.services.core": "1.18.0"
   },
   "keywords": [
     "purchasing",
@@ -36,16 +36,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.3.1"
+    "com.unity.purchasing.tests": "5.4.0"
   },
   "upmCi": {
-    "footprint": "9417345f0f44629c0753bef8b905c287636d1a97"
+    "footprint": "364cb44b2882c4e2b21648abed5e263c0ad80e5b"
   },
-  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.3/manual/index.html",
+  "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.4/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "ab287aeb340cc2bc1b03ada4decc6648b5cd779b"
+    "revision": "b64dbb8618279f3c99cd3fe930187453519f5d5a"
   },
   "samples": [
     {
@@ -104,11 +104,6 @@
       "path": "Samples~/Apple App Store - 05 GettingIntroductoryPrices"
     },
     {
-      "displayName": "Coded IAP 5.0.0 Sample",
-      "description": "This sample showcases how to use Coded IAP in 5.0.0. ",
-      "path": "Samples~/Coded IAP 5.0.0 Sample"
-    },
-    {
       "displayName": "Google Play Store - 05 Fraud Detection",
       "description": "This sample showcases how to provide to the Google Play Store your user's identifiers to help prevent fraud.",
       "path": "Samples~/Google Play Store - 05 FraudDetection"
@@ -117,6 +112,11 @@
       "displayName": "Google Play Store - 06 Local Receipt Validation",
       "description": "This sample showcases how to do local receipt validation with the Google Play Store.",
       "path": "Samples~/Google Play Store - 06 Local Receipt Validation"
+    },
+    {
+      "displayName": "IAP 5 Coded Sample",
+      "description": "This sample showcases how to use Coded IAP and Payment Providers.",
+      "path": "Samples~/IAP 5 Coded Sample"
     },
     {
       "displayName": "Minimal Coded IAP 5.0.0 Sample",

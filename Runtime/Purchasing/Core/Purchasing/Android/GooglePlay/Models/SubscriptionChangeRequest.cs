@@ -7,14 +7,15 @@ namespace UnityEngine.Purchasing
         readonly Action<DeferredPaymentUntilRenewalDateOrder> m_OnPurchaseDeferredUntilRenewalDate;
 
         internal Order CurrentOrder { get; }
-        internal Product NewSubscription { get; }
+        internal CartItem NewSubscriptionItem { get; }
+        internal Product NewSubscription => NewSubscriptionItem.Product;
         internal GooglePlayReplacementMode ReplacementMode { get; }
 
-        internal SubscriptionChangeRequest(Order currentOrder, Product newSubscription,
+        internal SubscriptionChangeRequest(Order currentOrder, CartItem newSubscriptionItem,
             GooglePlayReplacementMode replacementMode)
         {
             CurrentOrder = currentOrder;
-            NewSubscription = newSubscription;
+            NewSubscriptionItem = newSubscriptionItem;
             ReplacementMode = replacementMode;
         }
     }

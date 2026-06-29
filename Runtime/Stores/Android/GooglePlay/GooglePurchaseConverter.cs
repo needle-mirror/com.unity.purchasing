@@ -1,6 +1,5 @@
 #nullable enable
 
-using System;
 using System.Linq;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -36,23 +35,32 @@ namespace UnityEngine.Purchasing
         static ProductType GetProductType(ICart cart)
         {
             var cartItem = cart.Items().FirstOrDefault();
-            return cartItem?.Product.definition?.type ?? ProductType.Unknown;
+            return cartItem?.Product.type ?? ProductType.Unknown;
         }
 
         public ICart CreateCartFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
         {
             var product = productCache?.Find(purchase.sku) ?? DefaultProduct(purchase);
 
-            var updatedProduct = new Product(product.definition, product.metadata)
-            {
-// Obsolete: Product.receipt, Product.transactionID
-#pragma warning disable 618, 612
-                receipt = purchase.receipt,
-                transactionID = purchase.purchaseToken
-#pragma warning restore 618, 612
-            };
+            // Multi-listing aware: pick the listing whose storeSpecificId matches the actual SKU
+            // purchased. Falls back to the base listing in the single-listing case (where they're equal).
+            var sourceListing = productCache?.FindCatalogListingByStoreSpecificId(purchase.sku) ?? product.baseListing;
 
-            return new Cart(updatedProduct);
+// Obsolete: Product(ProductDefinition, ProductMetadata, string), Product.transactionID
+#pragma warning disable 618, 612
+            var updatedProduct = new Product(sourceListing?.definition, sourceListing?.metadata, purchase.receipt)
+            {
+                transactionID = purchase.purchaseToken
+            };
+#pragma warning restore 618, 612
+
+            // The new Product's only listing is keyed by definition.catalogListingId, which may
+            // differ from updatedProduct.uSku for non-base listings. Use the explicit-listing
+            // CartItem ctor so we don't rely on baseListing being populated.
+            var catalogListingId = sourceListing?.definition?.catalogListingId;
+            return catalogListingId != null && updatedProduct.catalogListings.ContainsKey(catalogListingId)
+                ? new Cart(new CartItem(updatedProduct, catalogListingId))
+                : new Cart(updatedProduct);
         }
 
         private Product DefaultProduct(IGooglePurchase purchase)

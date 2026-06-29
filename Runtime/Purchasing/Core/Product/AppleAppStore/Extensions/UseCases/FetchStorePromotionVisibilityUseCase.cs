@@ -19,10 +19,10 @@ namespace UnityEngine.Purchasing.UseCases
             m_NativeAppleStore = nativeStore;
         }
 
-        public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)
+        public void FetchStorePromotionVisibility(string storeSpecificId, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)
         {
             m_AppleStoreCallbacks.SetFetchStorePromotionVisibilityCallbacks(successCallback, errorCallback);
-            m_NativeAppleStore.FetchStorePromotionVisibility(product.definition.storeSpecificId);
+            m_NativeAppleStore.FetchStorePromotionVisibility(storeSpecificId);
         }
     }
 }

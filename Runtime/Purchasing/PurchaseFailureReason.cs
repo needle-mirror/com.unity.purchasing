@@ -67,5 +67,25 @@ namespace UnityEngine.Purchasing
         /// or 5.4. Its value differs for 5.5+ which introduced DuplicateTransaction.
         /// </summary>
         Unknown,
+
+        /// <summary>
+        /// The user is not authenticated.
+        /// </summary>
+        UserNotAuthenticated,
+
+        /// <summary>
+        /// The current store does not support this functionality.
+        /// </summary>
+        NotSupported,
+
+        /// <summary>
+        /// The order was cancelled before purchase was completed.
+        /// </summary>
+        OrderCancelled,
+
+        /// <summary>
+        /// The operation could not be completed due to an unexpected mismatch in order state.
+        /// </summary>
+        OrderStateChanged
     }
 }

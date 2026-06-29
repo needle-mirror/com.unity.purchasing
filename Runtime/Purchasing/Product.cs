@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
@@ -20,10 +22,45 @@ namespace UnityEngine.Purchasing
             this.receipt = receipt;
         }
 
-        internal Product(ProductDefinition definition, ProductMetadata metadata)
+        internal Product(ProductDefinition definition, ProductMetadata metadata, bool availableToPurchase = false)
         {
-            this.definition = definition;
-            this.metadata = metadata;
+            m_CatalogListings = new Dictionary<string, CatalogListing>();
+            if (definition != null)
+            {
+                var listing = new CatalogListing(definition.catalogListingId, definition, metadata, availableToPurchase);
+                uSku = definition.id;
+                type = definition.type;
+                m_CatalogListings[definition.catalogListingId] = listing;
+                m_BaseListing = listing;
+            }
+            else
+            {
+                // For test purposes only, definition should never be null for a real Product
+                uSku = null;
+                type = ProductType.Unknown;
+            }
+
+            catalogListings = m_CatalogListings;
+        }
+
+        readonly Dictionary<string, CatalogListing> m_CatalogListings;
+        CatalogListing m_BaseListing;
+
+        /// <summary>
+        /// Attach a new catalog listing to this product. The listing is keyed by its
+        /// <see cref="CatalogListing.id"/> and shows up in <see cref="catalogListings"/>.
+        /// </summary>
+        internal void AddCatalogListing(CatalogListing listing)
+        {
+            if (listing?.id == null)
+            {
+                return;
+            }
+            m_CatalogListings[listing.id] = listing;
+            if (uSku != null && listing.definition?.id == uSku)
+            {
+                m_BaseListing = listing;
+            }
         }
 
         internal static Product CreateUnknownProduct(string productId)
@@ -32,15 +69,53 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
+        /// The Unity-side identifier for this product. Equivalent to the product id authored in the
+        /// Unity catalog; distinct from any store-specific id, which lives on each
+        /// <see cref="CatalogListing.definition"/>.
+        /// </summary>
+        public string uSku { get; }
+
+        /// <summary>
+        /// The product type. Mirrors the <see cref="ProductDefinition.type"/> of the listing
+        /// the product was constructed from.
+        /// </summary>
+        public ProductType type { get; }
+
+        /// <summary>
+        /// All catalog listings attached to this product, keyed by <see cref="CatalogListing.id"/>.
+        /// Contains a single entry (the base listing, where <c>id == <see cref="uSku"/></c>) when the
+        /// product was constructed from a <see cref="ProductDefinition"/>.
+        /// Look up a specific listing with <c>product.catalogListings[catalogListingId]</c>.
+        /// </summary>
+        public IReadOnlyDictionary<string, CatalogListing> catalogListings { get; }
+
+        /// <summary>
+        /// The base listing for this product — the listing whose <see cref="CatalogListing.definition"/>
+        /// id equals <see cref="uSku"/>. Cached at construction and refreshed by
+        /// <see cref="AddCatalogListing"/> when a newly attached listing matches uSku.
+        /// </summary>
+        internal CatalogListing baseListing => m_BaseListing;
+
+        /// <summary>
         /// Basic immutable product properties.
         /// </summary>
-        public ProductDefinition definition { get; private set; }
+        public ProductDefinition definition => baseListing?.definition;
 
         /// <summary>
         /// Localized metadata provided by the store system.
         /// </summary>
         /// <value>The metadata.</value>
-        public ProductMetadata metadata { get; internal set; }
+        public ProductMetadata metadata
+        {
+            get => baseListing?.metadata;
+            internal set
+            {
+                if (baseListing != null)
+                {
+                    baseListing.metadata = value;
+                }
+            }
+        }
 
         /// <summary>
         /// Determine if this product is available to purchase according to
@@ -52,7 +127,17 @@ namespace UnityEngine.Purchasing
         ///
         /// If this is false, purchase attempts will immediately fail.
         /// </summary>
-        public bool availableToPurchase { get; internal set; }
+        public bool availableToPurchase
+        {
+            get => baseListing?.availableToPurchase ?? false;
+            internal set
+            {
+                if (baseListing != null)
+                {
+                    baseListing.availableToPurchase = value;
+                }
+            }
+        }
 
         /// <summary>
         /// A unique identifier for this product's transaction.
@@ -99,21 +184,17 @@ namespace UnityEngine.Purchasing
             internal set => SetReceipt(value);
         }
 
-        // Backs the obsolete `receipt` property. Do not call from new code.
         string GetReceipt()
         {
             var defaultStore = DefaultStoreHelper.GetDefaultBuiltInAppStore();
             if (defaultStore == AppStore.AppleAppStore || defaultStore == AppStore.MacAppStore)
             {
-// Obsolete: Product.transactionID
+// Obsolete: Product.transactionID, IAppleStoreExtendedPurchaseService.appReceipt
 #pragma warning disable 618, 612
                 if (transactionID == null)
-#pragma warning restore 618, 612
                 {
                     return null;
                 }
-// Obsolete: IAppleStoreExtendedPurchaseService.appReceipt, Product.transactionID
-#pragma warning disable 618, 612
                 var curReceipt = UnityIAPServices.DefaultPurchase().Apple?.appReceipt;
                 return CreateUnifiedReceipt(curReceipt, transactionID, defaultStore == AppStore.AppleAppStore ? AppleAppStore.Name : MacAppStore.Name);
 #pragma warning restore 618, 612
@@ -157,7 +238,7 @@ namespace UnityEngine.Purchasing
                 return false;
             }
 
-            return definition.Equals(p.definition);
+            return uSku == p.uSku;
         }
 
         /// <summary>
@@ -166,7 +247,7 @@ namespace UnityEngine.Purchasing
         /// <returns> The hash code as integer </returns>
         public override int GetHashCode()
         {
-            return definition.GetHashCode();
+            return uSku?.GetHashCode() ?? 0;
         }
 
         /// <summary>
@@ -175,9 +256,11 @@ namespace UnityEngine.Purchasing
         /// <returns> A string representation of the product.</returns>
         public override string ToString()
         {
+            var listings = string.Join(", ", m_CatalogListings.Values
+                .Select(l => $"{{id: {l.id}, definition: {l.definition}, metadata: {l.metadata}, availableToPurchase: {l.availableToPurchase}}}"));
 // Obsolete: Product.receipt
 #pragma warning disable 618, 612
-            return $"Product: {definition}, {metadata}, {receipt}";
+            return $"Product: uSku={uSku}, type={type}, catalogListings=[{listings}], receipt={receipt}";
 #pragma warning restore 618, 612
         }
     }

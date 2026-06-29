@@ -73,6 +73,15 @@ namespace UnityEngine.Purchasing
         [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_FetchStorefront();
 
+        [DllImport("unitypurchasing")]
+        private static extern IntPtr unityPurchasing_FetchAdvertisingIdentifier();
+
+        [DllImport("unitypurchasing")]
+        private static extern IntPtr unityPurchasing_FetchVendorIdentifier();
+
+        [DllImport("unitypurchasing")]
+        private static extern IntPtr unityPurchasing_FetchNativeDeviceInfo();
+
 
 #region StoreKit1Bindings
         [DllImport("unitypurchasing")]
@@ -400,6 +409,63 @@ namespace UnityEngine.Purchasing
             }
 
             unityPurchasing_FetchStorefront();
+        }
+
+        public string FetchAdvertisingIdentifier()
+        {
+            if (useStoreKit1)
+            {
+                return null;
+            }
+
+            return MarshalAndDeallocate(unityPurchasing_FetchAdvertisingIdentifier());
+        }
+
+        public string FetchVendorIdentifier()
+        {
+            if (useStoreKit1)
+            {
+                return null;
+            }
+
+            return MarshalAndDeallocate(unityPurchasing_FetchVendorIdentifier());
+        }
+
+        string MarshalAndDeallocate(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            var result = Marshal.PtrToStringAuto(ptr);
+            DeallocateMemory(ptr);
+            return result;
+        }
+
+        // ExternalPurchaseCustomLink is iOS-only — not supported on macOS
+        public void ExternalPurchaseCheckEligibility(ExternalPurchaseCallback callback) { }
+        public void ExternalPurchaseFetchToken(string tokenType, ExternalPurchaseCallback callback) { }
+        public void ExternalPurchaseShowNotice(string noticeType, ExternalPurchaseCallback callback) { }
+        public void ExternalPurchaseFetchStorefront(ExternalPurchaseCallback callback) { }
+
+        public string FetchNativeDeviceInfo()
+        {
+            IntPtr ptr = unityPurchasing_FetchNativeDeviceInfo();
+            string result = "";
+            if (ptr != IntPtr.Zero)
+            {
+                try
+                {
+                    result = Marshal.PtrToStringAuto(ptr) ?? "";
+                }
+                finally
+                {
+                    // Always deallocate via Swift directly — this memory is allocated by
+                    // unityPurchasingMakeHeapAllocatedStringCopy regardless of SK1/SK2.
+                    unityPurchasing_DeallocateMemory(ptr);
+            }
+            return result;
         }
     }
 }

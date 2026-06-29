@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
 
         private void ValidateItem(CartItem cartItem)
         {
-            if (cartItem.Product.definition.type == ProductType.Consumable)
+            if (cartItem.Product.type == ProductType.Consumable)
             {
                 if (cartItem.Quantity <= 0)
                 {

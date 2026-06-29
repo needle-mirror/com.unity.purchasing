@@ -1,0 +1,84 @@
+.products-foldout {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.products-empty {
+    color: rgb(153, 153, 153);
+}
+
+.product-header-row {
+    flex-direction: row;
+    margin-bottom: 4px;
+    padding-bottom: 2px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(77, 77, 77);
+}
+
+.product-header-label {
+    -unity-font-style: bold;
+}
+
+.product-row {
+    flex-direction: row;
+    margin-bottom: 2px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.product-sku {
+    flex-grow: 1;
+    color: rgb(153, 153, 153);
+}
+
+.product-price {
+    color: rgb(153, 153, 153);
+}
+
+.separator {
+    height: 1px;
+    background-color: rgb(77, 77, 77);
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.toggle-row {
+    flex-direction: row;
+    align-items: center;
+}
+
+.toggle-label {
+    -unity-font-style: bold;
+    margin-right: 8px;
+}
+
+.csv-label {
+    margin-right: 4px;
+}
+
+.radio-button {
+    margin-right: 8px;
+    margin-top: 2px;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.ucat-radio {
+    margin-right: 4px;
+    margin-top: 2px;
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.button-row {
+    flex-direction: row;
+    margin-top: 8px;
+}
+
+.grow-button {
+    flex-grow: 1;
+}

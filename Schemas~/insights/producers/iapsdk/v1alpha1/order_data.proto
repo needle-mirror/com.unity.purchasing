@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package insights.producers.iapsdk.v1alpha1;
+
+// The app store the transaction was made on. Mirrors the subset of
+// UnityEngine.Purchasing AppStore values relevant to mobile.
+enum Store {
+  STORE_UNSPECIFIED = 0;
+  STORE_APP_STORE = 1;     // Apple App Store (iOS / iPadOS / visionOS / tvOS)
+  STORE_GOOGLE_PLAY = 2;   // Google Play (Android)
+  STORE_PAYMENT_PROVIDER = 3; // For when forwarding the player directly to Stripe, Coda and so on.
+  STORE_WEBSHOP = 4; // For when forwarding to the Developers webstore/item pages
+}
+
+// Mirrors UnityEngine.Purchasing.ProductType from the IAP SDK
+// (`com.unity.purchasing/Runtime/Purchasing/ProductType.cs`).
+enum ProductType {
+  PRODUCT_TYPE_UNSPECIFIED = 0;
+  PRODUCT_TYPE_CONSUMABLE = 1;
+  PRODUCT_TYPE_NON_CONSUMABLE = 2;
+  PRODUCT_TYPE_SUBSCRIPTION = 3;
+  // The IAP SDK uses ProductType.Unknown when the store has not (yet)
+  // classified a product (e.g. unavailable, fetch failure).
+  PRODUCT_TYPE_UNKNOWN = 4;
+}
+
+// SKU mirrors what the Unity IAP SDK exposes via `Product.definition` and
+// `Product.metadata`. Fields are typed because the SDK provides typed
+// accessors — no need for raw JSON dumps on the client side.
+message SKU {
+  // Store-specific product identifier (`Product.definition.storeSpecificId`).
+  string sku_id = 1;
+
+  // Product classification (`Product.definition.type`).
+  ProductType product_type = 2;
+
+  // Localized product title (`Product.metadata.localizedTitle`).
+  optional string localized_title = 3;
+
+  // Localized product description (`Product.metadata.localizedDescription`).
+  optional string localized_description = 4;
+
+  // Display price formatted with currency symbol
+  // (`Product.metadata.localizedPriceString`, e.g. "$9.99", "£7.99",
+  // "¥1,200").
+  optional string localized_price_string = 5;
+
+  // Price in microcurrencies (1 unit = 1/1,000,000 of the currency),
+  // computed as `Product.metadata.localizedPrice * 1_000_000`.
+  // Microcurrencies match the iapbackend convention; stored as int64
+  // because Iceberg has no unsigned types and prices fit comfortably.
+  optional int64 price_micro = 6;
+
+  // ISO 4217 currency code reported by the store
+  // (`Product.metadata.isoCurrencyCode`, e.g. "USD", "GBP", "JPY").
+  // String rather than an enum because the SDK passes through whatever
+  // the store returns; values may not match a known enum entry, and the
+  // SDK has historically logged an empty string when the code is missing.
+  optional string iso_currency_code = 7;
+
+  // Number of units purchased (`CartItem.Quantity`). Defaults to 1 in the
+  // SDK; carried explicitly so downstream pipelines don't have to assume.
+  int64 quantity = 8;
+}
+
+// Order-level fields shared by every event variant.
+//
+// For failure events, fields may be partially populated depending on how
+// far the SDK got before the failure surfaced (e.g. SKU may resolve before
+// the store ever issues a transaction id).
+message OrderData {
+  // The SKU associated with this transaction.
+  SKU sku = 1;
+
+  // Store-issued transaction identifier (`UnifiedReceipt.TransactionID`).
+  // Apple: Transaction.id (StoreKit 2) / transaction_id (StoreKit 1).
+  // Google: Purchase.getOrderId() — may be absent for promo / test orders.
+  optional string store_transaction_id = 2;
+}

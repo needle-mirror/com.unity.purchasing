@@ -17,20 +17,10 @@ namespace UnityEngine.Purchasing.UseCases
             m_NativeAppleStore = nativeStore;
         }
 
-        public void SetStorePromotionOrder(List<Product> products)
+        public void SetStorePromotionOrder(List<string> storeSpecificIds)
         {
-            // Encode product list as a json doc containing an array of store-specific ids:
-            // { "products": [ "ssid1", "ssid2" ] }
-            var productIds = new List<string>();
-            foreach (var p in products)
-            {
-                if (p != null && !string.IsNullOrEmpty(p.definition.storeSpecificId))
-                {
-                    productIds.Add(p.definition.storeSpecificId);
-                }
-            }
-            
-            m_NativeAppleStore.SetStorePromotionOrder(MiniJson.JsonEncode(productIds));
+            // Encode the store-specific ids as a json array: ["ssid1", "ssid2"]
+            m_NativeAppleStore.SetStorePromotionOrder(MiniJson.JsonEncode(storeSpecificIds));
         }
     }
 }

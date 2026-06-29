@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package insights.common.v1alpha1;
+
+message Reporting {
+      // Platform identifier. Currently only "ios" and "android". We may add support for other platforms in the future.
+  string platform = 1;
+
+  // Application bundle identifier (e.g. "com.example.mygame").
+  string app_bundle_id = 2;
+}

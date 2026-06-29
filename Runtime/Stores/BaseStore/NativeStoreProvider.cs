@@ -4,7 +4,7 @@ namespace UnityEngine.Purchasing
 {
     internal class NativeStoreProvider : INativeStoreProvider
     {
-        public INativeAppleStore GetStorekit(IUnityCallback callback)
+        public INativeAppleStore GetStorekit()
         {
             // Both tvOS, iOS and visionOS use the same Objective-C linked to the XCode project.
             if (Application.platform == RuntimePlatform.IPhonePlayer ||

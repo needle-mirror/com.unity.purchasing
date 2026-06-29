@@ -47,6 +47,15 @@ namespace UnityEngine.Purchasing
         Product? GetProductById(string productId);
 
         /// <summary>
+        /// Gets a product by its catalog listing ID.
+        /// Returns null if no matching product is found.
+        /// </summary>
+        /// <param name="catalogListingId">The ID of the catalog listing.</param>
+        /// <returns>The matching product if found, otherwise returns null.</returns>
+        Product? GetProductByCatalogListingId(string catalogListingId);
+
+
+        /// <summary>
         /// Callback invoked with products that are successfully fetched.
         /// </summary>
         event Action<List<Product>>? OnProductsFetched;

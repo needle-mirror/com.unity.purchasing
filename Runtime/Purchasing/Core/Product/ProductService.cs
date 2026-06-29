@@ -36,7 +36,7 @@ namespace UnityEngine.Purchasing
 
         public void FetchProducts(List<ProductDefinition> productDefinitions, IRetryPolicy? retryPolicy)
         {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if DEBUG
             if (OnProductsFetched == null)
             {
                 Debug.unityLogger.LogIAPWarning("IProductService.FetchProducts called without a callback defined for IProductService.OnProductsFetched.");
@@ -79,11 +79,20 @@ namespace UnityEngine.Purchasing
             return m_ProductCache.Find(productId);
         }
 
+        /// <summary>
+        /// Gets a product by its product ID. If no product is found with the specified product ID,
+        /// attempts to locate a product with a matching store-specific product ID. Returns null if no matching product is found.
+        /// </summary>
+        /// <param name="productId">The ID of the product.</param>
+        /// <returns>The matching product if found, otherwise returns null.</returns>
+        public Product? GetProductByCatalogListingId(string catalogListingId)
+        {
+            return m_ProductCache.FindByCatalogListingId(catalogListingId);
+        }
+
         void HandleProductsFetched(List<Product>? fetchedProducts)
         {
             fetchedProducts ??= new List<Product>();
-
-            m_ProductCache.Add(fetchedProducts);
 
             OnProductsFetched?.Invoke(fetchedProducts);
         }

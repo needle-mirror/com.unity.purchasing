@@ -1,0 +1,16 @@
+generatorName: csharp-unity
+outputDir: ./tmp-client
+inputSpec: ./spec.yaml
+packageName: com.unity.purchasing.paymentProviders
+additionalProperties:
+  unityVersion: "2022.3"
+  packageVersion: "0.0.1-preview"
+  unityPackageNamespace: "UnityEngine.Purchasing.PaymentProviderService"
+  unityServiceName: "PaymentProvider"
+  unityPackageDescription: Unity IAP PaymentProvider Service
+  useUnityAuthentication: true
+  usePhpStyleQueryParams: false
+  publicAccess: []
+  releaseDate: 2025-02-24
+  generateMarkdownDocumentation: false
+  outputFormat: code-only

@@ -70,6 +70,7 @@ namespace UnityEngine.Purchasing
             di.AddInstance(new RetryService(UnityUtilContainer.Instance()));
             di.AddInstance(store.instance);
             di.AddInstance(store);
+            di.AddInstance(store.instance.ProductCache);
             di.AddService<FetchProductsUseCase>();
             di.AddService<ProductService>();
         }

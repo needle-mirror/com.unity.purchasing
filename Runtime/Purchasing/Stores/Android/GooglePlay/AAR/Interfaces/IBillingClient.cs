@@ -6,6 +6,7 @@ namespace UnityEngine.Purchasing.GoogleBilling.Interfaces
 {
     interface IBillingClient : IBillingClientBase
     {
+        void GetBillingConfigAsync(Action<IGoogleBillingResult, string> onBillingConfigResponse);
         void QueryPurchasesAsync(string skuType, Action<IGoogleBillingResult, IEnumerable<AndroidJavaObject>> onQueryPurchasesResponse);
         void QueryProductDetailsAsync(List<string> skus, string type, Action<IGoogleBillingResult, List<AndroidJavaObject>> onProductDetailsResponseAction);
         AndroidJavaObject LaunchBillingFlow(AndroidJavaObject productDetails, string oldPurchaseToken, GooglePlayReplacementMode? replacementMode);

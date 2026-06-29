@@ -1,0 +1,2177 @@
+openapi: 3.0.3
+info:
+  title: IAP API
+  contact:
+    name: 'Team: Creator Economy'
+    x-slack-channel: '#ask-creator-economy'
+  version: 1.0.0
+  x-unity-gateway:
+    configVersion: 1
+    documentation:
+      internal:
+        publishing: enabled
+      public:
+        publishing: unlisted
+      group: In-App Purchases
+      service: IAP
+      title: Client API
+    rateLimiters:
+      userRateLimiter:
+        targets:
+          - key: playerId
+          - key: projectId
+          - key: environmentId
+        limits:
+          - unit: minute
+            limit: 600
+      webhookRateLimiter:
+        targets:
+          - key: ip
+          - key: paymentProviderId
+        limits:
+          - unit: minute
+            limit: 600000
+      serviceAccountRateLimiter:
+        targets:
+          - key: serviceAccountId
+          - key: tokenIssuer
+            value: unity-services-roles
+        limits:
+          - unit: minute
+            limit: 12000
+      # Staging-only overrides for load testing. Mirrors the
+      # playerAuthRatelimiterStaging pattern in player-auth. Each player-facing
+      # route below references these from a `staging:` block, which replaces the
+      # production limiters in the staging environment only.
+      userRateLimiterStaging:
+        targets:
+          - key: playerId
+          - key: projectId
+          - key: environmentId
+        limits:
+          - unit: minute
+            limit: 1000000
+      serviceAccountRateLimiterStaging:
+        targets:
+          - key: serviceAccountId
+          - key: tokenIssuer
+            value: unity-services-roles
+        limits:
+          - unit: minute
+            limit: 1000000
+  description: |
+    # Introduction
+      Unity IAP is a unified solution for managing digital commerce and implementing in-app purchases across games, stores, and third-party payment providers. These APIs provide a fully managed entitlement system that handles orders and fulfillment through third-party payment providers.
+    # Concepts
+      ## Payment Providers
+      - Order: A purchase initiated through a third-party payment provider, managed through the entitlement system from creation to fulfillment.
+      - Entitlement: A player's right to access a purchased product, tracked and managed across all supported payment providers.
+
+tags:
+  - name: Payment provider
+    description: Payment provider endpoints
+  - name: Mock checkout
+    description: Mock payment provider checkout endpoints, used by the embedded mock checkout UI to let game developers test IAP integration end-to-end without configuring a real payment provider. Not intended for live games.
+
+servers:
+  - url: https://iap.services.api.unity.com
+    x-unity-gateway:
+      environment: production
+  - url: https://iap-stg.services.api.unity.com
+    x-unity-gateway:
+      environment: staging
+x-unity-gateway:
+  documentation:
+    visibility: internal
+  service: iap
+  resourceGating:
+    china:
+      disabled: true
+  production:
+    upstream:
+      host: transaction-verifier.production.psc.gateway.internal.unity.com
+  staging:
+    upstream:
+      host: transaction-verifier.staging.psc.gateway.internal.unity.com
+  xUser: true
+  eventCollection: {}
+  upstream:
+    jwsVersion: 2
+    timeout: 25s
+    port: 80
+    supportsHttps: false
+
+paths:
+  /v1/projects/{projectId}/environments/{environmentId}/order:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    post:
+      summary: Create an order
+      description: |-
+        Initiates an order for a player to purchase a specific product from a payment provider.
+        Supports webview-based flows and will support other flows in the future (which could return additional
+        order data). The player information is stored and used to personalize the order experience.
+        Currently supports exactly one SKU in the request.
+      operationId: initiatePaymentProviderOrder
+      tags:
+        - Payment provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/order-request'
+      responses:
+        '200':
+          description: Order successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/order-response'
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '409':
+          $ref: '#/components/responses/error-response-order-already-entitled'
+        '422':
+          $ref: '#/components/responses/error-response-unprocessable-entity'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        headers:
+          in:
+            - authorization
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/order
+  /v1/projects/{projectId}/environments/{environmentId}/payment-providers:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    get:
+      summary: List eligible configured payment providers
+      description: |-
+        Returns the list of configured payment providers the calling player is eligible for, based on their Live Releases
+        variant tags and the project's tag-to-provider routing configuration. Providers are listed in priority
+        order, highest first; clients should use the first entry by default. An empty list means no provider is
+        eligible for this player; clients should handle this as a normal "external payment unavailable" state.
+      operationId: listPaymentProviders
+      tags:
+        - Payment provider
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/payment-providers-response'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/payment-providers
+  /v1/projects/{projectId}/environments/{environmentId}/orders/{orderId}:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/unityOrderId'
+    get:
+      summary: Get order status
+      description: |-
+        Retrieves the status of an order. Returns 404 if no information has been received from the payment provider about the purchase yet.
+      operationId: getOrder
+      tags:
+        - Payment provider
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/order-response'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        headers:
+          in:
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/orders/{orderId}
+    patch:
+      summary: Update an order
+      description: |-
+        Updates an order. Used to mark an order as fulfilled or cancelled.
+      operationId: updateOrder
+      tags:
+        - Payment provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/update-order-request'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/order-response'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '409':
+          $ref: '#/components/responses/error-response-order-invalid-state-transition'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        headers:
+          in:
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/orders/{orderId}
+  /v1/projects/{projectId}/environments/{environmentId}/orders/entitled:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    get:
+      summary: List player entitlements
+      description: |-
+        Returns an array of all orders that the player is entitled to.
+
+        **Important**: Revoked orders are never included in the response, regardless of product type.
+
+        Entitlement logic by product type:
+        - **Consumables**: Included if not yet fulfilled.
+        - **Non-consumables**: Always included.
+        - **Subscriptions**: Not yet supported for external payment providers. Future behavior will be similar to non-consumables but will also require the subscription to not be expired.
+
+        If there is a mix of types in the order, the order will be returned if any of the types are entitled.
+      operationId: listEntitled
+      tags:
+        - Payment provider
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/order-response'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        headers:
+          in:
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/orders/entitled
+  /v1/payment-providers/stripe/incoming:
+    post:
+      summary: Incoming Stripe Webhook
+      operationId: handleStripeIncomingWebhook
+      description: Endpoint for receiving incoming webhooks from Stripe.
+      tags:
+        - Payment provider
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Stripe webhook event payload
+      responses:
+        '200':
+          description: Webhook received successfully
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+          allowMissingAuthHeader: true
+        authorization:
+          disabled: true
+        headers:
+          in:
+            - stripe-signature
+        rateLimiters:
+          - webhookRateLimiter
+        rewrite:
+          uri: /anonymous/v1/payment-providers/stripe/incoming
+  /v1/payment-providers/codapay/incoming:
+    get:
+      summary: Incoming CodaPay Webhook
+      operationId: handleCodaPayIncomingWebhook
+      description: Endpoint for receiving incoming payment notifications from CodaPay. CodaPay delivers these via GET with query parameters.
+      tags:
+        - Payment provider
+      responses:
+        '200':
+          description: Webhook received successfully
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+          allowMissingAuthHeader: true
+        authorization:
+          disabled: true
+        rateLimiters:
+          - webhookRateLimiter
+        rewrite:
+          uri: /anonymous/v1/payment-providers/codapay/incoming
+  /v1/payment-providers/{paymentProviderId}/oauth/callback:
+    parameters:
+      - $ref: '#/components/parameters/paymentProviderId'
+      - name: code
+        in: query
+        required: true
+        description: OAuth authorization code
+        schema:
+          type: string
+      - name: state
+        in: query
+        required: true
+        description: OAuth state token
+        schema:
+          type: string
+    get:
+      x-unity-gateway:
+        rewrite:
+          uri: /anonymous/v1/payment-providers/{paymentProviderId}/oauth/callback
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+          allowMissingAuthHeader: true
+        authorization:
+          disabled: true
+        bodyProcessing:
+          response: skip
+        headers:
+          out:
+            - Content-Security-Policy
+      summary: OAuth Callback Endpoint
+      operationId: handleOAuthCallback
+      description: OAuth callback endpoint for payment providers to redirect to after authorization.
+      tags:
+        - Payment provider
+      responses:
+        '200':
+          description: OAuth authorization successful
+          content:
+            text/html:
+              schema:
+                type: string
+                description: HTML response that closes the OAuth window
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+  /v1/payment-providers/codapay/onboarding/incoming:
+    post:
+      x-unity-gateway:
+        rewrite:
+          uri: /anonymous/v1/payment-providers/codapay/onboarding/incoming
+        authentication:
+          disabled: true
+        authorization:
+          disabled: true
+        headers:
+          in:
+            - authorization
+      summary: CodaPay Onboarding Account Link Callback
+      operationId: handleCodaPayOnboardingIncoming
+      description: Receives account-link callbacks from CodaPay during onboarding. Authenticated via CodaPay-issued JWT in the Authorization header.
+      tags:
+        - Payment provider
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer token (CodaPay-issued JWT)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/account-link-request'
+                - $ref: '#/components/schemas/account-link-initiated-request'
+              discriminator:
+                propertyName: method
+                mapping:
+                  'account-link': '#/components/schemas/account-link-request'
+                  'account-link-initiated': '#/components/schemas/account-link-initiated-request'
+      responses:
+        '204':
+          description: No Content (account link persisted successfully)
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '410':
+          $ref: '#/components/responses/error-response-gone'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+  /v1/projects/{projectId}/catalog/products:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+    get:
+      summary: List the payment providers products with metadata and pricing information
+      description: |-
+        Endpoint to retrieve the necessary products metadata and pricing information to display in the IAP SDK at runtime
+      operationId: listPaymentProvidersProducts
+      tags:
+        - Payment provider
+      parameters:
+        - $ref: '#/components/parameters/locale'
+        - $ref: '#/components/parameters/currency'
+        - name: sku
+          in: query
+          description: SKU identifier to filter products (can be specified multiple times)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          example: ['product-123', 'product-456']
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/product-response'
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers: ['player-auth', 'unity-services-roles']
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        rateLimiters:
+          - userRateLimiter
+          - serviceAccountRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+            - serviceAccountRateLimiterStaging
+        headers:
+          in:
+            - authorization
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/catalog/products
+  /v1/projects/{projectId}/catalog/skus:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+    get:
+      summary: List the SKUs
+      description: |-
+        Endpoint to retrieve a list of SKUs available in the game as well as their type and shop specific identifier
+      operationId: listSKUs
+      tags:
+        - Payment provider
+      parameters:
+        - name: store
+          in: query
+          description: Store identifier to filter SKU overrides (can be specified multiple times)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          example: ['apple', 'google']
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/sku-response'
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers: ['player-auth', 'unity-services-roles']
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        rateLimiters:
+          - userRateLimiter
+          - serviceAccountRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+            - serviceAccountRateLimiterStaging
+        headers:
+          in:
+            - authorization
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/catalog/skus
+  /v1/projects/{projectId}/catalog/store-overrides:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+    get:
+      summary: Resolve store-specific product ids to their Unity SKUs
+      description: |-
+        Reverse-lookup endpoint that resolves one or more store-specific product
+        ids (Apple/Google/etc.) back to their Unity SKU and product type for the
+        caller's live release. Returned as a map keyed by store, then by
+        store-specific id; unmatched ids are omitted.
+
+        A single store-specific id is expected to map to exactly one Unity SKU
+        across the catalog. If multiple Unity SKUs (or multiple variants of the
+        same Unity SKU with different types) declare the same store-specific id
+        on the same store, only the first match is returned; later collisions
+        are skipped and logged server-side. Keep store-specific ids unique
+        across your catalog to avoid this.
+      operationId: lookupStoreOverrides
+      tags:
+        - Payment provider
+      parameters:
+        - name: storeOverrideId
+          in: query
+          description: Store-specific product id to resolve. Required, may be supplied multiple times.
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+          style: form
+          explode: true
+          example: ['com.example.coins.100', 'gems_30_google']
+        - name: store
+          in: query
+          description: Case-insensitive store filter (e.g., 'apple', 'google'). Only that store key appears in the response.
+          required: true
+          schema:
+            type: string
+          example: 'apple'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/store-override-lookup-response'
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers: ['player-auth']
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        headers:
+          in:
+            - authorization
+            - Unity-IAP-Package-Version
+            - Unity-Client-Version
+            - Unity-Client-Mode
+        rewrite:
+          uri: /v1/projects/{projectId}/catalog/store-overrides
+  /v1/projects/{projectId}/environments/{environmentId}/mock-checkout/orders/{orderId}:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/unityOrderId'
+    get:
+      summary: Get mock checkout order
+      description: |-
+        Returns the order details displayed in the mock checkout UI. Only available for orders
+        created with the `mock` payment provider. The order's player ID must match the authenticated user.
+      operationId: getMockCheckoutOrder
+      tags:
+        - Mock checkout
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mock-checkout-order-response'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/mock-checkout/orders/{orderId}
+  /v1/projects/{projectId}/environments/{environmentId}/mock-checkout/orders/{orderId}/confirm:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/unityOrderId'
+    post:
+      summary: Confirm mock checkout order
+      description: |-
+        Marks the order as paid and returns a deep link redirect URL for the game client.
+        Only available for orders created with the `mock` payment provider.
+      operationId: confirmMockCheckoutOrder
+      tags:
+        - Mock checkout
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mock-checkout-action-response'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '409':
+          $ref: '#/components/responses/error-response-conflict'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/mock-checkout/orders/{orderId}/confirm
+  /v1/projects/{projectId}/environments/{environmentId}/mock-checkout/orders/{orderId}/cancel:
+    x-unity-gateway:
+      documentation:
+        visibility: both
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+      - $ref: '#/components/parameters/unityOrderId'
+    post:
+      summary: Cancel mock checkout order
+      description: |-
+        Marks the order as cancelled and returns a deep link redirect URL for the game client.
+        Only available for orders created with the `mock` payment provider.
+      operationId: cancelMockCheckoutOrder
+      tags:
+        - Mock checkout
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/mock-checkout-action-response'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '404':
+          $ref: '#/components/responses/error-response-not-found'
+        '409':
+          $ref: '#/components/responses/error-response-conflict'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
+      x-unity-gateway:
+        authentication:
+          jwt:
+            issuers:
+              - player-auth
+              - cloud-code
+              - unity-services-roles
+        authorization:
+          rules:
+            - authorizationType: token
+              resourceId: projectId
+              resourceType: project
+            - authorizationType: audience
+              audience: iap
+              applyTo:
+                authenticationType:
+                  - jwt
+                issuers:
+                  - player-auth
+        resourcePolicyAuthorization:
+          project: true
+          player: true
+          applyTo:
+            authenticationType: ['jwt']
+            issuers: ['player-auth']
+        rateLimiters:
+          - userRateLimiter
+        staging:
+          rateLimiters:
+            - userRateLimiterStaging
+        rewrite:
+          uri: /v1/projects/{projectId}/environments/{environmentId}/mock-checkout/orders/{orderId}/cancel
+  /mock-checkout/(.*):
+    x-unity-gateway:
+      documentation:
+        visibility: both
+      authentication:
+        disabled: true
+      authorization:
+        disabled: true
+      bodyProcessing:
+        request: skip
+        response: skip
+      rewrite:
+        uri: /mock-checkout/\1
+    get:
+      summary: Mock checkout UI assets
+      description: |-
+        Serves the embedded mock checkout single-page application (HTML, JS, CSS, and other static assets).
+        Game developers are redirected here from the URL returned by the create-order endpoint when using
+        the `mock` payment provider, so they can test their IAP integration end-to-end. Not intended for
+        live games.
+      operationId: getMockCheckoutAsset
+      tags:
+        - Mock checkout
+      responses:
+        '200':
+          description: OK
+        '404':
+          description: Not Found
+components:
+  schemas:
+    basic-error-response:
+      title: BasicErrorResponse
+      description: |
+        Referenced from - https://tools.ietf.org/html/rfc7807#page-3 Consumers MUST use the 'type' string as the primary identifier for the problem type; the 'title' string is advisory and included only for users who are not aware of the semantics of the URI and do not have the ability to discover them (for example, offline log analysis). Consumers SHOULD NOT automatically dereference the type URI. The "status" member, if present, is only advisory; it conveys the HTTP status code used for the convenience of the consumer. Generators MUST use the same status code in the actual HTTP response, to assure that generic HTTP software that does not understand this format still behaves correctly.  See Section 5 for further caveats regarding its use. Consumers can use the status member to determine what the original status code used by the generator was, in cases where it has been changed (for example, by an intermediary or cache), and when message bodies persist without HTTP information.  Generic HTTP software still uses the HTTP status code. The "detail" member, if present, should focus on helping the client correct the problem, rather than giving debugging information.
+      type: object
+      x-examples:
+        example-1:
+          type: problems/basic
+          title: service unavailable
+          status: 500
+          code: 1000
+          detail: service unavailable
+          details:
+            - health:
+                - service health ping failed
+      properties:
+        type:
+          type: string
+          description: 'A URI reference [RFC3986] that identifies the problem type. This specification encourages that, when dereferenced, it provide human-readable documentation for the problem type (for example, using HTML [W3C.REC-html5-20141028]). When this member is not present, its value is assumed to be "about:blank".'
+        title:
+          type: string
+          description: 'A short, human-readable summary of the problem type. It SHOULD NOT change from occurrence to occurrence of the problem, except for purposes of localization (for example, using proactive content negotiation; see [RFC7231], Section 3.4).'
+        status:
+          type: integer
+          description: 'The HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.'
+        code:
+          description: Service specific error code.
+          type: integer
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence of the problem. It may or may not yield further information if dereferenced.
+        details:
+          type: array
+          description: Machine readable service specific errors.
+          items:
+            type: object
+      required:
+        - type
+    validation-error-body:
+      title: ValidationErrorBody
+      type: object
+      properties:
+        field:
+          type: string
+        messages:
+          type: array
+          items:
+            type: string
+      required:
+        - field
+        - messages
+      description: Single error in the Validation Error Response.
+      x-examples: {}
+    validation-error-response:
+      title: ValidationErrorResponse
+      type: object
+      description: |
+        Validation error response when a value provided from the client does not pass validation on server.
+      x-examples:
+        Validation Error Example:
+          type: problems/validation
+          title: validation error
+          status: 400
+          code: 1009
+          detail: See 'errors' for specific validation errors
+          errors:
+            - field: name
+              messages:
+                - Only alphanumeric characters allowed
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        code:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/validation-error-body'
+      required:
+        - type
+        - title
+        - status
+        - code
+        - detail
+        - errors
+    google-purchase-state:
+      type: string
+      enum:
+        - PURCHASED
+        - PENDING
+        - UNSPECIFIED_STATE
+      description: Purchase state of the transaction. Should match with the IAP SDK purchase state.
+    google-transaction-dto:
+      description: Object representing a Google Play Store transaction
+      type: object
+      properties:
+        hash:
+          type: string
+          description: Hash of the transaction. Should be unique.
+        player_id:
+          type: string
+          description: ID of the player.
+        project_id:
+          type: string
+          description: ID of the Unity project.
+        fulfilled:
+          type: boolean
+          description: Whether the transaction has been marked as fulfilled.
+        fulfilled_at:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. `null` if there is no associated value.
+          example: '2020-04-01T13:07:23Z'
+        order_id:
+          type: string
+          description: ID of the order/transaction/receipt from a Google Play Store receipt.
+        product_id:
+          type: string
+          description: ID of the product.
+        quantity:
+          type: integer
+          nullable: true
+          description: Quantity of the product.
+        transaction_type:
+          type: string
+          description: Type of the transaction.
+        validated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        purchase_state:
+          $ref: '#/components/schemas/google-purchase-state'
+    apple-transaction-dto:
+      description: Object representing an Apple App Store transaction
+      type: object
+      properties:
+        hash:
+          type: string
+          description: Hash of the transaction. Should be unique.
+        player_id:
+          type: string
+          description: ID of the player.
+        project_id:
+          type: string
+          description: ID of the Unity project.
+        fulfilled:
+          type: boolean
+          description: Whether the transaction has been marked as fulfilled.
+        fulfilled_at:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. `null` if there is no associated value.
+          example: '2020-04-01T13:07:23Z'
+        transaction_id:
+          type: string
+          description: ID of the transaction from an Apple App Store transaction.
+        product_id:
+          type: string
+          description: ID of the product.
+        quantity:
+          type: integer
+          nullable: true
+          description: Quantity of the product.
+        transaction_type:
+          type: string
+          description: Type of the transaction.
+        validated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        updated_at:
+          type: string
+          format: date-time
+          description: Date time in ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        revoked_at:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. Null if the transaction is not revoked.
+          example: '2020-04-01T13:07:23Z'
+    update-order-request:
+      title: UpdateOrderRequest
+      type: object
+      description: Request body for updating an order
+      properties:
+        status:
+          type: string
+          enum: [fulfilled, cancelled, revoked]
+          description: >-
+            Updates the order status. Supported values are `fulfilled`, `cancelled`, and `revoked`.
+            Only orders with `created` status can be marked as `cancelled`.
+            Orders with `created` or `fulfilled` status can be marked as `revoked`.
+            Once cancelled or revoked, an order cannot be changed to another status.
+          example: fulfilled
+      required:
+        - status
+    refund-apple-transaction-request:
+      title: RefundAppleTransactionRequest
+      type: object
+      properties:
+        jwsTransaction:
+          type: string
+          description: JWS string of the Apple App Store transaction
+      required:
+        - jwsTransaction
+    apple-transaction-request:
+      title: AppleTransactionRequest
+      type: object
+      properties:
+        jwsTransaction:
+          type: string
+          description: JWS string of the Apple App Store transaction
+      required:
+        - jwsTransaction
+    google-transaction-request:
+      title: GoogleTransactionRequest
+      type: object
+      properties:
+        receipt:
+          type: string
+          description: Google receipt from the IAP SDK.
+      required:
+        - receipt
+    order-request:
+      title: OrderRequest
+      type: object
+      description: Request body for creating an order
+      properties:
+        player:
+          $ref: '#/components/schemas/player'
+        skus:
+          type: array
+          description: >-
+            Array of product SKUs. Currently must contain exactly one SKU.
+            Deprecated in favour of `catalogListingIds`; still supported during the
+            transition period. Provide either `skus` or `catalogListingIds`.
+          deprecated: true
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+          maxItems: 1
+          example: ['product-sku-123']
+        catalogListingIds:
+          type: array
+          description: >-
+            Array of catalog listing identifiers to purchase. Currently must
+            contain exactly one identifier. Replaces `skus` because SKUs are not
+            guaranteed to be unique. Each identifier is the Live Content config
+            path of the catalog listing and typically looks like a relative file
+            path. Provide either `skus` or `catalogListingIds`.
+          items:
+            type: string
+            minLength: 1
+          minItems: 1
+          maxItems: 1
+          example: ['endgame/gems-100.ucat']
+        currency:
+          type: string
+          description: >-
+            Currency code in ISO 4217 format. Required. If the requested currency is not
+            configured for the product, the order falls back to USD pricing. If neither the
+            requested currency nor USD is configured, the order is rejected.
+          pattern: '^[A-Z]{3}$'
+          example: 'USD'
+        country:
+          type: string
+          description: Country of purchase in ISO 3166-1 alpha-2 format. Used by payment providers that require a country-of-purchase signal (currently Coda Pay only); ignored by others. When omitted, the country is derived from the player's locale as a temporary backward-compatibility fallback for older SDK versions.
+          pattern: '^[A-Z]{2}$'
+          example: 'US'
+        paymentProvider:
+          type: string
+          description: Optional. Specify payment provider instead of using the default one configured for this project environment.
+          example: 'stripe'
+        externalTransactionTokens:
+          type: array
+          description: >-
+            Optional external-link transaction tokens, used by developers to self-report the
+            transaction to Apple/Google. Stored with the order and surfaced in order webhooks;
+            not returned in the order response. Up to two tokens may be supplied because a single
+            Apple external purchase can yield two distinct token types depending on the region —
+            for example an `acquisition` token and a `linkOut` token.
+          maxItems: 2
+          items:
+            type: object
+            required: [store, token]
+            properties:
+              store:
+                type: string
+                enum: [apple, google]
+                description: The app store the token targets, determining where the transaction is reported.
+              token:
+                type: string
+                maxLength: 4096
+                description: The external purchase/transaction token, stored and forwarded opaquely.
+              type:
+                type: string
+                enum: [acquisition, services, linkOut]
+                description: Apple-only token category. Only valid when store is "apple"; omit for Google.
+        deviceInfo:
+          $ref: '#/components/schemas/device-info'
+      required:
+        - player
+        - currency
+    player:
+      title: Player
+      type: object
+      description: Player information for creating an order
+      properties:
+        playerId:
+          type: string
+          description: Unity Player ID (automatically set from authentication token, should not be provided in request)
+          readOnly: true
+        displayName:
+          type: string
+          description: Player's display name
+        locale:
+          type: string
+          description: Player's locale in BCP 47 format
+          example: en-US
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional metadata about the player
+        identity:
+          type: object
+          description: Player identity information. The identity object is required but can be empty.
+          properties:
+            unity.installation_id:
+              type: string
+              description: Unity installation ID
+            unity.fid:
+              type: string
+              description: Unity FID
+            unity.gaid:
+              type: string
+              description: Google Advertising ID
+            unity.gappid:
+              type: string
+              description: Google App ID
+            unity.idfa:
+              type: string
+              description: iOS Identifier for Advertisers
+            unity.idfv:
+              type: string
+              description: iOS Identifier for Vendors
+            unity.mega_session_id:
+              type: string
+              description: Unity mega session ID
+            session.id:
+              type: string
+              description: Session ID
+            unity.consent_state.ads_intent:
+              type: string
+              description: User consent for ads
+            unity.consent_state.analytics_intent:
+              type: string
+              description: User consent for analytics
+            unity.analytics_id:
+              type: string
+              description: UA2 Analytics ID
+            unity.app_instance_id:
+              type: string
+              description: Firebase ID
+            unity.firebase_session_id:
+              type: string
+              description: Firebase session ID
+            unity.iap_sdk_version:
+              type: string
+              description: IAP SDK version
+            unity.engine_version:
+              type: string
+              description: Unity Engine version
+            unity.user_id:
+              type: string
+              description: Unity user identifier provided by the Game Developer
+            unity.installation_timestamp:
+              type: string
+              format: date-time
+              description: RFC 3339 timestamp of when the game was installed on the player's device
+          additionalProperties:
+            type: string
+          example:
+            unity.installation_id: 'abc123'
+            session.id: 'xyz789'
+      required:
+        - locale
+        - identity
+    payment-providers-response:
+      title: PaymentProvidersResponse
+      type: object
+      description: |-
+        List of configured payment provider identifiers the calling player is eligible for, listed in priority order, highest
+        first. The list may be empty when no provider is eligible.
+      required:
+        - providers
+      properties:
+        providers:
+          type: array
+          description: Ordered, deduplicated list of configured payment provider identifiers eligible for the calling player.
+          items:
+            type: string
+            example: stripe
+        paymentOptionsPopupEnabled:
+          type: boolean
+          description: |-
+            Server-driven killswitch for the SDK's payment-options popup. When false, clients should suppress the
+            picker UI and route purchases directly to the native store. Optional; clients treat a missing field as
+            true so older backends (and rollbacks) continue to render the popup.
+          example: true
+    device-info:
+      title: DeviceInfo
+      type: object
+      description: Device information provided by the IAP SDK for analytics enrichment.
+      properties:
+        language:
+          type: string
+          description: System language of the device (BCP 47 format).
+          example: 'en-US'
+        platform:
+          type: string
+          description: Platform the game is running on (e.g. `ios`, `android`).
+          example: 'ios'
+        localeList:
+          type: array
+          description: Ordered list of locales configured on the device.
+          items:
+            type: string
+          example: ['en-US', 'es-US']
+        deviceModel:
+          type: string
+          description: Device model identifier.
+          example: 'iPhone13,3'
+        systemBootTime:
+          type: integer
+          format: int64
+          description: Unix timestamp (seconds) of the last system boot.
+          example: 1778138688
+        osVersion:
+          type: string
+          description: Operating system version.
+          example: '17.0'
+        appBundleId:
+          type: string
+          description: Application bundle identifier.
+          example: 'com.example.game'
+        totalSpace:
+          type: integer
+          format: int64
+          description: Total device storage in bytes.
+          example: 256000000000
+    order-response:
+      title: OrderResponse
+      type: object
+      description: Response containing order object.
+      required:
+        - id
+        - status
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: the UUID of the order object
+        projectId:
+          type: string
+          format: uuid
+          description: the project ID.
+        environmentId:
+          type: string
+          format: uuid
+          description: the environment ID.
+        playerId:
+          type: string
+          description: the player ID.
+        paymentProvider:
+          type: string
+          description: the payment provider
+          example: stripe
+        paymentProviderResourceId:
+          type: string
+          description: the payment provider resource Id. For example the order session id with stripe.
+        url:
+          type: string
+          format: uri
+          description: the URL that must be used to complete the order on the payment provider.
+          example: 'https://example-webshop.com/products/sku123?session=...'
+        lineItems:
+          type: array
+          description: line items to be purchased with the order.
+          items:
+            type: object
+            properties:
+              sku: { $ref: '#/components/schemas/uSku' }
+              catalogListingId:
+                type: string
+                description: >-
+                  Live Content config path of the catalog listing this line item resolves to.
+                  Present whenever the product comes from the current (per-listing) catalog —
+                  for orders created via either `catalogListingIds` or `skus`. Omitted for
+                  legacy-catalog products and orders created before this field existed.
+                example: 'endgame/gems-100.ucat'
+              productType:
+                type: string
+                description: Type of the product.
+                example: 'consumable'
+        status:
+          type: string
+          description: |
+            Status of the order. Possible values:
+            - `created`: Order has been created.
+            - `paid`: Payment has been received and the payment provider has informed us.
+            - `fulfilled`: Order has been fulfilled and rewarded.
+            - `cancelled`: Order has been cancelled.
+            - `expired`: Payment provider checkout session reached its terminal unpaid state (e.g. Stripe `checkout.session.expired`, or a non-success Coda Pay result code). Can transition back to `paid` if the provider settles the payment late.
+            - `revoked`: Order has been revoked.
+        fulfilledAt:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. `null` if the order has not been fulfilled.
+          example: '2020-04-01T13:07:23Z'
+        revokedAt:
+          type: string
+          nullable: true
+          format: date-time
+          description: Date time in ISO 8601 format. `null` if the order has not been revoked.
+          example: '2020-04-01T13:07:23Z'
+        customReferenceId:
+          type: string
+          nullable: true
+          description: |
+            Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with
+            your internal system.
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional metadata about the player
+        createdAt:
+          type: string
+          format: date-time
+          description: Date and time at which the Order has been created. ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last Date and time at which the Order has been updated. ISO 8601 format.
+          example: '2020-04-01T13:07:23Z'
+    product-response:
+      title: ProductResponse
+      type: object
+      description: Product with localized details and pricing
+      properties:
+        catalogListingId:
+          type: string
+          description: >-
+            Identifier of the catalog listing this product was resolved from
+            (the Live Content config path). Empty for legacy single-file
+            catalog entries that have no listing path.
+          example: 'product-00001.json'
+        uSku:
+          type: string
+          description: Unity SKU identifier
+          example: 'product-123'
+        imageUrl:
+          type: string
+          description: URL to product image
+          example: 'https://example.com/image.png'
+        productDetails:
+          $ref: '#/components/schemas/localized-product-detail'
+        pricing:
+          $ref: '#/components/schemas/localized-pricing'
+      required:
+        - catalogListingId
+        - uSku
+        - imageUrl
+        - productDetails
+        - pricing
+    uSku:
+      type: string
+      description: Unity SKU identifier
+      example: 'product-123'
+    localized-product-detail:
+      title: LocalizedProductDetail
+      type: object
+      description: Localized product information
+      properties:
+        title:
+          type: string
+          description: Product title in the requested locale
+          example: 'Premium Gold Pack'
+        description:
+          type: string
+          description: Product description in the requested locale
+          example: '1000 gold coins'
+        language:
+          type: string
+          description: Language code of the returned details
+          example: 'en-US'
+      required:
+        - title
+        - description
+        - language
+    localized-pricing:
+      title: LocalizedPricing
+      type: object
+      description: Localized pricing information
+      properties:
+        price:
+          type: integer
+          format: int64
+          description: Price amount in micros (1,000,000 micros = 1 unit of currency)
+          example: 9990000
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          example: 'USD'
+        localizedPriceString:
+          type: string
+          description: Formatted price string with currency symbol
+          example: '$9.99 USD'
+      required:
+        - price
+        - currency
+        - localizedPriceString
+    mock-checkout-order-response:
+      title: MockCheckoutOrderResponse
+      type: object
+      description: Order details displayed in the mock checkout UI.
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The Unity order ID.
+        lineItems:
+          type: array
+          description: Line items being purchased, with pricing for display.
+          items:
+            type: object
+            properties:
+              sku:
+                type: string
+                description: Product SKU.
+              productType:
+                type: string
+                description: Type of the product.
+                example: 'consumable'
+              price:
+                type: integer
+                format: int64
+                description: Price amount in micros (1,000,000 micros = 1 unit of currency)
+                example: 9990000
+              currency:
+                type: string
+                description: ISO 4217 currency code
+                example: 'USD'
+            required:
+              - sku
+              - productType
+              - price
+              - currency
+      required:
+        - id
+        - lineItems
+    mock-checkout-action-response:
+      title: MockCheckoutActionResponse
+      type: object
+      description: Response returned from confirm/cancel mock checkout actions, containing the deep link the client should follow back to the game.
+      properties:
+        redirectUrl:
+          type: string
+          format: uri
+          description: Deep link URL the client should redirect to.
+          example: 'unitydl://order/confirm?orderId=...'
+      required:
+        - redirectUrl
+    sku-response:
+      title: SkuResponse
+      type: object
+      description: SKU with store-specific overrides
+      properties:
+        catalogListingId:
+          type: string
+          description: >-
+            Identifier of the catalog listing this SKU was resolved from
+            (the Live Content config path). Empty for legacy single-file
+            catalog entries that have no listing path.
+          example: 'product-00001.json'
+        uSku:
+          type: string
+          description: Unity SKU identifier
+          example: 'product-123'
+        type:
+          type: string
+          description: Product type
+          example: 'consumable'
+        skuOverrides:
+          type: array
+          description: Store-specific SKU mappings
+          items:
+            $ref: '#/components/schemas/sku-override-entry'
+      required:
+        - catalogListingId
+        - uSku
+        - type
+    sku-override-entry:
+      title: SkuOverrideEntry
+      type: object
+      description: Store-specific SKU override
+      properties:
+        store:
+          type: string
+          description: Store identifier (e.g., 'apple', 'google')
+          example: 'apple'
+        sku:
+          type: string
+          description: Store-specific SKU
+          example: 'com.example.product123'
+      required:
+        - store
+        - sku
+    store-override-match:
+      title: StoreOverrideMatch
+      type: object
+      description: A single resolution of a store-specific id to its Unity SKU and product type.
+      properties:
+        uSku:
+          type: string
+          description: Unity SKU identifier
+          example: '100_coins'
+        type:
+          type: string
+          description: Product type (e.g., 'Consumable', 'NonConsumable')
+          example: 'Consumable'
+      required:
+        - uSku
+        - type
+    store-override-lookup-response:
+      title: StoreOverrideLookupResponse
+      type: object
+      description: |-
+        Nested map of resolved store overrides. The outer key is the
+        lower-cased store identifier; the inner key is the store-specific id
+        from the request; the value is the matching Unity SKU + type.
+      additionalProperties:
+        type: object
+        description: Map of store-specific id to its matching Unity SKU for one store.
+        additionalProperties:
+          $ref: '#/components/schemas/store-override-match'
+      example:
+        google:
+          '30_GEMS_GOOGLE':
+            uSku: 'gems_30'
+            type: 'Consumable'
+        apple:
+          '30_GEMS_APPLE':
+            uSku: 'gems_30'
+            type: 'Consumable'
+    account-link-request:
+      title: AccountLinkRequest
+      type: object
+      properties:
+        method:
+          type: string
+          enum: ['account-link']
+          description: Callback method type
+        linkId:
+          type: string
+          maxLength: 256
+          description: Link ID previously generated by the signup-url endpoint
+        title:
+          type: string
+          maxLength: 255
+          minLength: 1
+          description: Game title
+        titleId:
+          type: string
+          format: uuid
+          description: Title identifier (UUID)
+        settlementId:
+          type: integer
+          format: int32
+          description: CodaPay settlement identifier
+        settlement:
+          type: string
+          maxLength: 255
+          minLength: 1
+          description: Settlement name
+        titleProductId:
+          type: string
+          format: uuid
+          description: Title product identifier (UUID)
+        titleProduct:
+          type: string
+          maxLength: 255
+          minLength: 1
+          description: Title product name
+        codaProjectId:
+          type: integer
+          format: int32
+          description: CodaPay project identifier
+        sandboxApiKey:
+          type: string
+          maxLength: 512
+          minLength: 1
+          description: Sandbox API key for CodaPay
+        productionApiKey:
+          type: string
+          maxLength: 512
+          minLength: 1
+          description: Production API key for CodaPay
+        kycSubmitted:
+          type: boolean
+          description: Whether KYC has been submitted
+        kycVerified:
+          type: boolean
+          description: Whether KYC has been verified
+      required:
+        - method
+        - linkId
+        - title
+        - titleId
+        - settlementId
+        - settlement
+        - titleProductId
+        - titleProduct
+        - codaProjectId
+        - sandboxApiKey
+        - productionApiKey
+        - kycSubmitted
+        - kycVerified
+    account-link-initiated-request:
+      title: AccountLinkInitiatedRequest
+      type: object
+      description: Payload for the `account-link-initiated` callback method. Sent by CodaPay when the merchant begins the account-link flow, before the full account-link callback arrives.
+      properties:
+        method:
+          type: string
+          enum: ['account-link-initiated']
+          description: Callback method type
+        linkId:
+          type: string
+          maxLength: 256
+          description: Link ID previously generated by the signup-url endpoint
+        settlementId:
+          type: integer
+          format: int32
+          description: CodaPay settlement identifier
+      required:
+        - method
+        - linkId
+        - settlementId
+  responses:
+    error-response-unauthorized:
+      description: Unauthorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-bad-request:
+      description: |-
+        Bad Request. Returned code indicates one of:
+          - Request parameter validation failure
+          - Other
+        See the response schema for more details
+      content:
+        application/problem+json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/basic-error-response'
+              - $ref: '#/components/schemas/validation-error-response'
+            discriminator:
+              propertyName: type
+              mapping:
+                'problems/basic': '#/components/schemas/basic-error-response'
+                'problems/validation': '#/components/schemas/validation-error-response'
+    error-response-forbidden:
+      description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-not-found:
+      description: Not Found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-service-unavailable:
+      description: Service Unavailable
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-too-many-requests:
+      description: Too Many Requests
+      headers:
+        Retry-After:
+          schema:
+            type: number
+          description: The number of seconds until a request is accepted.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-conflict:
+      description: Conflict
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-order-already-entitled:
+      description: Conflict. The player is already entitled to the item being purchased.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-order-invalid-state-transition:
+      description: |-
+        Conflict. The order is not in a state that allows the requested status change.
+        For example, only orders with 'created' status can be marked as 'cancelled'.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-unprocessable-entity:
+      description: Unprocessable Entity
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-gone:
+      description: Gone
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-internal-server-error:
+      description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+  parameters:
+    projectId:
+      name: projectId
+      in: path
+      description: ID of the Unity project.
+      required: true
+      schema:
+        type: string
+    environmentId:
+      name: environmentId
+      in: path
+      description: ID of the Unity environment.
+      required: true
+      schema:
+        type: string
+    orderId:
+      name: orderId
+      in: path
+      description: ID of the order/transaction/receipt from a Google Play Store receipt.
+      required: true
+      schema:
+        type: string
+    transactionId:
+      name: transactionId
+      in: path
+      description: ID of the transaction from an Apple App Store transaction.
+      required: true
+      schema:
+        type: string
+    paymentProviderId:
+      name: paymentProviderId
+      in: path
+      description: ID of the payment provider.
+      required: true
+      schema:
+        type: string
+    unityOrderId:
+      name: orderId
+      in: path
+      description: ID of the Unity order.
+      required: true
+      schema:
+        type: string
+    locale:
+      name: locale
+      in: query
+      description: Locale in BCP 47 format
+      required: false
+      schema:
+        type: string
+        example: en-US
+    currency:
+      name: currency
+      in: query
+      description: Currency code in ISO 4217 format
+      required: false
+      schema:
+        type: string
+        pattern: '^[A-Z]{3}$'
+        example: USD
+  securitySchemes:
+    Client:
+      type: http
+      scheme: bearer
+      description: |-
+        To get started with Authentication, please visit the [Client Authentication section](https://services.docs.unity.com/docs/client-auth).

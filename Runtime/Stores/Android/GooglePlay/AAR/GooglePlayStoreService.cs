@@ -76,7 +76,11 @@ namespace UnityEngine.Purchasing
 
         public virtual void Purchase(ProductDefinition product, Order? currentOrder, GooglePlayReplacementMode? desiredReplacementMode)
         {
-            m_GoogleLastKnownProductService.LastKnownOldProductId = currentOrder?.CartOrdered.Items().FirstOrDefault()?.Product.definition.storeSpecificId;
+            var currentItem = currentOrder?.CartOrdered.Items().FirstOrDefault();
+            m_GoogleLastKnownProductService.LastKnownOldProductId = currentItem != null
+                && currentItem.Product.catalogListings.TryGetValue(currentItem.CatalogListingId, out var currentListing)
+                ? currentListing.definition.storeSpecificId
+                : null;
             m_GoogleLastKnownProductService.LastKnownProductId = product.storeSpecificId;
             m_GoogleLastKnownProductService.LastKnownReplacementMode = desiredReplacementMode;
             m_GooglePurchaseService.Purchase(product, currentOrder, desiredReplacementMode);

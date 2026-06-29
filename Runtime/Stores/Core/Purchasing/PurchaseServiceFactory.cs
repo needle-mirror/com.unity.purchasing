@@ -1,13 +1,13 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using Unity.Services.Authentication.Internal;
-using Unity.Services.Core.Configuration.Internal;
-using Unity.Services.Core.Internal;
-using UnityEngine.Purchasing.Extension;
+using UnityEngine.Purchasing.Registration;
 using UnityEngine.Purchasing.Services;
+using UnityEngine.Purchasing.Stores;
+using UnityEngine.Purchasing.Stores.Data.Insights;
 using UnityEngine.Purchasing.Telemetry;
 using UnityEngine.Purchasing.UseCases;
+using UnityEngine.Purchasing.Utilities;
 #if IAP_ANALYTICS_SERVICE_ENABLED || IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT
 using Unity.Services.Analytics;
 #endif
@@ -36,6 +36,7 @@ namespace UnityEngine.Purchasing
             m_PurchaseServiceInstantiationByName.Add(GooglePlay.Name, CreateGooglePurchaseService);
             m_PurchaseServiceInstantiationByName.Add(AppleAppStore.Name, CreateApplePurchaseService);
             m_PurchaseServiceInstantiationByName.Add(MacAppStore.Name, CreateApplePurchaseService);
+            m_PurchaseServiceInstantiationByName.Add(PaymentProvider.Name, CreatePaymentProvidersPurchaseService);
         }
 
         public void RegisterNewService(string name, Func<IPurchaseService> createFunction)
@@ -105,6 +106,15 @@ namespace UnityEngine.Purchasing
             AddAnalyticsDependencies(di);
         }
 
+        static void AddDataDependencies(IDependencyInjectionService di)
+        {
+            di.AddInstance(UnityUtilContainer.Instance());
+            di.AddInstance(new CoreRegistryHelper());
+            di.AddInstance(StoreFactory.Instance().StoreLocationContext);
+            di.AddService<PlayerData>();
+            di.AddService<PurchaseEventEmitter>();
+        }
+
         static void AddAnalyticsDependencies(IDependencyInjectionService di)
         {
 #if IAP_ANALYTICS_SERVICE_ENABLED && !DISABLE_RUNTIME_IAP_ANALYTICS
@@ -127,6 +137,7 @@ namespace UnityEngine.Purchasing
             di.AddService<TelemetryDiagnostics>();
 
             AddPurchaseServiceDependencies(store, di);
+            AddDataDependencies(di);
             di.AddService<GooglePlayStoreExtendedPurchaseService>();
 
             return di.GetInstance<GooglePlayStoreExtendedPurchaseService>();
@@ -151,9 +162,22 @@ namespace UnityEngine.Purchasing
             di.AddService<SimulateAskToBuyUseCase>();
 
             AddPurchaseServiceDependencies(store, di);
+            AddDataDependencies(di);
             di.AddService<AppleStoreExtendedPurchaseService>();
 
             return di.GetInstance<AppleStoreExtendedPurchaseService>();
+        }
+
+        static PaymentProvidersExtendedPurchaseService CreatePaymentProvidersPurchaseService(
+            IStoreWrapper store)
+        {
+            IDependencyInjectionService di = new DependencyInjectionService();
+            AddPurchaseServiceDependencies(store, di);
+            AddDataDependencies(di);
+
+            di.AddService<PaymentProvidersExtendedPurchaseService>();
+
+            return di.GetInstance<PaymentProvidersExtendedPurchaseService>();
         }
     }
 }

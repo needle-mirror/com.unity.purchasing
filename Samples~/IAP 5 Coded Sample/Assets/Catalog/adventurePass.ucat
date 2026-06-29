@@ -1,0 +1,18 @@
+{
+  "uSKU": "com.unity.iap.test.adventure.pass.not",
+  "type": "Subscription",
+  "productDetails": [
+    {
+      "title": "Adventure Pass",
+      "description": "remium adventure pass subscription with exclusive rewards.",
+      "language": "en-US"
+    }
+  ],
+  "pricing": [
+    {
+      "currencyCode": "USD",
+      "amount": 4.99
+    }
+  ],
+  "imageUrl": "https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.shutterstock.com%2Fsearch%2Ffake&psig=AOvVaw0TBtTEGywqRYe95jBV5AHH&ust=1764194045674000&source=images&cd=vfe&opi=89978449&ved=0CBIQjRxqFwoTCPCil42ljpEDFQAAAAAdAAAAABAE"
+}

@@ -47,7 +47,7 @@ PluginImporter:
       settings:
         AddToEmbeddedBinaries: false
         CPU: AnyCPU
-        CompileFlags: 
+        CompileFlags:
         FrameworkDependencies: StoreKit;
     Win:
       enabled: 0
@@ -62,11 +62,11 @@ PluginImporter:
       settings:
         AddToEmbeddedBinaries: false
         CPU: AnyCPU
-        CompileFlags: 
-        FrameworkDependencies: 
+        CompileFlags:
+        FrameworkDependencies:
     tvOS:
       enabled: 1
       settings: {}
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:
+  assetBundleName:
+  assetBundleVariant:

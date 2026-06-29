@@ -16,6 +16,7 @@ namespace UnityEngine.Purchasing
     {
         readonly IStore m_Store;
         readonly IRetryService m_RetryService;
+        readonly IProductCache m_ProductCache;
 
         ProductFetchRequest? m_ActiveRequest;
         IRetryRequest? m_ActiveRetryRequest;
@@ -25,11 +26,14 @@ namespace UnityEngine.Purchasing
         /// Create the use case object for a store.
         /// </summary>
         /// <param name="storeResponsible">The store responsible for the products to be retrieved</param>
+        /// <param name="retryService">Service used to retry failed fetches.</param>
+        /// <param name="productCache">Cache that owns the products this use case attaches listings to.</param>
         [Preserve]
-        internal FetchProductsUseCase(IStore storeResponsible, IRetryService retryService)
+        internal FetchProductsUseCase(IStore storeResponsible, IRetryService retryService, IProductCache productCache)
         {
             m_Store = storeResponsible;
             m_RetryService = retryService;
+            m_ProductCache = productCache;
             m_Store.SetProductsCallback(this);
         }
 
@@ -79,16 +83,29 @@ namespace UnityEngine.Purchasing
         void ProcessFetchedProductsAndInvokeCallbacks(ProductFetchRequest request, IReadOnlyList<ProductDescription> productsRetrieved)
         {
             var matchedDefinitions = new List<ProductDefinition>();
-            var retrievedProducts = new List<Product>();
+            var updatedProducts = new List<Product>();
 
-            foreach (var description in productsRetrieved)
+            foreach (var definition in request.RequestedProducts)
             {
-                var definition = GetMatchingDefinition(description);
-
-                if (definition != null)
+                var description = GetMatchingDescription(definition, productsRetrieved);
+                if (description == null)
                 {
-                    matchedDefinitions.Add(definition);
-                    retrievedProducts.Add(CreateMatchedProduct(definition, description));
+                    continue;
+                }
+
+                matchedDefinitions.Add(definition);
+
+                var listing = CreateMatchedCatalogListing(definition, description);
+                var product = m_ProductCache.AddCatalogListing(definition.id, listing);
+                if (product == null)
+                {
+                    // No pre-existing product with this uSku — create one with this listing as its base.
+                    product = new Product(definition, description.metadata, availableToPurchase: true);
+                    m_ProductCache.Add(product);
+                }
+                if (!updatedProducts.Contains(product))
+                {
+                    updatedProducts.Add(product);
                 }
             }
 
@@ -96,25 +113,20 @@ namespace UnityEngine.Purchasing
             // Clear the active request before invoking the callbacks to avoid concurrency issues with retries
             m_ActiveRequest = null;
 
-            InvokeSuccessIfFetchedProducts(retrievedProducts, successCallback);
+            InvokeSuccessIfFetchedProducts(updatedProducts, successCallback);
             InvokeFailureIfIncomplete(request, matchedDefinitions);
         }
 
 
-        ProductDefinition? GetMatchingDefinition(ProductDescription description)
+        static ProductDescription? GetMatchingDescription(ProductDefinition definition, IReadOnlyList<ProductDescription> productsRetrieved)
         {
-            return m_ActiveRequest?.RequestedProducts.FirstOrDefault(definition =>
-                definition.storeSpecificId == description.storeSpecificId);
+            return productsRetrieved.FirstOrDefault(description =>
+                description.storeSpecificId == definition.storeSpecificId);
         }
 
-        Product CreateMatchedProduct(ProductDefinition definition, ProductDescription description)
+        CatalogListing CreateMatchedCatalogListing(ProductDefinition definition, ProductDescription description)
         {
-            var matchedProduct = new Product(definition, description.metadata)
-            {
-                availableToPurchase = true
-            };
-
-            return matchedProduct;
+            return new CatalogListing(definition.catalogListingId, definition, description.metadata, availableToPurchase: true);
         }
 
         static void InvokeSuccessIfFetchedProducts(List<Product> fetchedProducts, Action<List<Product>>? successCallback)

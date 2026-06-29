@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package insights.common.v1alpha1;
+
+// An enum to represent the event payloads pushed from an SDK through Insights Module LogEvent() method.
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_IAP_SDK = 1000;
+}

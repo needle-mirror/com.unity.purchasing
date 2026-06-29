@@ -27,6 +27,18 @@ namespace UnityEngine.Purchasing
         static extern void unityPurchasing_DeallocateMemory(IntPtr pointer);
 
         [DllImport("__Internal")]
+        static extern void externalPurchase_CheckEligibility(ExternalPurchaseCallback callback);
+
+        [DllImport("__Internal")]
+        static extern void externalPurchase_FetchToken(string tokenType, ExternalPurchaseCallback callback);
+
+        [DllImport("__Internal")]
+        static extern void externalPurchase_ShowNotice(string noticeType, ExternalPurchaseCallback callback);
+
+        [DllImport("__Internal")]
+        static extern void externalPurchase_FetchStorefront(ExternalPurchaseCallback callback);
+
+        [DllImport("__Internal")]
         static extern void unityPurchasing_FetchPurchases();
 
         // TODO: IAP-3857
@@ -68,6 +80,15 @@ namespace UnityEngine.Purchasing
 
         [DllImport("__Internal")]
         private static extern void unityPurchasing_FetchStorefront();
+
+        [DllImport("__Internal")]
+        private static extern IntPtr unityPurchasing_FetchAdvertisingIdentifier();
+
+        [DllImport("__Internal")]
+        private static extern IntPtr unityPurchasing_FetchVendorIdentifier();
+
+        [DllImport("__Internal")]
+        private static extern IntPtr unityPurchasing_FetchNativeDeviceInfo();
 
         // TODO: IAP-3929
         [DllImport("__Internal")]
@@ -170,18 +191,7 @@ namespace UnityEngine.Purchasing
                 return getUnityPurchasingAppReceipt();
             }
 
-        	// Fetch the receipt pointer from Swift
-        	IntPtr receiptPointer = unityPurchasing_FetchAppReceipt();
-			string res = "";
-        	if (receiptPointer != IntPtr.Zero)
-        	{
-				res = Marshal.PtrToStringAuto(receiptPointer);
-
-            	// Deallocate the memory when done
-				DeallocateMemory(receiptPointer);
-        	}
-
-        	return res;
+            return MarshalAndDeallocate(unityPurchasing_FetchAppReceipt());
         }
 
         public void DeallocateMemory(IntPtr pointer)
@@ -192,6 +202,18 @@ namespace UnityEngine.Purchasing
             }
 
             unityPurchasing_DeallocateMemory(pointer);
+        }
+
+        string MarshalAndDeallocate(IntPtr ptr)
+        {
+            if (ptr == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            var result = Marshal.PtrToStringAuto(ptr);
+            DeallocateMemory(ptr);
+            return result;
         }
 
         public bool canMakePayments
@@ -405,6 +427,26 @@ namespace UnityEngine.Purchasing
             unityPurchasing_FetchStorefront();
         }
 
+        public string FetchNativeDeviceInfo()
+        {
+            IntPtr ptr = unityPurchasing_FetchNativeDeviceInfo();
+            string result = "";
+            if (ptr != IntPtr.Zero)
+            {
+                try
+                {
+                    result = Marshal.PtrToStringAuto(ptr) ?? "";
+                }
+                finally
+                {
+                    // Always deallocate via Swift directly — this memory is allocated by
+                    // unityPurchasingMakeHeapAllocatedStringCopy regardless of SK1/SK2.
+                    unityPurchasing_DeallocateMemory(ptr);
+                }
+            }
+            return result;
+        }
+
         public void TransactionObserved(
             string transactionId,
             string productId,
@@ -428,6 +470,46 @@ namespace UnityEngine.Purchasing
                 transactionJsonRepresentation,
                 signatureJws);
 #endif
+        }
+
+        public string FetchAdvertisingIdentifier()
+        {
+            if (useStoreKit1)
+            {
+                return null;
+            }
+
+            return MarshalAndDeallocate(unityPurchasing_FetchAdvertisingIdentifier());
+        }
+
+        public string FetchVendorIdentifier()
+        {
+            if (useStoreKit1)
+            {
+                return null;
+            }
+
+            return MarshalAndDeallocate(unityPurchasing_FetchVendorIdentifier());
+        }
+
+        public void ExternalPurchaseCheckEligibility(ExternalPurchaseCallback callback)
+        {
+            externalPurchase_CheckEligibility(callback);
+        }
+
+        public void ExternalPurchaseFetchToken(string tokenType, ExternalPurchaseCallback callback)
+        {
+            externalPurchase_FetchToken(tokenType, callback);
+        }
+
+        public void ExternalPurchaseShowNotice(string noticeType, ExternalPurchaseCallback callback)
+        {
+            externalPurchase_ShowNotice(noticeType, callback);
+        }
+
+        public void ExternalPurchaseFetchStorefront(ExternalPurchaseCallback callback)
+        {
+            externalPurchase_FetchStorefront(callback);
         }
     }
 }
