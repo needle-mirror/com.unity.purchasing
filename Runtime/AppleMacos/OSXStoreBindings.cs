@@ -464,6 +464,7 @@ namespace UnityEngine.Purchasing
                     // Always deallocate via Swift directly — this memory is allocated by
                     // unityPurchasingMakeHeapAllocatedStringCopy regardless of SK1/SK2.
                     unityPurchasing_DeallocateMemory(ptr);
+                }
             }
             return result;
         }

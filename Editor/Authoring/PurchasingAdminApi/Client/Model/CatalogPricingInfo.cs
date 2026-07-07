@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "CatalogPricingInfo")]
     [Preserve]
-    public partial class CatalogPricingInfo
+    internal partial class CatalogPricingInfo
     {
         /// <summary>
         /// ISO 4217 currency code.

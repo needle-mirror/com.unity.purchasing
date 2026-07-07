@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "DeleteConfig_200_response")]
     [Preserve]
-    public partial class DeleteConfig200Response
+    internal partial class DeleteConfig200Response
     {
         /// <summary>
         /// Gets or Sets Id

@@ -8,11 +8,13 @@
 - [CatalogProvider](#catalogprovider)
 - [Initialization Example](#initialization-example)
 - [Product Definitions](#product-definitions)
+  - [CatalogListings and uSku (v5.4+)](#cataloglistings-and-usku-v54)
 - [Two-Step Purchase Flow](#two-step-purchase-flow)
 - [Restore Transactions](#restore-transactions)
 - [Entitlement Checking](#entitlement-checking)
 - [Fetch Existing Purchases](#fetch-existing-purchases)
 - [Receipt Validation](#receipt-validation)
+  - [IAppleOrderInfo Complete Member List](#iappleorderinfo-complete-member-list)
 - [Extended Service Events (NOT on StoreController)](#extended-service-events-not-on-storecontroller)
 - [AppleStoreExtendedProductService Key Members](#applestoreextendedproductservice-key-members)
 - [Subscription Info Access Path](#subscription-info-access-path)
@@ -88,6 +90,9 @@ event Action<Orders>? OnPurchasesFetched
 event Action<PurchasesFetchFailureDescription>? OnPurchasesFetchFailed
 event Action<Entitlement>? OnCheckEntitlement
 
+// Account change (v5.4+)
+event Action? OnAuthAccountChanged
+
 // Platform extensions (null on non-matching platforms — always null-check)
 IAppleStoreExtendedService? AppleStoreExtendedService { get; }
 IGooglePlayStoreExtendedService? GooglePlayStoreExtendedService { get; }
@@ -95,6 +100,21 @@ IAppleStoreExtendedProductService? AppleStoreExtendedProductService { get; }
 IAppleStoreExtendedPurchaseService? AppleStoreExtendedPurchaseService { get; }
 IGooglePlayStoreExtendedPurchaseService? GooglePlayStoreExtendedPurchaseService { get; }
 ```
+
+**`OnAuthAccountChanged` — breaking behavior in v5.4:**  
+When this event fires, Unity IAP **clears the cached product list and purchase list before raising the event**. Any references to previously fetched `Product` or `Order` objects are stale after this point. Re-run the full init sequence in the handler:
+
+```csharp
+store.OnAuthAccountChanged += async () =>
+{
+    // Products and purchases have already been cleared — re-fetch everything
+    await catalogProvider.FetchRemoteCatalog();       // D2C only
+    store.FetchProducts(productDefinitions);          // standard IAP
+    store.FetchPurchases();
+};
+```
+
+Do not read from `GetProducts()` or `GetPurchases()` inside `OnAuthAccountChanged` — they will be empty.
 
 ## Alternative Service Access (DefaultStore / DefaultProduct / DefaultPurchase)
 
@@ -199,6 +219,35 @@ ReadOnlyObservableCollection<Product> allProducts = store.GetProducts();
 // Get a specific product by ID
 Product coinsPack = store.GetProductById("com.mygame.coins100");
 ```
+
+### CatalogListings and uSku (v5.4+)
+
+In v5.4, `Product` exposes two new members. Prefer these for new code — `product.definition.id` remains backwards compatible but points new users toward `CatalogListings`:
+
+```csharp
+// product.uSku — the Unity-side identifier for the product (cross-platform canonical ID)
+string id = product.uSku;
+
+// product.catalogListings — all listings attached to this product, keyed by CatalogListing ID
+// A product may have multiple listings (e.g. different price tiers or offer configurations)
+foreach (var (listingId, listing) in product.catalogListings)
+{
+    bool canBuy     = listing.availableToPurchase;
+    string storeId  = listing.definition.storeSpecificId;
+    string price    = listing.metadata.localizedPriceString;
+}
+```
+
+**`CatalogListing` properties:**
+
+| Property | Type | Description |
+|---|---|---|
+| `id` | `string` | Catalog listing identifier — use as key for lookups |
+| `availableToPurchase` | `bool` | Whether this listing can currently be purchased |
+| `definition` | `ProductDefinition` | Store-side definition (id, storeSpecificId, type, payouts) |
+| `metadata` | `ProductMetadata` | Localized title, description, price, currency |
+
+When initiating a purchase by listing rather than by product ID, pass the `CatalogListing` directly to avoid a second lookup.
 
 ## Two-Step Purchase Flow
 
@@ -322,6 +371,19 @@ var jwsRepresentation = order.Info.Apple?.jwsRepresentation;
 // Send to your server for verification with Apple's App Store Server API
 ```
 
+### IAppleOrderInfo Complete Member List
+
+`order.Info.Apple` returns `IAppleOrderInfo?` (null on non-Apple platforms). Full member list:
+
+| Member | Type | Description |
+|---|---|---|
+| `jwsRepresentation` | `string?` | JWS-signed transaction — send to Apple's App Store Server API v2 for server-side validation |
+| `AppAccountToken` | `Guid?` | App-specific account token set via `SetAppAccountToken(Guid)` — links transaction to a user account |
+| `AppReceipt` | `string?` | Latest App Receipt (base64). May be null on reinstall; requires refreshing. Null on iOS ≤ 6. Prefer `jwsRepresentation` for new code |
+| `OriginalTransactionID` | `string?` | Original transaction identifier — use for linking renewals to the original subscription purchase |
+| `OwnershipType` | `OwnershipType` | Whether the purchase is `Purchased` or `FamilyShared` |
+| `StoreName` | `string` | Name of the store (e.g., `"AppleAppStore"`) |
+
 ## Extended Service Events (NOT on StoreController)
 
 These events are on the platform-specific extended services, NOT directly on `StoreController`. Always null-check before subscribing (`?.` does not work with `+=`).
@@ -347,10 +409,21 @@ if (store.AppleStoreExtendedPurchaseService != null)
 ```csharp
 Dictionary<string, string> GetIntroductoryPriceDictionary()
 Dictionary<string, string> GetProductDetails()
-void SetStorePromotionOrder(List<Product> products)
-void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visible)
+
+// Promotion order — prefer the CatalogListing ID overload for new code (v5.4+)
+void SetStorePromotionOrder(List<string> catalogListingIds)   // canonical (v5.4+)
+void SetStorePromotionOrder(List<Product> products)           // convenience wrapper
+
+// Promotion visibility — prefer the CatalogListing ID overload for new code (v5.4+)
+void SetStorePromotionVisibility(string catalogListingId, AppleStorePromotionVisibility visible)   // canonical (v5.4+)
+void SetStorePromotionVisibility(Product product, AppleStorePromotionVisibility visible)           // convenience wrapper
+
+// Fetch promotion order
 void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action<string> errorCallback)
-void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)
+
+// Fetch promotion visibility — prefer the CatalogListing ID overload for new code (v5.4+)
+void FetchStorePromotionVisibility(string catalogListingId, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)  // canonical (v5.4+)
+void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)          // convenience wrapper
 ```
 
 **CRITICAL:** `AppleProductMetadata` does NOT expose `introductoryPrice`, `introductoryPriceLocale`, `introductoryNumberOfPeriods`, or `subscriptionPeriod` as public properties. Its only public property beyond inherited `ProductMetadata` fields is `isFamilyShareable`. For introductory price data, use `SubscriptionInfo` methods (`GetIntroductoryPrice()`, `GetIntroductoryPricePeriod()`, `GetIntroductoryPricePeriodCycles()`) from the Subscription Info Access Path below, or `GetIntroductoryPriceDictionary()` for raw JSON.

@@ -17,9 +17,9 @@
       "PC",
       "Xbox"
     ],
-    "changelog": "### Added\n- [Direct to Consumer (D2C) payment providers](https://docs.unity.com/en-us/iap/payment-providers) - Integrate D2C payment providers with Unity In-App Purchasing to sell and fulfill products through off-platform transactions.\n- [Unity Webshops](https://docs.unity.com/iap/webshop) - Launch a branded web storefront for your In-App Purchasing catalog from the Unity Dashboard, with theming, hosting, and payments handled for you.\n- [Remote Catalog](https://docs.unity.com/en-us/iap/payment-providers/configure-remote-catalog) - Define your product catalog and upload it to the Remote Catalog service.\n- [Purchase Options UI](https://docs.unity.com/en-us/iap/payment-providers/initiate-purchase) - Start a purchase from your application and let players choose how to pay with the Purchase Options UI.\n- These new features listed above all require `com.unity.services.authentication` 3.7.1 and above.\n- [Catalog Listings](https://docs.unity.com/en-us/iap/payment-providers/configure-remote-catalog#products-and-catalog-listings) - A single product can now expose multiple purchasable offers via `CatalogListing`. Catalog Listings are defined in the Remote Catalog.\n   - All functions previously using a `Product` now have a new overload using `CatalogListing`\n   - All functions previously using a productId now use a catalogListingId\n   - Entitlement checks now query every `CatalogListing` on a product and report the highest `EntitlementStatus`, so multi-listing products (for example, `no_ads` and `no_ads_discounted`) resolve correctly regardless of which listing the player originally purchased.\n   - Products without a catalog listing are backward compatible - a default catalog listing will be created where the `catalogListingId` matches the Product's uSku.\n- [Compliance with Apple and Google external purchase requirements](https://docs.unity.com/en-us/iap/payment-providers/external-purchase-compliance) - Comply with Apple and Google's requirements for external purchases.\n\n### Changed\n- GooglePlay - Billing Library updated to 9.0.0 (was 8.3.0).\n- Updated `com.unity.services.core` dependency to 1.18.0.\n- The minimum Unity Editor version supported is 2022.3.\n- Authentication - The IAP SDK will clear products and purchases before raising the `OnAuthAccountChanged` event to prevent stale prices/listings/orders. From this callback, re-run your initialization flow for the new account: `FetchCatalog` → `FetchProducts` → `FetchPurchases`. Cached purchases and products will only be cleared on Authentication sign-in events when StoreController.OnAuthAccountChanged has at least one listener set.\n\n### Fixed\n- Fixed compile errors caused by naming collisions when a project imports a third-party package that exposes a top-level `UnityUtil` namespace.\n\n### API changes\n#### Payment Providers\n- New `PaymentProvidersExtendedPurchaseService` exposed on `StoreController`; new `PaymentProviders` property on `PurchaseService` / `IPurchaseService`.\n- `IPaymentProvidersExtendedPurchaseService.SetPaymentProviderOverride(string)` — overrides which payment provider is used in purchases.\n- `IPaymentProvidersExtendedService.GetEligiblePaymentProviders()` — returns providers in priority order; empty list means none eligible.\n- `IPaymentProvidersExtendedPurchaseService.SetComplianceCheck(Func<PaymentProviderComplianceContext, Task<bool>>)` — gates Payment Provider purchases on your compliance rules; returning `false` fails the purchase with `PurchasingUnavailable`.\n- `IPaymentProvidersExtendedPurchaseService.GenerateURL(string sku, IReadOnlyList<PaymentProviderToken>?)` — fetches the redirect URL up front (e.g. for compliance display) without opening it.\n- `IPaymentProvidersExtendedPurchaseService.Purchase(ICart, string)` and `PurchaseProduct(string catalogListingId, string)` — route a single purchase through a specific provider without mutating the value set by `SetPaymentProviderOverride`.\n- `IPaymentProvidersExtendedPurchaseService.RedirectToWebshop(string? catalogListingId = null, IReadOnlyList<PaymentProviderToken>? externalTokens = null)` — opens the Unity we"
+    "changelog": "### Changed\n- Updated AI skill with D2C and migration patterns.\n\n### Fixed\n- Apple - Resolved compiler error when building for macOS.\n- Catalog Editor - Changed visibility on some generated classes from public to internal."
   },
-  "version": "5.4.0",
+  "version": "5.4.1",
   "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
@@ -36,16 +36,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.4.0"
+    "com.unity.purchasing.tests": "5.4.1"
   },
   "upmCi": {
-    "footprint": "364cb44b2882c4e2b21648abed5e263c0ad80e5b"
+    "footprint": "7923cbe17a7f15f499104177c32d10f6ee17050c"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.4/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "b64dbb8618279f3c99cd3fe930187453519f5d5a"
+    "revision": "337bad7445318f795b41d8093dbe90edd62092e2"
   },
   "samples": [
     {

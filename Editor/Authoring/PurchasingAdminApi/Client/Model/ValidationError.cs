@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "ValidationError")]
     [Preserve]
-    public partial class ValidationError
+    internal partial class ValidationError
     {
         /// <summary>
         /// Gets or Sets Field

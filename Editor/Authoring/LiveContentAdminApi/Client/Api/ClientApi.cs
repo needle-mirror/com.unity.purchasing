@@ -19,7 +19,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IClientApi : IApiAccessor
+    internal interface IClientApi : IApiAccessor
     {
         /// <summary>
         /// Get file content
@@ -70,7 +70,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public partial class ClientApi : IClientApi
+    internal partial class ClientApi : IClientApi
     {        
         /// <summary>
         /// The client for accessing this underlying API asynchronously.

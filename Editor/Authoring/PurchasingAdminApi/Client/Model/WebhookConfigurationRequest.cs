@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "WebhookConfigurationRequest")]
     [Preserve]
-    public partial class WebhookConfigurationRequest
+    internal partial class WebhookConfigurationRequest
     {
         /// <summary>
         /// URL for webhook notifications

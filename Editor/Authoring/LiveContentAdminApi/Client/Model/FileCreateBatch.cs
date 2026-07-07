@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "fileCreateBatch")]
     [Preserve]
-    public partial class FileCreateBatch
+    internal partial class FileCreateBatch
     {
         /// <summary>
         /// Gets or Sets Path

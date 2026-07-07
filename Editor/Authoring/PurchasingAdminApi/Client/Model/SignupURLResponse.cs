@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "SignupURLResponse")]
     [Preserve]
-    public partial class SignupURLResponse
+    internal partial class SignupURLResponse
     {
         /// <summary>
         /// CodaPay portal signup URL with embedded Unity token

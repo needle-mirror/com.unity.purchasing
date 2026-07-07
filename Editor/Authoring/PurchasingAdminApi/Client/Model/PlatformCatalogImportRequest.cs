@@ -26,14 +26,14 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "PlatformCatalogImportRequest")]
     [Preserve]
-    public partial class PlatformCatalogImportRequest
+    internal partial class PlatformCatalogImportRequest
     {
         /// <summary>
         /// Secret Manager hierarchy level the secret is stored at. For &#39;organization&#39;, the organization is resolved by the gateway from the project.
         /// </summary>
         /// <value>Secret Manager hierarchy level the secret is stored at. For &#39;organization&#39;, the organization is resolved by the gateway from the project.</value>
         [JsonConverter(typeof(StringEnumConverter))]
-        public enum SecretScopeEnum
+        internal enum SecretScopeEnum
         {
             /// <summary>
             /// Enum Organization for value: organization
@@ -62,8 +62,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
         [DataMember(Name = "secretScope", IsRequired = true, EmitDefaultValue = true)]
         [Preserve]
         public SecretScopeEnum SecretScope { get; set; }
-
-
         /// <summary>
         /// The developer-chosen Secret Manager key holding the platform credential (auth material only). The service does not constrain its format.
         /// </summary>

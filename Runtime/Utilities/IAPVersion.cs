@@ -8,6 +8,6 @@ namespace UnityEngine.Purchasing
     // "Version Bump (Soft Files)" — update here, not at the call sites.
     internal static class IAPVersion
     {
-        public const string Current = "5.4.0";
+        public const string Current = "5.4.1";
     }
 }

@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "PaymentProviderConfigurationResponse_shopConfigurations")]
     [Preserve]
-    public partial class PaymentProviderConfigurationResponseShopConfigurations
+    internal partial class PaymentProviderConfigurationResponseShopConfigurations
     {
         /// <summary>
         /// Gets or Sets Codapay

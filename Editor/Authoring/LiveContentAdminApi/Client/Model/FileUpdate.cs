@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "fileUpdate")]
     [Preserve]
-    public partial class FileUpdate
+    internal partial class FileUpdate
     {
         /// <summary>
         /// Gets or Sets ContentSize

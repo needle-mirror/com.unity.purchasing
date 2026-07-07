@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "OAuthStartResponse")]
     [Preserve]
-    public partial class OAuthStartResponse
+    internal partial class OAuthStartResponse
     {
         /// <summary>
         /// OAuth provider authorization URL to redirect the user to

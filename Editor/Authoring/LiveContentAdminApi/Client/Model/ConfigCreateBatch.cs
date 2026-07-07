@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "configCreateBatch")]
     [Preserve]
-    public partial class ConfigCreateBatch : Dictionary<String, ApiObject>
+    internal partial class ConfigCreateBatch : Dictionary<String, ApiObject>
     {
         /// <summary>
         /// Gets or Sets Path

@@ -18,15 +18,18 @@ Access via `store.AppleStoreExtendedPurchaseService` (for purchase features) and
 Apple can present purchases from the App Store product page. Intercept and handle them:
 
 ```csharp
-store.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += (product) =>
+if (store.AppleStoreExtendedPurchaseService != null)
 {
-    // Player tapped "Buy" on App Store product page
-    // You can delay the purchase (e.g., show a loading screen first)
-    Debug.Log($"Promotional purchase intercepted: {product.definition.id}");
+    store.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += (product) =>
+    {
+        // Player tapped "Buy" on App Store product page
+        // You can delay the purchase (e.g., show a loading screen first)
+        Debug.Log($"Promotional purchase intercepted: {product.definition.id}");
 
-    // When ready, continue the purchase
-    store.AppleStoreExtendedPurchaseService.ContinuePromotionalPurchases();
-};
+        // When ready, continue the purchase
+        store.AppleStoreExtendedPurchaseService.ContinuePromotionalPurchases();
+    };
+}
 ```
 
 **CRITICAL:** If you subscribe to `OnPromotionalPurchaseIntercepted`, you MUST eventually call `ContinuePromotionalPurchases()` or the purchase will hang indefinitely.
@@ -176,7 +179,7 @@ Always check `IsSubscribed()` first — if the result is `Result.Unsupported`, t
 | Concern | Recommendation |
 |---|---|
 | Restore button | Required on iOS (Apple guideline). Add a "Restore Purchases" button that calls `store.RestoreTransactions()`. |
-| Receipt validation | Use `CrossPlatformValidator` for local validation. For production, also validate server-side. |
+| Receipt validation | **Google Play:** Use `CrossPlatformValidator(GooglePlayTangle.Data(), Application.identifier)` for local validation. **Apple (StoreKit 2):** Local validation via `CrossPlatformValidator` is a **no-op** — use `order.Info.Apple?.jwsRepresentation` for server-side validation instead. |
 | Pending purchases | Always handle `OnPurchasePending` and call `ConfirmPurchase`. Unconfirmed purchases persist across launches. |
 | Product IDs | Use reverse-domain naming: `com.company.game.product` |
 | Testing | Use sandbox accounts (Apple) and license testing accounts (Google) for testing without real charges. |

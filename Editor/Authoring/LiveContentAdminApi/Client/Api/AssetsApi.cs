@@ -19,7 +19,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IAssetsApi : IApiAccessor
+    internal interface IAssetsApi : IApiAccessor
     {
         /// <summary>
         /// Get assets
@@ -58,7 +58,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public partial class AssetsApi : IAssetsApi
+    internal partial class AssetsApi : IAssetsApi
     {        
         /// <summary>
         /// The client for accessing this underlying API asynchronously.

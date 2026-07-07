@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "PaymentProviderConfigurationResponse")]
     [Preserve]
-    public partial class PaymentProviderConfigurationResponse
+    internal partial class PaymentProviderConfigurationResponse
     {
         /// <summary>
         /// Configuration ID

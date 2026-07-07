@@ -2,11 +2,21 @@
 
 ## Table of Contents
 
+- [Trigger Phrases](#trigger-phrases)
 - [Overview](#overview)
 - [Migration Mapping Table](#migration-mapping-table)
 - [Key Breaking Changes](#key-breaking-changes)
 - [Migration Anti-Patterns](#migration-anti-patterns)
 - [Minimal v5 Example](#minimal-v5-example)
+
+## Trigger Phrases
+
+- "Migrate from Unity IAP v4 to v5"
+- "Upgrade Unity IAP to v5"
+- "Update IAP from v4"
+- "Migrate IStoreListener to StoreController"
+- "Replace ConfigurationBuilder with v5 IAP"
+- "Update UnityPurchasing.Initialize to v5"
 
 ## Overview
 

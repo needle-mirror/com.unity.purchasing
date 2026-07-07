@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "CatalogProduct")]
     [Preserve]
-    public partial class CatalogProduct
+    internal partial class CatalogProduct
     {
         /// <summary>
         /// Unity SKU identifier (platform store product ID).

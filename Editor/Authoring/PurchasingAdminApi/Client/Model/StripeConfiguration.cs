@@ -26,14 +26,14 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "StripeConfiguration")]
     [Preserve]
-    public partial class StripeConfiguration
+    internal partial class StripeConfiguration
     {
         /// <summary>
         /// OAuth mode for Stripe integration
         /// </summary>
         /// <value>OAuth mode for Stripe integration</value>
         [JsonConverter(typeof(StringEnumConverter))]
-        public enum OauthModeEnum
+        internal enum OauthModeEnum
         {
             /// <summary>
             /// Enum Test for value: test

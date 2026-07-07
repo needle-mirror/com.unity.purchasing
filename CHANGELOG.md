@@ -1,4 +1,12 @@
 # Changelog
+## [5.4.1] - 2026-07-07
+### Changed
+- Updated AI skill with D2C and migration patterns.
+
+### Fixed
+- Apple - Resolved compiler error when building for macOS.
+- Catalog Editor - Changed visibility on some generated classes from public to internal.
+
 ## [5.4.0] - 2026-06-29
 ### Added
 - [Direct to Consumer (D2C) payment providers](https://docs.unity.com/en-us/iap/payment-providers) - Integrate D2C payment providers with Unity In-App Purchasing to sell and fulfill products through off-platform transactions.

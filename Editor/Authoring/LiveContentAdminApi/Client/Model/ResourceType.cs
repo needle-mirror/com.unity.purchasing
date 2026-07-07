@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     /// <value>Resource type enumeration</value>
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum ResourceType
+    internal enum ResourceType
     {
         /// <summary>
         /// Enum File for value: file

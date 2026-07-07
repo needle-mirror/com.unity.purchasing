@@ -19,7 +19,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    interface IPaymentProviderConfigurationApi : IApiAccessor
+    internal interface IPaymentProviderConfigurationApi : IApiAccessor
     {
         /// <summary>
         /// Get Payment Provider Configuration
@@ -124,13 +124,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    partial class PaymentProviderConfigurationApi : IPaymentProviderConfigurationApi
-    {
+    internal partial class PaymentProviderConfigurationApi : IPaymentProviderConfigurationApi
+    {        
         /// <summary>
         /// The client for accessing this underlying API asynchronously.
         /// </summary>
         public IApiClient Client { get; }
-
+        
         /// <summary>
         /// Gets the configuration object
         /// </summary>
@@ -143,7 +143,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
         /// </summary>
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         public PaymentProviderConfigurationApi(IApiClient apiClient)
-        {
+        {      
             if (apiClient == null) throw new ArgumentNullException("apiClient");
 
             this.Client = apiClient;
@@ -160,7 +160,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
         /// <param name="apiClient">The client interface for synchronous API access.</param>
         /// <param name="apiConfiguration">The configuration object.</param>
         public PaymentProviderConfigurationApi(IApiClient apiClient, IApiConfiguration apiConfiguration)
-        {
+        {      
             if (apiClient == null) throw new ArgumentNullException("apiClient");
             if (apiConfiguration == null) throw new ArgumentNullException("apiConfiguration");
 

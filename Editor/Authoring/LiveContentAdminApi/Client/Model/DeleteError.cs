@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "DeleteError")]
     [Preserve]
-    public partial class DeleteError
+    internal partial class DeleteError
     {
         /// <summary>
         /// Gets or Sets File

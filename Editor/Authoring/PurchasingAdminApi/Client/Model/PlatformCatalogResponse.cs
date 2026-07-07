@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "PlatformCatalogResponse")]
     [Preserve]
-    public partial class PlatformCatalogResponse
+    internal partial class PlatformCatalogResponse
     {
         /// <summary>
         /// Gets or Sets Products

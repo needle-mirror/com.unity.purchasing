@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "CatalogStoreIdOverride")]
     [Preserve]
-    public partial class CatalogStoreIdOverride
+    internal partial class CatalogStoreIdOverride
     {
         /// <summary>
         /// Store identifier.

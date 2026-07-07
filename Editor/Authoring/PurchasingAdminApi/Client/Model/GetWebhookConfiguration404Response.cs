@@ -28,7 +28,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     [JsonConverter(typeof(GetWebhookConfiguration404ResponseJsonConverter))]
     [DataContract(Name = "getWebhookConfiguration_404_response")]
     [Preserve]
-    partial class GetWebhookConfiguration404Response : AbstractOpenAPISchema, IEquatable<GetWebhookConfiguration404Response>
+    internal partial class GetWebhookConfiguration404Response : AbstractOpenAPISchema, IEquatable<GetWebhookConfiguration404Response>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="GetWebhookConfiguration404Response" /> class

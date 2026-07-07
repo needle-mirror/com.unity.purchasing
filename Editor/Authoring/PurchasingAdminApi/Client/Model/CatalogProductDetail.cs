@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "CatalogProductDetail")]
     [Preserve]
-    public partial class CatalogProductDetail
+    internal partial class CatalogProductDetail
     {
         /// <summary>
         /// BCP 47 language tag.

@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "clientFile")]
     [Preserve]
-    public partial class ClientFile
+    internal partial class ClientFile
     {
         /// <summary>
         /// Gets or Sets Type

@@ -19,7 +19,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IWebhookConfigurationApi : IApiAccessor
+    internal interface IWebhookConfigurationApi : IApiAccessor
     {
         /// <summary>
         /// Get Webhook Configuration
@@ -63,7 +63,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public partial class WebhookConfigurationApi : IWebhookConfigurationApi
+    internal partial class WebhookConfigurationApi : IWebhookConfigurationApi
     {        
         /// <summary>
         /// The client for accessing this underlying API asynchronously.

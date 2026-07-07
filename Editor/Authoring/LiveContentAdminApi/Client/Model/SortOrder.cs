@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     /// <value>Sort Order</value>
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum SortOrder
+    internal enum SortOrder
     {
         /// <summary>
         /// Enum Asc for value: asc

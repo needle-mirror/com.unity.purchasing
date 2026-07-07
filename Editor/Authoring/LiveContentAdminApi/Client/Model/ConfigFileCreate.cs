@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "configFileCreate")]
     [Preserve]
-    public partial class ConfigFileCreate : Dictionary<String, ApiObject>
+    internal partial class ConfigFileCreate : Dictionary<String, ApiObject>
     {
         /// <summary>
         /// JSON Schema URIs that define the structure of the config

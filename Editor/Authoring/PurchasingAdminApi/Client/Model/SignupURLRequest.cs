@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "SignupURLRequest")]
     [Preserve]
-    public partial class SignupURLRequest
+    internal partial class SignupURLRequest
     {
         /// <summary>
         /// Game title to display during CodaPay onboarding

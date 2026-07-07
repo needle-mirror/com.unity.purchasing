@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "metadata")]
     [Preserve]
-    public partial class Metadata
+    internal partial class Metadata
     {
         /// <summary>
         /// Gets or Sets Type

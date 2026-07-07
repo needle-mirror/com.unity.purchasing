@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "CodaPayConfigurationRequest")]
     [Preserve]
-    public partial class CodaPayConfigurationRequest
+    internal partial class CodaPayConfigurationRequest
     {
         /// <summary>
         /// Whether to use the production CodaPay environment

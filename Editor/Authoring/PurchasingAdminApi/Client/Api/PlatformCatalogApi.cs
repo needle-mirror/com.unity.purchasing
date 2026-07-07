@@ -19,7 +19,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IPlatformCatalogApi : IApiAccessor
+    internal interface IPlatformCatalogApi : IApiAccessor
     {
         /// <summary>
         /// Import Platform Catalog
@@ -36,7 +36,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public partial class PlatformCatalogApi : IPlatformCatalogApi
+    internal partial class PlatformCatalogApi : IPlatformCatalogApi
     {        
         /// <summary>
         /// The client for accessing this underlying API asynchronously.

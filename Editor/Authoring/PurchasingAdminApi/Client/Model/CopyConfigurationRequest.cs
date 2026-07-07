@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "CopyConfigurationRequest")]
     [Preserve]
-    public partial class CopyConfigurationRequest
+    internal partial class CopyConfigurationRequest
     {
         /// <summary>
         /// Title identifier of the existing configuration to copy

@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "fileCreate")]
     [Preserve]
-    public partial class FileCreate
+    internal partial class FileCreate
     {
         /// <summary>
         /// Gets or Sets ContentSize

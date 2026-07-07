@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "BasicErrorResponse")]
     [Preserve]
-    public partial class BasicErrorResponse
+    internal partial class BasicErrorResponse
     {
         /// <summary>
         /// A URI reference [RFC3986] that identifies the problem type. This specification encourages that, when dereferenced, it provide human-readable documentation for the problem type (e.g., using HTML [W3C.REC-html5-20141028]). When this member is not present, its value is assumed to be \&quot;about:blank\&quot;.

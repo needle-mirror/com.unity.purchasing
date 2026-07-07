@@ -28,7 +28,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     [JsonConverter(typeof(UpsertSpecificPaymentProviderConfigurationRequestJsonConverter))]
     [DataContract(Name = "upsertSpecificPaymentProviderConfiguration_request")]
     [Preserve]
-    partial class UpsertSpecificPaymentProviderConfigurationRequest : AbstractOpenAPISchema, IEquatable<UpsertSpecificPaymentProviderConfigurationRequest>
+    internal partial class UpsertSpecificPaymentProviderConfigurationRequest : AbstractOpenAPISchema, IEquatable<UpsertSpecificPaymentProviderConfigurationRequest>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="UpsertSpecificPaymentProviderConfigurationRequest" /> class

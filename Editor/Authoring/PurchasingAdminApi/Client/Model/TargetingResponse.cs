@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "TargetingResponse")]
     [Preserve]
-    public partial class TargetingResponse
+    internal partial class TargetingResponse
     {
 
         /// <summary>

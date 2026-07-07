@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "ExistingCodaConfig")]
     [Preserve]
-    public partial class ExistingCodaConfig
+    internal partial class ExistingCodaConfig
     {
         /// <summary>
         /// CodaPay title name

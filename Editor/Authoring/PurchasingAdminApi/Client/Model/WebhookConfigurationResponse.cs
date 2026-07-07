@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "WebhookConfigurationResponse")]
     [Preserve]
-    public partial class WebhookConfigurationResponse
+    internal partial class WebhookConfigurationResponse
     {
         /// <summary>
         /// Webhook configuration ID

@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "batchUpdateResponse")]
     [Preserve]
-    public partial class BatchUpdateResponse
+    internal partial class BatchUpdateResponse
     {
         /// <summary>
         /// Gets or Sets Error

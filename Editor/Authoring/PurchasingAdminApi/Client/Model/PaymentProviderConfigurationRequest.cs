@@ -26,14 +26,14 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "PaymentProviderConfigurationRequest")]
     [Preserve]
-    public partial class PaymentProviderConfigurationRequest
+    internal partial class PaymentProviderConfigurationRequest
     {
         /// <summary>
         /// Legacy single-provider selection. When set, all orders without a tag-based match fall back to this provider. Optional; if omitted on update, the existing value is preserved. Will be removed once the dashboard adopts tag-based routing UI. &#x60;mock&#x60; is for development and testing only. 
         /// </summary>
         /// <value>Legacy single-provider selection. When set, all orders without a tag-based match fall back to this provider. Optional; if omitted on update, the existing value is preserved. Will be removed once the dashboard adopts tag-based routing UI. &#x60;mock&#x60; is for development and testing only. </value>
         [JsonConverter(typeof(StringEnumConverter))]
-        public enum TargetPaymentProviderEnum
+        internal enum TargetPaymentProviderEnum
         {
             /// <summary>
             /// Enum Codapay for value: codapay

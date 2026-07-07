@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.PurchasingAdminApi
     /// </summary>
     [DataContract(Name = "RedirectUrlsResponse")]
     [Preserve]
-    public partial class RedirectUrlsResponse
+    internal partial class RedirectUrlsResponse
     {
         /// <summary>
         /// Global success redirect URL

@@ -19,7 +19,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public interface IConfigsApi : IApiAccessor
+    internal interface IConfigsApi : IApiAccessor
     {
         /// <summary>
         /// Update multiple configs
@@ -176,7 +176,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// <summary>
     /// Represents a collection of functions to interact with the API endpoints
     /// </summary>
-    public partial class ConfigsApi : IConfigsApi
+    internal partial class ConfigsApi : IConfigsApi
     {        
         /// <summary>
         /// The client for accessing this underlying API asynchronously.

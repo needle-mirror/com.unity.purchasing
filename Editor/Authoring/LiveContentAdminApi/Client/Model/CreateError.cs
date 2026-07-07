@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     [DataContract(Name = "createError")]
     [Preserve]
-    public partial class CreateError
+    internal partial class CreateError
     {
         /// <summary>
         /// Gets or Sets File

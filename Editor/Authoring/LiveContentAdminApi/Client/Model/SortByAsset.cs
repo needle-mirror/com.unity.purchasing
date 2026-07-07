@@ -26,7 +26,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     /// </summary>
     /// <value>Sort By</value>
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum SortByAsset
+    internal enum SortByAsset
     {
         /// <summary>
         /// Enum Path for value: path
