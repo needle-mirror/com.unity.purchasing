@@ -55,6 +55,11 @@ namespace UnityEngine.Purchasing
         Guid m_AppAccountToken;
 
         public event Action<Product>? OnPromotionalPurchaseIntercepted;
+        public event Action<PendingOrder, ConfirmedOrder>? OnExpiredPurchaseFinished;
+
+        // Both native paths surfacing expired transactions (Transaction.updates
+        // and FetchPurchases) can report the same transaction in one session.
+        readonly HashSet<string> m_ExpiredPurchasesProcessed = new();
 
         protected AppleStoreImpl(ICartValidator cartValidator, IAppleFetchProductsService fetchProductsService,
             ITransactionLog transactionLog,
@@ -136,6 +141,44 @@ namespace UnityEngine.Purchasing
             base.FinishTransaction(productDefinition, transactionId);
         }
 
+        public override void FinishTransaction(PendingOrder pendingOrder)
+        {
+            if (StoreKitSelector.UseStoreKit1())
+            {
+                base.FinishTransaction(pendingOrder);
+                return;
+            }
+
+            // On SK2 the native finish is asynchronous, so confirm success is only
+            // reported once the native finish result is received, instead of unconditionally here.
+            m_CartValidator.Validate(pendingOrder.CartOrdered);
+            var cartItem = pendingOrder.CartOrdered.Items().FirstOrDefault();
+            var productDefinition = cartItem != null && cartItem.Product.catalogListings.TryGetValue(cartItem.CatalogListingId, out var listing) ? listing.definition : null;
+            FinishTransaction(productDefinition, pendingOrder.Info.TransactionID);
+        }
+
+        void OnFinishTransactionSucceeded(string transactionId)
+        {
+            // Matching against the pending confirmation requests is done by the confirm callback;
+            // results for internal finish retries have no matching request and are ignored there.
+            ConfirmCallback?.OnConfirmOrderSucceeded(transactionId);
+        }
+
+        void OnFinishTransactionFailed(string transactionId)
+        {
+            var isValidTransactionId = ulong.TryParse(transactionId, out _);
+            var reason = isValidTransactionId ? PurchaseFailureReason.DuplicateTransaction : PurchaseFailureReason.Unknown;
+            var details = isValidTransactionId
+                ? $"Transaction Id {transactionId} not found among the unfinished transactions. It has likely already been finished."
+                : $"Transaction Id {transactionId} is not a valid StoreKit 2 transaction id.";
+
+            var failureDescription = new PurchaseFailureDescription(
+                new CartItem(Product.CreateUnknownProduct(string.Empty)),
+                reason,
+                details);
+            ConfirmCallback?.OnConfirmOrderFailed(failureDescription.ConvertToFailedOrder(transactionId));
+        }
+
         public override void Purchase(ICart cart)
         {
             m_CartValidator.Validate(cart);
@@ -202,7 +245,7 @@ namespace UnityEngine.Purchasing
             m_Native?.FetchExistingPurchases();
         }
 
-        void OnPurchasesFetchedStoreKit1()
+        async void OnPurchasesFetchedStoreKit1()
         {
             var receipt = AppReceipt();
             var appleReceipt = GetAppleReceiptFromBase64String(receipt);
@@ -214,11 +257,11 @@ namespace UnityEngine.Purchasing
 
             var products = ProductCache.GetProducts();
 
-            var orders = CreateConfirmedOrdersForSK1(products, appleReceipt);
+            var orders = await CreateConfirmedOrdersForSK1(products, appleReceipt);
             PurchaseFetchCallback?.OnAllPurchasesRetrieved(orders);
         }
 
-        List<Order> CreateConfirmedOrdersForSK1(ReadOnlyObservableCollection<Product> products, AppleReceipt appleReceipt)
+        async Task<List<Order>> CreateConfirmedOrdersForSK1(ReadOnlyObservableCollection<Product> products, AppleReceipt appleReceipt)
         {
             var orders = new List<Order>();
             // Enrich the product descriptions with parsed receipt data. For multi-listing products,
@@ -238,7 +281,6 @@ namespace UnityEngine.Purchasing
                     var productType = (AppleStoreProductType)Enum.Parse(typeof(AppleStoreProductType), mostRecentReceipt.productType.ToString());
                     switch (productType)
                     {
-                        // if the product is auto-renewing subscription, filter the expired products
                         case AppleStoreProductType.AutoRenewingSubscription when new SubscriptionInfo(mostRecentReceipt, null).IsExpired() == Result.True:
                             continue;
                         case AppleStoreProductType.Consumable:
@@ -250,7 +292,7 @@ namespace UnityEngine.Purchasing
                                 mostRecentReceipt.originalTransactionIdentifier,
                                 true);
 
-                            var confirmedOrder = GenerateAppleConfirmedOrder(storeSpecificId, mostRecentReceipt.transactionID, mostRecentReceipt.originalTransactionIdentifier, OwnershipType.Undefined, null, null, null, catalogListingId: listing.id);
+                            var confirmedOrder = await GenerateAppleConfirmedOrder(storeSpecificId, mostRecentReceipt.transactionID, mostRecentReceipt.originalTransactionIdentifier, OwnershipType.Undefined, null, null, null, catalogListingId: listing.id);
                             orders.Add(confirmedOrder);
                             continue;
                         default:
@@ -301,14 +343,14 @@ namespace UnityEngine.Purchasing
             m_AppAccountToken = value;
         }
 
-        public override void OnPurchaseDeferred(string productDetails)
+        public override async void OnPurchaseDeferred(string productDetails)
         {
             var productDescriptions = JSONSerializer.DeserializeProductDescriptionsFromFetchProductsSk2(productDetails);
             var productDescription = productDescriptions.FirstOrDefault();
             if (productDescription != null)
             {
                 Guid? appAccountToken = null; // passed as null as there is only a promise of a purchase
-                var deferredOrder = GenerateAppleDeferredOrder(productDescription.storeSpecificId, productDescription.transactionId, "", OwnershipType.Undefined, appAccountToken, null);
+                var deferredOrder = await GenerateAppleDeferredOrder(productDescription.storeSpecificId, productDescription.transactionId, "", OwnershipType.Undefined, appAccountToken, null);
                 PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
             }
         }
@@ -325,31 +367,31 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public override void OnPurchasesFetched(string json)
+        public override async void OnPurchasesFetched(string json)
         {
             var fetchedPurchases = JSONSerializer.DeserializeFetchedPurchases(json);
-            var orders = CreateOrdersFromFetchedPurchases(fetchedPurchases);
+            var orders = await CreateOrdersFromFetchedPurchases(fetchedPurchases);
             PurchaseFetchCallback?.OnAllPurchasesRetrieved(orders);
         }
 
-        List<Order> CreateOrdersFromFetchedPurchases(Dictionary<string, Dictionary<string, object>> fetchedPurchases)
+        async Task<List<Order>> CreateOrdersFromFetchedPurchases(Dictionary<string, Dictionary<string, object>> fetchedPurchases)
         {
             var pendingOrders = new List<Order>();
             if (fetchedPurchases.TryGetValue("unfinishedTransactions", out var unfinishedTransactions))
             {
-                pendingOrders = GenerateOrdersFromProducts(unfinishedTransactions, true);
+                pendingOrders = await GenerateOrdersFromProducts(unfinishedTransactions, true);
             }
 
             var confirmedOrders = new List<Order>();
             if (fetchedPurchases.TryGetValue("finishedTransactions", out var finishedTransactions))
             {
-                confirmedOrders = GenerateOrdersFromProducts(finishedTransactions, false);
+                confirmedOrders = await GenerateOrdersFromProducts(finishedTransactions, false);
             }
 
             return pendingOrders.Concat(confirmedOrders).ToList();
         }
 
-        List<Order> GenerateOrdersFromProducts(Dictionary<string, object> transactions, bool isPending)
+        async Task<List<Order>> GenerateOrdersFromProducts(Dictionary<string, object> transactions, bool isPending)
         {
             var orders = new List<Order>();
             foreach (var transaction in transactions)
@@ -376,11 +418,11 @@ namespace UnityEngine.Purchasing
 
                 if (isPending)
                 {
-                    orders.Add(GenerateApplePendingOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo));
+                    orders.Add(await GenerateApplePendingOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo));
                 }
                 else
                 {
-                    orders.Add(GenerateAppleConfirmedOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo));
+                    orders.Add(await GenerateAppleConfirmedOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo));
                 }
             }
 
@@ -480,6 +522,35 @@ namespace UnityEngine.Purchasing
         void RevokeEntitlement(string productId)
         {
             EntitlementRevokedCallback?.onEntitlementRevoked(productId);
+        }
+
+        // An expired subscription transaction was finished natively without being
+        // delivered as a purchase. Raise both order shapes so the purchase service
+        // can log the analytics events the normal pending -> confirm flow produces,
+        // without invoking the user-facing purchase callbacks.
+        async void OnPurchaseExpired(string purchaseDetailsJson)
+        {
+            var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(purchaseDetailsJson);
+            var transactionId = purchaseDetails.TryGetString("transactionId");
+            if (string.IsNullOrEmpty(transactionId) || !m_ExpiredPurchasesProcessed.Add(transactionId))
+            {
+                return;
+            }
+
+            var subscriptionInfo = TryGetSubscriptionInfoFromPayload(purchaseDetails);
+            var productId = purchaseDetails.TryGetString("productId");
+            var originalTransactionId = purchaseDetails.TryGetString("originalTransactionId");
+            var ownershipType = OwnershipTypeFromString(purchaseDetails.TryGetString("ownershipType"));
+            var signatureJws = purchaseDetails.TryGetString("signatureJws");
+            Guid? appAccountToken = null;
+            if (Guid.TryParse(purchaseDetails.TryGetString("appAccountToken"), out Guid parsedToken))
+            {
+                appAccountToken = parsedToken;
+            }
+
+            var pendingOrder = await GenerateApplePendingOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+            var confirmedOrder = await GenerateAppleConfirmedOrder(productId, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+            OnExpiredPurchaseFinished?.Invoke(pendingOrder, confirmedOrder);
         }
 
         void OnFetchStorePromotionOrderSucceeded(string productIds)
@@ -586,6 +657,9 @@ namespace UnityEngine.Purchasing
                 case "OnEntitlementRevoked":
                     OnEntitlementRevoked(payload);
                     break;
+                case "OnPurchaseExpired":
+                    OnPurchaseExpired(payload);
+                    break;
                 case "OnCheckEntitlement":
                     OnCheckEntitlement(payload, entitlementStatus);
                     break;
@@ -607,6 +681,12 @@ namespace UnityEngine.Purchasing
                     break;
                 case "OnFetchStorefrontFailed":
                     OnFetchStorefrontFailed(payload);
+                    break;
+                case "OnFinishTransactionSucceeded":
+                    OnFinishTransactionSucceeded(payload);
+                    break;
+                case "OnFinishTransactionFailed":
+                    OnFinishTransactionFailed(payload);
                     break;
             }
         }
@@ -897,7 +977,7 @@ namespace UnityEngine.Purchasing
 
             OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
 #endif
-            ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+            await ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
 
             // Saves the current transactionId to prevent firing a DuplicatedTransaction event if the listener sends the transaction currently being processed.
             // After processing, so DuplicateTransactions are only blocked after the initial purchase event has been handled.
@@ -919,55 +999,51 @@ namespace UnityEngine.Purchasing
             return m_RefreshAppReceiptTask.Task;
         }
 
-        void ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
+        async Task ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
             if (!m_TransactionLog.HasRecordOf(transactionId))
             {
-                ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+                await ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             }
             else
             {
-                ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+                await ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             }
         }
 
-        void ProcessNewPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
+        async Task ProcessNewPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
-            var pendingOrder = GenerateApplePendingOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+            var pendingOrder = await GenerateApplePendingOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             PurchaseCallback?.OnPurchaseSucceeded(pendingOrder);
         }
 
-        void ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
+        async Task ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
         {
-            var confirmedOrder = GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+            var confirmedOrder = await GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
             EnsureConfirmedOrderIsFinished(confirmedOrder);
         }
 
-        DeferredOrder GenerateAppleDeferredOrder(string storeSpecificId, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, string? catalogListingId = null)
+        async Task<DeferredOrder> GenerateAppleDeferredOrder(string storeSpecificId, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, string? catalogListingId = null)
         {
-            var cart = BuildCartForApple(storeSpecificId, catalogListingId);
+            var cart = await BuildCartForApple(storeSpecificId, catalogListingId);
             return new DeferredOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws));
         }
 
-        PendingOrder GenerateApplePendingOrder(string storeSpecificId, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo, string? catalogListingId = null)
+        async Task<PendingOrder> GenerateApplePendingOrder(string storeSpecificId, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo, string? catalogListingId = null)
         {
-            var cart = BuildCartForApple(storeSpecificId, catalogListingId);
+            var cart = await BuildCartForApple(storeSpecificId, catalogListingId);
             return new PendingOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws), subscriptionInfo);
         }
 
-        ConfirmedOrder GenerateAppleConfirmedOrder(string storeSpecificId, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo, string? catalogListingId = null)
+        async Task<ConfirmedOrder> GenerateAppleConfirmedOrder(string storeSpecificId, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo, string? catalogListingId = null)
         {
-            var cart = BuildCartForApple(storeSpecificId, catalogListingId);
+            var cart = await BuildCartForApple(storeSpecificId, catalogListingId);
             return new ConfirmedOrder(cart, new AppleOrderInfo(transactionID, m_StoreName, this, originalTransactionId, ownershipType, appAccountToken, signatureJws), subscriptionInfo);
         }
 
-        // Builds a Cart targeting the right CatalogListing for an Apple order.
-        // When `catalogListingId` is provided and matches a listing on the resolved product, that
-        // listing is used. Otherwise the listing is derived from `storeSpecificId` (the id Apple
-        // sent us in the callback). Falls back to the product's base listing when nothing matches.
-        Cart BuildCartForApple(string storeSpecificId, string? catalogListingId)
+        async Task<Cart> BuildCartForApple(string storeSpecificId, string? catalogListingId)
         {
-            var product = FindProductById(storeSpecificId);
+            var product = await ProductCache.FindOrResolveAsync(storeSpecificId);
             if (catalogListingId == null)
             {
                 catalogListingId = ProductCache.FindCatalogListingByStoreSpecificId(storeSpecificId)?.id;
@@ -1077,7 +1153,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnPurchaseSucceeded(string id, string receipt, string transactionId, string originalTransactionId, bool isRestored)
+        async void OnPurchaseSucceeded(string id, string receipt, string transactionId, string originalTransactionId, bool isRestored)
         {
             var appleReceipt = GetAppleReceiptFromBase64String(receipt);
             var mostRecentReceipt = FindMostRecentReceipt(appleReceipt, id);
@@ -1089,11 +1165,11 @@ namespace UnityEngine.Purchasing
 
                 if (!m_TransactionLog.HasRecordOf(transactionId))
                 {
-                    ProcessNewPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null);
+                    await ProcessNewPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null);
                 }
                 else
                 {
-                    ProcessLoggedPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null);
+                    await ProcessLoggedPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null);
                 }
             }
             else
@@ -1235,7 +1311,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnPurchaseDeferredSk1(string productId)
+        async void OnPurchaseDeferredSk1(string productId)
         {
             var product = FindProductById(productId);
             if (product.type != ProductType.Unknown)
@@ -1243,7 +1319,7 @@ namespace UnityEngine.Purchasing
                 Guid? appAccountToken = null; // passed as null as there is only a promise of a purchase
                 // productId is the store-specific id Apple sent us — pass it through directly
                 // instead of routing back through baseListing (which would be wrong for non-base listings).
-                var deferredOrder = GenerateAppleDeferredOrder(productId, "", "", OwnershipType.Undefined, appAccountToken, null);
+                var deferredOrder = await GenerateAppleDeferredOrder(productId, "", "", OwnershipType.Undefined, appAccountToken, null);
                 PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
             }
         }

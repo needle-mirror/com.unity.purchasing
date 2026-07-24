@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Purchasing.Extension;
 using Stores.Android.GooglePlay.AAR.Interfaces;
+using UnityEngine.Purchasing.Extension;
 using Uniject;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.CatalogListings;
@@ -142,6 +143,7 @@ namespace UnityEngine.Purchasing
             di.AddInstance(new AppleAppStoreCartValidator(storeDisplayName));
             AddMetricizedAppleStoreDependencies(di);
             CreateAndAssignNativeAppleStore(di.GetInstance<AppleStoreImpl>());
+            WireStoreOverrideReverseLookup(di.GetInstance<AppleStoreImpl>().ProductCache, "apple");
             return CreateStoreWrapper(storeName, di);
         }
 
@@ -196,8 +198,14 @@ namespace UnityEngine.Purchasing
             AddGooglePlayStoreServices(di);
             AddGooglePlayStoreServiceAars(di);
             LinkGooglePlayStoreDependencies(di);
+            WireStoreOverrideReverseLookup(di.GetInstance<GooglePlayStore>().ProductCache, "google");
 
             return CreateStoreWrapper(GooglePlay.Name, di);
+        }
+
+        static void WireStoreOverrideReverseLookup(IProductCache productCache, string storeName)
+        {
+            productCache.SetReverseLookupService(new StoreOverrideReverseLookupService(storeName));
         }
 
         IStoreWrapper InstantiatePaymentProviderStore()

@@ -38,7 +38,7 @@ namespace UnityEngine.Purchasing.Services
 
         public void ClearTransactionLog()
         {
-#if DEBUG
+#if DEBUG || IAP_APPLE_CLEAR_TRANSACTION_LOG
             m_ClearAppleTransactionLogsUseCase.ClearTransactionLog();
 #endif
         }

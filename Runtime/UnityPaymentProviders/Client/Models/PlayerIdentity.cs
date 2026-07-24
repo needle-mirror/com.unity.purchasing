@@ -31,6 +31,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <summary>
         /// Player identity information. The identity object is required but can be empty.
         /// </summary>
+        /// <param name="unityImpressionId">Impression ID</param>
         /// <param name="unityInstallationId">Unity installation ID</param>
         /// <param name="unityFid">Unity FID</param>
         /// <param name="unityGaid">Google Advertising ID</param>
@@ -44,15 +45,16 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="unityAnalyticsId">UA2 Analytics ID</param>
         /// <param name="unityAppInstanceId">Firebase ID</param>
         /// <param name="unityFirebaseSessionId">Firebase session ID</param>
-        /// <param name="unityFirebaseAppId">Firebase App ID (mobilesdk_app_id from google-services.json)</param>
-        /// <param name="unityImpressionId">Correlation key for one purchase journey across native / PSP / webshop. Minted by the client that begins the journey (typically the Purchase Options UI).</param>
+        /// <param name="unityFirebaseAppId">Firebase app ID</param>
         /// <param name="unityIapSdkVersion">IAP SDK version</param>
         /// <param name="unityEngineVersion">Unity Engine version</param>
+        /// <param name="unityApplicationVersion">Developer-set application/build version of the game (e.g. semver)</param>
         /// <param name="unityUserId">Unity user identifier provided by the Game Developer</param>
         /// <param name="unityInstallationTimestamp">RFC 3339 timestamp of when the game was installed on the player&#39;s device</param>
         [Preserve]
-        public PlayerIdentity(string unityInstallationId = default, string unityFid = default, string unityGaid = default, string unityGappid = default, string unityIdfa = default, string unityIdfv = default, string unityMegaSessionId = default, string sessionId = default, string unityConsentStateAdsIntent = default, string unityConsentStateAnalyticsIntent = default, string unityAnalyticsId = default, string unityAppInstanceId = default, string unityFirebaseSessionId = default, string unityFirebaseAppId = default, string unityImpressionId = default, string unityIapSdkVersion = default, string unityEngineVersion = default, string unityUserId = default, DateTime unityInstallationTimestamp = default)
+        public PlayerIdentity(string unityImpressionId = default, string unityInstallationId = default, string unityFid = default, string unityGaid = default, string unityGappid = default, string unityIdfa = default, string unityIdfv = default, string unityMegaSessionId = default, string sessionId = default, string unityConsentStateAdsIntent = default, string unityConsentStateAnalyticsIntent = default, string unityAnalyticsId = default, string unityAppInstanceId = default, string unityFirebaseSessionId = default, string unityFirebaseAppId = default, string unityIapSdkVersion = default, string unityEngineVersion = default, string unityApplicationVersion = default, string unityUserId = default, DateTime unityInstallationTimestamp = default)
         {
+            UnityImpressionId = unityImpressionId;
             UnityInstallationId = unityInstallationId;
             UnityFid = unityFid;
             UnityGaid = unityGaid;
@@ -67,13 +69,20 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             UnityAppInstanceId = unityAppInstanceId;
             UnityFirebaseSessionId = unityFirebaseSessionId;
             UnityFirebaseAppId = unityFirebaseAppId;
-            UnityImpressionId = unityImpressionId;
             UnityIapSdkVersion = unityIapSdkVersion;
             UnityEngineVersion = unityEngineVersion;
+            UnityApplicationVersion = unityApplicationVersion;
             UnityUserId = unityUserId;
             UnityInstallationTimestamp = unityInstallationTimestamp;
         }
 
+        /// <summary>
+        /// Impression ID
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "unity.impression_id", EmitDefaultValue = false)]
+        public string UnityImpressionId{ get; }
+        
         /// <summary>
         /// Unity installation ID
         /// </summary>
@@ -164,22 +173,14 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         [Preserve]
         [DataMember(Name = "unity.firebase_session_id", EmitDefaultValue = false)]
         public string UnityFirebaseSessionId{ get; }
-
+        
         /// <summary>
-        /// Firebase App ID (mobilesdk_app_id from google-services.json)
+        /// Firebase app ID
         /// </summary>
         [Preserve]
         [DataMember(Name = "unity.firebase_app_id", EmitDefaultValue = false)]
         public string UnityFirebaseAppId{ get; }
-
-        /// <summary>
-        /// Correlation key for one purchase journey across native / PSP / webshop.
-        /// Minted by the client that begins the journey (typically the Purchase Options UI).
-        /// </summary>
-        [Preserve]
-        [DataMember(Name = "unity.impression_id", EmitDefaultValue = false)]
-        public string UnityImpressionId{ get; }
-
+        
         /// <summary>
         /// IAP SDK version
         /// </summary>
@@ -193,6 +194,13 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         [Preserve]
         [DataMember(Name = "unity.engine_version", EmitDefaultValue = false)]
         public string UnityEngineVersion{ get; }
+        
+        /// <summary>
+        /// Developer-set application/build version of the game (e.g. semver)
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "unity.application_version", EmitDefaultValue = false)]
+        public string UnityApplicationVersion{ get; }
         
         /// <summary>
         /// Unity user identifier provided by the Game Developer
@@ -216,6 +224,10 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         {
             var serializedModel = "";
 
+            if (UnityImpressionId != null)
+            {
+                serializedModel += "unity.impression_id," + UnityImpressionId + ",";
+            }
             if (UnityInstallationId != null)
             {
                 serializedModel += "unity.installation_id," + UnityInstallationId + ",";
@@ -272,10 +284,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 serializedModel += "unity.firebase_app_id," + UnityFirebaseAppId + ",";
             }
-            if (UnityImpressionId != null)
-            {
-                serializedModel += "unity.impression_id," + UnityImpressionId + ",";
-            }
             if (UnityIapSdkVersion != null)
             {
                 serializedModel += "unity.iap_sdk_version," + UnityIapSdkVersion + ",";
@@ -283,6 +291,10 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             if (UnityEngineVersion != null)
             {
                 serializedModel += "unity.engine_version," + UnityEngineVersion + ",";
+            }
+            if (UnityApplicationVersion != null)
+            {
+                serializedModel += "unity.application_version," + UnityApplicationVersion + ",";
             }
             if (UnityUserId != null)
             {
@@ -303,6 +315,12 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         {
             var dictionary = new Dictionary<string, string>();
 
+            if (UnityImpressionId != null)
+            {
+                var unity_impression_idStringValue = UnityImpressionId.ToString();
+                dictionary.Add("unity.impression_id", unity_impression_idStringValue);
+            }
+            
             if (UnityInstallationId != null)
             {
                 var unity_installation_idStringValue = UnityInstallationId.ToString();
@@ -380,19 +398,13 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
                 var unity_firebase_session_idStringValue = UnityFirebaseSessionId.ToString();
                 dictionary.Add("unity.firebase_session_id", unity_firebase_session_idStringValue);
             }
-
+            
             if (UnityFirebaseAppId != null)
             {
                 var unity_firebase_app_idStringValue = UnityFirebaseAppId.ToString();
                 dictionary.Add("unity.firebase_app_id", unity_firebase_app_idStringValue);
             }
-
-            if (UnityImpressionId != null)
-            {
-                var unity_impression_idStringValue = UnityImpressionId.ToString();
-                dictionary.Add("unity.impression_id", unity_impression_idStringValue);
-            }
-
+            
             if (UnityIapSdkVersion != null)
             {
                 var unity_iap_sdk_versionStringValue = UnityIapSdkVersion.ToString();
@@ -403,6 +415,12 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 var unity_engine_versionStringValue = UnityEngineVersion.ToString();
                 dictionary.Add("unity.engine_version", unity_engine_versionStringValue);
+            }
+            
+            if (UnityApplicationVersion != null)
+            {
+                var unity_application_versionStringValue = UnityApplicationVersion.ToString();
+                dictionary.Add("unity.application_version", unity_application_versionStringValue);
             }
             
             if (UnityUserId != null)

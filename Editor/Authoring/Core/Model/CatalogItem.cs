@@ -12,7 +12,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         [DataMember(Name = "uSKU"), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string uSku { get; set; }
         [DataMember(Name = "type")]
-        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonConverter(typeof(StringEnumConverter)), JsonProperty(DefaultValueHandling = DefaultValueHandling.Include)]
         public ProductType ProductType { get; set; }
         [DataMember(Name = "productDetails")]
         public List<ProductDetails> ProductDetails { get; set; }
@@ -111,6 +111,56 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             };
 
             return catalog;
+        }
+
+        public static List<CatalogItem> CreateDefaultCsvCatalog()
+        {
+            return new List<CatalogItem>
+            {
+                new CatalogItem
+                {
+                    CatalogListingId = "catalog/starter_pack",
+                    uSku = "starter_pack",
+                    ProductType = ProductType.Consumable,
+                    ProductDetails = new List<ProductDetails>
+                    {
+                        new ProductDetails { Title = "Starter Pack", Description = "A one-time starter bundle.", Language = TranslationLocale.en_US },
+                        new ProductDetails { Title = "Pack de démarrage", Description = "Un lot de démarrage.", Language = TranslationLocale.fr_FR },
+                    },
+                    PricingDetails = new List<PricingDetails>
+                    {
+                        new PricingDetails { CurrencyCode = "USD", Amount = 4.99 },
+                    },
+                },
+                new CatalogItem
+                {
+                    CatalogListingId = "catalog/premium_upgrade",
+                    uSku = "premium_upgrade",
+                    ProductType = ProductType.NonConsumable,
+                    ProductDetails = new List<ProductDetails>
+                    {
+                        new ProductDetails { Title = "Premium Upgrade", Description = "Unlock all premium features.", Language = TranslationLocale.en_US },
+                    },
+                    PricingDetails = new List<PricingDetails>
+                    {
+                        new PricingDetails { CurrencyCode = "USD", Amount = 9.99 },
+                    },
+                },
+                new CatalogItem
+                {
+                    CatalogListingId = "catalog/vip_monthly",
+                    uSku = "vip_monthly",
+                    ProductType = ProductType.Subscription,
+                    ProductDetails = new List<ProductDetails>
+                    {
+                        new ProductDetails { Title = "VIP Monthly", Description = "Monthly VIP membership.", Language = TranslationLocale.en_US },
+                    },
+                    PricingDetails = new List<PricingDetails>
+                    {
+                        new PricingDetails { CurrencyCode = "USD", Amount = 14.99 },
+                    },
+                },
+            };
         }
     }
 

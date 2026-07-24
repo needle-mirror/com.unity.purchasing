@@ -25,7 +25,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
     sealed class ObservableCatalogItemAssets : ObservableCollection<CatalogItemAsset>, IDisposable
     {
         const string k_DeserializationError = "DeserializationException";
-        readonly ICatalogLoader m_ResourceLoader;
+        readonly ICatalogUcatLoader m_ResourceLoader;
         readonly ILiveContentConfigClient m_Client;
         readonly IEnvironmentsApi m_EnvironmentsApi;
         readonly ILogger m_Logger;
@@ -39,7 +39,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
             new ObservableCollection<IDeploymentItem>();
 
         public ObservableCatalogItemAssets(
-            ICatalogLoader resourceLoader,
+            ICatalogUcatLoader resourceLoader,
             ILiveContentConfigClient client,
             IEnvironmentsApi environmentsApi,
             ILogger logger)

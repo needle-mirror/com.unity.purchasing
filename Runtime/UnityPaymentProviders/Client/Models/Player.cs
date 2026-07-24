@@ -35,14 +35,12 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="identity">identity param</param>
         /// <param name="playerId">Unity Player ID (automatically set from authentication token, should not be provided in request)</param>
         /// <param name="displayName">Player&#39;s display name</param>
-        /// <param name="metadata">Additional metadata about the player</param>
         [Preserve]
-        public Player(string locale, PlayerIdentity identity, string playerId = default, string displayName = default, Dictionary<string, string> metadata = default)
+        public Player(string locale, PlayerIdentity identity, string playerId = default, string displayName = default)
         {
             PlayerId = playerId;
             DisplayName = displayName;
             Locale = locale;
-            Metadata = metadata;
             Identity = identity;
         }
 
@@ -66,13 +64,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         [Preserve]
         [DataMember(Name = "locale", IsRequired = true, EmitDefaultValue = true)]
         public string Locale{ get; }
-        
-        /// <summary>
-        /// Additional metadata about the player
-        /// </summary>
-        [Preserve]
-        [DataMember(Name = "metadata", EmitDefaultValue = false)]
-        public Dictionary<string, string> Metadata{ get; }
         
         /// <summary>
         /// Parameter identity of Player
@@ -100,10 +91,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             if (Locale != null)
             {
                 serializedModel += "locale," + Locale + ",";
-            }
-            if (Metadata != null)
-            {
-                serializedModel += "metadata," + Metadata.ToString() + ",";
             }
             if (Identity != null)
             {
@@ -136,12 +123,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 var localeStringValue = Locale.ToString();
                 dictionary.Add("locale", localeStringValue);
-            }
-            
-            if (Metadata != null)
-            {
-                var metadataStringValue = Metadata.ToString();
-                dictionary.Add("metadata", metadataStringValue);
             }
             
             return dictionary;

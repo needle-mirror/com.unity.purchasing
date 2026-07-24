@@ -22,17 +22,17 @@ using UnityEngine.Purchasing.PaymentProviderService.Http;
 namespace UnityEngine.Purchasing.PaymentProviderService.Models
 {
     /// <summary>
-    /// Response containing order object.
+    /// Response containing the order. Read &#x60;uiMode&#x60; first to know how to present checkout: &#x60;hosted&#x60; populates &#x60;url&#x60;; &#x60;embedded&#x60; populates &#x60;embeddedInfo&#x60; (the credentials to render the in-page form) and leaves &#x60;url&#x60; empty.
     /// </summary>
     [Preserve]
     [DataContract(Name = "order-response")]
     internal class OrderResponse
     {
         /// <summary>
-        /// Response containing order object.
+        /// Response containing the order. Read &#x60;uiMode&#x60; first to know how to present checkout: &#x60;hosted&#x60; populates &#x60;url&#x60;; &#x60;embedded&#x60; populates &#x60;embeddedInfo&#x60; (the credentials to render the in-page form) and leaves &#x60;url&#x60; empty.
         /// </summary>
         /// <param name="id">the UUID of the order object</param>
-        /// <param name="status">Status of the order. Possible values: - &#x60;created&#x60;: Order has been created. - &#x60;paid&#x60;: Payment has been received and the payment provider has informed us. - &#x60;fulfilled&#x60;: Order has been fulfilled and rewarded. - &#x60;cancelled&#x60;: Order has been cancelled. - &#x60;expired&#x60;: Payment provider checkout session reached its terminal unpaid state (e.g. Stripe &#x60;checkout.session.expired&#x60;, or a non-success Coda Pay result code). Can transition back to &#x60;paid&#x60; if the provider settles the payment late. - &#x60;revoked&#x60;: Order has been revoked. </param>
+        /// <param name="status">Status of the order. Possible values: - &#x60;created&#x60;: Order has been created. - &#x60;paid&#x60;: Payment has been received and the payment provider has informed us. - &#x60;fulfilled&#x60;: Order has been fulfilled and rewarded. - &#x60;cancelled&#x60;: Order has been cancelled. - &#x60;expired&#x60;: Payment provider checkout session reached its terminal unpaid state (e.g. Stripe &#x60;checkout.session.expired&#x60;, or a non-success Codapay result code). Can transition back to &#x60;paid&#x60; if the provider settles the payment late. - &#x60;revoked&#x60;: Order has been revoked. </param>
         /// <param name="createdAt">Date and time at which the Order has been created. ISO 8601 format.</param>
         /// <param name="updatedAt">Last Date and time at which the Order has been updated. ISO 8601 format.</param>
         /// <param name="projectId">the project ID.</param>
@@ -40,14 +40,16 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="playerId">the player ID.</param>
         /// <param name="paymentProvider">the payment provider</param>
         /// <param name="paymentProviderResourceId">the payment provider resource Id. For example the order session id with stripe.</param>
-        /// <param name="url">the URL that must be used to complete the order on the payment provider.</param>
+        /// <param name="url">The URL used to complete the order on the payment provider&#39;s hosted page. Empty string when &#x60;uiMode&#x60; is &#x60;embedded&#x60; (use &#x60;embeddedInfo&#x60; instead).</param>
+        /// <param name="uiMode">One of &#x60;hosted&#x60; or &#x60;embedded&#x60;. How the checkout is presented. &#x60;hosted&#x60; populates &#x60;url&#x60;; &#x60;embedded&#x60; populates &#x60;embeddedInfo&#x60;.</param>
+        /// <param name="embeddedInfo">embeddedInfo param</param>
         /// <param name="lineItems">line items to be purchased with the order.</param>
         /// <param name="fulfilledAt">Date time in ISO 8601 format. &#x60;null&#x60; if the order has not been fulfilled.</param>
         /// <param name="revokedAt">Date time in ISO 8601 format. &#x60;null&#x60; if the order has not been revoked.</param>
         /// <param name="customReferenceId">Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with your internal system. </param>
         /// <param name="metadata">Additional metadata about the player</param>
         [Preserve]
-        public OrderResponse(System.Guid id, string status, DateTime createdAt, DateTime updatedAt, System.Guid projectId = default, System.Guid environmentId = default, string playerId = default, string paymentProvider = default, string paymentProviderResourceId = default, string url = default, List<OrderResponseLineItemsInner> lineItems = default, DateTime? fulfilledAt = default, DateTime? revokedAt = default, string customReferenceId = default, Dictionary<string, string> metadata = default)
+        public OrderResponse(System.Guid id, string status, DateTime createdAt, DateTime updatedAt, System.Guid projectId = default, System.Guid environmentId = default, string playerId = default, string paymentProvider = default, string paymentProviderResourceId = default, string url = default, string uiMode = default, OrderResponseEmbeddedInfo embeddedInfo = default, List<OrderResponseLineItemsInner> lineItems = default, DateTime? fulfilledAt = default, DateTime? revokedAt = default, string customReferenceId = default, Dictionary<string, string> metadata = default)
         {
             Id = id;
             ProjectId = projectId;
@@ -56,6 +58,8 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             PaymentProvider = paymentProvider;
             PaymentProviderResourceId = paymentProviderResourceId;
             Url = url;
+            UiMode = uiMode;
+            EmbeddedInfo = embeddedInfo;
             LineItems = lineItems;
             Status = status;
             FulfilledAt = fulfilledAt;
@@ -109,11 +113,25 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string PaymentProviderResourceId{ get; }
         
         /// <summary>
-        /// the URL that must be used to complete the order on the payment provider.
+        /// The URL used to complete the order on the payment provider&#39;s hosted page. Empty string when &#x60;uiMode&#x60; is &#x60;embedded&#x60; (use &#x60;embeddedInfo&#x60; instead).
         /// </summary>
         [Preserve]
         [DataMember(Name = "url", EmitDefaultValue = false)]
         public string Url{ get; }
+        
+        /// <summary>
+        /// One of &#x60;hosted&#x60; or &#x60;embedded&#x60;. How the checkout is presented. &#x60;hosted&#x60; populates &#x60;url&#x60;; &#x60;embedded&#x60; populates &#x60;embeddedInfo&#x60;.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "uiMode", EmitDefaultValue = false)]
+        public string UiMode{ get; }
+        
+        /// <summary>
+        /// Parameter embeddedInfo of OrderResponse
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "embeddedInfo", EmitDefaultValue = false)]
+        public OrderResponseEmbeddedInfo EmbeddedInfo{ get; }
         
         /// <summary>
         /// line items to be purchased with the order.
@@ -123,7 +141,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public List<OrderResponseLineItemsInner> LineItems{ get; }
         
         /// <summary>
-        /// Status of the order. Possible values: - &#x60;created&#x60;: Order has been created. - &#x60;paid&#x60;: Payment has been received and the payment provider has informed us. - &#x60;fulfilled&#x60;: Order has been fulfilled and rewarded. - &#x60;cancelled&#x60;: Order has been cancelled. - &#x60;expired&#x60;: Payment provider checkout session reached its terminal unpaid state (e.g. Stripe &#x60;checkout.session.expired&#x60;, or a non-success Coda Pay result code). Can transition back to &#x60;paid&#x60; if the provider settles the payment late. - &#x60;revoked&#x60;: Order has been revoked. 
+        /// Status of the order. Possible values: - &#x60;created&#x60;: Order has been created. - &#x60;paid&#x60;: Payment has been received and the payment provider has informed us. - &#x60;fulfilled&#x60;: Order has been fulfilled and rewarded. - &#x60;cancelled&#x60;: Order has been cancelled. - &#x60;expired&#x60;: Payment provider checkout session reached its terminal unpaid state (e.g. Stripe &#x60;checkout.session.expired&#x60;, or a non-success Codapay result code). Can transition back to &#x60;paid&#x60; if the provider settles the payment late. - &#x60;revoked&#x60;: Order has been revoked. 
         /// </summary>
         [Preserve]
         [DataMember(Name = "status", IsRequired = true, EmitDefaultValue = true)]
@@ -206,6 +224,14 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             if (Url != null)
             {
                 serializedModel += "url," + Url + ",";
+            }
+            if (UiMode != null)
+            {
+                serializedModel += "uiMode," + UiMode + ",";
+            }
+            if (EmbeddedInfo != null)
+            {
+                serializedModel += "embeddedInfo," + EmbeddedInfo.ToString() + ",";
             }
             if (LineItems != null)
             {
@@ -290,6 +316,12 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 var urlStringValue = Url.ToString();
                 dictionary.Add("url", urlStringValue);
+            }
+            
+            if (UiMode != null)
+            {
+                var uiModeStringValue = UiMode.ToString();
+                dictionary.Add("uiMode", uiModeStringValue);
             }
             
             if (Status != null)

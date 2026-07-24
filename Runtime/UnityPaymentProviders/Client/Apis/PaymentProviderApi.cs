@@ -34,46 +34,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
             /// <summary>
             /// Async Operation.
-            /// Incoming CodaPay Webhook.
-            /// </summary>
-            /// <param name="request">Request object for HandleCodaPayIncomingWebhook.</param>
-            /// <param name="operationConfiguration">Configuration for HandleCodaPayIncomingWebhook.</param>
-            /// <returns>Task for a Response object containing status code, headers.</returns>
-            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-            Task<Response> HandleCodaPayIncomingWebhookAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleCodaPayIncomingWebhookRequest request, Configuration operationConfiguration = null);
-
-            /// <summary>
-            /// Async Operation.
-            /// CodaPay Onboarding Account Link Callback.
-            /// </summary>
-            /// <param name="request">Request object for HandleCodaPayOnboardingIncoming.</param>
-            /// <param name="operationConfiguration">Configuration for HandleCodaPayOnboardingIncoming.</param>
-            /// <returns>Task for a Response object containing status code, headers.</returns>
-            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-            Task<Response> HandleCodaPayOnboardingIncomingAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleCodaPayOnboardingIncomingRequest request, Configuration operationConfiguration = null);
-
-            /// <summary>
-            /// Async Operation.
-            /// OAuth Callback Endpoint.
-            /// </summary>
-            /// <param name="request">Request object for HandleOAuthCallback.</param>
-            /// <param name="operationConfiguration">Configuration for HandleOAuthCallback.</param>
-            /// <returns>Task for a Response object containing status code, headers, and string object.</returns>
-            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-            Task<Response<string>> HandleOAuthCallbackAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleOAuthCallbackRequest request, Configuration operationConfiguration = null);
-
-            /// <summary>
-            /// Async Operation.
-            /// Incoming Stripe Webhook.
-            /// </summary>
-            /// <param name="request">Request object for HandleStripeIncomingWebhook.</param>
-            /// <param name="operationConfiguration">Configuration for HandleStripeIncomingWebhook.</param>
-            /// <returns>Task for a Response object containing status code, headers.</returns>
-            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-            Task<Response> HandleStripeIncomingWebhookAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleStripeIncomingWebhookRequest request, Configuration operationConfiguration = null);
-
-            /// <summary>
-            /// Async Operation.
             /// Create an order.
             /// </summary>
             /// <param name="request">Request object for InitiatePaymentProviderOrder.</param>
@@ -101,26 +61,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
             /// <returns>Task for a Response object containing status code, headers, and PaymentProvidersResponse object.</returns>
             /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
             Task<Response<PaymentProvidersResponse>> ListPaymentProvidersAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.ListPaymentProvidersRequest request, Configuration operationConfiguration = null);
-
-            /// <summary>
-            /// Async Operation.
-            /// List the payment providers products with metadata and pricing information.
-            /// </summary>
-            /// <param name="request">Request object for ListPaymentProvidersProducts.</param>
-            /// <param name="operationConfiguration">Configuration for ListPaymentProvidersProducts.</param>
-            /// <returns>Task for a Response object containing status code, headers, and List&lt;ProductResponse&gt; object.</returns>
-            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-            Task<Response<List<ProductResponse>>> ListPaymentProvidersProductsAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.ListPaymentProvidersProductsRequest request, Configuration operationConfiguration = null);
-
-            /// <summary>
-            /// Async Operation.
-            /// List the SKUs.
-            /// </summary>
-            /// <param name="request">Request object for ListSKUs.</param>
-            /// <param name="operationConfiguration">Configuration for ListSKUs.</param>
-            /// <returns>Task for a Response object containing status code, headers, and List&lt;SkuResponse&gt; object.</returns>
-            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-            Task<Response<List<SkuResponse>>> ListSKUsAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.ListSKUsRequest request, Configuration operationConfiguration = null);
 
             /// <summary>
             /// Async Operation.
@@ -215,114 +155,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
         /// <summary>
         /// Async Operation.
-        /// Incoming CodaPay Webhook.
-        /// </summary>
-        /// <param name="request">Request object for HandleCodaPayIncomingWebhook.</param>
-        /// <param name="operationConfiguration">Configuration for HandleCodaPayIncomingWebhook.</param>
-        /// <returns>Task for a Response object containing status code, headers.</returns>
-        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-        public async Task<Response> HandleCodaPayIncomingWebhookAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleCodaPayIncomingWebhookRequest request,
-            Configuration operationConfiguration = null)
-        {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200",  null },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"500", typeof(BasicErrorResponse)   } };
-
-            // Merge the operation/request level configuration with the client level configuration.
-            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
-
-            var response = await HttpClient.MakeRequestAsync("GET",
-                request.ConstructUrl(finalConfiguration.BasePath),
-                request.ConstructBody(),
-                request.ConstructHeaders(_accessToken, finalConfiguration),
-                finalConfiguration.RequestTimeout ?? _baseTimeout);
-
-            ResponseHandler.HandleAsyncResponse(response, statusCodeToTypeMap);
-            return new Response(response);
-        }
-
-
-        /// <summary>
-        /// Async Operation.
-        /// CodaPay Onboarding Account Link Callback.
-        /// </summary>
-        /// <param name="request">Request object for HandleCodaPayOnboardingIncoming.</param>
-        /// <param name="operationConfiguration">Configuration for HandleCodaPayOnboardingIncoming.</param>
-        /// <returns>Task for a Response object containing status code, headers.</returns>
-        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-        public async Task<Response> HandleCodaPayOnboardingIncomingAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleCodaPayOnboardingIncomingRequest request,
-            Configuration operationConfiguration = null)
-        {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"204",  null },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"410", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   } };
-
-            // Merge the operation/request level configuration with the client level configuration.
-            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
-
-            var response = await HttpClient.MakeRequestAsync("POST",
-                request.ConstructUrl(finalConfiguration.BasePath),
-                request.ConstructBody(),
-                request.ConstructHeaders(_accessToken, finalConfiguration),
-                finalConfiguration.RequestTimeout ?? _baseTimeout);
-
-            ResponseHandler.HandleAsyncResponse(response, statusCodeToTypeMap);
-            return new Response(response);
-        }
-
-
-        /// <summary>
-        /// Async Operation.
-        /// OAuth Callback Endpoint.
-        /// </summary>
-        /// <param name="request">Request object for HandleOAuthCallback.</param>
-        /// <param name="operationConfiguration">Configuration for HandleOAuthCallback.</param>
-        /// <returns>Task for a Response object containing status code, headers, and string object.</returns>
-        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-        public async Task<Response<string>> HandleOAuthCallbackAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleOAuthCallbackRequest request,
-            Configuration operationConfiguration = null)
-        {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(string)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"500", typeof(BasicErrorResponse)   } };
-
-            // Merge the operation/request level configuration with the client level configuration.
-            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
-
-            var response = await HttpClient.MakeRequestAsync("GET",
-                request.ConstructUrl(finalConfiguration.BasePath),
-                request.ConstructBody(),
-                request.ConstructHeaders(_accessToken, finalConfiguration),
-                finalConfiguration.RequestTimeout ?? _baseTimeout);
-
-            var handledResponse = ResponseHandler.HandleAsyncResponse<string>(response, statusCodeToTypeMap);
-            return new Response<string>(response, handledResponse);
-        }
-
-
-        /// <summary>
-        /// Async Operation.
-        /// Incoming Stripe Webhook.
-        /// </summary>
-        /// <param name="request">Request object for HandleStripeIncomingWebhook.</param>
-        /// <param name="operationConfiguration">Configuration for HandleStripeIncomingWebhook.</param>
-        /// <returns>Task for a Response object containing status code, headers.</returns>
-        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-        public async Task<Response> HandleStripeIncomingWebhookAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.HandleStripeIncomingWebhookRequest request,
-            Configuration operationConfiguration = null)
-        {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200",  null },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"500", typeof(BasicErrorResponse)   } };
-
-            // Merge the operation/request level configuration with the client level configuration.
-            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
-
-            var response = await HttpClient.MakeRequestAsync("POST",
-                request.ConstructUrl(finalConfiguration.BasePath),
-                request.ConstructBody(),
-                request.ConstructHeaders(_accessToken, finalConfiguration),
-                finalConfiguration.RequestTimeout ?? _baseTimeout);
-
-            ResponseHandler.HandleAsyncResponse(response, statusCodeToTypeMap);
-            return new Response(response);
-        }
-
-
-        /// <summary>
-        /// Async Operation.
         /// Create an order.
         /// </summary>
         /// <param name="request">Request object for InitiatePaymentProviderOrder.</param>
@@ -399,60 +231,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
             var handledResponse = ResponseHandler.HandleAsyncResponse<PaymentProvidersResponse>(response, statusCodeToTypeMap);
             return new Response<PaymentProvidersResponse>(response, handledResponse);
-        }
-
-
-        /// <summary>
-        /// Async Operation.
-        /// List the payment providers products with metadata and pricing information.
-        /// </summary>
-        /// <param name="request">Request object for ListPaymentProvidersProducts.</param>
-        /// <param name="operationConfiguration">Configuration for ListPaymentProvidersProducts.</param>
-        /// <returns>Task for a Response object containing status code, headers, and List&lt;ProductResponse&gt; object.</returns>
-        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-        public async Task<Response<List<ProductResponse>>> ListPaymentProvidersProductsAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.ListPaymentProvidersProductsRequest request,
-            Configuration operationConfiguration = null)
-        {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(List<ProductResponse>)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"404", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   },{"503", typeof(BasicErrorResponse)   } };
-
-            // Merge the operation/request level configuration with the client level configuration.
-            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
-
-            var response = await HttpClient.MakeRequestAsync("GET",
-                request.ConstructUrl(finalConfiguration.BasePath),
-                request.ConstructBody(),
-                request.ConstructHeaders(_accessToken, finalConfiguration),
-                finalConfiguration.RequestTimeout ?? _baseTimeout);
-
-            var handledResponse = ResponseHandler.HandleAsyncResponse<List<ProductResponse>>(response, statusCodeToTypeMap);
-            return new Response<List<ProductResponse>>(response, handledResponse);
-        }
-
-
-        /// <summary>
-        /// Async Operation.
-        /// List the SKUs.
-        /// </summary>
-        /// <param name="request">Request object for ListSKUs.</param>
-        /// <param name="operationConfiguration">Configuration for ListSKUs.</param>
-        /// <returns>Task for a Response object containing status code, headers, and List&lt;SkuResponse&gt; object.</returns>
-        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-        public async Task<Response<List<SkuResponse>>> ListSKUsAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.ListSKUsRequest request,
-            Configuration operationConfiguration = null)
-        {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(List<SkuResponse>)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"404", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   },{"503", typeof(BasicErrorResponse)   } };
-
-            // Merge the operation/request level configuration with the client level configuration.
-            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
-
-            var response = await HttpClient.MakeRequestAsync("GET",
-                request.ConstructUrl(finalConfiguration.BasePath),
-                request.ConstructBody(),
-                request.ConstructHeaders(_accessToken, finalConfiguration),
-                finalConfiguration.RequestTimeout ?? _baseTimeout);
-
-            var handledResponse = ResponseHandler.HandleAsyncResponse<List<SkuResponse>>(response, statusCodeToTypeMap);
-            return new Response<List<SkuResponse>>(response, handledResponse);
         }
 
 

@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Stores.Android.GooglePlay.AAR.Interfaces;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -89,7 +90,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void HandleNoPurchasesErrorCase(IGoogleBillingResult billingResult)
+        async void HandleNoPurchasesErrorCase(IGoogleBillingResult billingResult)
         {
             switch (billingResult.responseCode)
             {
@@ -99,8 +100,7 @@ namespace UnityEngine.Purchasing
                 case GoogleBillingResponseCode.BillingUnavailable:
                     m_GooglePurchaseCallback.OnPurchaseFailed(
                         new PurchaseFailureDescription(
-                            m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
-                            Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
+                            await ResolveOrUnknown(m_LastKnownProductService.LastKnownProductId),
                             PurchaseFailureReason.PurchasingUnavailable,
                             billingResult.debugMessage + " - Google BillingResponseCode = " + billingResult.responseCode
                         )
@@ -109,8 +109,7 @@ namespace UnityEngine.Purchasing
                 case GoogleBillingResponseCode.ItemAlreadyOwned:
                     m_GooglePurchaseCallback.OnPurchaseFailed(
                         new PurchaseFailureDescription(
-                            m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
-                            Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
+                            await ResolveOrUnknown(m_LastKnownProductService.LastKnownProductId),
                             PurchaseFailureReason.DuplicateTransaction,
                             billingResult.debugMessage + " - Google BillingResponseCode = " + billingResult.responseCode
                         )
@@ -119,8 +118,7 @@ namespace UnityEngine.Purchasing
                 case GoogleBillingResponseCode.Ok:
                     m_GooglePurchaseCallback.OnPurchaseFailed(
                         new PurchaseFailureDescription(
-                            m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
-                            Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
+                            await ResolveOrUnknown(m_LastKnownProductService.LastKnownProductId),
                             PurchaseFailureReason.PurchaseMissing,
                             billingResult.debugMessage + " - onPurchasesUpdated: purchases list is empty - Google BillingResponseCode = " + billingResult.responseCode
                         )
@@ -129,8 +127,7 @@ namespace UnityEngine.Purchasing
                 default:
                     m_GooglePurchaseCallback.OnPurchaseFailed(
                         new PurchaseFailureDescription(
-                            m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
-                            Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
+                            await ResolveOrUnknown(m_LastKnownProductService.LastKnownProductId),
                             PurchaseFailureReason.Unknown,
                             billingResult.debugMessage + " {M: GPUL.HEC} - Google BillingResponseCode = " + billingResult.responseCode
                         )
@@ -141,7 +138,18 @@ namespace UnityEngine.Purchasing
 
         async void HandleUserCancelledPurchaseFailure(IGoogleBillingResult billingResult)
         {
-            var googlePurchases = await m_GoogleQueryPurchasesUseCase.QueryPurchases();
+            List<IGooglePurchase> googlePurchases;
+            try
+            {
+                googlePurchases = await m_GoogleQueryPurchasesUseCase.QueryPurchases();
+            }
+            catch (Exception)
+            {
+                // Purchases couldn't be queried to detect an unacknowledged purchase; treat as a plain cancellation.
+                OnPurchaseCancelled(billingResult);
+                return;
+            }
+
             HandleUserCancelledPurchaseFailure(billingResult, googlePurchases);
         }
 
@@ -169,22 +177,21 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnPurchaseOk(IGooglePurchase googlePurchase)
+        async void OnPurchaseOk(IGooglePurchase googlePurchase)
         {
             if (googlePurchase.purchaseState == m_GooglePurchaseStateEnumProvider.Purchased())
             {
-                HandlePurchasedProduct(googlePurchase);
+                await HandlePurchasedProduct(googlePurchase);
             }
             else if (googlePurchase.purchaseState == m_GooglePurchaseStateEnumProvider.Pending())
             {
-                m_GooglePurchaseCallback.NotifyDeferredPurchase(googlePurchase);
+                await m_GooglePurchaseCallback.NotifyDeferredPurchase(googlePurchase);
             }
             else
             {
                 m_GooglePurchaseCallback.OnPurchaseFailed(
                     new PurchaseFailureDescription(
-                        m_ProductCache?.FindOrDefault(googlePurchase.purchaseToken) ??
-                        Product.CreateUnknownProduct(googlePurchase.purchaseToken),
+                        await ResolveOrUnknown(googlePurchase.sku ?? m_LastKnownProductService.LastKnownProductId),
                         PurchaseFailureReason.Unknown,
                         GoogleBillingStrings.errorPurchaseStateUnspecified + " {M: GPUL.OPO}"
                     )
@@ -192,7 +199,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void HandlePurchasedProduct(IGooglePurchase googlePurchase)
+        async Task HandlePurchasedProduct(IGooglePurchase googlePurchase)
         {
             if (IsDeferredSubscriptionChange(googlePurchase))
             {
@@ -205,7 +212,7 @@ namespace UnityEngine.Purchasing
                     m_GooglePurchaseCallback.NotifyUpgradeDowngradeSubscription(m_LastKnownProductService.LastKnownProductId);
                 }
 
-                m_GooglePurchaseCallback.OnPurchaseSuccessful(googlePurchase);
+                await m_GooglePurchaseCallback.OnPurchaseSuccessful(googlePurchase);
             }
         }
 
@@ -220,7 +227,7 @@ namespace UnityEngine.Purchasing
             return m_LastKnownProductService.LastKnownReplacementMode == GooglePlayReplacementMode.Deferred;
         }
 
-        void OnPurchaseCancelled(IGoogleBillingResult billingResult)
+        async void OnPurchaseCancelled(IGoogleBillingResult billingResult)
         {
             if (!string.IsNullOrEmpty(m_LastKnownProductService.LastKnownOldProductId) && m_LastKnownProductService.LastKnownOldProductId != m_LastKnownProductService.LastKnownProductId)
             {
@@ -229,48 +236,53 @@ namespace UnityEngine.Purchasing
 
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
-                    m_ProductCache?.FindOrDefault(m_LastKnownProductService.LastKnownProductId) ??
-                    Product.CreateUnknownProduct(m_LastKnownProductService.LastKnownProductId),
+                    await ResolveOrUnknown(m_LastKnownProductService.LastKnownProductId),
                     PurchaseFailureReason.UserCancelled,
                     billingResult.debugMessage + " - Google BillingResponseCode = " + billingResult.responseCode
                 )
             );
         }
 
-        void OnPurchaseCancelled(IGooglePurchase googlePurchase)
+        async void OnPurchaseCancelled(IGooglePurchase googlePurchase)
         {
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
-                    m_ProductCache?.FindOrDefault(googlePurchase.purchaseToken) ??
-                    Product.CreateUnknownProduct(googlePurchase.purchaseToken),
+                    await ResolveOrUnknown(googlePurchase.sku ?? m_LastKnownProductService.LastKnownProductId),
                     PurchaseFailureReason.UserCancelled,
                     GoogleBillingStrings.errorUserCancelled + " - Google BillingResponseCode = " + GoogleBillingResponseCode.UserCanceled
                 )
             );
         }
 
-        void OnPurchaseAlreadyOwned(IGooglePurchase googlePurchase)
+        async void OnPurchaseAlreadyOwned(IGooglePurchase googlePurchase)
         {
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
-                    m_ProductCache?.FindOrDefault(googlePurchase.purchaseToken) ??
-                    Product.CreateUnknownProduct(googlePurchase.purchaseToken),
+                    await ResolveOrUnknown(googlePurchase.sku ?? m_LastKnownProductService.LastKnownProductId),
                     PurchaseFailureReason.DuplicateTransaction,
                     GoogleBillingStrings.errorItemAlreadyOwned + " - Google BillingResponseCode = " + GoogleBillingResponseCode.ItemAlreadyOwned
                 )
             );
         }
 
-        void OnPurchaseFailedForUnknownReason(IGooglePurchase googlePurchase, string debugMessage)
+        async void OnPurchaseFailedForUnknownReason(IGooglePurchase googlePurchase, string debugMessage)
         {
             m_GooglePurchaseCallback.OnPurchaseFailed(
                 new PurchaseFailureDescription(
-                    m_ProductCache?.FindOrDefault(googlePurchase.purchaseToken) ??
-                    Product.CreateUnknownProduct(googlePurchase.purchaseToken),
+                    await ResolveOrUnknown(googlePurchase.sku ?? m_LastKnownProductService.LastKnownProductId),
                     PurchaseFailureReason.Unknown,
                     debugMessage + " {M: GPUL.OPF}"
                 )
             );
+        }
+
+        Task<Product> ResolveOrUnknown(string? id)
+        {
+            if (m_ProductCache != null)
+            {
+                return m_ProductCache.FindOrResolveAsync(id);
+            }
+            return Task.FromResult(Product.CreateUnknownProduct(id ?? string.Empty));
         }
 
         public void SetProductCache(IProductCache? productCache)

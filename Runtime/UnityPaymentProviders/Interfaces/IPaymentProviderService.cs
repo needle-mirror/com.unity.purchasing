@@ -9,9 +9,8 @@ namespace UnityEngine.Purchasing.PaymentProviderService
     internal interface IPaymentProviderService
     {
         public Task<OrderData> GetUrl(string catalogListingId, string displayName, string locale, string currencyCode,
-            string country, PlayerIdentity playerIdentity, string paymentProviderOverride, DeviceInfo deviceInfo, IReadOnlyList<PaymentProviderToken> paymentProviderTokens = null);
-        public Task<List<ProductData>> GetProducts(List<string> skus, string locale, string currencyCode);
-        public Task<List<CatalogProductData>> GetCatalog(List<string> stores);
+            string country, PlayerIdentity playerIdentity, string paymentProviderOverride, string customReferenceId,
+            IReadOnlyDictionary<string, string> customMetadata, DeviceInfo deviceInfo, IReadOnlyList<PaymentProviderToken> paymentProviderTokens = null);
         public Task<List<OrderData>> GetEntitledOrders();
         public Task<OrderData> GetOrder(string orderId);
         public Task<OrderData> UpdateOrder(string orderId, UpdateOrderStatus status);

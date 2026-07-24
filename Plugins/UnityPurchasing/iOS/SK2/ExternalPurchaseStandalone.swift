@@ -61,7 +61,7 @@ public enum ExternalPurchaseStandalone {
     public static func checkEligibility(callback: @escaping ExternalPurchaseCallbackDelegateType) async {
 #if compiler(>=6.0)
         let isEligible: Bool
-        if #available(iOS 18.1, macOS 15.1, visionOS 2.1, *) {
+        if #available(iOS 18.1, macOS 15.1, visionOS 2.1, tvOS 18.1, *) {
             isEligible = await ExternalPurchaseCustomLink.isEligible
         } else {
             // Pre-18.1 fallback: canMakePayments + EU storefront check
@@ -83,7 +83,7 @@ public enum ExternalPurchaseStandalone {
      */
     public static func fetchToken(tokenType: String, callback: @escaping ExternalPurchaseCallbackDelegateType) async {
 #if compiler(>=6.0)
-        guard #available(iOS 18.1, macOS 15.1, visionOS 2.1, *) else {
+        guard #available(iOS 18.1, macOS 15.1, visionOS 2.1, tvOS 18.1, *) else {
             invokeCallback(callback, subject: "OnFetchExternalPurchaseTokenFailed", payload: "ExternalPurchaseCustomLink requires iOS 18.1+ / macOS 15.1+ / visionOS 2.1+")
             return
         }
@@ -139,7 +139,7 @@ public enum ExternalPurchaseStandalone {
     @MainActor
     public static func showNotice(noticeType: String, callback: @escaping ExternalPurchaseCallbackDelegateType) async {
 #if compiler(>=6.0)
-        guard #available(iOS 18.1, macOS 15.1, visionOS 2.1, *) else {
+        guard #available(iOS 18.1, macOS 15.1, visionOS 2.1, tvOS 18.1, *) else {
             invokeCallback(callback, subject: "OnShowExternalPurchaseNoticeFailed", payload: "ExternalPurchaseCustomLink requires iOS 18.1+ / macOS 15.1+ / visionOS 2.1+")
             return
         }

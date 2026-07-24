@@ -7,7 +7,6 @@ using Unity.Purchasing.Editor.Shared.Assets;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor.Purchasing.Editor.Authoring.Core.IO;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Model;
-using UnityEditor.Purchasing.Editor.Authoring.IO;
 
 namespace UnityEditor.Purchasing.Editor.Authoring.Model
 {

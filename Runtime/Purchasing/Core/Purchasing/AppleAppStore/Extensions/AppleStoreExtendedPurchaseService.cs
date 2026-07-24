@@ -37,6 +37,7 @@ namespace UnityEngine.Purchasing.Services
             IConfirmOrderUseCase confirmOrderUseCase,
             ICheckEntitlementUseCase checkEntitlementUseCase,
             IOnEntitlementRevokedUseCase onEntitlementRevokedUseCase,
+            IAppleStoreCallbacks appleStoreCallbacks,
             IStoreWrapper storeWrapper,
             IAnalyticsClient analyticsClient,
             IRefreshAppReceiptUseCase refreshAppReceiptUseCase,
@@ -65,8 +66,19 @@ namespace UnityEngine.Purchasing.Services
             m_OnEntitlementRevokedUseCase = onEntitlementRevokedUseCase;
 
             m_OnEntitlementRevokedUseCase.OnEntitlementRevoked += OnEntitlementRevokedUseCaseOnOnEntitlementRevoked;
+            appleStoreCallbacks.OnExpiredPurchaseFinished += OnExpiredPurchaseFinished;
             m_RefreshAppReceiptUseCase = refreshAppReceiptUseCase;
             m_PurchaseEvent = purchaseEvent;
+        }
+
+        // An expired subscription transaction was finished natively without
+        // surfacing OnPurchasePending/OnPurchaseConfirmed. Still log the
+        // analytics events the normal pending -> confirm flow would have produced.
+        void OnExpiredPurchaseFinished(PendingOrder pendingOrder, ConfirmedOrder confirmedOrder)
+        {
+            SendPurchasePaidEvent(pendingOrder);
+            m_AnalyticsClient.OnPurchaseSucceeded(confirmedOrder);
+            SendPurchaseFulfilledEvent(confirmedOrder);
         }
 
         private protected override void SendPurchaseIntentStartEvent(ICart cart)

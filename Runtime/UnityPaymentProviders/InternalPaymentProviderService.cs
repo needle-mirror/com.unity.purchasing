@@ -39,27 +39,32 @@ namespace UnityEngine.Purchasing.PaymentProviderService
         Configuration Configuration { get; }
 
         public async Task<OrderData> GetUrl(string catalogListingId, string displayName, string locale, string currencyCode,
-            string country, PlayerIdentity playerIdentity, string paymentProviderOverride, DeviceInfo deviceInfo, IReadOnlyList<PaymentProviderToken> paymentProviderTokens)
+            string country, PlayerIdentity playerIdentity, string paymentProviderOverride, string customReferenceId,
+            IReadOnlyDictionary<string, string> customMetadata, DeviceInfo deviceInfo, IReadOnlyList<PaymentProviderToken> paymentProviderTokens)
         {
             CheckForCloudProjectInfo();
 
             var request = new InitiatePaymentProviderOrderRequest(
-                m_CloudProjectId.GetCloudProjectId(),
-                m_EnvironmentId.EnvironmentId,
-                new OrderRequest(
-                    new Player(
-                        locale,
-                        playerIdentity,
-                        null, // TODO: Remove PlayerID from Player object in spec file.
-                        displayName
+                projectId: m_CloudProjectId.GetCloudProjectId(),
+                environmentId: m_EnvironmentId.EnvironmentId,
+                orderRequest: new OrderRequest(
+                    player: new Player(
+                        locale: locale,
+                        identity: playerIdentity,
+                        playerId: null, // TODO: Remove PlayerID from Player object in spec file.
+                        displayName: displayName
                         ),
-                    currencyCode,
-                    null,
-                    new List<string> { catalogListingId },
-                    country,
-                    paymentProviderOverride,
-                    MapExternalTransactionTokens(paymentProviderTokens),
-                    deviceInfo
+                    currency: currencyCode,
+                    skus: null,
+                    catalogListingIds: new List<string> { catalogListingId },
+                    country: country,
+                    paymentProvider: paymentProviderOverride,
+                    uiMode: null, // needs to be null to avoid explicitly setting it to "hosted" in the generated code
+                    externalTransactionTokens: MapExternalTransactionTokens(paymentProviderTokens),
+                    customReferenceId: customReferenceId,
+                    metadata: customMetadata?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+                    redirectUrls: null,
+                    deviceInfo: deviceInfo
                 )
             );
 
@@ -103,38 +108,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService
             return externalTokens;
         }
 
-        public async Task<List<ProductData>> GetProducts(List<string> skus, string locale, string currencyCode)
-        {
-            CheckForCloudProjectInfo();
-            var request = new ListPaymentProvidersProductsRequest(
-                m_CloudProjectId.GetCloudProjectId(),
-                locale,
-                currencyCode,
-                skus
-                );
-
-            return await m_ServiceExceptionMapper.InvokeAndMapServiceExceptions(async () =>
-            {
-                var response = await PaymentProviderApiClient.ListPaymentProvidersProductsAsync(request, Configuration);
-                return CreateProductDataFromResponse(response.Result);
-            });
-        }
-
-        public async Task<List<CatalogProductData>> GetCatalog(List<string> stores)
-        {
-            CheckForCloudProjectInfo();
-            var request = new ListSKUsRequest(
-                m_CloudProjectId.GetCloudProjectId(),
-                stores
-            );
-
-            return await m_ServiceExceptionMapper.InvokeAndMapServiceExceptions(async () =>
-            {
-                var response = await PaymentProviderApiClient.ListSKUsAsync(request, Configuration);
-                return GetCatalogProductsFromResponse(response.Result);
-            });
-        }
-
         private void CheckForCloudProjectInfo()
         {
             if (m_EnvironmentId?.EnvironmentId is null ||
@@ -142,52 +115,6 @@ namespace UnityEngine.Purchasing.PaymentProviderService
                )
             {
                 throw new CloudProjectAuthenticationException();
-            }
-        }
-
-        private List<ProductData> CreateProductDataFromResponse(List<ProductResponse> results)
-        {
-            try
-            {
-                return results.Select(result => new ProductData()
-                    {
-                        catalogListingId = result.CatalogListingId,
-                        unitySku = result.USku,
-                        currency = result.Pricing.Currency,
-                        priceInMicros = result.Pricing.Price,
-                        title = result.ProductDetails.Title,
-                        description = result.ProductDetails.Description,
-                        priceString = result.Pricing.LocalizedPriceString,
-                        language = result.ProductDetails.Language
-                    }
-                ).ToList();
-            }
-            catch (Exception e)
-            {
-                throw new ResponseDeserializationException($"Error deserializing ProductData from response: {e.Message}");
-            }
-        }
-
-        private List<CatalogProductData> GetCatalogProductsFromResponse(List<SkuResponse> results)
-        {
-            try
-            {
-                return results.Select(data => new CatalogProductData()
-                {
-                    catalogListingId = data.CatalogListingId,
-                    productType = CatalogProductTypeFromString(data.Type),
-                    unitySku = data.USku,
-                    storeOverrides = data.SkuOverrides != null ? data.SkuOverrides.Select(storeOverride =>
-                        new CatalogStoreOverride()
-                        {
-                            storeName = storeOverride.Store, skuOverride = storeOverride.Sku
-                        }
-                    ).ToList() : new List<CatalogStoreOverride>()
-                }).ToList();
-            }
-            catch (Exception e)
-            {
-                throw new ResponseDeserializationException($"Error deserializing CatalogProductData from response: {e.Message}");
             }
         }
 
@@ -257,8 +184,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService
             return await m_ServiceExceptionMapper.InvokeAndMapServiceExceptions(async () =>
             {
                 var response = await PaymentProviderApiClient.ListPaymentProvidersAsync(request, Configuration);
-                // Missing paymentOptionsPopupEnabled defaults to true so older backends and rollbacks keep the popup on.
-                return (response.Result.Providers, response.Result.PaymentOptionsPopupEnabled ?? true);
+                return (response.Result.Providers, response.Result.PaymentOptionsPopupEnabled);
             });
         }
 

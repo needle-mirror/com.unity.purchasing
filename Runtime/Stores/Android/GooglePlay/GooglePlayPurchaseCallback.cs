@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -45,9 +46,9 @@ namespace UnityEngine.Purchasing
             m_ChangeSubscriptionCallback = changeSubscriptionCallback;
         }
 
-        public void OnPurchaseSuccessful(IGooglePurchase purchase)
+        public async Task OnPurchaseSuccessful(IGooglePurchase purchase)
         {
-            var order = m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
+            var order = await m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
             OnOrderPurchaseSuccessful(order);
         }
 
@@ -69,18 +70,18 @@ namespace UnityEngine.Purchasing
                 purchaseFailureDescription.ConvertToFailedOrder());
         }
 
-        public void NotifyDeferredPurchase(IGooglePurchase purchase)
+        public async Task NotifyDeferredPurchase(IGooglePurchase purchase)
         {
-            var order = (DeferredOrder) m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
+            var order = (DeferredOrder) await m_GooglePurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache);
             m_PurchaseCallback?.OnPurchaseDeferred(order);
         }
 
-        public void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku)
+        public void NotifyDeferredProrationUpgradeDowngradeSubscription(string? sku)
         {
             m_ChangeSubscriptionCallback?.OnSubscriptionChangeDeferredUntilRenewal(sku);
         }
 
-        public void NotifyUpgradeDowngradeSubscription(string sku)
+        public void NotifyUpgradeDowngradeSubscription(string? sku)
         {
             m_ChangeSubscriptionCallback?.OnSubscriptionChange(sku);
         }

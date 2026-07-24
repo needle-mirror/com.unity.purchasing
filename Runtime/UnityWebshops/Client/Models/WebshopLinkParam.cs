@@ -112,7 +112,17 @@ namespace UnityEngine.Purchasing.WebshopService.Models
             /// Enum Google for value: google
             /// </summary>
             [EnumMember(Value = "google")]
-            Google = 10
+            Google = 10,
+            /// <summary>
+            /// Enum CustomReferenceId for value: customReferenceId
+            /// </summary>
+            [EnumMember(Value = "customReferenceId")]
+            CustomReferenceId = 11,
+            /// <summary>
+            /// Enum Metadata for value: metadata
+            /// </summary>
+            [EnumMember(Value = "metadata")]
+            Metadata = 12
         }
 
         /// <summary>

@@ -66,10 +66,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring
                 (IApiClient)sp.GetService(typeof(IApiClient)),
                 new ApiConfiguration { BasePath = LiveContentAdminEnvironment.BasePath }));
             collection.RegisterSingleton(Default<ILiveContentConfigClient, LiveContentConfigClient>);
+            collection.RegisterSingleton(Default<IWebshopCategoriesClient, WebshopCategoriesClient>);
             collection.Register(Default<IAccessTokens, AccessTokens>);
             collection.Register(_ => EnvironmentsApi.Instance);
             collection.RegisterStartupSingleton(Default<DeploymentProvider, PurchasingDeploymentProvider>);
-            collection.Register(Default<ICatalogLoader, CatalogItemLoader>);
+            collection.Register(Default<ICatalogUcatLoader, CatalogUcatLoader>);
             collection.Register(Default<ICatalogCsvParser, CatalogCsvParser>);
             collection.RegisterSingleton(Default<ObservableCatalogCsvAssets>);
             collection.Register(Default<IDisplayDialog, DisplayDialog>);

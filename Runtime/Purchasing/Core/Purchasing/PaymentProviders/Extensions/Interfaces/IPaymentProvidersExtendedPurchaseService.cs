@@ -19,6 +19,28 @@ namespace UnityEngine.Purchasing
         void SetPaymentProviderOverride(string? paymentProviderOverride);
 
         /// <summary>
+        /// Set the value of `customReferenceId` to be used on new Payment Provider Orders.
+        /// A unique custom identifier which can be set to any value to help reconcile Payment Provider orders
+        /// with your own internal system.
+        /// </summary>
+        /// <param name="customReferenceId">
+        /// `null`by default.
+        /// If not `null`, the value set as the `CustomReferenceId` on new Payment Provider orders.
+        /// Pass <c>null</c> to clear previously set custom reference ID. </param>
+        void SetCustomReferenceId(string? customReferenceId);
+
+        /// <summary>
+        /// Set the value of `metadata` on new Payment Provider Orders.
+        /// An arbitrary collection of `string` key-value pairs.
+        /// </summary>
+        /// <param name="customMetadata">
+        /// `null`by default.
+        /// If not `null`, the data sent as the `Metadata` on new Payment Provider orders.
+        /// A shallow copy of the dictionary is taken, so later changes to the original dictionary have no effect.
+        /// Call this method again to update. </param>
+        void SetCustomMetadata(IReadOnlyDictionary<string, string>? customMetadata);
+
+        /// <summary>
         /// Register a developer-supplied compliance check invoked at the start of every
         /// Payment Provider purchase, before Unity creates an order on the backend.
         ///

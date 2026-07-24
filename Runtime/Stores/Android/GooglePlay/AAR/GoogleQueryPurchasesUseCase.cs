@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,8 +35,16 @@ namespace UnityEngine.Purchasing
             m_BillingClient.QueryPurchasesAsync(skuType,
                 (billingResult, purchases) =>
                 {
-                    var result = IsResultOk(billingResult) ? m_PurchaseBuilder.BuildPurchases(purchases) : Enumerable.Empty<IGooglePurchase>();
-                    taskCompletion.TrySetResult(result);
+                    if (IsResultOk(billingResult))
+                    {
+                        taskCompletion.TrySetResult(m_PurchaseBuilder.BuildPurchases(purchases));
+                    }
+                    else
+                    {
+                        // Fault the task so callers can distinguish a failed query from a user owning no purchases.
+                        taskCompletion.TrySetException(new Exception(
+                            $"Querying purchases of type {skuType} failed - responseCode: {billingResult.responseCode}, debugMessage: {billingResult.debugMessage}"));
+                    }
                 });
 
             return taskCompletion.Task;

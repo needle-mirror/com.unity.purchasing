@@ -217,7 +217,10 @@ namespace UnityEngine.Purchasing
 
                 var productId = purchaseDetails.TryGetString("productId");
                 var verificationError = purchaseDetails.TryGetString("verificationError");
-                PurchaseFailureReason reason = (PurchaseFailureReason)Convert.ToInt32(purchaseDetails.TryGetString("reason"));
+                var rawReason = Convert.ToInt32(purchaseDetails.TryGetString("reason"));
+                var reason = Enum.IsDefined(typeof(PurchaseFailureReason), rawReason)
+                    ? (PurchaseFailureReason)rawReason
+                    : PurchaseFailureReason.Unknown;
 
                 var description = new PurchaseFailureDescription(ProductCache.FindOrDefault(productId), reason, verificationError);
                 OnPurchaseFailed(description);

@@ -10,6 +10,6 @@ namespace UnityEngine.Purchasing.Stores
         string? Locale { get; }
         string? RegionCode { get; }
         string? CurrencyCode { get; }
-        Task<PlayerIdentity> CreatePlayerIdentityAsync();
+        Task<PlayerIdentity> CreatePlayerIdentityAsync(string? impressionId = null);
     }
 }

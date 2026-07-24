@@ -17,10 +17,10 @@
       "PC",
       "Xbox"
     ],
-    "changelog": "### Changed\n- Updated AI skill with D2C and migration patterns.\n\n### Fixed\n- Apple - Resolved compiler error when building for macOS.\n- Catalog Editor - Changed visibility on some generated classes from public to internal."
+    "changelog": "### Added\n- Payment Providers - `IPaymentProvidersExtendedPurchaseService.SetCustomReferenceId(string?)` — sets the `CustomReferenceId` sent on new Payment Provider orders, echoed back on the order and its webhooks so you can reconcile IAP orders with your own internal system.\n- Payment Providers - `IPaymentProvidersExtendedPurchaseService.SetCustomMetadata(IReadOnlyDictionary<string, string>?)` — sets an arbitrary `string` key/value dictionary sent as `Metadata` on new Payment Provider orders.\n- Payment Providers - `IPaymentProvidersOrderInfo` — Payment-Provider-specific order details accessible via `order.Info.PaymentProviders`. Exposes `CustomReferenceId` (the value set via `SetCustomReferenceId`) and `Metadata` (the value set via `SetCustomMetadata`).\n- Authoring - Deploy auto-creates any webshop categories referenced by catalog items but missing from the categories document. Existing categories are left untouched.\n\n### Changed\n- Package description - Corrected the setup instructions to point to `Services > In-App Purchasing > Configure`, replacing the outdated `Window > General > Services` path.\n- Purchasing - Purchases with a store specific id not found in the current catalog will attempt to find the matching uSku in the Remote Catalog\n- Purchase Options UI - Replace \"Google Pay\" and \"Apple Pay\" assets with appropriate \"Google Play\" and \"In-App Purchase\" assets.\n\n### Fixed\n- GooglePlay - A failed purchases query (non-OK billing result) was indistinguishable from a user owning no purchases, so a lapsed subscription could not be reliably detected.\n   - `FetchPurchases` now invokes `OnPurchasesFetchFailed` on failure with the billing response code instead of `OnPurchasesFetched` with an empty list.\n   - `CheckEntitlement` now reports `EntitlementStatus.Unknown` on failure instead of `EntitlementStatus.NotEntitled` when the purchases query fails.\n- Apple (StoreKit 2) - `FetchPurchases` no longer reports expired subscriptions as pending purchases via `OnPurchasePending`.\n- Apple (StoreKit 2) - Purchase failures were reported with the wrong `PurchaseFailureReason`. `Unknown` errors were surfaced as either `ValidationFailure` or `SignatureInvalid`.\n- Apple (StoreKit 2) - Purchase failures that have a specific `PurchaseFailureReason` are now more accurately reported instead of being `Unknown`.\n- Apple (StoreKit 2) -  confirm success (`OnPurchaseConfirmed`) is now reported only after the native `Transaction.finish` call has completed, instead of unconditionally before it ran. A finish that does not find a matching unfinished transaction now reports a `DuplicateTransaction` confirm failure, as the transaction has likely already been finished.\n- Apple - Added missing `tvOS 18.1` availability check, causing `'ExternalPurchaseCustomLink' is only available in tvOS 18.1 or newer` build failure."
   },
-  "version": "5.4.1",
-  "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package and open the Services window (Window > General > Services).\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
+  "version": "5.4.2",
+  "description": "Unity In-App Purchasing (IAP) allows you to sell digital content within your application. This package provides a unified API for handling in-app purchases across multiple platforms, including the Apple App Store and Google Play Store. Unity IAP simplifies implementing and managing purchases for different stores.\n\nFeatures:\n\n ▪ A single API to access all supported stores, making it easier to manage your in-game economy.\n ▪ Automatic integration with Unity Analytics for monitoring revenue and purchase data across platforms.\n ▪ Supports iOS, Mac, tvOS, and Google Play.\n ▪ Client-side receipt validation for Apple Store and Google Play.\n\nTo enable In-App Purchasing, install the package, then go to Services > In-App Purchasing > Configure.\n\nUpgrade notes:\nThis release is a major update to the IAP package. Review the included sample for a complete example of how to use the new version. Upgrading is recommended to take advantage of the latest improvements and features.",
   "dependencies": {
     "com.unity.ugui": "1.0.0",
     "com.unity.modules.unitywebrequest": "1.0.0",
@@ -36,16 +36,16 @@
   "license": "Unity Companion Package License v1.0",
   "hideInEditor": false,
   "relatedPackages": {
-    "com.unity.purchasing.tests": "5.4.1"
+    "com.unity.purchasing.tests": "5.4.2"
   },
   "upmCi": {
-    "footprint": "7923cbe17a7f15f499104177c32d10f6ee17050c"
+    "footprint": "0c17ad996e99bf6bdc58bc64b036c3dc705df897"
   },
   "documentationUrl": "https://docs.unity3d.com/Packages/com.unity.purchasing@5.4/manual/index.html",
   "repository": {
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.purchasing.git",
     "type": "git",
-    "revision": "337bad7445318f795b41d8093dbe90edd62092e2"
+    "revision": "9080bc7ecd5bd10ddf3ed190eb9dc84c649fc071"
   },
   "samples": [
     {

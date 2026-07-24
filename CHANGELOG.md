@@ -1,4 +1,26 @@
 # Changelog
+## [5.4.2] - 2026-07-24
+### Added
+- Payment Providers - `IPaymentProvidersExtendedPurchaseService.SetCustomReferenceId(string?)` — sets the `CustomReferenceId` sent on new Payment Provider orders, echoed back on the order and its webhooks so you can reconcile IAP orders with your own internal system.
+- Payment Providers - `IPaymentProvidersExtendedPurchaseService.SetCustomMetadata(IReadOnlyDictionary<string, string>?)` — sets an arbitrary `string` key/value dictionary sent as `Metadata` on new Payment Provider orders.
+- Payment Providers - `IPaymentProvidersOrderInfo` — Payment-Provider-specific order details accessible via `order.Info.PaymentProviders`. Exposes `CustomReferenceId` (the value set via `SetCustomReferenceId`) and `Metadata` (the value set via `SetCustomMetadata`).
+- Authoring - Deploy auto-creates any webshop categories referenced by catalog items but missing from the categories document. Existing categories are left untouched.
+
+### Changed
+- Package description - Corrected the setup instructions to point to `Services > In-App Purchasing > Configure`, replacing the outdated `Window > General > Services` path.
+- Purchasing - Purchases with a store specific id not found in the current catalog will attempt to find the matching uSku in the Remote Catalog
+- Purchase Options UI - Replace "Google Pay" and "Apple Pay" assets with appropriate "Google Play" and "In-App Purchase" assets.
+
+### Fixed
+- GooglePlay - A failed purchases query (non-OK billing result) was indistinguishable from a user owning no purchases, so a lapsed subscription could not be reliably detected.
+   - `FetchPurchases` now invokes `OnPurchasesFetchFailed` on failure with the billing response code instead of `OnPurchasesFetched` with an empty list.
+   - `CheckEntitlement` now reports `EntitlementStatus.Unknown` on failure instead of `EntitlementStatus.NotEntitled` when the purchases query fails.
+- Apple (StoreKit 2) - `FetchPurchases` no longer reports expired subscriptions as pending purchases via `OnPurchasePending`.
+- Apple (StoreKit 2) - Purchase failures were reported with the wrong `PurchaseFailureReason`. `Unknown` errors were surfaced as either `ValidationFailure` or `SignatureInvalid`.
+- Apple (StoreKit 2) - Purchase failures that have a specific `PurchaseFailureReason` are now more accurately reported instead of being `Unknown`.
+- Apple (StoreKit 2) -  confirm success (`OnPurchaseConfirmed`) is now reported only after the native `Transaction.finish` call has completed, instead of unconditionally before it ran. A finish that does not find a matching unfinished transaction now reports a `DuplicateTransaction` confirm failure, as the transaction has likely already been finished.
+- Apple - Added missing `tvOS 18.1` availability check, causing `'ExternalPurchaseCustomLink' is only available in tvOS 18.1 or newer` build failure.
+
 ## [5.4.1] - 2026-07-07
 ### Changed
 - Updated AI skill with D2C and migration patterns.

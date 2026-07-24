@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Uniject;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
@@ -89,7 +90,7 @@ namespace UnityEngine.Purchasing
 #pragma warning restore 618, 612
         }
 
-        void OnPurchasesFetched(List<IGooglePurchase>? purchases)
+        async void OnPurchasesFetched(List<IGooglePurchase>? purchases)
         {
             if (purchases == null)
             {
@@ -97,8 +98,8 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            var orders = purchases
-                .Select(purchase => m_PurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache))
+            var orders = (await Task.WhenAll(purchases
+                    .Select(purchase => m_PurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache))))
                 .ToList();
 
             m_FetchCallback?.OnAllPurchasesRetrieved(orders);

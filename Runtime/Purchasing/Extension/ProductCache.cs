@@ -1,13 +1,17 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace UnityEngine.Purchasing.Extension
 {
     class ProductCache : IProductCache
     {
+        IStoreOverrideReverseLookupService? m_ReverseLookup;
+
         ObservableCollection<Product> m_Products = new();
         readonly ReadOnlyObservableCollection<Product> m_ProductsReadOnly;
 
@@ -196,6 +200,47 @@ namespace UnityEngine.Purchasing.Extension
         public CatalogListing? FindCatalogListingByStoreSpecificId(string? storeSpecificId)
         {
             return storeSpecificId != null && catalogListingsByStoreSpecificId.TryGetValue(storeSpecificId, out var listing) ? listing : null;
+        }
+
+        public void SetReverseLookupService(IStoreOverrideReverseLookupService service)
+        {
+            m_ReverseLookup = service;
+        }
+
+        public Task<ResolvedUSku?> ResolveByStoreSpecificIdAsync(string? storeSpecificId)
+        {
+            return m_ReverseLookup?.ResolveAsync(storeSpecificId) ?? Task.FromResult<ResolvedUSku?>(null);
+        }
+
+        public async Task<Product> FindOrResolveAsync(string? storeSpecificId)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(storeSpecificId))
+                {
+                    var cached = Find(storeSpecificId);
+                    if (cached != null)
+                    {
+                        return cached;
+                    }
+                    var resolved = await ResolveByStoreSpecificIdAsync(storeSpecificId);
+                    if (resolved != null && !string.IsNullOrEmpty(resolved.USku))
+                    {
+                        // Backend gave us the Unity-side id. Prefer the cached Product (with real
+                        // metadata) — a synthetic Product would shadow the developer's actual
+                        // catalog entry downstream. If the uSku isn't cached, synthesize a
+                        // Product that keeps both ids distinct and carries the backend-reported
+                        // type so downstream consumers can identify the native purchase without
+                        // conflating the two identifiers.
+                        return Find(resolved.USku) ?? Product.CreateUnknownProduct(resolved.USku, storeSpecificId, resolved.Type);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.unityLogger.LogIAPWarning($"FindOrResolveAsync fell back to sync unknown for '{storeSpecificId}': {e.Message}");
+            }
+            return Product.CreateUnknownProduct(storeSpecificId!);
         }
     }
 }

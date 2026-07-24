@@ -68,6 +68,15 @@ namespace UnityEngine.Purchasing
             return new Product(new ProductDefinition(productId, ProductType.Unknown), new ProductMetadata());
         }
 
+        // Overload for callers that also know the native storeSpecificId and the backend-reported
+        // ProductType (e.g. the store-overrides reverse lookup returns Consumable / NonConsumable /
+        // Subscription) — keeps the ids distinct in the resulting ProductDefinition and carries the
+        // real type instead of Unknown.
+        internal static Product CreateUnknownProduct(string uSku, string storeSpecificId, ProductType type)
+        {
+            return new Product(new ProductDefinition(uSku, storeSpecificId, type), new ProductMetadata());
+        }
+
         /// <summary>
         /// The Unity-side identifier for this product. Equivalent to the product id authored in the
         /// Unity catalog; distinct from any store-specific id, which lives on each

@@ -75,12 +75,11 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                 // otherwise mint one for this journey. Single id for every item in
                 // the cart — they all belong to the same purchase journey.
                 var impressionId = ImpressionIdContext.TakeOrMint();
-                var pps = await m_PlayerData.CreatePlayerIdentityAsync();
+                var pps = await m_PlayerData.CreatePlayerIdentityAsync(impressionId);
                 foreach (var item in cart.Items())
                 {
                     if (item?.Product == null) continue;
                     var iaps = BuildEnvelope(item, null, pps, new PurchaseIntentStartEvent());
-                    iaps.ImpressionId = impressionId;
                     Forward(iaps);
                 }
             }
@@ -92,14 +91,13 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
             try
             {
                 var impressionId = ImpressionIdContext.Mint();
-                var pps = await m_PlayerData.CreatePlayerIdentityAsync();
+                var pps = await m_PlayerData.CreatePlayerIdentityAsync(impressionId);
                 // No cart yet at modal-show time; envelope's Order stays null.
                 var iaps = BuildEnvelope(null, null, pps, new PaymentOptionsShownEvent
                 {
                     OptionsShown = new List<PaymentOption>(optionsShown),
                     OptionsDefaultProvider = defaultProvider
                 });
-                iaps.ImpressionId = impressionId;
                 Forward(iaps);
             }
             catch (Exception e) { LogEmissionFailure(nameof(PaymentOptionsShownEvent), e); }
@@ -281,6 +279,7 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                 EventData = variant,
                 ApplicationVersion = Application.version,
                 InstallationTimestamp = AppInstallInfo.GetInstallTimestamp(),
+                ImpressionId = pps.UnityImpressionId,
             };
         }
 

@@ -273,6 +273,17 @@ Do not call `StoreController(PaymentProvider.Name)` before the player is authent
 
 **Anonymous sign-in warning:** Do not use anonymous sign-in as the authentication method for D2C purchases. Anonymous sign-in does not persist purchases after the session token is lost — if the player reinstalls the app or clears app data, their purchase history becomes unrecoverable. Use a persistent identity method (e.g., Unity Authentication with a linked account, or your own identity provider).
 
+### Payment provider services on the StoreController
+
+The `StoreController` (scoped to `PaymentProvider.Name`) exposes the payment-provider APIs through **two** properties. Use the exact property names below — do not substitute the interface name for the property name, and do not use `PurchaseService.PaymentProviders` (that is a different entry point that returns the purchase-extended interface). Both properties are typed as nullable, but on a `PaymentProvider.Name`-scoped `StoreController` the factory always populates them — they are only `null` when reached from a `StoreController` scoped to another store (Apple / Google), where the payment-provider extensions do not apply. Guard with `?.` if the same code path could see either kind of controller.
+
+| StoreController property | Returns interface | Members used in this doc |
+| --- | --- | --- |
+| `store.PaymentProviderStoreExtendedService` | `IPaymentProvidersExtendedService` | `GetEligiblePaymentProviders`, `GetPaymentOptionProviderUGUI`, `GetPaymentOptionProviderUITK`, `SetCheckoutPresentationMode`, `SetWebshopPresentationMode`, `SetDeepLinkScheme` |
+| `store.PaymentProvidersExtendedPurchaseService` | `IPaymentProvidersExtendedPurchaseService` | `PurchaseProduct`, `RedirectToWebshop`, `GenerateURL`, `SetComplianceCheck`, `SetPaymentProviderOverride` |
+
+Note the naming asymmetry: the presentation-service property is singular (`PaymentProvider`**Store**`ExtendedService`) while the purchase-service property is plural (`PaymentProviders`**ExtendedPurchase**`Service`). This mirrors the Apple/Google split (`...ExtendedService` + `...ExtendedPurchaseService`).
+
 ### Coexistence with existing Apple / Google StoreController
 
 If the project already has a `StoreController` for Apple App Store or Google Play (standard IAP 5):
@@ -575,7 +586,7 @@ Purchase handling follows the same save-before-confirm contract as standard IAP 
 
 IAP D2C Capabilities-specific notes:
 
-- **Checkout presentation mode:** By default, the payment flow opens in the device's external browser. Unity IAP 5.4 also supports an in-app WebView via `CheckoutPresentationMode`. Set the mode on `IPaymentProvidersExtendedService` before purchase:
+- **Checkout presentation mode:** By default, the payment flow opens in the device's external browser. Unity IAP 5.4 also supports an in-app WebView via `CheckoutPresentationMode`. Set the mode before purchase via `store.PaymentProviderStoreExtendedService` (the `IPaymentProvidersExtendedService` accessor — see "Payment provider services on the StoreController" above):
 
   ```csharp
   // External browser (default)
@@ -586,6 +597,16 @@ IAP D2C Capabilities-specific notes:
   ```
 
   When using `ExternalBrowser`, the game is suspended during payment and resumes via the deep link redirect. When using `WebView`, the game remains active and the WebView is dismissed on completion. `OnPurchasePending` fires in both cases after the payment is processed.
+
+- **Webshop presentation mode:** `RedirectToWebshop` uses a **separate** `SetWebshopPresentationMode` setter — it is independent of `SetCheckoutPresentationMode` (verified by `PaymentProviderImplTests.TestWebshopModeIsIndependentOfCheckoutMode`). Setting the checkout mode to `WebView` does **not** move the webshop flow into the in-app WebView; without an explicit webshop-mode call, `RedirectToWebshop` opens the external browser. Set it before invoking `RedirectToWebshop`:
+
+  ```csharp
+  // External browser (default)
+  store.PaymentProviderStoreExtendedService?.SetWebshopPresentationMode(CheckoutPresentationMode.ExternalBrowser);
+
+  // In-app WebView
+  store.PaymentProviderStoreExtendedService?.SetWebshopPresentationMode(CheckoutPresentationMode.WebView);
+  ```
 
 - `OnPurchaseDeferred` fires if the payment is not immediately completed. Do not grant — show pending UI.
 - Always confirm (`ConfirmPurchase`) only after entitlement is granted and saved. For consumables, Unity IAP D2C Capabilities prevents re-purchase until the previous order is confirmed.

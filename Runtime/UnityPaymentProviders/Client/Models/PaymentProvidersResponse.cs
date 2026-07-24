@@ -32,9 +32,9 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// List of configured payment provider identifiers the calling player is eligible for, listed in priority order, highest first. The list may be empty when no provider is eligible.
         /// </summary>
         /// <param name="providers">Ordered, deduplicated list of configured payment provider identifiers eligible for the calling player.</param>
-        /// <param name="paymentOptionsPopupEnabled">Server-driven killswitch for the SDK&#39;s payment-options popup. When false, clients should suppress the picker UI and route purchases directly to the native store. Optional; clients treat a missing field as true so older backends (and rollbacks) continue to render the popup. </param>
+        /// <param name="paymentOptionsPopupEnabled">Indicates whether the client should display the payment options popup (interstitial) before initiating checkout.</param>
         [Preserve]
-        public PaymentProvidersResponse(List<string> providers, bool? paymentOptionsPopupEnabled = default)
+        public PaymentProvidersResponse(List<string> providers, bool paymentOptionsPopupEnabled)
         {
             Providers = providers;
             PaymentOptionsPopupEnabled = paymentOptionsPopupEnabled;
@@ -46,14 +46,14 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         [Preserve]
         [DataMember(Name = "providers", IsRequired = true, EmitDefaultValue = true)]
         public List<string> Providers{ get; }
-
+        
         /// <summary>
-        /// Server-driven killswitch for the SDK&#39;s payment-options popup. When false, clients should suppress the picker UI and route purchases directly to the native store. Optional; clients treat a missing field as true so older backends (and rollbacks) continue to render the popup.
+        /// Indicates whether the client should display the payment options popup (interstitial) before initiating checkout.
         /// </summary>
         [Preserve]
-        [DataMember(Name = "paymentOptionsPopupEnabled", EmitDefaultValue = false)]
-        public bool? PaymentOptionsPopupEnabled{ get; }
-
+        [DataMember(Name = "paymentOptionsPopupEnabled", IsRequired = true, EmitDefaultValue = true)]
+        public bool PaymentOptionsPopupEnabled{ get; }
+    
         /// <summary>
         /// Formats a PaymentProvidersResponse into a string of key-value pairs for use as a path parameter.
         /// </summary>
@@ -64,12 +64,9 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
 
             if (Providers != null)
             {
-                serializedModel += "providers," + Providers.ToString() + (PaymentOptionsPopupEnabled != null ? "," : "");
+                serializedModel += "providers," + Providers.ToString() + ",";
             }
-            if (PaymentOptionsPopupEnabled != null)
-            {
-                serializedModel += "paymentOptionsPopupEnabled," + PaymentOptionsPopupEnabled.ToString();
-            }
+            serializedModel += "paymentOptionsPopupEnabled," + PaymentOptionsPopupEnabled.ToString();
             return serializedModel;
         }
 
@@ -86,13 +83,10 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
                 var providersStringValue = Providers.ToString();
                 dictionary.Add("providers", providersStringValue);
             }
-
-            if (PaymentOptionsPopupEnabled != null)
-            {
-                var paymentOptionsPopupEnabledStringValue = PaymentOptionsPopupEnabled.ToString();
-                dictionary.Add("paymentOptionsPopupEnabled", paymentOptionsPopupEnabledStringValue);
-            }
-
+            
+            var paymentOptionsPopupEnabledStringValue = PaymentOptionsPopupEnabled.ToString();
+            dictionary.Add("paymentOptionsPopupEnabled", paymentOptionsPopupEnabledStringValue);
+            
             return dictionary;
         }
     }

@@ -3,22 +3,22 @@
 		{
 			"ValidationTest": "Manifest Validation",
 			"ExceptionMessage": "In package.json, \"displayName\" cannot have any special characters. Read more about this error and potential solutions at https://docs.unity3d.com/Packages/com.unity.package-validation-suite@latest/index.html?preview=1&subfolder=/manual/manifest_validation_error.html#displayName-cannot-have-any-special-characters",
-			"PackageVersion": "5.4.1"
+			"PackageVersion": "5.4.2"
 		},
 		{
 			"ValidationTest": "API Validation",
 			"ExceptionMessage": "Additions require a new minor or major version.",
-			"PackageVersion": "5.4.1"
+			"PackageVersion": "5.4.2"
 		},
 		{
 			"ValidationTest": "API Validation",
 			"ExceptionMessage": "New assembly \"UnityEditor.Purchasing.Authoring\" may only be added in a new minor or major version.",
-			"PackageVersion": "5.4.1"
+			"PackageVersion": "5.4.2"
 		},
 		{
 			"ValidationTest": "API Validation",
 			"ExceptionMessage": "New assembly \"UnityEditor.Purchasing.Editor.Authoring.Core\" may only be added in a new minor or major version.",
-			"PackageVersion": "5.4.1"
+			"PackageVersion": "5.4.2"
 		}
 	],
 	"WarningExceptions": []

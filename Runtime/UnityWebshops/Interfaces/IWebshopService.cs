@@ -13,6 +13,8 @@ namespace UnityEngine.Purchasing.WebshopService
             string? locale,
             string? currencyCode,
             string? country,
-            IReadOnlyList<WebshopExternalToken> externalTokens);
+            IReadOnlyList<WebshopExternalToken> externalTokens,
+            string? customReferenceId,
+            IReadOnlyDictionary<string, string>? customMetadata);
     }
 }

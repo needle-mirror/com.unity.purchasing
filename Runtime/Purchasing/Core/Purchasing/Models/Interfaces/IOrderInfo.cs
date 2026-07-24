@@ -19,6 +19,11 @@ namespace UnityEngine.Purchasing
         IGoogleOrderInfo? Google { get; }
 
         /// <summary>
+        /// Payment Providers specific OrderInfo class
+        /// </summary>
+        IPaymentProvidersOrderInfo? PaymentProviders { get; }
+
+        /// <summary>
         /// Additional information for purchased products found in a `ConfirmedOrder`.
         /// </summary>
         List<IPurchasedProductInfo> PurchasedProductInfo { get; set; }

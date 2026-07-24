@@ -72,7 +72,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
 
     public func purchaseProduct(productId: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async -> PurchaseDetails? {
         guard let product = await fetchProductsUseCase.fetchProduct(for: productId) else {
-            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: "Failed to find the product", reason: 2 /* 2 = ProductUnavailable */)
+            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: "Failed to find the product", reason: PurchaseFailureReason.ProductUnavailable.rawValue)
             let jsonString = encodeToJSON(purchaseDetail)
             await storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
             return nil
@@ -81,11 +81,27 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
         do {
             return try await purchaseProduct(product: product, options: options, storefrontChangeCallback: storefrontChangeCallback)
         } catch let error as Product.PurchaseError{
-            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 3 /* 3 = PurchaseFailed */)
+            let reason: PurchaseFailureReason
+            switch error {
+            case .productUnavailable:
+                reason = .ProductUnavailable
+            case .purchaseNotAllowed:
+                reason = .PurchasingUnavailable
+            default:
+                reason = .Unknown
+            }
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: reason.rawValue)
         } catch let error as StoreKitError {
-            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 3 /* 3 = PurchaseFailed */)
+            let reason: PurchaseFailureReason
+            switch error {
+            case .userCancelled:
+                reason = .UserCancelled
+            default:
+                reason = .Unknown
+            }
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: reason.rawValue)
         } catch {
-            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 7 /* 7 = Unknown */)
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: PurchaseFailureReason.Unknown.rawValue)
         }
         return nil
     }
@@ -100,14 +116,14 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             case .success(let verification):
                  return await createPurchaseDetails(from: verification)
             case .userCancelled:
-                await purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: 4 /* 4 = UserCancelled */)
+                await purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
                 return nil
             case .pending:
                 let jsonString = encodeToJSON( ["products": [product]])
                 await storeKitCallback.callback(subject: "OnPurchaseDeferred", payload: jsonString, entitlementStatus: 0)
                 return nil
             default:
-                await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
+                await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: PurchaseFailureReason.Unknown.rawValue)
                 return nil
             }
 #else
@@ -119,7 +135,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
 #endif
         }
         catch {
-            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: 7 /* 7 = Unknown */)
+            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: PurchaseFailureReason.Unknown.rawValue)
             return nil
         }
     }
@@ -136,14 +152,14 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
         case .success(let verification):
             return await createPurchaseDetails(from: verification)
         case .userCancelled:
-            await purchaseProductExceptionCallbacks(productID: product.id, error: "User cancelled", reason: 4 /* 4 = UserCanceled */)
+            await purchaseProductExceptionCallbacks(productID: product.id, error: "User cancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
             return nil
         case .pending:
             let jsonString = encodeToJSON( ["products": [product]])
             await storeKitCallback.callback(subject: "OnPurchaseDeferred", payload: jsonString, entitlementStatus: 0)
             return nil
         default:
-            await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: 7 /* 7 = Unknown */)
+            await purchaseProductExceptionCallbacks(productID: product.id, error: "Unknown error", reason: PurchaseFailureReason.Unknown.rawValue)
             return nil
         }
     }

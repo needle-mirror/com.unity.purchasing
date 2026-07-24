@@ -58,7 +58,9 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                Debug.unityLogger.LogIAPError($"Cannot find matching confirmation request for transaction id: {transactionId}. The List of orders may have become corrupt. No callbacks will be sent for this call.");
+                // Expected for finish results triggered internally by the store (e.g. retries of
+                // previously confirmed transactions on startup) rather than by a confirm request.
+                Debug.unityLogger.LogIAPVerbose($"No pending confirmation request for transaction id: {transactionId}. No callbacks will be sent for this call.");
             }
         }
 

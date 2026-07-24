@@ -8,7 +8,7 @@ protocol TransactionUseCaseProtocol {
     func isPending(_ productId: String) async throws -> PurchaseState
     func fetchAllTransactions() async -> (finishedTransactions: [String : PurchaseDetails], unfinishedTransactions: [String : PurchaseDetails])
     func fetchTransactions(for productIds: [String]) async -> TransactionResponse
-    func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async
+    func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async -> Bool
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
@@ -103,6 +103,20 @@ class TransactionUseCase: TransactionUseCaseProtocol {
         for await transactionResult in Transaction.unfinished {
             do {
                 let transaction = try transactionObserver.checkVerified(transactionResult)
+
+                if transaction.revocationDate != nil {
+                    await transactionObserver.finishRevokedTransaction(transaction, transactionResult)
+                    continue
+                }
+                if transaction.isUpgraded {
+                    await transactionObserver.finishExpiredTransaction(transaction, transactionResult)
+                    continue
+                }
+                if let expirationDate = transaction.expirationDate, expirationDate < Date() {
+                    await transactionObserver.finishExpiredTransaction(transaction, transactionResult)
+                    continue
+                }
+
                 let details = transactionResult.purchaseDetails()
                 result[String(transaction.id)] = details
             } catch {
@@ -137,8 +151,10 @@ class TransactionUseCase: TransactionUseCaseProtocol {
 
     /**
      Use `Transaction.finish` to finish the specified transaction.
+     - Returns: `true` if the transaction was found in `Transaction.unfinished` and finished,
+     `false` if it was not found (StoreKit already considers it finished).
      */
-    public func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async {
+    public func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async -> Bool {
         // Fetch all unfinished transactions
         let transactions = Transaction.unfinished
 
@@ -157,7 +173,9 @@ class TransactionUseCase: TransactionUseCaseProtocol {
                 {
                     printLog("Finishing transaction \(transactionId) \(txn.productID)")
                 }
+                return true
             }
         }
+        return false
     }
 }

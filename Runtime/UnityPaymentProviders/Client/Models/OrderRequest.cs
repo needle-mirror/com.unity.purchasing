@@ -35,12 +35,16 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="currency">Currency code in ISO 4217 format. Required. If the requested currency is not configured for the product, the order falls back to USD pricing. If neither the requested currency nor USD is configured, the order is rejected.</param>
         /// <param name="skus">Array of product SKUs. Currently must contain exactly one SKU. Deprecated in favour of &#x60;catalogListingIds&#x60;; still supported during the transition period. Provide either &#x60;skus&#x60; or &#x60;catalogListingIds&#x60;.</param>
         /// <param name="catalogListingIds">Array of catalog listing identifiers to purchase. Currently must contain exactly one identifier. Replaces &#x60;skus&#x60; because SKUs are not guaranteed to be unique. Each identifier is the Live Content config path of the catalog listing and typically looks like a relative file path. Provide either &#x60;skus&#x60; or &#x60;catalogListingIds&#x60;.</param>
-        /// <param name="country">Country of purchase in ISO 3166-1 alpha-2 format. Used by payment providers that require a country-of-purchase signal (currently Coda Pay only); ignored by others. When omitted, the country is derived from the player&#39;s locale as a temporary backward-compatibility fallback for older SDK versions.</param>
+        /// <param name="country">Country of purchase in ISO 3166-1 alpha-2 format. Used by payment providers that require a country-of-purchase signal (currently Codapay only); ignored by others. When omitted, the country is derived from the player&#39;s locale as a temporary backward-compatibility fallback for older SDK versions.</param>
         /// <param name="paymentProvider">Optional. Specify payment provider instead of using the default one configured for this project environment.</param>
+        /// <param name="uiMode">Optional. One of &#x60;hosted&#x60; or &#x60;embedded&#x60;. How the checkout is presented. &#x60;hosted&#x60; (default) returns a provider-hosted checkout page in &#x60;url&#x60;. &#x60;embedded&#x60; returns an &#x60;embeddedInfo&#x60; object (client secret, plus a publishable key for Stripe) for rendering an in-page form via the payment provider&#39;s JS SDK and leaves &#x60;url&#x60; empty. Only &#x60;stripe&#x60; supports &#x60;embedded&#x60;; other providers reject the request. In &#x60;embedded&#x60; mode the player is never redirected, so only payment methods that don&#39;t require a redirect are offered (cards, Apple Pay, Google Pay, Link).</param>
         /// <param name="externalTransactionTokens">Optional external-link transaction tokens, used by developers to self-report the transaction to Apple/Google. Stored with the order and surfaced in order webhooks; not returned in the order response. Up to two tokens may be supplied because a single Apple external purchase can yield two distinct token types depending on the region — for example an &#x60;acquisition&#x60; token and a &#x60;linkOut&#x60; token.</param>
+        /// <param name="redirectUrls">redirectUrls param</param>
+        /// <param name="customReferenceId">Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with your internal system. Stored with the order and returned in the order response and order webhooks.</param>
+        /// <param name="metadata">Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks.</param>
         /// <param name="deviceInfo">deviceInfo param</param>
         [Preserve]
-        public OrderRequest(Player player, string currency, List<string> skus = default, List<string> catalogListingIds = default, string country = default, string paymentProvider = default, List<OrderRequestExternalTransactionTokensInner> externalTransactionTokens = default, DeviceInfo deviceInfo = default)
+        public OrderRequest(Player player, string currency, List<string> skus = default, List<string> catalogListingIds = default, string country = default, string paymentProvider = default, string uiMode = "hosted", List<OrderRequestExternalTransactionTokensInner> externalTransactionTokens = default, OrderRequestRedirectUrls redirectUrls = default, string customReferenceId = default, Dictionary<string, string> metadata = default, DeviceInfo deviceInfo = default)
         {
             Player = player;
             Skus = skus;
@@ -48,7 +52,11 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             Currency = currency;
             Country = country;
             PaymentProvider = paymentProvider;
+            UiMode = uiMode;
             ExternalTransactionTokens = externalTransactionTokens;
+            RedirectUrls = redirectUrls;
+            CustomReferenceId = customReferenceId;
+            Metadata = metadata;
             DeviceInfo = deviceInfo;
         }
 
@@ -81,7 +89,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string Currency{ get; }
         
         /// <summary>
-        /// Country of purchase in ISO 3166-1 alpha-2 format. Used by payment providers that require a country-of-purchase signal (currently Coda Pay only); ignored by others. When omitted, the country is derived from the player&#39;s locale as a temporary backward-compatibility fallback for older SDK versions.
+        /// Country of purchase in ISO 3166-1 alpha-2 format. Used by payment providers that require a country-of-purchase signal (currently Codapay only); ignored by others. When omitted, the country is derived from the player&#39;s locale as a temporary backward-compatibility fallback for older SDK versions.
         /// </summary>
         [Preserve]
         [DataMember(Name = "country", EmitDefaultValue = false)]
@@ -95,11 +103,39 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string PaymentProvider{ get; }
         
         /// <summary>
+        /// Optional. One of &#x60;hosted&#x60; or &#x60;embedded&#x60;. How the checkout is presented. &#x60;hosted&#x60; (default) returns a provider-hosted checkout page in &#x60;url&#x60;. &#x60;embedded&#x60; returns an &#x60;embeddedInfo&#x60; object (client secret, plus a publishable key for Stripe) for rendering an in-page form via the payment provider&#39;s JS SDK and leaves &#x60;url&#x60; empty. Only &#x60;stripe&#x60; supports &#x60;embedded&#x60;; other providers reject the request. In &#x60;embedded&#x60; mode the player is never redirected, so only payment methods that don&#39;t require a redirect are offered (cards, Apple Pay, Google Pay, Link).
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "uiMode", EmitDefaultValue = false)]
+        public string UiMode{ get; }
+        
+        /// <summary>
         /// Optional external-link transaction tokens, used by developers to self-report the transaction to Apple/Google. Stored with the order and surfaced in order webhooks; not returned in the order response. Up to two tokens may be supplied because a single Apple external purchase can yield two distinct token types depending on the region — for example an &#x60;acquisition&#x60; token and a &#x60;linkOut&#x60; token.
         /// </summary>
         [Preserve]
         [DataMember(Name = "externalTransactionTokens", EmitDefaultValue = false)]
         public List<OrderRequestExternalTransactionTokensInner> ExternalTransactionTokens{ get; }
+        
+        /// <summary>
+        /// Parameter redirectUrls of OrderRequest
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "redirectUrls", EmitDefaultValue = false)]
+        public OrderRequestRedirectUrls RedirectUrls{ get; }
+        
+        /// <summary>
+        /// Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with your internal system. Stored with the order and returned in the order response and order webhooks.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "customReferenceId", EmitDefaultValue = false)]
+        public string CustomReferenceId{ get; }
+        
+        /// <summary>
+        /// Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "metadata", EmitDefaultValue = false)]
+        public Dictionary<string, string> Metadata{ get; }
         
         /// <summary>
         /// Parameter deviceInfo of OrderRequest
@@ -140,9 +176,25 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 serializedModel += "paymentProvider," + PaymentProvider + ",";
             }
+            if (UiMode != null)
+            {
+                serializedModel += "uiMode," + UiMode + ",";
+            }
             if (ExternalTransactionTokens != null)
             {
                 serializedModel += "externalTransactionTokens," + ExternalTransactionTokens.ToString() + ",";
+            }
+            if (RedirectUrls != null)
+            {
+                serializedModel += "redirectUrls," + RedirectUrls.ToString() + ",";
+            }
+            if (CustomReferenceId != null)
+            {
+                serializedModel += "customReferenceId," + CustomReferenceId + ",";
+            }
+            if (Metadata != null)
+            {
+                serializedModel += "metadata," + Metadata.ToString() + ",";
             }
             if (DeviceInfo != null)
             {
@@ -187,6 +239,24 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 var paymentProviderStringValue = PaymentProvider.ToString();
                 dictionary.Add("paymentProvider", paymentProviderStringValue);
+            }
+            
+            if (UiMode != null)
+            {
+                var uiModeStringValue = UiMode.ToString();
+                dictionary.Add("uiMode", uiModeStringValue);
+            }
+            
+            if (CustomReferenceId != null)
+            {
+                var customReferenceIdStringValue = CustomReferenceId.ToString();
+                dictionary.Add("customReferenceId", customReferenceIdStringValue);
+            }
+            
+            if (Metadata != null)
+            {
+                var metadataStringValue = Metadata.ToString();
+                dictionary.Add("metadata", metadataStringValue);
             }
             
             return dictionary;

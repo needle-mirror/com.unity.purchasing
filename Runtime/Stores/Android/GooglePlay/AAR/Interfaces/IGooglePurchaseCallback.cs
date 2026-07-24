@@ -1,4 +1,6 @@
+#nullable enable
 using System;
+using System.Threading.Tasks;
 using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing.Interfaces
@@ -9,10 +11,10 @@ namespace UnityEngine.Purchasing.Interfaces
         void SetPurchaseCallback(IStorePurchaseCallback purchaseCallback);
         void SetPurchaseFetchCallback(IStorePurchaseFetchCallback fetchCallback);
         void SetChangeSubscriptionCallback(IGooglePlayChangeSubscriptionCallback changeSubscriptionCallback);
-        void OnPurchaseSuccessful(IGooglePurchase purchase);
+        Task OnPurchaseSuccessful(IGooglePurchase purchase);
         void OnPurchaseFailed(PurchaseFailureDescription purchaseFailureDescription);
-        void NotifyDeferredPurchase(IGooglePurchase purchase);
-        void NotifyDeferredProrationUpgradeDowngradeSubscription(string sku);
-        void NotifyUpgradeDowngradeSubscription(string sku);
+        Task NotifyDeferredPurchase(IGooglePurchase purchase);
+        void NotifyDeferredProrationUpgradeDowngradeSubscription(string? sku);
+        void NotifyUpgradeDowngradeSubscription(string? sku);
     }
 }

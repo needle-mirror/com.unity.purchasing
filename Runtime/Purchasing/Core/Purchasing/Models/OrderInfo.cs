@@ -15,6 +15,7 @@ namespace UnityEngine.Purchasing
     {
         public IAppleOrderInfo? Apple => this as IAppleOrderInfo;
         public IGoogleOrderInfo? Google => this as IGoogleOrderInfo;
+        public IPaymentProvidersOrderInfo? PaymentProviders => this as IPaymentProvidersOrderInfo;
 
         public List<IPurchasedProductInfo> PurchasedProductInfo { get; set; }
 

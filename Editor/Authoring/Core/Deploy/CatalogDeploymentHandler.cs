@@ -13,8 +13,16 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
 {
     class CatalogDeploymentHandler : CatalogFetchDeployBase, ICatalogDeploymentHandler
     {
-        public CatalogDeploymentHandler(ILiveContentConfigClient client, ILogger logger)
-            : base(client, logger) {}
+        readonly IWebshopCategoriesClient m_CategoriesClient;
+
+        public CatalogDeploymentHandler(
+            ILiveContentConfigClient client,
+            IWebshopCategoriesClient categoriesClient,
+            ILogger logger)
+            : base(client, logger)
+        {
+            m_CategoriesClient = categoriesClient;
+        }
 
         public async Task<DeployResult> DeployAsync(
             IReadOnlyList<CatalogEntryDeploymentItem> localResources,
@@ -58,6 +66,8 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
 
             if (!filteredLocalResources.Any())
                 return res;
+
+            await UpsertReferencedCategories(filteredLocalResources, token);
 
             filteredLocalResources.ForEach(l => l.Progress = 50);
             filteredLocalResources.ForEach(l => l.Status = Statuses.GetDeploying());
@@ -159,6 +169,59 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
                 return valid;
             }).ToList();
             return filteredLocalResources;
+        }
+
+        // Best-effort: append ids referenced by webshop-enabled items to webshop/categories.json
+        // with a placeholder `{"en": "<id>"}` name. Existing entries are preserved verbatim.
+        // Failure is logged, not surfaced — item upserts proceed regardless.
+        async Task UpsertReferencedCategories(
+            IReadOnlyList<CatalogEntryDeploymentItem> filteredLocalResources,
+            CancellationToken token)
+        {
+            var required = filteredLocalResources
+                .Where(r => r.CatalogItem.IsWebshopAvailable)
+                .SelectMany(r => r.CatalogItem.Categories ?? Enumerable.Empty<string>())
+                .Where(id => !string.IsNullOrWhiteSpace(id))
+                .ToHashSet(StringComparer.Ordinal);
+            if (required.Count == 0)
+                return;
+
+            try
+            {
+                var doc = await m_CategoriesClient.Get(token) ?? new WebshopCategories();
+                doc.Categories ??= new List<WebshopCategory>();
+
+                var known = new HashSet<string>(
+                    doc.Categories.Where(c => !string.IsNullOrEmpty(c?.Id)).Select(c => c.Id),
+                    StringComparer.Ordinal);
+
+                var appended = 0;
+                foreach (var id in required)
+                {
+                    if (known.Add(id))
+                    {
+                        doc.Categories.Add(new WebshopCategory
+                        {
+                            Id = id,
+                            Name = new Dictionary<string, string> { ["en"] = id },
+                        });
+                        appended++;
+                    }
+                }
+
+                if (appended == 0)
+                    return;
+
+                await m_CategoriesClient.Upsert(doc, token);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e);
+            }
         }
 
         protected override DeploymentStatus GetSuccessStatus(string message)

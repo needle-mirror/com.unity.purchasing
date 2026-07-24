@@ -3,12 +3,41 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace UnityEngine.Purchasing.Extension
 {
     // Interface for a cache of products specific to the store.
     interface IProductCache : IReadOnlyProductCache
     {
+        /// <summary>
+        /// Set an optional reverse-lookup service used by <see cref="ResolveByStoreSpecificIdAsync"/> and <see cref="FindOrResolveAsync"/>
+        /// to resolve a native store id to a Unity uSku via the backend store-overrides endpoint.
+        /// Wired only on Apple and Google stores; other stores leave it null.
+        /// </summary>
+        void SetReverseLookupService(IStoreOverrideReverseLookupService service);
+
+        /// <summary>
+        /// Asks the configured reverse-lookup service for the Unity uSku (+ resolved
+        /// <see cref="ProductType"/>) that maps to <paramref name="storeSpecificId"/>. Returns null
+        /// when no resolver is configured, the backend has no mapping, or the project has no
+        /// remote catalog. Callers that want a synthesized Product on cache miss should use
+        /// <see cref="FindOrResolveAsync"/>.
+        /// </summary>
+        Task<ResolvedUSku?> ResolveByStoreSpecificIdAsync(string? storeSpecificId);
+
+        /// <summary>
+        /// Primary lookup used from purchase-callback hot paths. Tries, in order:
+        /// <list type="number">
+        /// <item>Sync <see cref="Find"/> against the local cache (matches both uSku and storeSpecificId indexes).</item>
+        /// <item>Awaits the backend reverse-lookup to translate <paramref name="storeSpecificId"/> to a uSku, then re-runs Find for that uSku.</item>
+        /// <item>Falls back to <see cref="Product.CreateUnknownProduct(string)"/> using the backend-resolved uSku when available, otherwise the original <paramref name="storeSpecificId"/>.</item>
+        /// </list>
+        /// Exceptions from the resolver are swallowed and the sync fallback is returned — these
+        /// callers must never propagate an exception up the store callback.
+        /// </summary>
+        Task<Product> FindOrResolveAsync(string? storeSpecificId);
+
         // Keyed by Product.uSku — the Unity-side product identifier.
         Dictionary<string, Product> productsByUSku { get; }
         // Keyed by CatalogListing.id — one entry per listing (multiple per product when a product has multiple listings).

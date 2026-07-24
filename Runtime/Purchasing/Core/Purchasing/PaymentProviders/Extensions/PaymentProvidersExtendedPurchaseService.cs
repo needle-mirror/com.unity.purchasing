@@ -62,6 +62,16 @@ namespace UnityEngine.Purchasing
             m_PaymentProviderCallbacks.SetComplianceCheck(complianceCheck);
         }
 
+        public void SetCustomReferenceId(string? customReferenceId)
+        {
+            m_PaymentProviderCallbacks.SetCustomReferenceId(customReferenceId);
+        }
+
+        public void SetCustomMetadata(IReadOnlyDictionary<string, string>? customMetadata)
+        {
+            m_PaymentProviderCallbacks.SetCustomMetadata(customMetadata);
+        }
+
         public Task<string?> GenerateURL(string? catalogListingId, IReadOnlyList<PaymentProviderToken>? externalTokens = null)
         {
             return m_PaymentProviderCallbacks.GenerateURL(catalogListingId, externalTokens);

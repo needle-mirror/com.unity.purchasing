@@ -6,10 +6,10 @@ using UnityEngine.UIElements;
 namespace UnityEditor.Purchasing.Authoring
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = true, AllowMultiple = false)]
-    public sealed class CustomReadOnlyAttribute : PropertyAttribute { }
+    sealed class CustomReadOnlyAttribute : PropertyAttribute { }
 
     [CustomPropertyDrawer(typeof(CustomReadOnlyAttribute))]
-    internal sealed class CustomReadOnlyDrawer : PropertyDrawer
+    sealed class CustomReadOnlyDrawer : PropertyDrawer
     {
         public override VisualElement CreatePropertyGUI(SerializedProperty property)
         {

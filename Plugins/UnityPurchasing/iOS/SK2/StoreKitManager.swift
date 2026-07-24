@@ -84,7 +84,7 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
             let jsonString = encodeToJSON(purchaseDetail)
             await storeKitCallback.callback(subject: "OnPurchaseSucceeded", payload: jsonString, entitlementStatus: 0)
         } catch {
-            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: error.localizedDescription, reason: 7 /* 7 = Unknown */)
+            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: error.localizedDescription, reason: PurchaseFailureReason.Unknown.rawValue)
             let jsonString = encodeToJSON(purchaseDetail)
             await self.storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
         }
@@ -328,7 +328,14 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
      */
     public func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async
     {
-        await transactionUseCase.finishTransaction(transactionId: transactionId, logFinishTransaction: logFinishTransaction)
+        // Report the result of the finish pass so C# only confirms orders once it has run.
+        let finished = await transactionUseCase.finishTransaction(transactionId: transactionId, logFinishTransaction: logFinishTransaction)
+        if finished {
+            await storeKitCallback.callback(subject: "OnFinishTransactionSucceeded", payload: String(transactionId), entitlementStatus: 0)
+        } else {
+            printLog("finishTransaction: \(transactionId) not found in unfinished transactions.")
+            await storeKitCallback.callback(subject: "OnFinishTransactionFailed", payload: String(transactionId), entitlementStatus: 0)
+        }
     }
 
     /**

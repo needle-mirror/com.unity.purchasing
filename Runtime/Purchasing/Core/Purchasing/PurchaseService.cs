@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing
         readonly ICheckEntitlementUseCase m_CheckEntitlementUseCase;
         internal readonly IPurchaseCache m_PurchaseCache;
         protected readonly IStoreWrapper m_StoreWrapper;
-        readonly IAnalyticsClient m_AnalyticsClient;
+        private protected readonly IAnalyticsClient m_AnalyticsClient;
         bool m_ProcessFetchedPendingOrders = true;
         // TODO: ULO-9339
         bool m_IsBuiltinStore;

@@ -27,8 +27,8 @@ namespace UnityEngine.Purchasing
         static readonly Dictionary<string, (string? dark, string? light)> s_BrandPaths
             = new(StringComparer.OrdinalIgnoreCase)
             {
-                ["AppleAppStore"] = ("com.unity.purchasing/Brands/ApplePay",  "com.unity.purchasing/Brands/ApplePayWhite"),
-                ["GooglePlay"]    = ("com.unity.purchasing/Brands/GooglePay", "com.unity.purchasing/Brands/GooglePayWhite"),
+                ["AppleAppStore"] = ("com.unity.purchasing/Brands/AppleInAppPurchase1ln", "com.unity.purchasing/Brands/AppleInAppPurchase1lnWhite"),
+                ["GooglePlay"]    = ("com.unity.purchasing/Brands/GooglePlayWordmark", "com.unity.purchasing/Brands/GooglePlayWordmarkWhite"),
                 ["codapay"]       = ("com.unity.purchasing/Brands/Coda",      "com.unity.purchasing/Brands/CodaWhite"),
                 ["stripe"]        = (null,                                    "com.unity.purchasing/Brands/StripeWhite"),
             };

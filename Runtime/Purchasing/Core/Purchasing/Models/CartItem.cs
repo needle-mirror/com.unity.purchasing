@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Linq;
+
 namespace UnityEngine.Purchasing
 {
     /// <summary>
@@ -63,15 +65,31 @@ namespace UnityEngine.Purchasing
         {
             if (product == null || catalogListingId == null || !product.catalogListings.ContainsKey(catalogListingId))
             {
-                var have = product?.catalogListings == null
-                    ? "(product or catalogListings was null)"
-                    : product.catalogListings.Count == 0
-                        ? "(empty)"
-                        : string.Join(", ", product.catalogListings.Keys);
+                string listingIds;
+                if (product == null || product.catalogListings == null)
+                {
+                    listingIds = "(product or catalogListings was null)";
+                }
+                else if (product.catalogListings.Count == 0)
+                {
+                    listingIds = "(empty)";
+                }
+                else if (product.catalogListings.Count == 1)
+                {
+                    throw new InvalidCartItemException(
+                        $"No catalog listing '{catalogListingId}' was found on the given product. " +
+                        $"Product uSku='{product?.uSku ?? "(null)"}'. " +
+                        $"Available listing id on this product: {product?.catalogListings.First().Key}. Did you mean to use this id?");
+                }
+                else
+                {
+                    listingIds = string.Join(", ", product.catalogListings.Keys);
+                }
+
                 throw new InvalidCartItemException(
-                    $"No catalog listing '{catalogListingId}' found on the given product. " +
+                    $"No catalog listing '{catalogListingId}' was found on the given product. " +
                     $"Product uSku='{product?.uSku ?? "(null)"}'. " +
-                    $"Available listing ids on this product: [{have}]");
+                    $"Available listing ids on this product: [{listingIds}]");
             }
 
             Product = product;

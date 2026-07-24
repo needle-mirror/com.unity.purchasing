@@ -14,6 +14,7 @@ namespace UnityEngine.Purchasing
         bool simulateAskToBuy { get; set; }
         void SetAppAccountToken(Guid token);
         event Action<Product>? OnPromotionalPurchaseIntercepted;
+        event Action<PendingOrder, ConfirmedOrder>? OnExpiredPurchaseFinished;
         void SetRefreshAppReceiptCallbacks(Action<string> successCallback, Action<string> errorCallback);
         void SetRefreshAppReceipt(bool refreshAppReceipt);
         void SetFetchStorefrontCallbacks(Action<AppleStorefront> successCallback, Action<string> errorCallback);

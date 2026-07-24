@@ -50,7 +50,9 @@ namespace UnityEngine.Purchasing.WebshopService
             string? locale,
             string? currencyCode,
             string? country,
-            IReadOnlyList<WebshopExternalToken> externalTokens)
+            IReadOnlyList<WebshopExternalToken> externalTokens,
+            string? customReferenceId,
+            IReadOnlyDictionary<string, string>? customMetadata)
         {
             CheckForCloudProjectInfo();
 
@@ -66,6 +68,12 @@ namespace UnityEngine.Purchasing.WebshopService
             foreach (var token in externalTokens)
             {
                 linkParams.Add(new WebshopLinkParam(MapTokenType(token.Type), token.Token));
+            }
+
+            AddIfPresent(linkParams, WebshopLinkParam.TypeOptions.CustomReferenceId, customReferenceId);
+            if (customMetadata != null && customMetadata.Count > 0)
+            {
+                linkParams.Add(new WebshopLinkParam(WebshopLinkParam.TypeOptions.Metadata, SerializeMetadataToJson(customMetadata)));
             }
 
             var request = new CreateWebshopLinkRequest(
@@ -103,6 +111,9 @@ namespace UnityEngine.Purchasing.WebshopService
             return await Task.FromResult<string?>(null);
 #endif
         }
+
+        internal static string SerializeMetadataToJson(IReadOnlyDictionary<string, string> metadata) =>
+            IsolatedJsonSerializer.Serialize(metadata);
 
         static void AddIfPresent(List<WebshopLinkParam> list, WebshopLinkParam.TypeOptions type, string? value)
         {

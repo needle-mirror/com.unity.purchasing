@@ -58,10 +58,6 @@ namespace UnityEngine.Purchasing.Stores
         string? m_CachedAppInstanceId;
         string? m_CachedFirebaseSessionId;
         string? m_CachedFirebaseAppId;
-        // Minted by the client that begins a purchase journey (typically the
-        // Purchase Options UI). No SDK-side source today; populated by a future
-        // setter / call-site once that UI lands.
-        string? m_CachedImpressionId;
 
         [Preserve]
         internal PlayerData(ICoreRegistryHelper coreRegistry, IUtil util, IStoreLocationContext storeLocationContext)
@@ -79,7 +75,7 @@ namespace UnityEngine.Purchasing.Stores
 #endif
 
 #pragma warning disable CS1998
-        public async Task<PlayerIdentity> CreatePlayerIdentityAsync()
+        public async Task<PlayerIdentity> CreatePlayerIdentityAsync(string? impressionId = null)
 #pragma warning restore CS1998
         {
             string? idfa = null;
@@ -88,7 +84,6 @@ namespace UnityEngine.Purchasing.Stores
             string? appInstanceId = null;
             string? firebaseSessionId = null;
             string? firebaseAppId = null;
-            string? impressionId = m_CachedImpressionId;
             bool adsIntentGranted = false;
 
 #if ENABLE_UNITY_CONSENT
@@ -129,6 +124,7 @@ namespace UnityEngine.Purchasing.Stores
 
 
             return new PlayerIdentity(
+                unityImpressionId: impressionId,
                 unityInstallationId: m_CoreRegistry.InstallationId,
                 sessionId: m_SessionId,
                 unityAnalyticsId: m_AnalyticsId,
@@ -138,9 +134,9 @@ namespace UnityEngine.Purchasing.Stores
                 unityAppInstanceId: appInstanceId,
                 unityFirebaseSessionId: firebaseSessionId,
                 unityFirebaseAppId: firebaseAppId,
-                unityImpressionId: impressionId,
                 unityIapSdkVersion: IAPVersion.Current,
                 unityEngineVersion: m_Util.unityVersion,
+                unityApplicationVersion: m_Util.gameVersion,
                 unityUserId: m_CoreRegistry.ExternalUserId,
                 unityInstallationTimestamp: AppInstallInfo.GetInstallTimestamp() ?? default
 #if ENABLE_UNITY_CONSENT

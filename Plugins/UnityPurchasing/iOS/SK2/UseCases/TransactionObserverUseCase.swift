@@ -11,6 +11,8 @@ public protocol TransactionObserverUseCaseProtocol {
     func checkVerified<T>(_ result: VerificationResult<T>) throws -> T
     func updateCustomerProductStatus() async
     func updatePurchasedIdentifier(_ purchaseDetail: PurchaseDetails) async
+    func finishExpiredTransaction(_ transaction: Transaction, _ verificationResult: VerificationResult<Transaction>) async
+    func finishRevokedTransaction(_ transaction: Transaction, _ verificationResult: VerificationResult<Transaction>) async
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
@@ -97,26 +99,23 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
             for await result in Transaction.updates {
                 do {
                     let transaction = try self.checkVerified(result)
-                    let purchaseDetails = await self.createPurchaseDetails(from: result)
-
 
                     if let _ = transaction.revocationDate {
                         // Remove access to the product identified by transaction.productID.
                         // Transaction.revocationReason provides details about
                         // the revoked transaction.
-                        await self.revokePurchase(purchaseDetails)
-                        await transaction.finish()
+                        await self.finishRevokedTransaction(transaction, result)
                     } else if let expirationDate = transaction.expirationDate, expirationDate < Date() {
-                        // Do nothing, this subscription is expired.
-                        await transaction.finish()
-                        StoreKitManager.instance.recordTransactionForAttribution(purchaseDetails)
+                        // This subscription is expired, finish it silently.
+                        await self.finishExpiredTransaction(transaction, result)
                     } else if transaction.isUpgraded {
                         // Do nothing, there is an active transaction
                         // for a higher level of service.
-                        await transaction.finish()
+                        await self.finishExpiredTransaction(transaction, result)
                     } else {
                         // Provide access to the product identified by
                         // transaction.productID.
+                        let purchaseDetails = await self.createPurchaseDetails(from: result)
                         await self.updatePurchasedIdentifier(purchaseDetails)
                     }
                 } catch {
@@ -125,5 +124,19 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
                 }
             }
         }
+    }
+
+    public func finishExpiredTransaction(_ transaction: Transaction, _ verificationResult: VerificationResult<Transaction>) async {
+        let purchaseDetails = await createPurchaseDetails(from: verificationResult)
+        let jsonString = encodeToJSON(purchaseDetails)
+        await storeKitCallback.callback(subject: "OnPurchaseExpired", payload: jsonString, entitlementStatus: 0)
+        StoreKitManager.instance.recordTransactionForAttribution(purchaseDetails)
+        await transaction.finish()
+    }
+
+    public func finishRevokedTransaction(_ transaction: Transaction, _ verificationResult: VerificationResult<Transaction>) async {
+        let purchaseDetails = await createPurchaseDetails(from: verificationResult)
+        await revokePurchase(purchaseDetails)
+        await transaction.finish()
     }
 }

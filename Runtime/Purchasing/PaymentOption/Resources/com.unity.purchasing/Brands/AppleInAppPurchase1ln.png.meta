@@ -1,0 +1,533 @@
+fileFormatVersion: 2
+guid: 6fa6673c15e05410da95cebffbeba0a5
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 2459652727713259353
+    second: AppleInAppPurchase1ln_0
+  - first:
+      213: -8332318481874391541
+    second: AppleInAppPurchase1ln_1
+  - first:
+      213: 5278781536924358705
+    second: AppleInAppPurchase1ln_2
+  - first:
+      213: -4521817182487260403
+    second: AppleInAppPurchase1ln_3
+  - first:
+      213: 4508892017910812857
+    second: AppleInAppPurchase1ln_4
+  - first:
+      213: -4957684761152538773
+    second: AppleInAppPurchase1ln_5
+  - first:
+      213: 2086935780069670565
+    second: AppleInAppPurchase1ln_6
+  - first:
+      213: -5102370233788775208
+    second: AppleInAppPurchase1ln_7
+  - first:
+      213: 1833643228818761725
+    second: AppleInAppPurchase1ln_8
+  - first:
+      213: 900174295129359388
+    second: AppleInAppPurchase1ln_9
+  - first:
+      213: 4401353397905176686
+    second: AppleInAppPurchase1ln_10
+  - first:
+      213: -5461530508104705977
+    second: AppleInAppPurchase1ln_11
+  - first:
+      213: 6472238078532837170
+    second: AppleInAppPurchase1ln_12
+  - first:
+      213: 2955742068909934377
+    second: AppleInAppPurchase1ln_13
+  - first:
+      213: 2237772238631412782
+    second: AppleInAppPurchase1ln_14
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: iOS
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 6
+        width: 31
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 95f5b22cf11722220800000000000000
+      internalID: 2459652727713259353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_1
+      rect:
+        serializedVersion: 2
+        x: 36
+        y: 7
+        width: 8
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b0e647cbc78ad5c80800000000000000
+      internalID: -8332318481874391541
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_2
+      rect:
+        serializedVersion: 2
+        x: 47
+        y: 7
+        width: 24
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1385443f6dff14940800000000000000
+      internalID: 5278781536924358705
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_3
+      rect:
+        serializedVersion: 2
+        x: 73
+        y: 18
+        width: 18
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d03d69aea374f31c0800000000000000
+      internalID: -4521817182487260403
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_4
+      rect:
+        serializedVersion: 2
+        x: 89
+        y: 7
+        width: 33
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b01b22b66dc29e30800000000000000
+      internalID: 4508892017910812857
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_5
+      rect:
+        serializedVersion: 2
+        x: 122
+        y: 0
+        width: 26
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b67b2270af3c23bb0800000000000000
+      internalID: -4957684761152538773
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_6
+      rect:
+        serializedVersion: 2
+        x: 149
+        y: 0
+        width: 25
+        height: 34
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5aefa10f80946fc10800000000000000
+      internalID: 2086935780069670565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_7
+      rect:
+        serializedVersion: 2
+        x: 183
+        y: 7
+        width: 27
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d44e7e4e4db039b0800000000000000
+      internalID: -5102370233788775208
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_8
+      rect:
+        serializedVersion: 2
+        x: 210
+        y: 6
+        width: 24
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df7ea823dc8627910800000000000000
+      internalID: 1833643228818761725
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_9
+      rect:
+        serializedVersion: 2
+        x: 236
+        y: 7
+        width: 15
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c148f1980cf0e7c00800000000000000
+      internalID: 900174295129359388
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_10
+      rect:
+        serializedVersion: 2
+        x: 249
+        y: 6
+        width: 25
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e68b815989fb41d30800000000000000
+      internalID: 4401353397905176686
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_11
+      rect:
+        serializedVersion: 2
+        x: 275
+        y: 7
+        width: 24
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 748d57670feb434b0800000000000000
+      internalID: -5461530508104705977
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_12
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 6
+        width: 23
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 23fd4b4bd3202d950800000000000000
+      internalID: 6472238078532837170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_13
+      rect:
+        serializedVersion: 2
+        x: 324
+        y: 6
+        width: 23
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9270e0160c7e40920800000000000000
+      internalID: 2955742068909934377
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: AppleInAppPurchase1ln_14
+      rect:
+        serializedVersion: 2
+        x: 346
+        y: 6
+        width: 24
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e242bdbaef92e0f10800000000000000
+      internalID: 2237772238631412782
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      AppleInAppPurchase1ln_0: 2459652727713259353
+      AppleInAppPurchase1ln_1: -8332318481874391541
+      AppleInAppPurchase1ln_10: 4401353397905176686
+      AppleInAppPurchase1ln_11: -5461530508104705977
+      AppleInAppPurchase1ln_12: 6472238078532837170
+      AppleInAppPurchase1ln_13: 2955742068909934377
+      AppleInAppPurchase1ln_14: 2237772238631412782
+      AppleInAppPurchase1ln_2: 5278781536924358705
+      AppleInAppPurchase1ln_3: -4521817182487260403
+      AppleInAppPurchase1ln_4: 4508892017910812857
+      AppleInAppPurchase1ln_5: -4957684761152538773
+      AppleInAppPurchase1ln_6: 2086935780069670565
+      AppleInAppPurchase1ln_7: -5102370233788775208
+      AppleInAppPurchase1ln_8: 1833643228818761725
+      AppleInAppPurchase1ln_9: 900174295129359388
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

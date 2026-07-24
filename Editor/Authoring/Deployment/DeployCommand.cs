@@ -15,6 +15,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
     {
         readonly ICatalogDeploymentHandler m_DeploymentHandler;
         readonly ILiveContentConfigClient m_Client;
+        readonly IWebshopCategoriesClient m_CategoriesClient;
         readonly IEnvironmentsApi m_EnvironmentsApi;
 
         public override string Name => L10n.Tr("Deploy");
@@ -22,17 +23,21 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
         public DeployCommand(
             ICatalogDeploymentHandler moduleDeploymentHandler,
             ILiveContentConfigClient client,
+            IWebshopCategoriesClient categoriesClient,
             IEnvironmentsApi environmentsApi)
         {
             m_DeploymentHandler = moduleDeploymentHandler;
             m_Client = client;
+            m_CategoriesClient = categoriesClient;
             m_EnvironmentsApi = environmentsApi;
         }
 
         public override async Task ExecuteAsync(IEnumerable<CatalogEntryDeploymentItem> items, CancellationToken cancellationToken = default)
         {
             var itemList = items.ToList();
-            await m_Client.Initialize(m_EnvironmentsApi.ActiveEnvironmentId.ToString(), CloudProjectSettings.projectId, cancellationToken);
+            var envId = m_EnvironmentsApi.ActiveEnvironmentId.ToString();
+            await m_Client.Initialize(envId, CloudProjectSettings.projectId, cancellationToken);
+            await m_CategoriesClient.Initialize(envId, CloudProjectSettings.projectId, cancellationToken);
             OnPreDeploy(itemList);
             await m_DeploymentHandler.DeployAsync(itemList, false, false, cancellationToken);
         }

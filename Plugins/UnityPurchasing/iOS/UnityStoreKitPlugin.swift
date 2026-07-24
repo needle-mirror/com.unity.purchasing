@@ -229,12 +229,18 @@ public func unityPurchasing_RefreshAppReceipt() {
 @_cdecl("unityPurchasing_FinishTransaction")
 public func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar>, logFinishTransaction: Bool) {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    if let transactionIdUInt64 = UInt64(String(cString: transactionId))
-    {
-        Task.detached(priority: .background, operation: {
+    let transactionIdString = String(cString: transactionId)
+    Task.detached(priority: .background, operation: {
+        if let transactionIdUInt64 = UInt64(transactionIdString)
+        {
             await StoreKitManager.instance.finishTransaction(transactionId: transactionIdUInt64, logFinishTransaction: logFinishTransaction)
-        })
-    }
+        }
+        else
+        {
+            printLog("finishTransaction: transactionId \(transactionIdString) is not a valid UInt64.")
+            await StoreKitManager.instance.storeKitCallback.callback(subject: "OnFinishTransactionFailed", payload: transactionIdString, entitlementStatus: 0)
+        }
+    })
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)

@@ -20,10 +20,20 @@ namespace UnityEngine.Purchasing
         {
             if (product != null)
             {
-                var purchases = await m_GoogleQueryPurchasesUseCase.QueryPurchases();
+                EntitlementStatus status;
+                try
+                {
+                    var purchases = await m_GoogleQueryPurchasesUseCase.QueryPurchases();
 
-                var purchase = purchases.FirstOrDefault(PurchaseToCheckForEntitlement(product));
-                var status = DetermineEntitlementStatus(purchase, product.type);
+                    var purchase = purchases.FirstOrDefault(PurchaseToCheckForEntitlement(product));
+                    status = DetermineEntitlementStatus(purchase, product.type);
+                }
+                catch (Exception ex)
+                {
+                    // A failed purchases query doesn't mean the user is not entitled.
+                    Debug.unityLogger.LogIAPWarning($"CheckEntitlement failed for {product.storeSpecificId}: {ex.Message}");
+                    status = EntitlementStatus.Unknown;
+                }
 
                 onEntitlementChecked?.Invoke(product, status);
             }

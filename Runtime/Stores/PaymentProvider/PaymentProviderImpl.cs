@@ -40,6 +40,8 @@ namespace UnityEngine.Purchasing.Stores
         IPlayerData m_PlayerData;
         string? m_PaymentProviderOverride;
         protected Func<PaymentProviderComplianceContext, Task<bool>>? m_ComplianceCheck;
+        string? m_CustomReferenceId;
+        IReadOnlyDictionary<string, string>? m_CustomMetadata;
         INativeAppleStore? m_NativeStore;
         DeviceInfo? m_DeviceInfo;
         readonly ConcurrentDictionary<string, Task<OrderData>> m_OrderDataCache = new();
@@ -219,8 +221,12 @@ namespace UnityEngine.Purchasing.Stores
             PurchaseCallback?.OnPurchaseDeferred(
                 new DeferredOrder(
                     cart,
-                    new OrderInfo("", order.orderId.ToFormattedString(),
-                        PaymentProvider.Name)
+                    new PaymentProvidersOrderInfo(
+                        order.orderId.ToFormattedString(),
+                        PaymentProvider.Name,
+                        order.orderData.customReferenceId,
+                        order.orderData.metadata
+                        )
                 )
             );
         }
@@ -356,6 +362,18 @@ namespace UnityEngine.Purchasing.Stores
         public void SetComplianceCheck(Func<PaymentProviderComplianceContext, Task<bool>>? complianceCheck)
         {
             m_ComplianceCheck = complianceCheck;
+        }
+
+        public void SetCustomReferenceId(string? customReferenceId)
+        {
+            m_CustomReferenceId = customReferenceId;
+        }
+
+        public void SetCustomMetadata(IReadOnlyDictionary<string, string>? customMetadata)
+        {
+            m_CustomMetadata = customMetadata == null
+                ? null
+                : new Dictionary<string, string>(customMetadata);
         }
 
         // Runs the developer-supplied compliance callback before order creation.
@@ -596,7 +614,12 @@ namespace UnityEngine.Purchasing.Stores
             {
                 var cartValidator = new NonNullCartValidator();
                 var cart = CreateCartFromOrderData(orderData, cartValidator);
-                var orderInfo = new OrderInfo("", orderData.id.ToFormattedString(), PaymentProvider.Name);
+
+                var transactionId = orderData.id.ToFormattedString();
+                var customReferenceId = orderData.customReferenceId;
+                var metadata = orderData.metadata;
+
+                var orderInfo = new PaymentProvidersOrderInfo(transactionId, PaymentProvider.Name, customReferenceId, metadata);
                 return orderData.status switch
                 {
                     OrderStatus.Created => new DeferredOrder(cart, orderInfo),
@@ -1015,7 +1038,7 @@ namespace UnityEngine.Purchasing.Stores
                 {
                     throw new RestrictedTokensNotAvailable(k_WebshopUnsupportedMessage);
                 }
-                context.WebshopUrl ??= await FetchWebshopUrl(catalogListingId, null, externalTokens);
+                context.WebshopUrl ??= await FetchWebshopUrl(catalogListingId, context.ImpressionId, externalTokens);
                 return context.WebshopUrl;
             }
 
@@ -1062,7 +1085,8 @@ namespace UnityEngine.Purchasing.Stores
                 return;
             }
 
-            s_FlowContext.Value = new PurchaseFlowContext(PurchaseChannel.Webshop);
+            var impressionId = ImpressionIdContext.TakeOrMint();
+            s_FlowContext.Value = new PurchaseFlowContext(PurchaseChannel.Webshop, impressionId: impressionId);
             string? primedUrl;
             try
             {
@@ -1078,7 +1102,7 @@ namespace UnityEngine.Purchasing.Stores
                 s_FlowContext.Value = null;
             }
 
-            var url = primedUrl ?? await FetchWebshopUrl(catalogListingId, null, externalTokens);
+            var url = primedUrl ?? await FetchWebshopUrl(catalogListingId, impressionId, externalTokens);
 
             // Present the webshop via the shared coordinator using the webshop's own
             // presentation mode. No poll afterwards: a webshop redirect generates no
@@ -1126,7 +1150,9 @@ namespace UnityEngine.Purchasing.Stores
                     m_PlayerData.Locale,
                     m_PlayerData.CurrencyCode,
                     m_PlayerData.RegionCode,
-                    MapWebshopExternalTokens(externalTokens)
+                    MapWebshopExternalTokens(externalTokens),
+                    m_CustomReferenceId,
+                    m_CustomMetadata
                 );
 
             if (!link.Live)
@@ -1191,15 +1217,17 @@ namespace UnityEngine.Purchasing.Stores
             return await m_PaymentProviderClientWrapper
                 .GetPaymentProviderService()
                 .GetUrl(
-                    catalogListingId,
-                    m_PlayerData.DisplayName,
-                    m_PlayerData.Locale,
-                    m_PlayerData.CurrencyCode,
-                    m_PlayerData.RegionCode,
-                    await m_PlayerData.CreatePlayerIdentityAsync(),
-                    paymentProviderName ?? m_PaymentProviderOverride,
-                    ConvertDeviceInfoToGeneratedModel(deviceInfo),
-                    externalTokens
+                    catalogListingId: catalogListingId,
+                    displayName: m_PlayerData.DisplayName,
+                    locale: m_PlayerData.Locale,
+                    currencyCode: m_PlayerData.CurrencyCode,
+                    country: m_PlayerData.RegionCode,
+                    playerIdentity: await m_PlayerData.CreatePlayerIdentityAsync(ImpressionIdContext.TakeOrMint()),
+                    paymentProviderOverride: paymentProviderName ?? m_PaymentProviderOverride,
+                    customReferenceId: m_CustomReferenceId,
+                    customMetadata: m_CustomMetadata,
+                    deviceInfo: ConvertDeviceInfoToGeneratedModel(deviceInfo),
+                    paymentProviderTokens: externalTokens
                 );
         }
 
@@ -1335,11 +1363,16 @@ namespace UnityEngine.Purchasing.Stores
         // RedirectToWebshop pick it up after the callback returns (shared by-reference via AsyncLocal).
         public string? WebshopUrl { get; set; }
 
-        public PurchaseFlowContext(PurchaseChannel channel, string? paymentProviderName = null, string? webshopUrl = null)
+        // The journey's impression_id, so a webshop URL primed from inside the compliance
+        // callback (GenerateURL) carries the same id as the outer RedirectToWebshop fetch.
+        public string? ImpressionId { get; }
+
+        public PurchaseFlowContext(PurchaseChannel channel, string? paymentProviderName = null, string? webshopUrl = null, string? impressionId = null)
         {
             Channel = channel;
             PaymentProviderName = paymentProviderName;
             WebshopUrl = webshopUrl;
+            ImpressionId = impressionId;
         }
     }
 }

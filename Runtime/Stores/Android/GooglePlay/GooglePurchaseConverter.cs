@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Scripting;
@@ -13,9 +14,9 @@ namespace UnityEngine.Purchasing
         internal GooglePurchaseConverter(IProductDetailsConverter productDetailsConverter)
         { }
 
-        public Order CreateOrderFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
+        public async Task<Order> CreateOrderFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
         {
-            var cart = CreateCartFromPurchase(purchase, productCache);
+            var cart = await CreateCartFromPurchase(purchase, productCache);
             var orderInfo = new GoogleOrderInfo(purchase.receipt, purchase.purchaseToken, GooglePlay.Name, purchase.obfuscatedAccountId, purchase.obfuscatedProfileId);
 
             if (purchase.IsPending())
@@ -38,9 +39,25 @@ namespace UnityEngine.Purchasing
             return cartItem?.Product.type ?? ProductType.Unknown;
         }
 
-        public ICart CreateCartFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
+        public async Task<ICart> CreateCartFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
         {
-            var product = productCache?.Find(purchase.sku) ?? DefaultProduct(purchase);
+            // Cache-by-sku → backend reverse-lookup → cache-by-uSku → DefaultProduct.
+            // DefaultProduct is the terminal fallback because it enriches the returned Product with
+            // Google's productDescription metadata (title / price / currency) — richer than a plain
+            // CreateUnknownProduct. When the resolver produced a match, we pass its uSku + type
+            // through so the fallback Product's ProductDefinition carries both ids and the correct
+            // ProductType.
+            var product = productCache?.Find(purchase.sku);
+            ResolvedUSku? resolved = null;
+            if (product == null && productCache != null)
+            {
+                resolved = await productCache.ResolveByStoreSpecificIdAsync(purchase.sku);
+                if (resolved != null && !string.IsNullOrEmpty(resolved.USku))
+                {
+                    product = productCache.Find(resolved.USku);
+                }
+            }
+            product ??= DefaultProduct(purchase, resolved?.USku ?? purchase.sku ?? "", resolved?.Type ?? ProductType.Unknown);
 
             // Multi-listing aware: pick the listing whose storeSpecificId matches the actual SKU
             // purchased. Falls back to the base listing in the single-listing case (where they're equal).
@@ -63,13 +80,14 @@ namespace UnityEngine.Purchasing
                 : new Cart(updatedProduct);
         }
 
-        private Product DefaultProduct(IGooglePurchase purchase)
+        // Terminal fallback when neither the local cache nor the backend reverse lookup can
+        // identify the product. Metadata comes from the Google productDescription attached to this
+        // purchase, which is richer than a bare CreateUnknownProduct. Callers pick the uSku:
+        // the backend-resolved value when available, otherwise the raw Google sku.
+        Product DefaultProduct(IGooglePurchase purchase, string uSku, ProductType type)
         {
             var productDescription = purchase.productDescriptions.FirstOrDefault();
-
-            var productId = purchase.sku ?? "";
-
-            return new Product(new ProductDefinition(productId, productId, ProductType.Unknown),
+            return new Product(new ProductDefinition(uSku, purchase.sku ?? "", type),
                 productDescription?.metadata);
         }
     }
