@@ -48,7 +48,6 @@ namespace UnityEngine.Purchasing
         static AppleStoreImpl? s_Instance;
         static Action? s_QuittingHandler;
 
-        string? m_LastPurchaseTransactionId;
         string? appReceipt;
 
         bool m_IsTransactionObserverEnabled;
@@ -185,8 +184,6 @@ namespace UnityEngine.Purchasing
             var cartItem = cart.Items().First();
             var productDefinition = cartItem.Product.catalogListings[cartItem.CatalogListingId].definition;
             var purchaseOptions = PurchaseOptions();
-            // Resets the last purchase transaction id to avoid discarding real duplicated transactions.
-            m_LastPurchaseTransactionId = string.Empty;
             Purchase(productDefinition, purchaseOptions);
         }
 
@@ -963,6 +960,9 @@ namespace UnityEngine.Purchasing
             var ownershipType = OwnershipTypeFromString(purchaseDetails.TryGetString("ownershipType"));
             var appAccountTokenString = purchaseDetails.TryGetString("appAccountToken");
             var signatureJws = purchaseDetails.TryGetString("signatureJws");
+            // Only present on the result of the native purchase call, never on Transaction.updates
+            // or entitlement deliveries — its presence identifies the answer to a Purchase call.
+            var requestedProductId = purchaseDetails.TryGetString("requestedProductId");
 
             Guid? appAccountToken = null;
             if (Guid.TryParse(appAccountTokenString, out Guid parsedToken))
@@ -977,11 +977,7 @@ namespace UnityEngine.Purchasing
 
             OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
 #endif
-            await ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
-
-            // Saves the current transactionId to prevent firing a DuplicatedTransaction event if the listener sends the transaction currently being processed.
-            // After processing, so DuplicateTransactions are only blocked after the initial purchase event has been handled.
-            m_LastPurchaseTransactionId = transactionId;
+            await ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo, requestedProductId);
         }
 
         // TODO: IAP-3929
@@ -999,7 +995,7 @@ namespace UnityEngine.Purchasing
             return m_RefreshAppReceiptTask.Task;
         }
 
-        async Task ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
+        async Task ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo, string? requestedProductId)
         {
             if (!m_TransactionLog.HasRecordOf(transactionId))
             {
@@ -1007,7 +1003,7 @@ namespace UnityEngine.Purchasing
             }
             else
             {
-                await ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+                await ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo, requestedProductId);
             }
         }
 
@@ -1017,10 +1013,10 @@ namespace UnityEngine.Purchasing
             PurchaseCallback?.OnPurchaseSucceeded(pendingOrder);
         }
 
-        async Task ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo)
+        async Task ProcessLoggedPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo, string? requestedProductId)
         {
             var confirmedOrder = await GenerateAppleConfirmedOrder(id, transactionId, originalTransactionId, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
-            EnsureConfirmedOrderIsFinished(confirmedOrder);
+            EnsureConfirmedOrderIsFinished(confirmedOrder, requestedProductId);
         }
 
         async Task<DeferredOrder> GenerateAppleDeferredOrder(string storeSpecificId, string transactionID, string originalTransactionId, OwnershipType ownershipType, Guid? appAccountToken, string? signatureJws, string? catalogListingId = null)
@@ -1053,40 +1049,37 @@ namespace UnityEngine.Purchasing
                 : new Cart(product);
         }
 
-        void EnsureConfirmedOrderIsFinished(ConfirmedOrder confirmedOrder)
+        void EnsureConfirmedOrderIsFinished(ConfirmedOrder confirmedOrder, string? requestedProductId)
         {
             var cartItem = confirmedOrder.CartOrdered.Items().FirstOrDefault();
             var productDefinition = cartItem != null && cartItem.Product.catalogListings.TryGetValue(cartItem.CatalogListingId, out var orderListing) ? orderListing.definition : null;
-            InvokeDuplicateTransactionError(confirmedOrder);
+            InvokeDuplicateTransactionError(confirmedOrder, requestedProductId);
             base.FinishTransaction(productDefinition, confirmedOrder.Info.TransactionID);
         }
 
-        void InvokeDuplicateTransactionError(ConfirmedOrder confirmedOrder)
+        void InvokeDuplicateTransactionError(ConfirmedOrder confirmedOrder, string? requestedProductId)
         {
-            var subscriptionInfo = confirmedOrder.Info.PurchasedProductInfo.FirstOrDefault()?.subscriptionInfo;
-            if (subscriptionInfo != null)
+            var productInfo = confirmedOrder.Info.PurchasedProductInfo.FirstOrDefault();
+            var productId = productInfo?.productId;
+            var renewalProductId = productInfo?.subscriptionInfo?.m_SubscriptionRenewalProductId;
+            var hasPendingRenewalChange = !string.IsNullOrEmpty(renewalProductId) && renewalProductId != productId;
+
+            if (requestedProductId == null && !StoreKitSelector.UseStoreKit1())
             {
-                var renewalProductId = subscriptionInfo.m_SubscriptionRenewalProductId;
-                if (renewalProductId != string.Empty && renewalProductId != confirmedOrder.Info.PurchasedProductInfo.First().productId)
-                {
-                    var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
-                        PurchaseFailureReason.DuplicateTransaction,
-                        "Subscription was downgraded from " + confirmedOrder.Info.PurchasedProductInfo.First().productId + " to " + renewalProductId);
-                    PurchaseCallback?.OnPurchaseFailed(failedOrder);
-                }
+                // An unsolicited redelivery of an already-confirmed transaction:
+                // nobody is waiting for an answer, finish silently.
+                return;
             }
-            else
-            {
-                if (m_LastPurchaseTransactionId == confirmedOrder.Info.TransactionID)
-                {
-                    // Prevents duplicated transaction error when processing the same confirmed order multiple times, which can happen when the listener sends transactions that have already been processed by the user.
-                    return;
-                }
-                var failedOrder = new FailedOrder(confirmedOrder.CartOrdered,
-                    PurchaseFailureReason.DuplicateTransaction,
-                    "Purchase has already been confirmed.");
-                PurchaseCallback?.OnPurchaseFailed(failedOrder);
-            }
+
+            InvokeDuplicateTransactionFailure(confirmedOrder, hasPendingRenewalChange
+                ? $"Subscription {productId} is already active and is set to renew as {renewalProductId}."
+                : "Purchase has already been confirmed.");
+        }
+
+        void InvokeDuplicateTransactionFailure(ConfirmedOrder confirmedOrder, string details)
+        {
+            var failedOrder = new FailedOrder(confirmedOrder, PurchaseFailureReason.DuplicateTransaction, details);
+            PurchaseCallback?.OnPurchaseFailed(failedOrder);
         }
 
 #region StoreKit1
@@ -1169,7 +1162,7 @@ namespace UnityEngine.Purchasing
                 }
                 else
                 {
-                    await ProcessLoggedPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null);
+                    await ProcessLoggedPurchase(id, transactionId, originalTransactionId, string.Empty, OwnershipType.Undefined, null, string.Empty, null, null);
                 }
             }
             else

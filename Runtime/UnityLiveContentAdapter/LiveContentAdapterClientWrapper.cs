@@ -1,5 +1,4 @@
 using Unity.Services.Authentication.Internal;
-using Unity.Services.Core.Configuration.Internal;
 using UnityEngine.Purchasing.LiveContentAdapterService;
 
 namespace UnityEngine.Purchasing.Stores
@@ -14,9 +13,9 @@ namespace UnityEngine.Purchasing.Stores
             return m_LiveContentAdapterService;
         }
 
-        public void CreateLiveContentAdapterService(IAccessToken accessToken, IEnvironmentId environmentId, ICloudProjectId cloudProjectId, string baseUrl = null)
+        public void CreateLiveContentAdapterService(IAccessToken accessToken, IEnvironmentId environmentId, string baseUrl)
         {
-            m_LiveContentAdapterService ??= new InternalLiveContentAdapterService(accessToken, environmentId, cloudProjectId, baseUrl);
+            m_LiveContentAdapterService ??= new InternalLiveContentAdapterService(accessToken, environmentId, baseUrl);
         }
     }
 }

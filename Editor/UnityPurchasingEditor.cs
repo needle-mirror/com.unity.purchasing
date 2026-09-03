@@ -237,6 +237,12 @@ namespace UnityEditor.Purchasing
         [PostProcessScene(0)]
         internal static void OnPostProcessScene()
         {
+            
+            // PostProcessScene also fires on every Play Mode entry. The Android store
+            // plugin stripping only affects player builds, so skip the work otherwise.
+            if (!BuildPipeline.isBuildingPlayer)
+                return;
+
             if (File.Exists(ModePath))
             {
                 try

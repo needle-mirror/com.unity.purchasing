@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing
 
         /// <summary>
         /// A container for a Product’s subscription-related information.
-        /// Returns null for non-subscriptions.
+        /// Returns null for non-subscriptions, and for products that were not fetched from the store.
         /// </summary>
         SubscriptionInfo? subscriptionInfo { get; }
     }

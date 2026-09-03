@@ -22,7 +22,20 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Validations
                 .ToList();
         }
 
-        public static (string, string) GetDuplicateResourceErrorMessages(
+        public static void UpdateDeploymentStatus(
+            IReadOnlyList<IGrouping<string, CatalogEntryDeploymentItem>> duplicateGroups)
+        {
+            foreach (var group in duplicateGroups)
+            {
+                foreach (var resourceItem in group)
+                {
+                    var (shortMsg, longMsg) = GetDuplicateResourceErrorMessages(resourceItem, group.ToList());
+                    resourceItem.Status = Statuses.GetFailedToDeploy(shortMsg);
+                }
+            }
+        }
+
+        public static (string shortMsg, string longMsg) GetDuplicateResourceErrorMessages(
             CatalogEntryDeploymentItem targetCatalogEntryDeploymentItem,
             IReadOnlyList<CatalogEntryDeploymentItem> group)
         {

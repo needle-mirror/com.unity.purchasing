@@ -10,7 +10,11 @@ namespace IAPResolver
         public override List<string> Dependencies =>
             new List<string>()
             {
-                "com.android.billingclient:billing:9.0.0"
+                "com.android.billingclient:billing:9.0.0",
+                // Not IAP's: Unity's androidx chain pulls kotlin-stdlib-jdk7/jdk8:1.6.21, which duplicate
+                // classes now in kotlin-stdlib 1.8+. 1.8.22 are empty stubs; drop at androidx.lifecycle 2.7.0.
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22",
+                "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22"
             };
         public override List<string> Repositories =>
             new List<string>();

@@ -40,7 +40,13 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
     @Dependency private(set) var transactionUseCase: TransactionUseCaseProtocol
     @Dependency private(set) var storeKitCallback: StoreKitCallbackDelegate
 
-    private(set) var products: [Product] = []
+    // Fetches are serialised upstream by FetchProductsUseCase, but the readers
+    // are not: purchase and the Transaction.updates observer each run on their
+    // own Task.detached. [Product] is copy-on-write, so an unguarded read during
+    // the merge sees a buffer mid-swap, not just stale data.
+    private let cachedProductsLock = NSLock()
+    private var cachedProducts: [Product] = []
+
     var purchasedProducts: [Product] = []
 
     // MARK: Singleton
@@ -131,7 +137,9 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
             let storeSpecificIds = product.map { $0.storeSpecificId }
 
             let response = await productUseCase.fetchProducts(for: storeSpecificIds)
-            products = response.products
+            // Merge into the cache by id: refetched products replace their old entry,
+            // products from earlier fetches are kept.
+            mergeIntoCache(response.products)
 
             let jsonString = encodeToJSON(response)
             await storeKitCallback.callback(subject: "OnProductsFetched", payload: jsonString, entitlementStatus: 0)
@@ -143,10 +151,38 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
     }
 
     /**
+     Merge a fetch result into the cache: refetched products replace their old
+     entry, earlier ones are kept.
+
+     Synchronous because `NSLock.unlock()` is unavailable from an async context
+     under Swift 6; `withLock` would do but needs iOS 16 and we ship to 15.
+     */
+    private func mergeIntoCache(_ products: [Product]) {
+        cachedProductsLock.lock()
+        defer { cachedProductsLock.unlock() }
+
+        let fetchedIds = Set(products.map { $0.id })
+        cachedProducts = products + cachedProducts.filter { !fetchedIds.contains($0.id) }
+    }
+
+    /**
+     Get a product from the cache populated by `fetchProducts`.
+     */
+    public func cachedProduct(for productId: String) -> Product? {
+        cachedProductsLock.lock()
+        defer { cachedProductsLock.unlock() }
+        return cachedProducts.first(where: { $0.id == productId })
+    }
+
+    /**
      Get a single product by ID. First checks cache, then uses direct Product.products lookup
      to handle edge cases like removed catalog items that still have active transactions.
      */
     public func getProduct(for productId: String) async -> Product? {
+        if let cached = cachedProduct(for: productId) {
+            return cached
+        }
+
         // Use Product.products directly - this can find products even if they are
         // removed from catalog but still have active subscriptions
         do {

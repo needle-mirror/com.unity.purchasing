@@ -15,6 +15,8 @@ namespace UnityEngine.Purchasing
         static AndroidJavaClass? s_AnalyticsClass;
         static AndroidJavaClass? s_TasksClass;
         static AndroidJavaClass? s_FirebaseAppClass;
+        // null = not probed yet; false is remembered for the session.
+        static bool? s_FirebaseAvailable;
 
         static AndroidJavaClass GetAnalyticsClass()
         {
@@ -34,8 +36,34 @@ namespace UnityEngine.Purchasing
             return s_FirebaseAppClass;
         }
 
+        static bool FirebaseAvailable()
+        {
+            if (s_FirebaseAvailable.HasValue)
+            {
+                return s_FirebaseAvailable.Value;
+            }
+
+            try
+            {
+                GetAnalyticsClass();
+                GetFirebaseAppClass();
+                s_FirebaseAvailable = true;
+                return true;
+            }
+            catch (Exception)
+            {
+                s_FirebaseAvailable = false;
+                return false;
+            }
+        }
+
         public async Task<string?> FetchAppInstanceIdAsync()
         {
+            if (!FirebaseAvailable())
+            {
+                return null;
+            }
+
             try
             {
                 return await Task.Run(() =>
@@ -63,6 +91,11 @@ namespace UnityEngine.Purchasing
 
         public async Task<string?> FetchSessionIdAsync()
         {
+            if (!FirebaseAvailable())
+            {
+                return null;
+            }
+
             try
             {
                 return await Task.Run(() =>
@@ -90,6 +123,11 @@ namespace UnityEngine.Purchasing
 
         public async Task<string?> FetchAppIdAsync()
         {
+            if (!FirebaseAvailable())
+            {
+                return null;
+            }
+
             try
             {
                 return await Task.Run(() =>

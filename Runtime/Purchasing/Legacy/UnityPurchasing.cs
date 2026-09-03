@@ -43,7 +43,12 @@ namespace UnityEngine.Purchasing
         {
             var productService = ProductServiceProvider.GetDefaultProductService();
             AddProductServiceListeners(storeListener, productService);
-            productService.FetchProducts(configurationBuilder.m_CatalogProvider.GetProducts(), new MaximumNumberOfAttemptsRetryPolicy(5));
+            // Ask for the running store's ids. GetProducts() with no store name skips
+            // UpdateStoreSpecificIDs entirely, so the definitions would keep whichever
+            // override AddStoreSpecificIds happened to apply last — an Apple-only
+            // override would be sent to a Google fetch.
+            var products = configurationBuilder.m_CatalogProvider.GetProducts(DefaultStoreHelper.GetDefaultStoreName());
+            productService.FetchProducts(products, new MaximumNumberOfAttemptsRetryPolicy(5));
         }
 
 

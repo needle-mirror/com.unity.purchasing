@@ -97,7 +97,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                         ImageUrl = NullIfEmpty(GetField(fields, columnMap, k_ColumnImageUrl)),
                         ProductDetails = new List<ProductDetails>(),
                         PricingDetails = new List<PricingDetails>(),
-                        StoreIdOverrides = BuildStoreIdOverrides(fields, columnMap),
                         IsWebshopAvailable = ParseWebshopAvailability(GetField(fields, columnMap, k_ColumnIsWebshopAvailable)),
                         Categories = new List<string>(),
                         HdImages = new List<HdImage>(),
@@ -107,6 +106,10 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                             GetField(fields, columnMap, k_ColumnPromotionEndsAt),
                             rowNumber, issues),
                     };
+                    item.SetStoreIdOverride(StoreId.Google, NullIfEmpty(GetField(fields, columnMap, k_ColumnGoogleOverride)));
+                    item.SetStoreIdOverride(StoreId.Apple, NullIfEmpty(GetField(fields, columnMap, k_ColumnAppleOverride)));
+                    item.SetStoreIdOverride(StoreId.XboxStore, NullIfEmpty(GetField(fields, columnMap, k_ColumnXboxStoreOverride)));
+                    item.SetStoreIdOverride(StoreId.MacAppStore, NullIfEmpty(GetField(fields, columnMap, k_ColumnMacAppStoreOverride)));
                     groups[catalogListingId] = item;
                     idOrder.Add(catalogListingId);
                     firstRowFor[catalogListingId] = rowNumber;
@@ -127,22 +130,22 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                         rowNumber, firstRowFor[catalogListingId], conflictMessages);
 
                     var google = NullIfEmpty(GetField(fields, columnMap, k_ColumnGoogleOverride));
-                    AddConflictIfChanged(google, FindOverrideValue(item, StoreId.Google),
+                    AddConflictIfChanged(google, item.GetStoreIdOverride(StoreId.Google),
                         k_ColumnGoogleOverride, catalogListingId,
                         rowNumber, firstRowFor[catalogListingId], conflictMessages);
 
                     var apple = NullIfEmpty(GetField(fields, columnMap, k_ColumnAppleOverride));
-                    AddConflictIfChanged(apple, FindOverrideValue(item, StoreId.Apple),
+                    AddConflictIfChanged(apple, item.GetStoreIdOverride(StoreId.Apple),
                         k_ColumnAppleOverride, catalogListingId,
                         rowNumber, firstRowFor[catalogListingId], conflictMessages);
 
                     var xbox = NullIfEmpty(GetField(fields, columnMap, k_ColumnXboxStoreOverride));
-                    AddConflictIfChanged(xbox, FindOverrideValue(item, StoreId.XboxStore),
+                    AddConflictIfChanged(xbox, item.GetStoreIdOverride(StoreId.XboxStore),
                         k_ColumnXboxStoreOverride, catalogListingId,
                         rowNumber, firstRowFor[catalogListingId], conflictMessages);
 
                     var macos = NullIfEmpty(GetField(fields, columnMap, k_ColumnMacAppStoreOverride));
-                    AddConflictIfChanged(macos, FindOverrideValue(item, StoreId.MacAppStore),
+                    AddConflictIfChanged(macos, item.GetStoreIdOverride(StoreId.MacAppStore),
                         k_ColumnMacAppStoreOverride, catalogListingId,
                         rowNumber, firstRowFor[catalogListingId], conflictMessages);
 
@@ -271,27 +274,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
             return result;
         }
 
-        static List<StoreIdOverride> BuildStoreIdOverrides(string[] fields, Dictionary<string, int> columnMap)
-        {
-            var google = NullIfEmpty(GetField(fields, columnMap, k_ColumnGoogleOverride));
-            var apple = NullIfEmpty(GetField(fields, columnMap, k_ColumnAppleOverride));
-            var xbox = NullIfEmpty(GetField(fields, columnMap, k_ColumnXboxStoreOverride));
-            var macos = NullIfEmpty(GetField(fields, columnMap, k_ColumnMacAppStoreOverride));
-            if (google == null && apple == null && xbox == null && macos == null)
-                return null;
-
-            var list = new List<StoreIdOverride>();
-            if (google != null)
-                list.Add(new StoreIdOverride { Store = StoreId.Google, Value = google });
-            if (apple != null)
-                list.Add(new StoreIdOverride { Store = StoreId.Apple, Value = apple });
-            if (xbox != null)
-                list.Add(new StoreIdOverride { Store = StoreId.XboxStore, Value = xbox });
-            if (macos != null)
-                list.Add(new StoreIdOverride { Store = StoreId.MacAppStore, Value = macos });
-            return list;
-        }
-
         static bool ParseWebshopAvailability(string value)
         {
             return !string.IsNullOrWhiteSpace(value)
@@ -399,18 +381,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
             var parsed = ParseDateTimeOffset(newValue);
             if (parsed.HasValue && parsed != existing)
                 AddMessage(conflictMessages, rowNumber, context, fieldName, "conflicts with", originalRow);
-        }
-
-        static string FindOverrideValue(CatalogItem item, StoreId store)
-        {
-            if (item.StoreIdOverrides == null)
-                return null;
-            foreach (var o in item.StoreIdOverrides)
-            {
-                if (o.Store == store)
-                    return o.Value;
-            }
-            return null;
         }
 
         static ProductBadge BuildBadge(string text, string imageUrl)
@@ -554,10 +524,10 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                 var pricing = item.PricingDetails ?? new List<PricingDetails>();
                 var categories = item.Categories ?? new List<string>();
                 var hdImages = item.HdImages ?? new List<HdImage>();
-                var googleOverride = FindOverrideValue(item, StoreId.Google);
-                var appleOverride = FindOverrideValue(item, StoreId.Apple);
-                var xboxStoreOverride = FindOverrideValue(item, StoreId.XboxStore);
-                var macAppStoreOverride = FindOverrideValue(item, StoreId.MacAppStore);
+                var googleOverride = item.GetStoreIdOverride(StoreId.Google);
+                var appleOverride = item.GetStoreIdOverride(StoreId.Apple);
+                var xboxStoreOverride = item.GetStoreIdOverride(StoreId.XboxStore);
+                var macAppStoreOverride = item.GetStoreIdOverride(StoreId.MacAppStore);
                 var promotionType = item.Promotion?.Type.ToString() ?? string.Empty;
                 var promotionStartsAt = FormatDateTimeOffset(item.Promotion?.StartsAt);
                 var promotionEndsAt = FormatDateTimeOffset(item.Promotion?.EndsAt);

@@ -1,6 +1,6 @@
 namespace UnityEditor.Purchasing.Editor.Authoring.Core.Logger
 {
-    interface ILogger
+    public interface ILogger
     {
         void LogError(object message);
         void LogWarning(object message);

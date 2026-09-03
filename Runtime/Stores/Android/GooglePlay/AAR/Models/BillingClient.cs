@@ -161,7 +161,12 @@ namespace UnityEngine.Purchasing.Stores.Android.GooglePlay.AAR.Models
         static AndroidJavaObject QueryProductDetailsParamsProductList(List<string> products, string type)
         {
             var productJavaList = products.Select(product => QueryProductDetailsParamsProduct(type, product)).ToList();
-            return productJavaList.ToJava();
+            var javaList = productJavaList.ToJava();
+            foreach (var p in productJavaList)
+            {
+                p.Dispose();
+            }
+            return javaList;
         }
 
         static AndroidJavaObject QueryProductDetailsParamsProduct(string type, string product)

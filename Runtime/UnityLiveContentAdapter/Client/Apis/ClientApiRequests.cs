@@ -276,22 +276,16 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerConfigContentRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for projectId </summary>
-        [Preserve]
-        public string ProjectId { get; }
         string PathAndQueryParams;
 
         /// <summary>
         /// GetPlayerConfigContent Request Object.
         /// Get config content
         /// </summary>
-        /// <param name="projectId">Project ID</param>
         [Preserve]
-        public GetPlayerConfigContentRequest(string projectId)
+        public GetPlayerConfigContentRequest()
         {
-            ProjectId = projectId;
-
-            PathAndQueryParams = $"/projects/{projectId}/configs/content/(.+)$";
+            PathAndQueryParams = $"/configs/content/(.+)$";
 
 
         }
@@ -375,9 +369,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerConfigsRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for projectId </summary>
-        [Preserve]
-        public string ProjectId { get; }
         /// <summary>Accessor for page </summary>
         [Preserve]
         public long? Page { get; }
@@ -408,7 +399,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// GetPlayerConfigs Request Object.
         /// Get player configs
         /// </summary>
-        /// <param name="projectId">Project ID</param>
         /// <param name="page">Current Page. Deprecated: use the `next` cursor instead for efficient pagination.</param>
         /// <param name="limit">Items Per Page</param>
         /// <param name="path">Path</param>
@@ -418,10 +408,8 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// <param name="start">Path-based cursor - Start from the alphabetically first config path</param>
         /// <param name="metadata">AIP-160 filter expression scoped to the metadata object. Field paths are relative to the metadata object — do not include a \"metadata.\" prefix. Supported operators: = != < <= > >= : (has/contains) AND OR NOT. Wildcards: use * in string values for glob matching (e.g. \"io*\" matches \"ios\"). Examples:   ?metadata=platform=\"ios\"   ?metadata=platform=\"ios\" AND version>3   ?metadata=platform=\"ios\" OR platform=\"android\"   ?metadata=NOT platform=\"web\"   ?metadata=tags:\"mobile\"   ?metadata=version:*</param>
         [Preserve]
-        public GetPlayerConfigsRequest(string projectId, long? page = default(long?), long? limit = 10, string path = default(string), string schema = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
+        public GetPlayerConfigsRequest(long? page = default(long?), long? limit = 10, string path = default(string), string schema = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
         {
-            ProjectId = projectId;
-
             Page = page;
             Limit = limit;
             Path = path;
@@ -430,7 +418,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             After = after;
             Start = start;
             Metadata = metadata;
-            PathAndQueryParams = $"/projects/{projectId}/configs/info";
+            PathAndQueryParams = $"/configs/info";
 
             List<string> queryParams = new List<string>();
 
@@ -554,9 +542,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerConfigsContentRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for projectId </summary>
-        [Preserve]
-        public string ProjectId { get; }
         /// <summary>Accessor for page </summary>
         [Preserve]
         public long? Page { get; }
@@ -590,7 +575,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// GetPlayerConfigsContent Request Object.
         /// Get player configs with inline content
         /// </summary>
-        /// <param name="projectId">Project ID</param>
         /// <param name="page">Current Page. Deprecated: use the `next` cursor instead for efficient pagination.</param>
         /// <param name="limit">Items Per Page</param>
         /// <param name="path">Path</param>
@@ -601,10 +585,8 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// <param name="start">Path-based cursor - Start from the alphabetically first config path</param>
         /// <param name="metadata">AIP-160 filter expression scoped to the metadata object. Field paths are relative to the metadata object — do not include a \"metadata.\" prefix. Supported operators: = != < <= > >= : (has/contains) AND OR NOT. Wildcards: use * in string values for glob matching (e.g. \"io*\" matches \"ios\"). Examples:   ?metadata=platform=\"ios\"   ?metadata=platform=\"ios\" AND version>3   ?metadata=platform=\"ios\" OR platform=\"android\"   ?metadata=NOT platform=\"web\"   ?metadata=tags:\"mobile\"   ?metadata=version:*</param>
         [Preserve]
-        public GetPlayerConfigsContentRequest(string projectId, long? page = default(long?), long? limit = 10, string path = default(string), string schema = default(string), string schemaVersion = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
+        public GetPlayerConfigsContentRequest(long? page = default(long?), long? limit = 10, string path = default(string), string schema = default(string), string schemaVersion = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
         {
-            ProjectId = projectId;
-
             Page = page;
             Limit = limit;
             Path = path;
@@ -614,7 +596,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             After = after;
             Start = start;
             Metadata = metadata;
-            PathAndQueryParams = $"/projects/{projectId}/configs/content";
+            PathAndQueryParams = $"/configs/content";
 
             List<string> queryParams = new List<string>();
 
@@ -750,22 +732,16 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerFileContentRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for projectId </summary>
-        [Preserve]
-        public string ProjectId { get; }
         string PathAndQueryParams;
 
         /// <summary>
         /// GetPlayerFileContent Request Object.
         /// Get file content
         /// </summary>
-        /// <param name="projectId">Project ID</param>
         [Preserve]
-        public GetPlayerFileContentRequest(string projectId)
+        public GetPlayerFileContentRequest()
         {
-            ProjectId = projectId;
-
-            PathAndQueryParams = $"/projects/{projectId}/files/content/(.+)$";
+            PathAndQueryParams = $"/files/content/(.+)$";
 
 
         }
@@ -848,9 +824,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerFilesRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for projectId </summary>
-        [Preserve]
-        public string ProjectId { get; }
         /// <summary>Accessor for page </summary>
         [Preserve]
         public long? Page { get; }
@@ -878,7 +851,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// GetPlayerFiles Request Object.
         /// Get player files
         /// </summary>
-        /// <param name="projectId">Project ID</param>
         /// <param name="page">Current Page. Deprecated: use the `next` cursor instead for efficient pagination.</param>
         /// <param name="limit">Items Per Page</param>
         /// <param name="path">Path</param>
@@ -887,10 +859,8 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// <param name="start">Path-based cursor - Start from the alphabetically first file path</param>
         /// <param name="metadata">AIP-160 filter expression scoped to the metadata object. Field paths are relative to the metadata object — do not include a \"metadata.\" prefix. Supported operators: = != < <= > >= : (has/contains) AND OR NOT. Wildcards: use * in string values for glob matching (e.g. \"io*\" matches \"ios\"). Examples:   ?metadata=platform=\"ios\"   ?metadata=platform=\"ios\" AND version>3   ?metadata=platform=\"ios\" OR platform=\"android\"   ?metadata=NOT platform=\"web\"   ?metadata=tags:\"mobile\"   ?metadata=version:*</param>
         [Preserve]
-        public GetPlayerFilesRequest(string projectId, long? page = default(long?), long? limit = 10, string path = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
+        public GetPlayerFilesRequest(long? page = default(long?), long? limit = 10, string path = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
         {
-            ProjectId = projectId;
-
             Page = page;
             Limit = limit;
             Path = path;
@@ -898,7 +868,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             After = after;
             Start = start;
             Metadata = metadata;
-            PathAndQueryParams = $"/projects/{projectId}/files/info";
+            PathAndQueryParams = $"/files/info";
 
             List<string> queryParams = new List<string>();
 

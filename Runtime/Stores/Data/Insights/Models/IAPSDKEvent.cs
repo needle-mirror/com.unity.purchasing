@@ -31,6 +31,7 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights.Models
         public string ApplicationVersion { get; set; } = "";                 // field 21
         public string? ImpressionId { get; set; }                            // field 24  (wrapper-supplied, optional)
         public string? FirebaseAppId { get; set; }                           // field 100 (wrapper-supplied; mobilesdk_app_id from google-services.json)
+        public string? InstallMode { get; set; }                             // field 101 (Android only; unset elsewhere)
     }
 
     // Marker for the `oneof event_data` in IAPSDKEvent.

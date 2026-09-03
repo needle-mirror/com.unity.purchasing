@@ -274,6 +274,7 @@ namespace UnityEngine.Purchasing
         {
             di.AddService<GoogleLastKnownProductService>();
             di.AddService<GooglePurchaseStateEnumProvider>();
+            di.AddService<GoogleProductDetailsReader>();
             di.AddService<GooglePurchaseBuilder>();
             di.AddService<GooglePurchasesUpdatedListener>();
             di.AddService<BillingClient>();

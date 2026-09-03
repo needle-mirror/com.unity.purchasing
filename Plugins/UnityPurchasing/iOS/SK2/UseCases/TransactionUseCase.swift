@@ -12,7 +12,10 @@ protocol TransactionUseCaseProtocol {
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
-class TransactionUseCase: TransactionUseCaseProtocol {
+// @unchecked Sendable: required under Swift 6 strict concurrency as this type is resolved via the
+// (@unchecked Sendable) DependencyContainer and used across async contexts. Safe because it is
+// effectively immutable — it holds only a `@Dependency`; every method operates on local state.
+class TransactionUseCase: TransactionUseCaseProtocol, @unchecked Sendable {
     @Dependency private(set) var transactionObserver: TransactionObserverUseCaseProtocol
 
     public func getPurchaseState(_ productId: String) async throws -> PurchaseState {

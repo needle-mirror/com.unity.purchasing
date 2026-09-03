@@ -49,7 +49,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
             Categories = config.Categories?.Count > 0 ? new List<string>(config.Categories) : null;
             HdImages = BuildHdImages(config.HdImages);
             Promotion = config.Promotion is not null ? new Promotion(config.Promotion) : null;
-            StoreIdOverrides = BuildOverrides(config);
+            StoreIdOverrides = null;
+            SetStoreIdOverride(StoreId.Apple, config.AppleOverride);
+            SetStoreIdOverride(StoreId.Google, config.GoogleOverride);
+            SetStoreIdOverride(StoreId.XboxStore, config.XboxStoreOverride);
+            SetStoreIdOverride(StoreId.MacAppStore, config.MacAppStoreOverride);
         }
 
         static List<HdImage> BuildHdImages(List<HdImage> source)
@@ -60,20 +64,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
             foreach (var img in source)
                 list.Add(new HdImage(img));
             return list;
-        }
-
-        static List<StoreIdOverride> BuildOverrides(CatalogItemInspectorConfig config)
-        {
-            var list = new List<StoreIdOverride>();
-            if (!string.IsNullOrEmpty(config.AppleOverride))
-                list.Add(new StoreIdOverride { Store = StoreId.Apple, Value = config.AppleOverride });
-            if (!string.IsNullOrEmpty(config.GoogleOverride))
-                list.Add(new StoreIdOverride { Store = StoreId.Google, Value = config.GoogleOverride });
-            if (!string.IsNullOrEmpty(config.XboxStoreOverride))
-                list.Add(new StoreIdOverride { Store = StoreId.XboxStore, Value = config.XboxStoreOverride });
-            if (!string.IsNullOrEmpty(config.MacAppStoreOverride))
-                list.Add(new StoreIdOverride { Store = StoreId.MacAppStore, Value = config.MacAppStoreOverride });
-            return list.Count > 0 ? list : null;
         }
     }
 }

@@ -163,6 +163,12 @@ namespace UnityEngine.Purchasing
                 {
                     product.storeSpecificId = storeSpecificId;
                 }
+                else
+                {
+                    // Stores without an override must fall back to the default id, not keep
+                    // whichever store's override was added last.
+                    product.storeSpecificId = product.id;
+                }
             }
         }
     }

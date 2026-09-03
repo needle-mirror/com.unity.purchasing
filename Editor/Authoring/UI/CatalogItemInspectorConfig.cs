@@ -58,10 +58,10 @@ namespace UnityEditor.Purchasing.Authoring
             Categories = catalogItem.Categories is null ? null : new List<string>(catalogItem.Categories);
             HdImages = catalogItem.HdImages?.Select(i => new HdImage(i)).ToList();
             Promotion = catalogItem.Promotion is null ? null : new Promotion(catalogItem.Promotion);
-            AppleOverride = catalogItem.StoreIdOverrides?.FirstOrDefault(o => o.Store == StoreId.Apple)?.Value;
-            GoogleOverride = catalogItem.StoreIdOverrides?.FirstOrDefault(o => o.Store == StoreId.Google)?.Value;
-            XboxStoreOverride = catalogItem.StoreIdOverrides?.FirstOrDefault(o => o.Store == StoreId.XboxStore)?.Value;
-            MacAppStoreOverride = catalogItem.StoreIdOverrides?.FirstOrDefault(o => o.Store == StoreId.MacAppStore)?.Value;
+            AppleOverride = catalogItem.GetStoreIdOverride(StoreId.Apple);
+            GoogleOverride = catalogItem.GetStoreIdOverride(StoreId.Google);
+            XboxStoreOverride = catalogItem.GetStoreIdOverride(StoreId.XboxStore);
+            MacAppStoreOverride = catalogItem.GetStoreIdOverride(StoreId.MacAppStore);
         }
     }
 }

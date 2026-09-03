@@ -16,6 +16,7 @@ using UnityEditor.Purchasing.Editor.Authoring.Core.Service;
 using UnityEditor.Purchasing.Editor.Authoring.Deployment;
 using UnityEditor.Purchasing.Editor.Authoring.IO;
 using UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi;
+using CoreLiveContentConfigClient = UnityEditor.Purchasing.Editor.Authoring.Core.LiveContentConfigClient;
 using UnityEditor.Purchasing.Editor.Authoring.Model;
 using static Unity.Purchasing.Editor.Shared.DependencyInversion.Factories;
 using ILogger = UnityEditor.Purchasing.Editor.Authoring.Core.Logger.ILogger;
@@ -65,7 +66,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring
             collection.Register<IConfigsApi>(sp => new ConfigsApi(
                 (IApiClient)sp.GetService(typeof(IApiClient)),
                 new ApiConfiguration { BasePath = LiveContentAdminEnvironment.BasePath }));
-            collection.RegisterSingleton(Default<ILiveContentConfigClient, LiveContentConfigClient>);
+            collection.Register(Default<ILiveContentApiTransport, EditorLiveContentApiTransport>);
+            collection.RegisterSingleton<ILiveContentConfigClient>(sp => new CoreLiveContentConfigClient(
+                (ILiveContentApiTransport)sp.GetService(typeof(ILiveContentApiTransport)),
+                (ILogger)sp.GetService(typeof(ILogger)),
+                LiveContentAdminEnvironment.SchemaRegistryBasePath));
             collection.RegisterSingleton(Default<IWebshopCategoriesClient, WebshopCategoriesClient>);
             collection.Register(Default<IAccessTokens, AccessTokens>);
             collection.Register(_ => EnvironmentsApi.Instance);

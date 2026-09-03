@@ -16,7 +16,10 @@ public protocol TransactionObserverUseCaseProtocol {
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
-public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
+// @unchecked Sendable: required for the `Task.detached` capture of `self` in `listenForTransactions()`
+// under Swift 6 strict concurrency. Safe because the only mutable state, `updateListenerTask`, is written
+// once via the idempotent `addTransactionObserver()` and cancelled in `deinit` — never mutated concurrently.
+public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol, @unchecked Sendable {
     @Dependency private(set) var storeKitCallback: StoreKitCallbackDelegate
 
     var updateListenerTask: Task<Void, Error>? = nil
@@ -48,6 +51,10 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol {
      Start a transaction listener as close to app launch as possible so you don't miss any transactions.
      */
     public func addTransactionObserver() {
+        // Idempotent: the observer is registered once, during initialization (after FetchProducts).
+        // Guarding against repeated calls prevents leaking the previous detached listener
+        // (`deinit` only cancels the last handle) and transactions being delivered more than once.
+        guard updateListenerTask == nil else { return }
         updateListenerTask = listenForTransactions()
     }
 

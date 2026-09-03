@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
 using Uniject;
@@ -52,7 +53,8 @@ namespace UnityEngine.Purchasing.Stores
 #endif
 
         IGoogleAdvertisingIdClient? m_AdvertisingIdClient;
-        //IFirebaseAnalyticsClient? m_FirebaseAnalyticsClient;
+        IFirebaseAnalyticsClient? m_FirebaseAnalyticsClient;
+        ConnectionsSettingsClient? m_ConnectionsSettingsClient;
         INativeAppleStore? m_NativeStore;
         // AppInstanceId is stable per session and re-fetching does JNI thread-attach work.
         string? m_CachedAppInstanceId;
@@ -74,9 +76,7 @@ namespace UnityEngine.Purchasing.Stores
         string ConsentStateAnalyticsIntent => s_ConsentStatesStrings[(int) ConsentState.AnalyticsIntent];
 #endif
 
-#pragma warning disable CS1998
         public async Task<PlayerIdentity> CreatePlayerIdentityAsync(string? impressionId = null)
-#pragma warning restore CS1998
         {
             string? idfa = null;
             string? idfv = null;
@@ -98,12 +98,25 @@ namespace UnityEngine.Purchasing.Stores
                 case RuntimePlatform.Android:
                     if (adsIntentGranted)
                     {
-                        m_AdvertisingIdClient ??= new GoogleAdvertisingIdClient();
-                        gaid = m_AdvertisingIdClient.FetchGaid();
-                        //m_FirebaseAnalyticsClient ??= new FirebaseAnalyticsClient();
-                        //appInstanceId = m_CachedAppInstanceId ??= await m_FirebaseAnalyticsClient.FetchAppInstanceIdAsync();
-                        //firebaseSessionId = m_CachedFirebaseSessionId ??= await m_FirebaseAnalyticsClient.FetchSessionIdAsync();
-                        //firebaseAppId = m_CachedFirebaseAppId ??= await m_FirebaseAnalyticsClient.FetchAppIdAsync();
+                        var enabledAttributes = EnabledAttributes;
+                        if (enabledAttributes.Contains(ConnectionsSettingsClient.GaidKey))
+                        {
+                            m_AdvertisingIdClient ??= new GoogleAdvertisingIdClient();
+                            gaid = await m_AdvertisingIdClient.FetchGaidAsync();
+                        }
+                        m_FirebaseAnalyticsClient ??= new FirebaseAnalyticsClient();
+                        if (enabledAttributes.Contains(ConnectionsSettingsClient.AppInstanceIdKey))
+                        {
+                            appInstanceId = m_CachedAppInstanceId ??= await m_FirebaseAnalyticsClient.FetchAppInstanceIdAsync();
+                        }
+                        if (enabledAttributes.Contains(ConnectionsSettingsClient.FirebaseSessionIdKey))
+                        {
+                            firebaseSessionId = m_CachedFirebaseSessionId ??= await m_FirebaseAnalyticsClient.FetchSessionIdAsync();
+                        }
+                        if (enabledAttributes.Contains(ConnectionsSettingsClient.FirebaseAppIdKey))
+                        {
+                            firebaseAppId = m_CachedFirebaseAppId ??= await m_FirebaseAnalyticsClient.FetchAppIdAsync();
+                        }
                     }
                     break;
                 case RuntimePlatform.IPhonePlayer:
@@ -113,7 +126,7 @@ namespace UnityEngine.Purchasing.Stores
             case RuntimePlatform.VisionOS:
 #endif
                     m_NativeStore ??= new NativeStoreProvider().GetStorekit();
-                    if (adsIntentGranted)
+                    if (adsIntentGranted && EnabledAttributes.Contains(ConnectionsSettingsClient.IdfaKey))
                     {
                         idfa = m_NativeStore.FetchAdvertisingIdentifier();
                     }
@@ -144,6 +157,19 @@ namespace UnityEngine.Purchasing.Stores
                 , unityConsentStateAnalyticsIntent: ConsentStateAnalyticsIntent
 #endif
             );
+        }
+
+        // Which Google Analytics identifiers the project allows collecting,
+        // per remote connections settings. Non-blocking: empty (collect
+        // nothing) until the session's background fetch has succeeded, so
+        // identity creation never waits on the network.
+        HashSet<string> EnabledAttributes
+        {
+            get
+            {
+                m_ConnectionsSettingsClient ??= new ConnectionsSettingsClient(m_CoreRegistry);
+                return m_ConnectionsSettingsClient.CachedEnabledAttributes;
+            }
         }
 
         public string? Locale => GetCurrentLocaleCodeIfValid();

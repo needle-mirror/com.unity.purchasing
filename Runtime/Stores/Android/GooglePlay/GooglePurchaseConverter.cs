@@ -17,7 +17,7 @@ namespace UnityEngine.Purchasing
         public async Task<Order> CreateOrderFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
         {
             var cart = await CreateCartFromPurchase(purchase, productCache);
-            var orderInfo = new GoogleOrderInfo(purchase.receipt, purchase.purchaseToken, GooglePlay.Name, purchase.obfuscatedAccountId, purchase.obfuscatedProfileId);
+            var orderInfo = new GoogleOrderInfo(purchase.receipt, purchase.purchaseToken, GooglePlay.Name, purchase.obfuscatedAccountId, purchase.obfuscatedProfileId, purchase.orderId);
 
             if (purchase.IsPending())
             {

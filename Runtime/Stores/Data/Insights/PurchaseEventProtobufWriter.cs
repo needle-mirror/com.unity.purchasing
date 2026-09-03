@@ -88,6 +88,7 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
             WriteOptionalString(s, 21, e.ApplicationVersion);
             WriteOptionalString(s, 24, e.ImpressionId);
             WriteOptionalString(s, 100, e.FirebaseAppId);
+            WriteOptionalString(s, 101, e.InstallMode);
         }
 
         static void WriteEventVariant(Stream s, IEventVariant? variant)

@@ -11,6 +11,11 @@ public struct PurchaseDetails: Codable {
     var ownershipType: String?
     var productId: String?
     var productType: String?
+    // Set only on the result of a purchase() call — never on Transaction.updates or entitlement
+    // deliveries — so the managed side can tell the answer to a Purchase apart from redeliveries.
+    // Carries the product that was requested, which can differ from the transaction's product
+    // (e.g. a subscription downgrade is answered with the active subscription's transaction).
+    var requestedProductId: String?
     var purchaseDate: Double?
     var signatureJws: String?
     var transactionId: UInt64?
@@ -35,6 +40,7 @@ public struct PurchaseDetails: Codable {
         case ownershipType
         case productId
         case productType
+        case requestedProductId
         case purchaseDate
         case signatureJws
         case transactionId

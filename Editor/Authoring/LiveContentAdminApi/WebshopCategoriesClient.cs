@@ -4,7 +4,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity.Purchasing.Editor.Shared.Clients;
 using Unity.Purchasing.Editor.Shared.WebApi;
 using Unity.Services.Core.Editor;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Model;
@@ -15,18 +14,27 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     class WebshopCategoriesClient : IWebshopCategoriesClient
     {
         internal const string Path = "webshop/categories.json";
-        internal const string RequiredSchema =
-            "https://services.api.unity.com/schema-registry/v1/schemas/UnityWebshopCategories/versions/1.1.0";
+        const string k_RequiredSchemaPath = "/v1/schemas/UnityWebshopCategories/versions/1.1.0";
 
         readonly IAccessTokens m_TokenProvider;
         readonly IConfigsApi m_ConfigsApi;
+        readonly string m_RequiredSchema;
         string m_EnvironmentId;
         string m_ProjectId;
 
         public WebshopCategoriesClient(IAccessTokens tokenProvider, IConfigsApi configsApi)
+            : this(tokenProvider, configsApi, LiveContentAdminEnvironment.SchemaRegistryBasePath)
+        {
+        }
+
+        internal WebshopCategoriesClient(
+            IAccessTokens tokenProvider,
+            IConfigsApi configsApi,
+            string schemaRegistryBasePath)
         {
             m_TokenProvider = tokenProvider;
             m_ConfigsApi = configsApi;
+            m_RequiredSchema = schemaRegistryBasePath + k_RequiredSchemaPath;
         }
 
         public async Task Initialize(string environmentId, string projectId, CancellationToken cancellationToken)
@@ -74,10 +82,14 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
                 var response = await m_ConfigsApi.UpdateConfigFile(
                     m_EnvironmentId, m_ProjectId, Path, body, cancellationToken: cancellationToken);
 
+                InlineVariantFormat.LogErrorIfDetected(response.Content);
+
                 if (response.StatusCode == 404)
                 {
                     response = await m_ConfigsApi.CreateConfigFile(
                         m_EnvironmentId, m_ProjectId, Path, body, cancellationToken: cancellationToken);
+
+                    InlineVariantFormat.LogErrorIfDetected(response.Content);
                 }
 
                 if (!response.IsSuccessful)
@@ -91,11 +103,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
 
         // Schema must be attached on every write: the storefront's schema-filtered read hides files
         // whose $schema attachment was dropped, and PUT replaces the whole record.
-        static Dictionary<string, ApiObject> SerializeBody(WebshopCategories categories)
+        Dictionary<string, ApiObject> SerializeBody(WebshopCategories categories)
         {
             var envelope = new BodyEnvelope
             {
-                Schemas = new List<string> { RequiredSchema },
+                Schemas = new List<string> { m_RequiredSchema },
                 Categories = categories.Categories,
             };
             var json = IsolatedJsonConvert.SerializeObject(envelope,
@@ -105,12 +117,8 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
 
         async Task UpdateToken()
         {
-            var client = m_ConfigsApi as ConfigsApi;
-            if (client == null)
-                return;
-            var token = await m_TokenProvider.GetServicesGatewayTokenAsync();
-            var headers = new AdminApiHeaders<WebshopCategoriesClient>(token);
-            client.Configuration.DefaultHeaders = headers.ToDictionary();
+            await LiveContentAdminApiHeaderConfigurator.UpdateAuthenticationHeaders<WebshopCategoriesClient>(
+                m_ConfigsApi, m_TokenProvider.GetServicesGatewayTokenAsync);
         }
 
         static ClientException GetRequestException(ApiException e, [CallerMemberName] string caller = null)

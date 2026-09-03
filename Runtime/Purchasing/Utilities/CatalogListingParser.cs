@@ -18,7 +18,7 @@ namespace UnityEngine.Purchasing.Utilities
                 if (dto != null)
                 {
                     dto.CatalogListingId = contentData.path;
-                    dto.HasWebshop = contentData.schemas?.Any(s  => s.Contains(CatalogListingClient.k_WebshopSchemaUrl)) ?? false;
+                    dto.HasWebshop = contentData.schemas?.Any(s => s.Contains(CatalogListingClient.k_WebshopSchemaPath)) ?? false;
                 }
                 return dto;
             }

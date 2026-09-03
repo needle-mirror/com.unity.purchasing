@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,7 +9,6 @@ using Unity.Services.DeploymentApi.Editor;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Logger;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Model;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Service;
-using UnityEditor.Purchasing.Editor.Authoring.Core.Validations;
 
 
 namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
@@ -28,9 +26,9 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
             Logger = logger;
         }
 
-        protected void SetupMaps(IReadOnlyList<CatalogEntryDeploymentItem> filteredLocalResources, IReadOnlyList<CatalogEntryDeploymentItem> remoteResources)
+        protected void SetupMaps(IReadOnlyList<CatalogEntryDeploymentItem> localResources, IReadOnlyList<CatalogEntryDeploymentItem> remoteResources)
         {
-            m_LocalMap = filteredLocalResources.ToDictionary(l => l.CatalogItem.CatalogListingId, l => l);
+            m_LocalMap = localResources.ToDictionary(l => l.CatalogItem.CatalogListingId, l => l);
             m_RemoteMap = remoteResources.ToDictionary(l => l.CatalogItem.CatalogListingId, l => l);
         }
 
@@ -102,19 +100,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
             {
                 Logger.LogError(e);
                 catalogEntryDeploymentItem.Status = Statuses.GetFailedToDeploy(e.ToString());
-            }
-        }
-
-        protected void UpdateDuplicateResourceStatus(
-            IReadOnlyList<IGrouping<string, CatalogEntryDeploymentItem>> duplicateGroups)
-        {
-            foreach (var group in duplicateGroups)
-            {
-                foreach (var resourceItem in group)
-                {
-                    var(message, shortMessage) = DuplicateResourceValidation.GetDuplicateResourceErrorMessages(resourceItem, group.ToList());
-                    resourceItem.Status = GetFailedStatus(shortMessage);
-                }
             }
         }
 

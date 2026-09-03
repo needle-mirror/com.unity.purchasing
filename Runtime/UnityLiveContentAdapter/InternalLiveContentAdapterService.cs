@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Unity.Services.Authentication.Internal;
-using Unity.Services.Core.Configuration.Internal;
 using UnityEngine.Purchasing.LiveContentAdapterService.Apis.Client;
 using UnityEngine.Purchasing.LiveContentAdapterService.Client;
 using UnityEngine.Purchasing.LiveContentAdapterService.Http;
@@ -15,18 +14,16 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService
     {
         readonly ILiveContentAdapterServiceExceptionMapper m_ServiceExceptionMapper;
         readonly IEnvironmentId m_EnvironmentId;
-        readonly ICloudProjectId m_CloudProjectId;
         readonly IClientApiClient m_ApiClient;
         readonly Configuration m_Configuration;
 
-        internal InternalLiveContentAdapterService(IAccessToken accessToken, IEnvironmentId environmentId, ICloudProjectId cloudProjectId, string baseUrl = null)
+        internal InternalLiveContentAdapterService(IAccessToken accessToken, IEnvironmentId environmentId, string baseUrl)
         {
-            var url = baseUrl ?? "https://services.api.unity.com/live-content/client/v1";
+            var url = baseUrl ?? throw new ArgumentNullException(nameof(baseUrl));
             m_ApiClient = new ClientApiClient(new HttpClient(), accessToken);
             m_Configuration = new Configuration(url, 10, 4, null);
 
             m_EnvironmentId = environmentId;
-            m_CloudProjectId = cloudProjectId;
 
             m_ServiceExceptionMapper = new LiveContentAdapterServiceExceptionMapper();
         }
@@ -36,7 +33,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService
             CheckForCloudProjectInfo();
 
             var request = new GetPlayerConfigsContentRequest(
-                projectId: m_CloudProjectId.GetCloudProjectId(),
                 schema: schema,
                 schemaVersion: schemaVersion,
                 limit: limit,
@@ -52,8 +48,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService
 
         void CheckForCloudProjectInfo()
         {
-            if (m_EnvironmentId?.EnvironmentId is null ||
-                m_CloudProjectId?.GetCloudProjectId() is null)
+            if (m_EnvironmentId?.EnvironmentId is null)
             {
                 throw new CloudProjectAuthenticationException();
             }

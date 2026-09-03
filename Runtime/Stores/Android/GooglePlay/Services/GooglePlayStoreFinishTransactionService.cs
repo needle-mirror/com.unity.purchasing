@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.Extension;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -41,6 +42,17 @@ namespace UnityEngine.Purchasing
             {
                 await m_GooglePlayStoreService.FinishTransaction(product, purchaseToken,
                     (billingResult, googlePurchase) => HandleFinishTransaction(product, billingResult, googlePurchase));
+            }
+            catch (GoogleFinishTransactionException e)
+            {
+                SendTransactionFailedCallback(
+                    new PurchaseFailureDescription(
+                        m_ProductCache?.FindOrDefault(product?.storeSpecificId) ??
+                        Product.CreateUnknownProduct(product?.storeSpecificId),
+                        e.FailureReason,
+                        e.Message
+                    ), purchaseToken
+                );
             }
             catch (Exception e)
             {

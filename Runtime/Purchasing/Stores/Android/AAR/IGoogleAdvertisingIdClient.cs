@@ -1,9 +1,11 @@
 #nullable enable
 
+using System.Threading.Tasks;
+
 namespace UnityEngine.Purchasing
 {
     internal interface IGoogleAdvertisingIdClient
     {
-        string? FetchGaid();
+        Task<string?> FetchGaidAsync();
     }
 }

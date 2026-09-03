@@ -1,4 +1,32 @@
 # Changelog
+## [5.4.3] - 2026-09-03
+### Added
+- Authoring - Added validation preventing deployment of catalog items whose store-specific product ID overrides conflict across different SKUs. Per-item validation also catches empty override values and duplicate store entries.
+- Google Analytics identifiers are collected when Google Analytics is linked, or when Developer Data Collection is set to Recommended, in addition to the existing end-user ads consent requirement. Configure this in the Unity Dashboard, under Project Settings > Developer Data.
+- GooglePlay - Added `IGoogleOrderInfo.OrderId` (accessible via `Order.Info.Google.OrderId`), exposing the Google Play order id of a purchase ([`Purchase.getOrderId()`](https://developer.android.com/reference/com/android/billingclient/api/Purchase#getOrderId())).
+- GooglePlay - Added `IGoogleOrderInfo.PurchaseToken`, exposing the Google Play purchase token under its own name. This returns the same value as `IOrderInfo.TransactionID`, which contains the purchase token on Google Play.
+
+### Changed
+- Insights - On Unity 6000.7.0a7 and newer, the package uses the Editor's built-in Insights module to report IAP telemetry. Activating the module also collects data classed as essential to its operation, including session and app lifecycle events, device and OS attributes, and identifiers that associate telemetry with a project and session. Collection is governed by Unity's [Developer Data framework](https://docs.unity.com/cloud/en-us/developer-data-framework/overview) and can be managed per project in the Diagnostics section of Project Settings. On older Editor versions, the package reports through the existing gateway, unchanged.
+- Authoring - `.ucat` catalog files now serialize store ID overrides as flat fields (`googleOverride`, `appleOverride`, `xboxStoreOverride`, `macAppStoreOverride`) instead of the `storeIdOverrides` array. Existing files with the array format are still read correctly.
+- Remote Catalog - Runtime catalog requests now use the project-scoped Live Content domain.
+- Updated the link to the Apple Developer Program License Agreement in [Third Party Notices](./Third%20Party%20Notices.md).
+
+### Fixed
+- Catalog - `CatalogProvider` no longer applies another store's product ID override to stores that have none. Products with an override for only some stores (e.g. Apple but not Google) now correctly fall back to the default product ID on the other stores.
+- Catalog - The legacy `UnityPurchasing.Initialize` path now resolves the running store before fetching products. Previously it used whichever store-specific product ID was registered last, so a product configured with `ConfigurationBuilder.AddProduct` for more than one store could be fetched using another store's ID. Products with an override for a single store were unaffected.
+- GooglePlay - Fixed OrderInfo.Receipt's price_amount_micros returning a string instead of a long.
+- GooglePlay - Confirming a `PendingOrder` that Google Play has already acknowledged now triggers `OnPurchaseConfirmed` with a `PurchaseFailureReason.DuplicateTransaction` `FailedOrder`. Previously `OnPurchaseConfirmed` was not triggered at all. This applies to `ProductType.NonConsumable`, `ProductType.Subscription` and `ProductType.Unknown` products, and can happen when the purchase was acknowledged by your backend or on another device.
+- GooglePlay - `FetchPurchases` and `RestoreTransactions` silently dropped purchases whose products had never been fetched; these are now returned as unknown products.
+- GooglePlay - Fixed Android builds failing with `Execution failed for task ':launcher:checkReleaseDuplicateClasses'` on specific Unity Editor versions.
+- GooglePlay - Fixed `AndroidJavaObject` references causing a memory leak when fetching products.
+- Editor Play Mode - Fixed slow Play Mode entry on projects with many assets by skipping Android store configuration outside of player builds.
+- Apple - Fixed additional Swift 6 strict concurrency data race errors in `TransactionObserverUseCase`, `TransactionUseCase`, and `UnityPurchasingInAppBrowserController` that caused build failures when `SWIFT_STRICT_CONCURRENCY` is set to `complete`.
+- Apple - Purchasing now uses the product cached at fetch time instead of re-fetching it from the App Store on every purchase call.
+- Apple - Product lookup errors at purchase time (e.g. network failures) are now reported with their real error message instead of being misreported as `PurchaseFailureReason.ProductUnavailable`.
+- Apple - `FailedOrder`s with `PurchaseFailureReason.DuplicateTransaction` reported through `OnPurchaseFailed` now carry the order's `Info` (including `TransactionID`) instead of an empty `OrderInfo`, so the failure can be attributed to the transaction it concerns.
+- Apple - `OnPurchaseFailed` with `PurchaseFailureReason.DuplicateTransaction` is no longer raised for transactions redelivered by the store; it now only follows a `Purchase` call. StoreKit 1 keeps its previous behaviour.
+
 ## [5.4.2] - 2026-07-24
 ### Added
 - Payment Providers - `IPaymentProvidersExtendedPurchaseService.SetCustomReferenceId(string?)` — sets the `CustomReferenceId` sent on new Payment Provider orders, echoed back on the order and its webhooks so you can reconcile IAP orders with your own internal system.
@@ -20,6 +48,7 @@
 - Apple (StoreKit 2) - Purchase failures that have a specific `PurchaseFailureReason` are now more accurately reported instead of being `Unknown`.
 - Apple (StoreKit 2) -  confirm success (`OnPurchaseConfirmed`) is now reported only after the native `Transaction.finish` call has completed, instead of unconditionally before it ran. A finish that does not find a matching unfinished transaction now reports a `DuplicateTransaction` confirm failure, as the transaction has likely already been finished.
 - Apple - Added missing `tvOS 18.1` availability check, causing `'ExternalPurchaseCustomLink' is only available in tvOS 18.1 or newer` build failure.
+- Removed obsolete `Lumin` and `Stadia` platform entries from assembly definitions, silencing unknown-platform warnings in recent Unity editors.
 
 ## [5.4.1] - 2026-07-07
 ### Changed

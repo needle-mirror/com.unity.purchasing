@@ -6,23 +6,17 @@ import StoreKit
  */
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 public protocol ProductUseCaseProtocol {
-    func fetchProduct(for productId: String) async -> Product?
+    func fetchProduct(for productId: String) async throws -> Product?
     func fetchProducts(for productIds: [String]) async -> ProductResponse
     func fetchSubscribtion(for productId: String) async -> SubscriptionInfoStatusResponse
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 public class ProductUseCase: ProductUseCaseProtocol {
-    public func fetchProduct(for productId: String) async -> Product? {
-        do {
-            let products = try await Product.products(for: [productId])
-            if products.count == 0 {
-                return nil
-            }
-            return products[0]
-        } catch {
-            return nil
-        }
+    /// Returns nil only when the store response does not contain the product;
+    /// store/network errors are thrown so callers can report the real failure.
+    public func fetchProduct(for productId: String) async throws -> Product? {
+        return try await Product.products(for: [productId]).first
     }
     
     public func fetchProducts(for productIds: [String]) async -> ProductResponse {

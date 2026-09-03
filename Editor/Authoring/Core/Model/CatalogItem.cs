@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -34,6 +35,60 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         public Promotion Promotion { get; set; }
         [DataMember(Name = "storeIdOverrides"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<StoreIdOverride> StoreIdOverrides { get; set; }
+
+        public bool ShouldSerializeStoreIdOverrides() => false;
+
+        [IgnoreDataMember, JsonProperty("googleOverride", NullValueHandling = NullValueHandling.Ignore)]
+        string GoogleOverride
+        {
+            get => GetStoreIdOverride(StoreId.Google);
+            set => SetStoreIdOverride(StoreId.Google, value);
+        }
+
+        [IgnoreDataMember, JsonProperty("appleOverride", NullValueHandling = NullValueHandling.Ignore)]
+        string AppleOverride
+        {
+            get => GetStoreIdOverride(StoreId.Apple);
+            set => SetStoreIdOverride(StoreId.Apple, value);
+        }
+
+        [IgnoreDataMember, JsonProperty("xboxStoreOverride", NullValueHandling = NullValueHandling.Ignore)]
+        string XboxStoreOverride
+        {
+            get => GetStoreIdOverride(StoreId.XboxStore);
+            set => SetStoreIdOverride(StoreId.XboxStore, value);
+        }
+
+        [IgnoreDataMember, JsonProperty("macAppStoreOverride", NullValueHandling = NullValueHandling.Ignore)]
+        string MacAppStoreOverride
+        {
+            get => GetStoreIdOverride(StoreId.MacAppStore);
+            set => SetStoreIdOverride(StoreId.MacAppStore, value);
+        }
+
+        public string GetStoreIdOverride(StoreId store)
+        {
+            return StoreIdOverrides?.FirstOrDefault(entry => entry.Store == store)?.Value;
+        }
+
+        public void SetStoreIdOverride(StoreId store, string value)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                StoreIdOverrides?.RemoveAll(entry => entry.Store == store);
+                return;
+            }
+            StoreIdOverrides ??= new List<StoreIdOverride>();
+            var existing = StoreIdOverrides.FirstOrDefault(entry => entry.Store == store);
+            if (existing != null)
+            {
+                existing.Value = value;
+            }
+            else
+            {
+                StoreIdOverrides.Add(new StoreIdOverride { Store = store, Value = value });
+            }
+        }
 
         // Persistent identifier as stored remotely i.e.: "catalog/{filename-no-ext}";
         // CSV: from the CatalogListingId column, fallback to Sku column). Not serialized to

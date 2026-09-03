@@ -37,6 +37,11 @@
             "name": "com.unity.services.cloudcode",
             "expression": "2.3.0",
             "define": "IAP_CLOUDCODE_ENABLED"
+        },
+        {
+            "name": "Unity",
+            "expression": "6000.7.0a7",
+            "define": "UNITY_INSIGHTS_REQUIREMENTS_API"
         }
     ],
     "noEngineReferences": false

@@ -43,15 +43,6 @@ namespace UnityEngine.Purchasing
             m_GooglePlayStoreService.FetchPurchases(OnPurchasesFetched, PurchaseRetrievalFailedForUnknownReasons);
         }
 
-        public void FetchPurchases(Action<List<Product>> onQueryPurchaseSucceed)
-        {
-            m_GooglePlayStoreService.FetchPurchases(
-                googlePurchases =>
-                {
-                    onQueryPurchaseSucceed(FillProductsWithPurchases(googlePurchases));
-                }, PurchaseRetrievalFailedForUnknownReasons);
-        }
-
         public IGooglePurchase? GetGooglePurchase(string purchaseToken)
         {
             IGooglePurchase? purchase = null;
@@ -61,33 +52,6 @@ namespace UnityEngine.Purchasing
                     purchase = googlePurchases.FirstOrDefault(purchases => purchases.purchaseToken == purchaseToken);
                 }, PurchaseRetrievalFailedForUnknownReasons);
             return purchase;
-        }
-
-        List<Product> FillProductsWithPurchases(IEnumerable<IGooglePurchase> purchases)
-        {
-            return purchases.SelectMany(BuildProductsFromPurchase).ToList();
-        }
-
-        IEnumerable<Product> BuildProductsFromPurchase(IGooglePurchase purchase)
-        {
-            return purchase.skus
-                .Select(sku => (sku, product: m_ProductCache?.Find(sku)))
-                .Where(t => t.product != null)
-                .Select(t => CompleteProductInfoWithPurchase(t.product!, t.sku, purchase));
-        }
-
-        Product CompleteProductInfoWithPurchase(Product product, string sku, IGooglePurchase purchase)
-        {
-            // Multi-listing aware: pick the listing whose storeSpecificId matches the SKU we're
-            // building for (falls back to the base listing in the single-listing case).
-            var sourceListing = m_ProductCache?.FindCatalogListingByStoreSpecificId(sku) ?? product.baseListing;
-// Obsolete: Product(ProductDefinition, ProductMetadata, string), Product.transactionID
-#pragma warning disable 618, 612
-            return new Product(sourceListing?.definition, sourceListing?.metadata, purchase.receipt)
-            {
-                transactionID = purchase.purchaseToken,
-            };
-#pragma warning restore 618, 612
         }
 
         async void OnPurchasesFetched(List<IGooglePurchase>? purchases)
@@ -115,11 +79,6 @@ namespace UnityEngine.Purchasing
         {
             m_FetchCallback?.OnPurchasesRetrievalFailed(
                 new PurchasesFetchFailureDescription(PurchasesFetchFailureReason.Unknown, message ?? string.Empty));
-        }
-
-        static Func<IGooglePurchase, bool> PurchaseIsPurchased()
-        {
-            return purchase => purchase.IsPurchased();
         }
 
         static Func<IGooglePurchase, bool> PurchaseIsPending()

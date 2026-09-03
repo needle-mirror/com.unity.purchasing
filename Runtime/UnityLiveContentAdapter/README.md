@@ -9,7 +9,14 @@
       brew install openjdk
     ```
 2. If you don't already have it, you will need the generator jar. This can be found [here](https://pages.prd.mz.internal.unity3d.com/unity-common-openapi-generators/docs/csharp-generator/). **DO NOT SAVE IT TO VERSION CONTROL**
-3. (optional) Update the `./spec.yaml` with the [client api spec](https://github.com/Unity-Technologies/docs-content/blob/main/content/oas-live-content-assets-client/1.0.0/specs/openapi/live-content-client-api-v1.yaml).
+3. (optional) Update `./spec.yaml` from the Live Content client API spec. The gateway spec uses wildcard project hosts; replace each wildcard with an OpenAPI server variable before generation:
+    ```yaml
+      - url: https://{projectId}.live-content.unity3dusercontent.com/v1
+        variables:
+          projectId:
+            default: project-id
+    ```
+    Apply the same conversion to the `live-content-stg.unity3dusercontent.com` server.
 
 ### Option A) Using the Script (macOS, Linux, or Windows)
 
@@ -38,7 +45,7 @@ This will automatically:
 
 1. Run the generator with the configuration file `./configuration.yaml`:
     ```bash
-      java -jar ./path/to/generator.jar generate -c ./configuration.yaml 
+      java -jar ./path/to/generator.jar generate -c ./configuration.yaml
     ```
 2. Extract and move the generated client to `./Client`:
     ```bash
@@ -54,6 +61,6 @@ This will automatically:
 
 ### Additional Manual Steps
 
-1. Verify that the default base URL in the internal service and any base URLs passed in from callers match the base URL in `spec.yaml`. Callers may pass a staging URL depending on which environment the runtime is pointing at.
+1. Verify that generated request paths do not contain `/projects/{projectId}`. The project ID is part of the base URL subdomain, which is initialized by `IapCoreInitializeCallback`.
 2. Review `spec.yaml` and generated code for unexpected changes. The public API spec is manually maintained and may contain errors. Raise potential discrepancies with the team.
 3. Make sure to add any new, untracked files, especially new .meta files.

@@ -9,11 +9,18 @@ tags:
   - description: Client-facing operations
     name: Client
 servers:
-  - url: https://services.api.unity.com/live-content/client/v1
-  - url: https://staging.services.api.unity.com/live-content/client/v1
-  - url: https://test.services.api.unity.com/live-content/client/v1
+  - url: https://{projectId}.live-content.unity3dusercontent.com/v1
+    variables:
+      projectId:
+        default: project-id
+        description: Unity Cloud Project ID
+  - url: https://{projectId}.live-content-stg.unity3dusercontent.com/v1
+    variables:
+      projectId:
+        default: project-id
+        description: Unity Cloud Project ID
 paths:
-  /projects/{projectId}/configs/content:
+  /configs/content:
     get:
       security:
         - Client: []
@@ -23,13 +30,6 @@ paths:
       tags:
         - Client
       parameters:
-        - description: Project ID
-          in: path
-          name: projectId
-          required: true
-          schema:
-            example: '{{projectId}}'
-            type: string
         - deprecated: true
           description: 'Current Page. Deprecated: use the `next` cursor instead for efficient pagination.'
           in: query
@@ -97,21 +97,13 @@ paths:
               description: Opaque cursor token for the next page of results. Present only when more results exist. Pass as `?next=<token>` to retrieve the next page.
               schema:
                 type: string
-  /projects/{projectId}/configs/content/(.+)$:
+  /configs/content/(.+)$:
     get:
       summary: Get config content
       description: Returns the structured JSON content of a single config by its path.
       operationId: GetPlayerConfigContent
       tags:
         - Client
-      parameters:
-        - description: Project ID
-          in: path
-          name: projectId
-          required: true
-          schema:
-            example: '{{projectId}}'
-            type: string
       responses:
         '200':
           content:
@@ -125,7 +117,7 @@ paths:
                       price: 100
                 type: object
           description: The structured config body.
-  /projects/{projectId}/configs/info:
+  /configs/info:
     get:
       summary: Get player configs
       description: |
@@ -135,13 +127,6 @@ paths:
       tags:
         - Client
       parameters:
-        - description: Project ID
-          in: path
-          name: projectId
-          required: true
-          schema:
-            example: '{{projectId}}'
-            type: string
         - deprecated: true
           description: 'Current Page. Deprecated: use the `next` cursor instead for efficient pagination.'
           in: query
@@ -204,21 +189,13 @@ paths:
               description: Opaque cursor token for the next page of results. Present only when more results exist. Pass as `?next=<token>` to retrieve the next page.
               schema:
                 type: string
-  /projects/{projectId}/files/content/(.+)$:
+  /files/content/(.+)$:
     get:
       summary: Get file content
       description: Retrieve the content of a single file.
       operationId: GetPlayerFileContent
       tags:
         - Client
-      parameters:
-        - description: Project ID
-          in: path
-          name: projectId
-          required: true
-          schema:
-            example: '{{projectId}}'
-            type: string
       responses:
         '307':
           description: Temporary Redirect - Redirects the client to the new content location.
@@ -227,7 +204,7 @@ paths:
               description: The URL to which the client should be redirected to access the file content.
               schema:
                 type: string
-  /projects/{projectId}/files/info:
+  /files/info:
     get:
       summary: Get player files
       description: |
@@ -237,13 +214,6 @@ paths:
       tags:
         - Client
       parameters:
-        - description: Project ID
-          in: path
-          name: projectId
-          required: true
-          schema:
-            example: '{{projectId}}'
-            type: string
         - deprecated: true
           description: 'Current Page. Deprecated: use the `next` cursor instead for efficient pagination.'
           in: query

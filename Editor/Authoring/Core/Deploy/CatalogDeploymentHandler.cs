@@ -34,9 +34,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
 
             var remoteResources = await GetRemoteItems(localResources, cancellationToken: token);
 
-            var filteredLocalResources = FilterInvalidItems(localResources, remoteResources);
+            var deduplicatedLocalResources = DuplicateResourceValidation.FilterDuplicateResources(
+                localResources, out var duplicateGroups);
+            DuplicateResourceValidation.UpdateDeploymentStatus(duplicateGroups);
 
-            SetupMaps(filteredLocalResources, remoteResources);
+            SetupMaps(deduplicatedLocalResources, remoteResources);
+
+            var filteredLocalResources = FilterInvalidItems(deduplicatedLocalResources, remoteResources);
 
             var toCreate = filteredLocalResources
                 .Where(DoesNotExistRemotely)
@@ -46,15 +50,9 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
                 .Where(ExistsRemotely)
                 .ToList();
 
-            var remoteOnlyResources = remoteResources
-                .Where(DoesNotExistLocally)
-                .ToList();
-
-            var toDelete = new List<CatalogEntryDeploymentItem>();
-            if (reconcile)
-            {
-                toDelete = remoteOnlyResources;
-            }
+            var toDelete = reconcile
+                ? remoteResources.Where(DoesNotExistLocally).ToList()
+                : new List<CatalogEntryDeploymentItem>();
 
             res.Deployed = localResources.Concat(toDelete).ToList();
 
@@ -150,25 +148,29 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
         }
 
         List<CatalogEntryDeploymentItem> FilterInvalidItems(
-            IReadOnlyList<CatalogEntryDeploymentItem> localResources,
+            IReadOnlyList<CatalogEntryDeploymentItem> deduplicatedResources,
             IReadOnlyList<CatalogEntryDeploymentItem> remoteResources)
         {
-            var filteredLocalResources = DuplicateResourceValidation.FilterDuplicateResources(
-                localResources, out var duplicateGroups);
-
-            UpdateDuplicateResourceStatus(duplicateGroups);
-
-            //Validate and return only those that are valid
-            filteredLocalResources = filteredLocalResources.Where(f =>
+            foreach (var item in deduplicatedResources)
             {
                 var previousResource = remoteResources.FirstOrDefault(r =>
-                    r.CatalogItem.CatalogListingId == f.CatalogItem.CatalogListingId)?.CatalogItem;
-                var valid = f.Validate(previousResource);
-                if (!valid)
-                    f.Status = DeploymentStatus.GetFailedToDeploy("Catalog item is invalid and will not be deployed");
-                return valid;
+                    r.CatalogItem.CatalogListingId == item.CatalogItem.CatalogListingId)?.CatalogItem;
+                _ = item.Validate(previousResource);
+            }
+
+            var localSet = new HashSet<CatalogEntryDeploymentItem>(deduplicatedResources);
+            StoreOverrideConflictValidation.AddConflictStates(deduplicatedResources, remoteResources, localSet);
+
+            return deduplicatedResources.Where(item =>
+            {
+                var hasErrors = item.States.Any(s =>
+                    s.Type == CatalogItem.ValidationStateType && s.Level == SeverityLevel.Error);
+                if (hasErrors)
+                {
+                    item.Status = DeploymentStatus.GetFailedToDeploy("Catalog item is invalid and will not be deployed");
+                }
+                return !hasErrors;
             }).ToList();
-            return filteredLocalResources;
         }
 
         // Best-effort: append ids referenced by webshop-enabled items to webshop/categories.json

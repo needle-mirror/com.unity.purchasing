@@ -75,6 +75,7 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                 EventData = variant,
                 ApplicationVersion = Application.version,
                 InstallationTimestamp = AppInstallInfo.GetInstallTimestamp(),
+                InstallMode = PurchaseEventEmitter.GetInstallMode(Application.platform),
             };
         }
     }

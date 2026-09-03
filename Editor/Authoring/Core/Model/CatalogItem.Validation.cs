@@ -71,8 +71,9 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
                     SeverityLevel.Warning, ValidationStateType));
             }
 
-            if (ProductDetails == null ||
-                ProductDetails.Any(d => string.IsNullOrWhiteSpace(d.Title)))
+            if (ProductDetails == null
+                || !ProductDetails.Any()
+                || ProductDetails.Any(d => string.IsNullOrWhiteSpace(d.Title)))
             {
                 states.Add(new AssetState("Missing Product Details",
                     "A product detail is missing data",
@@ -112,7 +113,28 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
                 }
             }
 
+            ValidateStoreIdOverrides(states);
+
             return states;
+        }
+
+        void ValidateStoreIdOverrides(List<AssetState> states)
+        {
+            if (StoreIdOverrides == null || StoreIdOverrides.Count == 0)
+            {
+                return;
+            }
+
+            foreach (var entry in StoreIdOverrides)
+            {
+                if (string.IsNullOrWhiteSpace(entry.Value))
+                {
+                    states.Add(new AssetState(
+                        $"Empty store override value for {entry.Store}",
+                        $"The store override for {entry.Store} has an empty value. Either set a valid store-specific product ID or remove the override.",
+                        SeverityLevel.Error, ValidationStateType));
+                }
+            }
         }
 
         internal static AssetState? GetIdValidationError(string id, string label)

@@ -2,6 +2,7 @@
 
 using System;
 using System.Threading.Tasks;
+using UnityEngine.Purchasing.Exceptions;
 using UnityEngine.Purchasing.GoogleBilling.Interfaces;
 using UnityEngine.Purchasing.Interfaces;
 using UnityEngine.Purchasing.Models;
@@ -44,7 +45,12 @@ namespace UnityEngine.Purchasing
             {
                 m_BillingClient.ConsumeAsync(purchaseToken, result => onTransactionFinished(result, purchase));
             }
-            else if (!purchase.IsAcknowledged())
+            else if (purchase.IsAcknowledged())
+            {
+                throw new GoogleFinishTransactionException(PurchaseFailureReason.DuplicateTransaction,
+                    "Purchase has already been acknowledged. Unity IAP's cached purchases may be out of date; please call FetchPurchases to refresh them.");
+            }
+            else
             {
                 m_BillingClient.AcknowledgePurchase(purchaseToken, result => onTransactionFinished(result, purchase));
             }

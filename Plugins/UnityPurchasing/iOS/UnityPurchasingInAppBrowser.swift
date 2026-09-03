@@ -25,7 +25,10 @@ private func iapLog(_ message: String) {
     NSLog("UnityIAP InAppBrowser: %@", message)
 }
 
-final class UnityPurchasingInAppBrowserController: NSObject, SFSafariViewControllerDelegate {
+// @unchecked Sendable: `static let shared` requires the type to be Sendable under Swift 6 strict
+// concurrency. Safe because this is a UIKit controller — its mutable state (currentViewController,
+// callback) is only touched on the main thread during launch/dismiss of the SFSafariViewController.
+final class UnityPurchasingInAppBrowserController: NSObject, SFSafariViewControllerDelegate, @unchecked Sendable {
 
     static let shared = UnityPurchasingInAppBrowserController()
 

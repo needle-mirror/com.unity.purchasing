@@ -92,7 +92,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Apis.Client
                 // We return a merge between the current configuration and the
                 // global configuration to ensure we have the correct
                 // combination of headers and a base path (if it is set).
-                Configuration globalConfiguration = new Configuration("https://services.api.unity.com/live-content/client/v1", 10, 4, null);
+                Configuration globalConfiguration = new Configuration("https://project-id.live-content.unity3dusercontent.com/v1", 10, 4, null);
                 return Configuration.MergeConfigurations(_configuration, globalConfiguration);
             }
             set { _configuration = value; }

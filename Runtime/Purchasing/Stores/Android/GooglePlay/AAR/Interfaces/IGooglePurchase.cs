@@ -9,7 +9,7 @@ namespace UnityEngine.Purchasing.Interfaces
     {
         int purchaseState { get; }
         List<string> skus { get; }
-        string orderId { get; }
+        string? orderId { get; }
         string receipt { get; }
         string signature { get; }
         string? obfuscatedAccountId { get; }

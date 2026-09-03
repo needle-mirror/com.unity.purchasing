@@ -73,8 +73,14 @@ namespace UnityEngine.Purchasing.Registration
 
             InitializeSessionEvents();
             InitializeDeepLinkService(registry);
+            PrefetchConnectionsSettings();
 
             return Task.CompletedTask;
+        }
+
+        static void PrefetchConnectionsSettings()
+        {
+            new ConnectionsSettingsClient(new CoreRegistryHelper()).EnsureFetched();
         }
 
         static void InitializeSessionEvents()
@@ -99,22 +105,23 @@ namespace UnityEngine.Purchasing.Registration
             var accessToken = registry.GetServiceComponent<IAccessToken>();
             var projectConfiguration = registry.GetServiceComponent<IProjectConfiguration>();
 
-            var host = GetLiveContentHost(projectConfiguration);
+            var host = GetLiveContentHost(projectConfiguration, cloudProjectId?.GetCloudProjectId());
 
-            LiveContentAdapterServiceProvider.Instance().CreateLiveContentAdapterService(accessToken, environmentId, cloudProjectId, host);
+            LiveContentAdapterServiceProvider.Instance().CreateLiveContentAdapterService(accessToken, environmentId, host);
         }
 
-        string GetLiveContentHost(IProjectConfiguration projectConfiguration)
+        internal static string GetLiveContentHost(IProjectConfiguration projectConfiguration, string projectId)
         {
-            var cloudEnvironment = projectConfiguration?.GetString(k_CloudEnvironmentKey);
-
-            switch (cloudEnvironment)
+            if (string.IsNullOrWhiteSpace(projectId))
             {
-                case k_StagingEnvironment:
-                    return "https://staging.services.api.unity.com/live-content/client/v1";
-                default:
-                    return "https://services.api.unity.com/live-content/client/v1";
+                throw new ServicesInitializationException("Failed to initialize the Live Content Adapter because the Unity project is not linked to a Unity Cloud project. ");
             }
+
+            var cloudEnvironment = projectConfiguration?.GetString(k_CloudEnvironmentKey);
+            var domain = cloudEnvironment == k_StagingEnvironment
+                ? "live-content-stg.unity3dusercontent.com"
+                : "live-content.unity3dusercontent.com";
+            return $"https://{projectId}.{domain}/v1";
         }
 
         private void InitializePaymentProviderService(CoreRegistry registry)

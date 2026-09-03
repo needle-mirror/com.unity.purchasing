@@ -21,21 +21,26 @@ namespace UnityEngine.Purchasing.Registration
         string? EnvironmentId { get; }
         string? PlayerId { get; }
         string? ExternalUserId { get; }
+        string? CloudEnvironment { get; }
     }
 
     internal sealed class CoreRegistryHelper : ICoreRegistryHelper
     {
+        const string k_CloudEnvironmentKey = "com.unity.services.core.cloud-environment";
+
         IEngineInstallationId? m_InstallationId;
         ICloudProjectId? m_CloudProjectId;
         IEnvironmentId? m_EnvironmentId;
         IPlayerId? m_PlayerId;
         IExternalUserId? m_ExternalUserId;
+        IProjectConfiguration? m_ProjectConfiguration;
 
         public string? InstallationId => Resolve(ref m_InstallationId)?.GetOrCreateIdentifier();
         public string? CloudProjectId => Resolve(ref m_CloudProjectId)?.GetCloudProjectId();
         public string? EnvironmentId => Resolve(ref m_EnvironmentId)?.EnvironmentId;
         public string? PlayerId => Resolve(ref m_PlayerId)?.PlayerId;
         public string? ExternalUserId => Resolve(ref m_ExternalUserId)?.UserId;
+        public string? CloudEnvironment => Resolve(ref m_ProjectConfiguration)?.GetString(k_CloudEnvironmentKey);
 
         static T? Resolve<T>(ref T? cached) where T : class, IServiceComponent
         {

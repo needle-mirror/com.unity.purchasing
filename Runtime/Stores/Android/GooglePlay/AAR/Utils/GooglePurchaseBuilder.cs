@@ -11,12 +11,15 @@ namespace UnityEngine.Purchasing.Utils
     {
         readonly IGoogleCachedQueryProductDetailsService m_CachedQueryProductDetailsService;
         readonly ILogger m_Logger;
+        readonly IGoogleProductDetailsReader m_ProductDetailsReader;
 
         [Preserve]
-        internal GooglePurchaseBuilder(IGoogleCachedQueryProductDetailsService cachedQueryProductDetailsService, ILogger logger)
+        internal GooglePurchaseBuilder(IGoogleCachedQueryProductDetailsService cachedQueryProductDetailsService, ILogger logger,
+            IGoogleProductDetailsReader productDetailsReader)
         {
             m_CachedQueryProductDetailsService = cachedQueryProductDetailsService;
             m_Logger = logger;
+            m_ProductDetailsReader = productDetailsReader;
         }
 
         public IEnumerable<IGooglePurchase> BuildPurchases(IEnumerable<AndroidJavaObject> purchases)
@@ -49,10 +52,13 @@ namespace UnityEngine.Purchasing.Utils
             }
         }
 
-        static IEnumerable<AndroidJavaObject> TryFindAllProductDetails(IEnumerable<string> skus, IEnumerable<AndroidJavaObject> productDetails)
+        // internal rather than private so the drop behaviour can be unit tested: BuildPurchase itself
+        // is unreachable from tests because AndroidJavaObject.Call is non-virtual and needs a live JVM.
+        internal IEnumerable<AndroidJavaObject> TryFindAllProductDetails(IEnumerable<string> skus, IEnumerable<AndroidJavaObject> productDetails)
         {
-            return skus.Select(sku => productDetails.First(
-                productDetail => sku == productDetail.Call<string>("getProductId")));
+            return skus.Select(sku => productDetails.FirstOrDefault(
+                    productDetail => sku == m_ProductDetailsReader.GetProductId(productDetail)))
+                .Where(productDetail => productDetail != null);
         }
     }
 }

@@ -14,14 +14,22 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         const string k_CloudEnvironmentArg = "-cloudEnvironment";
         const string k_StagingEnvironment = "staging";
 
-        const string k_ProductionBasePath = "https://services.api.unity.com/live-content/admin";
-        const string k_StagingBasePath = "https://staging.services.api.unity.com/live-content/admin";
+        const string k_LiveContentBasePathProduction = "https://services.api.unity.com/live-content/admin";
+        const string k_LiveContentBasePathStaging = "https://staging.services.api.unity.com/live-content/admin";
+        const string k_SchemaRegistryBasePathProduction = "https://services.api.unity.com/schema-registry";
+        const string k_SchemaRegistryBasePathStaging = "https://staging.services.api.unity.com/schema-registry";
 
-        internal static string BasePath => GetBasePath(Environment.GetCommandLineArgs());
+        internal static string BasePath => GetLiveContentBasePath(Environment.GetCommandLineArgs());
+        internal static string SchemaRegistryBasePath => GetSchemaRegistryBasePath(Environment.GetCommandLineArgs());
 
-        internal static string GetBasePath(string[] commandLineArgs)
+        internal static string GetLiveContentBasePath(string[] commandLineArgs)
         {
-            return IsStagingEnvironment(commandLineArgs) ? k_StagingBasePath : k_ProductionBasePath;
+            return IsStagingEnvironment(commandLineArgs) ? k_LiveContentBasePathStaging : k_LiveContentBasePathProduction;
+        }
+
+        internal static string GetSchemaRegistryBasePath(string[] commandLineArgs)
+        {
+            return IsStagingEnvironment(commandLineArgs) ? k_SchemaRegistryBasePathStaging : k_SchemaRegistryBasePathProduction;
         }
 
         static bool IsStagingEnvironment(string[] commandLineArgs)

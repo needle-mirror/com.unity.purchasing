@@ -17,7 +17,7 @@ namespace UnityEngine.Purchasing.Models
         public bool isAcknowledged { get; }
         public int purchaseState { get; }
         public List<string> skus { get; }
-        public string orderId { get; }
+        public string? orderId { get; }
         public string receipt { get; }
         public string signature { get; }
         public string originalJson { get; }

@@ -4,20 +4,21 @@ using System.Runtime.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
-using UnityEngine.Purchasing;
 
-namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
+namespace UnityEditor.Purchasing.Editor.Authoring.Core
 {
     [DataContract]
     public class CatalogItemDto
     {
         [DataMember(Name = "$schema"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public IList<string> Schemas { get; set; }
+        [DataMember(Name = "$metadata"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public JObject Metadata { get; set; }
         [DataMember(Name = "uSKU")]
         public string uSku { get; set; }
         [DataMember(Name = "type")]
         [JsonConverter(typeof(StringEnumConverter))]
-        public ProductType ProductType { get; set; }
+        public ProductTypeDto ProductType { get; set; }
         [DataMember(Name = "productDetails")]
         public List<ProductDetailsDto> ProductDetails { get; set; }
         [DataMember(Name = "pricing")]
@@ -78,7 +79,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     }
 
 
-    public enum ProductType
+    public enum ProductTypeDto
     {
         Consumable,
         NonConsumable,
@@ -93,12 +94,12 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     {
         [DataMember(Name = "store")]
         [JsonConverter(typeof(StringEnumConverter))]
-        public StoreId Store;
+        public StoreIdDto Store;
         [DataMember(Name = "value")]
         public string Value;
     }
 
-    public enum StoreId
+    public enum StoreIdDto
     {
         [EnumMember(Value = "apple")]
         Apple,

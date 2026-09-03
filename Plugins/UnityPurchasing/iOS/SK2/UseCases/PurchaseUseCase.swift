@@ -71,14 +71,19 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
     }
 
     public func purchaseProduct(productId: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async -> PurchaseDetails? {
-        guard let product = await fetchProductsUseCase.fetchProduct(for: productId) else {
-            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: "Failed to find the product", reason: PurchaseFailureReason.ProductUnavailable.rawValue)
-            let jsonString = encodeToJSON(purchaseDetail)
-            await storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
-            return nil
-        }
-
         do {
+            // Use the product cached at fetch time; only hit the store on a cache miss
+            // (e.g. purchase intents for products that were never fetched).
+            let product: Product
+            if let cached = StoreKitManager.instance.cachedProduct(for: productId) {
+                product = cached
+            } else if let fetched = try await fetchProductsUseCase.fetchProduct(for: productId) {
+                product = fetched
+            } else {
+                await purchaseProductExceptionCallbacks(productID: productId, error: "Failed to find the product", reason: PurchaseFailureReason.ProductUnavailable.rawValue)
+                return nil
+            }
+
             return try await purchaseProduct(product: product, options: options, storefrontChangeCallback: storefrontChangeCallback)
         } catch let error as Product.PurchaseError{
             let reason: PurchaseFailureReason
@@ -90,7 +95,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             default:
                 reason = .Unknown
             }
-            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: reason.rawValue)
+            await purchaseProductExceptionCallbacks(productID: productId, error: error.localizedDescription, reason: reason.rawValue)
         } catch let error as StoreKitError {
             let reason: PurchaseFailureReason
             switch error {
@@ -99,9 +104,9 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             default:
                 reason = .Unknown
             }
-            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: reason.rawValue)
+            await purchaseProductExceptionCallbacks(productID: productId, error: error.localizedDescription, reason: reason.rawValue)
         } catch {
-            await purchaseProductExceptionCallbacks(productID: product.id, error: error.localizedDescription, reason: PurchaseFailureReason.Unknown.rawValue)
+            await purchaseProductExceptionCallbacks(productID: productId, error: error.localizedDescription, reason: PurchaseFailureReason.Unknown.rawValue)
         }
         return nil
     }
@@ -114,7 +119,9 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             let purchaseResult = try await product.purchase(confirmIn: (scene?.windowScene)!, options: Set(purchaseProductOptions))
             switch purchaseResult {
             case .success(let verification):
-                 return await createPurchaseDetails(from: verification)
+                 var purchaseDetails = await createPurchaseDetails(from: verification)
+                 purchaseDetails.requestedProductId = product.id
+                 return purchaseDetails
             case .userCancelled:
                 await purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
                 return nil
@@ -150,7 +157,9 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
         let result = try await product.purchase(options: options)
         switch result {
         case .success(let verification):
-            return await createPurchaseDetails(from: verification)
+            var purchaseDetails = await createPurchaseDetails(from: verification)
+            purchaseDetails.requestedProductId = product.id
+            return purchaseDetails
         case .userCancelled:
             await purchaseProductExceptionCallbacks(productID: product.id, error: "User cancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
             return nil

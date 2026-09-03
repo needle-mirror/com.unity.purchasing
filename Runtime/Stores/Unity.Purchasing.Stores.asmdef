@@ -68,6 +68,11 @@
           "name": "com.unity.services.authentication",
           "expression": "3.7.1",
           "define": "IAP_UNITY_AUTH_RESTRICTED_TOKEN_ENABLED"
+        },
+        {
+          "name": "Unity",
+          "expression": "6000.7.0a7",
+          "define": "UNITY_INSIGHTS_REQUIREMENTS_API"
         }
     ],
     "noEngineReferences": false

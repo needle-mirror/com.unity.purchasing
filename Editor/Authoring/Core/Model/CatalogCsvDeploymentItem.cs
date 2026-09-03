@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using Unity.Services.DeploymentApi.Editor;
+using UnityEditor.Purchasing.Editor.Authoring.Core.Validations;
 
 namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
 {
@@ -58,27 +59,42 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             ClearTypedStates(CatalogItem.ValidationStateType);
 
             var entries = EntryDeploymentItems ?? new List<CatalogEntryDeploymentItem>();
+
+            foreach (var entry in entries)
+            {
+                entry.Validate(null);
+            }
+
+            StoreOverrideConflictValidation.AddConflictStates(entries);
+
             var errors = 0;
             var warnings = 0;
             var detailLines = new List<string>();
             foreach (var entry in entries)
             {
-                entry.Validate(null);
                 var entryStates = entry.States
                     .Where(s => s.Type == CatalogItem.ValidationStateType)
                     .ToList();
                 if (entryStates.Count == 0)
+                {
                     continue;
+                }
 
                 var worst = entryStates.Max(s => s.Level);
                 if (worst == SeverityLevel.Error)
+                {
                     errors++;
+                }
                 else if (worst == SeverityLevel.Warning)
+                {
                     warnings++;
+                }
 
                 var id = EntryDisplayId(entry);
                 foreach (var state in entryStates)
+                {
                     detailLines.Add($"{id}: {state.Description}");
+                }
             }
 
             if (errors > 0)

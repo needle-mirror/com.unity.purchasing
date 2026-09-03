@@ -13,11 +13,15 @@ namespace UnityEngine.Purchasing.CatalogListings
 {
     internal class CatalogListingClient : ICatalogListingClient
     {
-        const string k_SchemaUrl =
+        const string k_ProductionSchemaUrl =
             "https://services.api.unity.com/schema-registry/v1/schemas/UnityRemoteCatalog";
 
-        internal const string k_WebshopSchemaUrl =
-            "https://services.api.unity.com/schema-registry/v1/schemas/UnityRemoteCatalogWebshop";
+        const string k_StagingSchemaUrl =
+            "https://staging.services.api.unity.com/schema-registry/v1/schemas/UnityRemoteCatalog";
+
+        const string k_StagingEnvironment = "staging";
+
+        internal const string k_WebshopSchemaPath = "/v1/schemas/UnityRemoteCatalogWebshop";
 
         const string k_SchemaVersion = ">=1.1.0,<2.0.0";
 
@@ -28,22 +32,25 @@ namespace UnityEngine.Purchasing.CatalogListings
         readonly ILiveContentAdapterClientWrapper m_LiveContentAdapterClientWrapper;
         readonly ICatalogListingParser m_Parser;
         readonly IUtil m_Util;
+        readonly Func<string?> m_CloudEnvironmentProvider;
 
         public CatalogListingClient(
             ILiveContentAdapterClientWrapper liveContentAdapterClientWrapper,
             ICatalogListingParser parser,
-            IUtil util)
+            IUtil util,
+            Func<string?> cloudEnvironmentProvider)
         {
             m_LiveContentAdapterClientWrapper = liveContentAdapterClientWrapper;
             m_Parser = parser;
             m_Util = util;
+            m_CloudEnvironmentProvider = cloudEnvironmentProvider;
         }
 
         public bool IsAvailable => m_LiveContentAdapterClientWrapper.LiveContentAdapterClientIsAvailable;
 
         public async Task<CatalogListingResult> GetCatalogListings()
         {
-            var schemaUrlEncoded = Uri.EscapeDataString(k_SchemaUrl);
+            var schemaUrlEncoded = Uri.EscapeDataString(ResolveSchemaUrl());
             var liveContentService = m_LiveContentAdapterClientWrapper.GetLiveContentAdapterService();
 
             var accumulated = new List<CatalogListingDto>();
@@ -95,6 +102,13 @@ namespace UnityEngine.Purchasing.CatalogListings
 
                 cursor = pageConfigs.LastOrDefault()?.path;
             }
+        }
+
+        internal string ResolveSchemaUrl()
+        {
+            return m_CloudEnvironmentProvider() == k_StagingEnvironment
+                ? k_StagingSchemaUrl
+                : k_ProductionSchemaUrl;
         }
 
         // WebGL-safe delay: coroutine-driven via IUtil + TaskCompletionSource. Avoids Task.Delay which

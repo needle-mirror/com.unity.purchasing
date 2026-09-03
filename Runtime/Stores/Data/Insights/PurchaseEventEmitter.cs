@@ -3,8 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-// TODO ULO-10723: Remove Insights Module Enabled defines
-#if UNITY_6000_5_OR_NEWER && IAP_INSIGHTS_MODULE_ENABLED
+#if UNITY_INSIGHTS_REQUIREMENTS_API && ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS
 using Unity.EngineDiagnostics;
 #endif
 using UnityEngine.Networking;
@@ -20,26 +19,6 @@ using InsightsEventType = UnityEngine.Purchasing.Stores.Data.Insights.Models.Eve
 
 namespace UnityEngine.Purchasing.Stores.Data.Insights
 {
-    // Concrete implementation of IPurchaseEventEmitter. Per Emit*Async call:
-    //   1. Awaits IPlayerData to resolve identity / session / consent.
-    //   2. Builds the proto-faithful Insights.Models.IAPSDKEvent from
-    //      caller-provided SDK data (Product, transactionId, etc.) plus
-    //      environment data (Application.cloudProjectId, platform,
-    //      DeviceInfo from the platform-specific builders).
-    //   3. Hands the IAPSDKEvent to PurchaseEventProtobufWriter for
-    //      serialization to canonical proto3 binary wire format.
-    //   4. Forwards the bytes — to the Insights gateway via HTTP POST on
-    //      pre-6000.5 Unity, or to the runtime-module wrapper on 6000.5+
-    //      (currently a Debug.Log stub pending the LogEvent API).
-    //
-    // Fields the SDK can't reasonably source on its own are left for the
-    // runtime-module wrapper to augment on the wire:
-    //   - event_uuid             (proto explicit: wrapper-generated)
-    //
-    // installation_timestamp (ULO-10536) is sourced via AppInstallInfo,
-    // which mirrors the engine PR (ULO-10238, unity/unity #105897) when
-    // the engine module is not available: Android PackageInfo.firstInstallTime
-    // via JNI, iOS bundle directory creation date.
     internal sealed class PurchaseEventEmitter : IPurchaseEventEmitter
     {
         readonly IPlayerData m_PlayerData;
@@ -83,7 +62,10 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                     Forward(iaps);
                 }
             }
-            catch (Exception e) { LogEmissionFailure(nameof(PurchaseIntentStartEvent), e); }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         public async void SendPaymentOptionsShownEvent(IReadOnlyList<PaymentOption> optionsShown, string? defaultProvider)
@@ -100,7 +82,10 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                 });
                 Forward(iaps);
             }
-            catch (Exception e) { LogEmissionFailure(nameof(PaymentOptionsShownEvent), e); }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         public async void SendPurchasePaidEvent(PendingOrder order, IPurchaseFulfilledPayload? payload)
@@ -119,7 +104,10 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                     Forward(iaps);
                 }
             }
-            catch (Exception e) { LogEmissionFailure(nameof(PurchasePaidEvent), e); }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         public async void SendPurchaseFailedEvent(FailedOrder order)
@@ -139,7 +127,10 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                     Forward(iaps);
                 }
             }
-            catch (Exception e) { LogEmissionFailure(nameof(PurchaseFailedEvent), e); }
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         public async void SendPurchaseFulfilledEvent(ConfirmedOrder order, IPurchaseFulfilledPayload? payload)
@@ -158,12 +149,10 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                     Forward(iaps);
                 }
             }
-            catch (Exception e) { LogEmissionFailure(nameof(PurchaseFulfilledEvent), e); }
-        }
-
-        static void LogEmissionFailure(string variant, Exception e)
-        {
-            Debug.unityLogger.LogIAPVerbose($"Insights emission failed for {variant}: {e.Message}");
+            catch (Exception)
+            {
+                // ignored
+            }
         }
 
         static IStorePayload? MapPayload(IPurchaseFulfilledPayload? payload)
@@ -196,17 +185,21 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
         {
             var body = PurchaseEventProtobufWriter.Write(iaps);
 
-            // TODO: temporary script define: IAP_INSIGHTS_MODULE_ENABLED
-            // There will be a more official feature flag coming soon that will replace this.
-            // TODO ULO-10723: Remove Insights Module Enabled defines
-#if UNITY_6000_5_OR_NEWER && IAP_INSIGHTS_MODULE_ENABLED
+            // UNITY_INSIGHTS_REQUIREMENTS_API is a versionDefine (Unity >= 6000.7.0a7):
+            // those Editors provide the RequiresInsights attribute (declared in the
+            // package's Editor assembly), which guarantees the Insights module is kept
+            // in player builds, so events can go through the module.
+            // ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS gates the Insights module
+            // itself — it is set per-platform, so platforms without Insights (e.g.
+            // Linux) fall back to POSTing to the Insights gateway directly.
+#if UNITY_INSIGHTS_REQUIREMENTS_API && ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS
             ForwardModule(body);
 #else
             ForwardGateway(body);
 #endif
         }
 
-#if UNITY_6000_5_OR_NEWER && IAP_INSIGHTS_MODULE_ENABLED
+#if UNITY_INSIGHTS_REQUIREMENTS_API && ENABLE_CLOUD_SERVICES_ENGINE_DIAGNOSTICS
         static void ForwardModule(byte[] body)
         {
             // EngineDiagnostics.LogEvent takes a ReadOnlySpan<char>, so the
@@ -235,11 +228,6 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
             var op = request.SendWebRequest();
             op.completed += _ =>
             {
-                if (request.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.unityLogger.LogError("IAPSDKEvent",
-                        $"Insights ingest failed ({(long)request.responseCode}): {request.error}");
-                }
                 request.Dispose();
             };
         }
@@ -280,7 +268,30 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                 ApplicationVersion = Application.version,
                 InstallationTimestamp = AppInstallInfo.GetInstallTimestamp(),
                 ImpressionId = pps.UnityImpressionId,
+                InstallMode = GetInstallMode(Application.platform),
             };
+        }
+
+        // install_mode is Android-only for now; other platforms leave the
+        // field unset so it stays absent on the wire (proto3 default).
+        internal static string? GetInstallMode(RuntimePlatform platform)
+        {
+            return platform == RuntimePlatform.Android
+                ? MapInstallMode(Application.installMode)
+                : null;
+        }
+
+        internal static string? MapInstallMode(ApplicationInstallMode mode)
+        {
+            switch (mode)
+            {
+                case ApplicationInstallMode.Store: return "store";
+                case ApplicationInstallMode.DeveloperBuild: return "dev_release";
+                case ApplicationInstallMode.Adhoc: return "adhoc";
+                case ApplicationInstallMode.Enterprise: return "enterprise";
+                case ApplicationInstallMode.Editor: return "editor";
+                default: return null;
+            }
         }
 
         internal static DeviceInfo? BuildSdkDeviceInfo(RuntimePlatform platform)
