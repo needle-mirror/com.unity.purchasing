@@ -117,7 +117,9 @@ namespace UnityEngine.Purchasing
 
         public void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws)
         {
-            throw new NotImplementedException();
+            // Intentionally empty. Attribution is iOS only, and the caller no longer compiles this
+            // path out, so a stub that threw would break every purchase on the platforms this
+            // assembly covers, the Editor included.
         }
 
         public void FetchPurchases(string json)

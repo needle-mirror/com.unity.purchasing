@@ -54,6 +54,25 @@ namespace UnityEngine.Purchasing.Extension
         }
 
         /// <summary>
+        /// Parametrized Constructor.
+        /// Describes one catalog listing of a product, for stores that return different metadata
+        /// (such as a different price) for each catalog listing.
+        /// In <see cref="Store.FetchProducts"/>, pass the ids of the <see cref="ProductDefinition"/> you are describing:
+        /// <code>
+        /// new ProductDescription(definition.storeSpecificId, metadata, definition.catalogListingId)
+        /// </code>
+        /// If your store returns the same metadata for every catalog listing of a product, use
+        /// <see cref="ProductDescription(string, ProductMetadata)"/> instead.
+        /// </summary>
+        /// <param name="id"> The store-specific id of the product. </param>
+        /// <param name="metadata"> The metadata of this catalog listing. </param>
+        /// <param name="catalogListingId"> The catalog listing id of the <see cref="ProductDefinition"/> being described. </param>
+        public ProductDescription(string id, ProductMetadata metadata, string catalogListingId) : this(id, metadata)
+        {
+            this.catalogListingId = catalogListingId;
+        }
+
+        /// <summary>
         /// The store-specific id of this product.
         /// </summary>
         public string storeSpecificId { get; private set; }
@@ -74,6 +93,13 @@ namespace UnityEngine.Purchasing.Extension
         /// The Metadate of the product. Contains store interface information.
         /// </summary>
         public ProductMetadata metadata { get; private set; }
+
+        /// <summary>
+        /// The catalog listing this description applies to, or null if it applies to every catalog listing
+        /// of the product.
+        /// Set through <see cref="ProductDescription(string, ProductMetadata, string)"/>.
+        /// </summary>
+        public string catalogListingId { get; private set; }
 
         /// <summary>
         /// The receipt provided on product purchase.

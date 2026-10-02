@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
 {
@@ -14,15 +15,29 @@ namespace UnityEditor.Purchasing
         const string k_AuthHeaderName = "Authorization";
         const string k_AuthHeaderValueFormat = "Bearer {0}";
 
-        internal static async Task<GooglePlayKeyRequestResult> RequestGooglePlayKeyAsync(string gatewayToken)
+        internal static async Task<GooglePlayKeyRequestResult> RequestGooglePlayKeyAsync(string gatewayToken, string projectId)
         {
-            var response = await SendUnityWebRequestAndGetResponseAsync(gatewayToken);
+            var response = await SendUnityWebRequestAndGetResponseAsync(gatewayToken, projectId);
             return response;
         }
 
-        static async Task<GooglePlayKeyRequestResult> SendUnityWebRequestAndGetResponseAsync(string gatewayToken)
+        internal static async Task<long> PushGooglePlayKeyAsync(string gatewayToken, string projectId, string googlePlayKey)
         {
-            using (var request = await CreateAndSendWebRequestAsync(gatewayToken))
+            var body = JsonUtility.ToJson(new IapSettings { google = new GoogleIapSettings { publicKey = googlePlayKey } });
+
+            var request = BuildUnityWebRequest(gatewayToken, projectId, UnityWebRequest.kHttpVerbPOST);
+            request.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body));
+            request.SetRequestHeader("Content-Type", "application/json");
+
+            using (var response = await SendWebRequestAsync(request))
+            {
+                return response.responseCode;
+            }
+        }
+
+        static async Task<GooglePlayKeyRequestResult> SendUnityWebRequestAndGetResponseAsync(string gatewayToken, string projectId)
+        {
+            using (var request = await SendWebRequestAsync(BuildUnityWebRequest(gatewayToken, projectId, UnityWebRequest.kHttpVerbGET)))
             {
                 var requestResult = new GooglePlayKeyRequestResult();
 
@@ -41,11 +56,11 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        static Task<UnityWebRequest> CreateAndSendWebRequestAsync(string gatewayToken)
+        static Task<UnityWebRequest> SendWebRequestAsync(UnityWebRequest webRequest)
         {
             var taskCompletionSource = new TaskCompletionSource<UnityWebRequest>();
 
-            var operation = BuildUnityWebRequest(gatewayToken).SendWebRequest();
+            var operation = webRequest.SendWebRequest();
             operation.completed += OnRequestCompleted;
 
             return taskCompletionSource.Task;
@@ -60,10 +75,11 @@ namespace UnityEditor.Purchasing
             }
         }
 
-        static UnityWebRequest BuildUnityWebRequest(string gatewayToken)
+        // The project id is passed in, not read here, so a request can't land on a project linked after it started.
+        static UnityWebRequest BuildUnityWebRequest(string gatewayToken, string projectId, string method)
         {
-            var url = string.Format(PurchasingUrls.iapSettingssUrl, CloudProjectSettings.projectId);
-            var request = UnityWebRequest.Get(url);
+            var url = string.Format(PurchasingUrls.iapSettingssUrl, projectId);
+            var request = new UnityWebRequest(url, method, new DownloadHandlerBuffer(), null);
             request.suppressErrorsToConsole = true;
 
             request.SetRequestHeader(k_AuthHeaderName, string.Format(k_AuthHeaderValueFormat, gatewayToken));

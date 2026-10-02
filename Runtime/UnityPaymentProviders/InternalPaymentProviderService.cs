@@ -188,6 +188,30 @@ namespace UnityEngine.Purchasing.PaymentProviderService
             });
         }
 
+        public async Task<string> RegisterLinkOutSession(PlayerIdentity playerIdentity, DeviceInfo deviceInfo)
+        {
+            CheckForCloudProjectInfo();
+            var request = new RegisterLinkOutSessionRequest(
+                projectId: m_CloudProjectId.GetCloudProjectId(),
+                environmentId: m_EnvironmentId.EnvironmentId,
+                linkOutSessionRegisterRequest: new LinkOutSessionRegisterRequest(
+                    identity: playerIdentity,
+                    deviceInfo: deviceInfo
+                )
+            );
+
+            return await m_ServiceExceptionMapper.InvokeAndMapServiceExceptions(async () =>
+            {
+                var response = await PaymentProviderApiClient.RegisterLinkOutSessionAsync(request, Configuration);
+                // The generated model types the id as a non-nullable Guid, so an absent field
+                // deserializes to Guid.Empty rather than null.
+                // TODO: ULO-11869 - check with backend that treating an empty guid as "no session"
+                // is the right contract here.
+                var sessionId = response.Result.LinkOutSessionId;
+                return sessionId == Guid.Empty ? null : sessionId.ToString();
+            });
+        }
+
         private OrderData CreateOrderDataFromResponse(OrderResponse orderResponse)
         {
             try
@@ -204,6 +228,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService
                     lineItems = orderResponse.LineItems.Select(lineItemResponse => new LineItem()
                         {
                             unitySku = lineItemResponse.Sku,
+                            catalogListingId = lineItemResponse.CatalogListingId,
                             productType = lineItemResponse.ProductType,
                         }).ToList(),
                     status = OrderStatusFromString(orderResponse.Status),

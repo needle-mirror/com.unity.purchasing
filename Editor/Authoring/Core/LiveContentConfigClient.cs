@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Logger;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Model;
+using UnityEditor.Purchasing.Editor.Authoring.Core.Retry;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Service;
 
 namespace UnityEditor.Purchasing.Editor.Authoring.Core
@@ -23,7 +23,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
             return catalogListingId;
         }
 
-        const string k_SchemaRegistryBasePath =
+        const string k_SchemaRegistryBasePathProduction =
             "https://services.api.unity.com/schema-registry";
         internal const string k_RequiredSchemaPath =
             "/v1/schemas/UnityRemoteCatalog/versions/1.1.0";
@@ -35,19 +35,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         internal static bool IsSdkControlled(string url) =>
             url != null && (url.Contains(k_RequiredSchemaPath) || url.Contains(k_WebshopMarker));
 
-        const int k_MaxConcurrentFetches = 8;
-        const int k_MaxFetchRetries = 4;
-        static readonly Random s_Jitter = new Random();
+        readonly OperationRetryPolicy m_RetryPolicy = OperationRetryPolicy.Create()
+            .WithMaxRetries(3)
+            .WithBackoff(1000, 8000)
+            .WithJitter(250);
 
-        static readonly JsonSerializerSettings k_DtoSettings = new JsonSerializerSettings
-        {
-            Formatting = Formatting.Indented
-        };
-
-        static readonly JsonSerializerSettings k_DeserSettings = new JsonSerializerSettings
-        {
-            MissingMemberHandling = MissingMemberHandling.Ignore
-        };
+        static readonly JsonSerializerSettings k_DtoSettings = new() { Formatting = Formatting.Indented };
+        static readonly JsonSerializerSettings k_DeserializationSettings = new() { MissingMemberHandling = MissingMemberHandling.Ignore };
 
         readonly ILogger m_Logger;
         readonly ILiveContentApiTransport m_Transport;
@@ -55,7 +49,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         readonly string m_WebshopSchema;
 
         public LiveContentConfigClient(ILiveContentApiTransport transport, ILogger logger)
-            : this(transport, logger, k_SchemaRegistryBasePath) { }
+            : this(transport, logger, k_SchemaRegistryBasePathProduction) { }
 
         internal LiveContentConfigClient(
             ILiveContentApiTransport transport,
@@ -80,52 +74,36 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         {
             try
             {
-                var configPaths = await FetchAllConfigPaths(cancellationToken);
-
-                using var gate = new SemaphoreSlim(k_MaxConcurrentFetches);
-                var fetchTasks = configPaths
-                    .Select(configPath => FetchConfigWithRetry(configPath, gate, cancellationToken))
-                    .ToList();
-
-                var payloads = await Task.WhenAll(fetchTasks);
+                var configs = await FetchAllConfigsWithContent(cancellationToken);
 
                 var result = new List<CatalogItem>();
-                for (var i = 0; i < payloads.Length; i++)
+                foreach (var config in configs)
                 {
-                    var payload = payloads[i];
-                    var configPath = configPaths[i];
-
-                    if (!payload.IsSuccess)
+                    if (config.Body == null || config.VariantTags.Count != 0)
                     {
-                        if (payload.StatusCode == 404)
-                            continue;
-
-                        throw new ClientException(
-                            $"Failed to fetch config at '{configPath}' " +
-                            $"(HTTP {payload.StatusCode}). Aborting List() to avoid returning a partial catalog.",
-                            null);
-                    }
-
-                    if (string.IsNullOrEmpty(payload.Content))
                         continue;
+                    }
 
                     try
                     {
-                        var dto = JsonConvert.DeserializeObject<CatalogItemDto>(payload.Content, k_DeserSettings);
-                        if (dto == null)
-                            continue;
-                        if (string.IsNullOrEmpty(dto.uSku))
+                        if (!config.Body.TryGetContentAs<CatalogItemDto>(out var dto, k_DeserializationSettings) || dto == null)
                         {
-                            m_Logger.LogWarning($"Config at '{configPath}' has empty or missing uSku. Skipping.");
                             continue;
                         }
+
+                        if (string.IsNullOrEmpty(dto.uSku))
+                        {
+                            m_Logger.LogWarning($"Config at '{config.Path}' has empty or missing uSku. Skipping.");
+                            continue;
+                        }
+
                         var item = dto.ToCatalogItem();
-                        item.CatalogListingId = configPath;
+                        item.CatalogListingId = config.Path;
                         result.Add(item);
                     }
                     catch (Exception e)
                     {
-                        m_Logger.LogWarning($"Failed to deserialize config at '{configPath}'. Skipping. {e.Message}");
+                        m_Logger.LogWarning($"Failed to deserialize config at '{config.Path}'. Skipping. {e.Message}");
                     }
                 }
 
@@ -145,107 +123,117 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
             }
         }
 
-        async Task<TransportResult> FetchConfigWithRetry(string configPath, SemaphoreSlim gate, CancellationToken cancellationToken)
+        public async Task<CatalogItem> Get(string catalogListingId, CancellationToken cancellationToken)
         {
-            await gate.WaitAsync(cancellationToken);
             try
             {
-                return await SendWithRetry(
-                    () => m_Transport.GetConfigContentAsync(configPath, cancellationToken),
-                    cancellationToken);
+                var path = GetCatalogListingPath(catalogListingId);
+                var body = await FetchConfigBody(path, cancellationToken);
+                return body != null ? ParseCatalogItem(body, path) : null;
             }
-            finally
+            catch (ClientException)
             {
-                gate.Release();
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                throw new ClientException($"Get() failed unexpectedly. {e.Message}", e);
             }
         }
 
-        async Task<TransportResult> SendWithRetry(Func<Task<TransportResult>> sendRequest, CancellationToken cancellationToken)
+        async Task<LiveContentConfigBody> FetchConfigBody(string path, CancellationToken cancellationToken)
         {
-            TransportResult response = default;
-            for (var attempt = 0; attempt < k_MaxFetchRetries; attempt++)
-            {
-                response = await sendRequest();
+            var result = await SendWithRetry(
+                () => m_Transport.GetConfigContentAsync(path, cancellationToken),
+                cancellationToken);
 
-                if (response.IsSuccess || response.StatusCode == 404 || !IsTransientFailure(response))
-                    return response;
+            if (result.StatusCode == 404 || !result.IsSuccess)
+                return null;
 
-                if (attempt < k_MaxFetchRetries - 1)
-                {
-                    var delay = ComputeRetryDelay(response, attempt);
-                    await Task.Delay(delay, cancellationToken);
-                }
-            }
-            return response;
+            return result.Content;
         }
 
-        static bool IsTransientFailure(TransportResult response)
+        CatalogItem ParseCatalogItem(LiveContentConfigBody body, string path)
+        {
+            if (!body.TryGetContentAs<CatalogItemDto>(out var dto, k_DeserializationSettings)
+                || dto == null || string.IsNullOrEmpty(dto.uSku))
+                return null;
+
+            var item = dto.ToCatalogItem();
+            item.CatalogListingId = path;
+            return item;
+        }
+
+        async Task<TResult> SendWithRetry<TResult>(Func<Task<TResult>> sendRequest, CancellationToken cancellationToken)
+            where TResult : ITransportResult
+        {
+            return await m_RetryPolicy.ExecuteAsync(
+                sendRequest,
+                response => IsTransientFailure(response),
+                cancellationToken,
+                response => ParseRetryAfter(response));
+        }
+
+        static bool IsTransientFailure(ITransportResult response)
         {
             return response.StatusCode == 0
                 || response.StatusCode == 429
-                || (response.StatusCode >= 500 && response.StatusCode < 600);
+                || response.StatusCode is >= 500 and < 600;
         }
 
-        static TimeSpan ComputeRetryDelay(TransportResult response, int attempt)
+        static TimeSpan? ParseRetryAfter(ITransportResult response)
         {
-            var retryAfter = response.Headers?
-                .FirstOrDefault(h => string.Equals(h.Key, "Retry-After", StringComparison.OrdinalIgnoreCase)).Value;
-            if (!string.IsNullOrEmpty(retryAfter)
-                && int.TryParse(retryAfter, out var seconds)
+            var header = GetHeaderValue(response, "Retry-After");
+            if (!string.IsNullOrEmpty(header)
+                && int.TryParse(header, out var seconds)
                 && seconds > 0)
             {
-                return TimeSpan.FromSeconds(Math.Min(seconds, 30));
+                return TimeSpan.FromSeconds(seconds);
             }
 
-            var backoffMs = Math.Min(1000 * (1 << attempt), 8000);
-            int jitterMs;
-            lock (s_Jitter) { jitterMs = s_Jitter.Next(0, 250); }
-            return TimeSpan.FromMilliseconds(backoffMs + jitterMs);
+            return null;
         }
 
-        async Task<List<string>> FetchAllConfigPaths(CancellationToken cancellationToken)
+        async Task<List<LiveContentConfig>> FetchAllConfigsWithContent(CancellationToken cancellationToken)
         {
             const int maxConfigsApiPageSize = 100;
-            var configPaths = new List<string>();
+            var configs = new List<LiveContentConfig>();
             string afterCursor = null;
             var isFirstPage = true;
-            List<string> allItems;
+            var seenCursors = new HashSet<string>(StringComparer.Ordinal);
 
             do
             {
                 var configsResponse = await SendWithRetry(
-                    () => m_Transport.GetConfigPathsAsync(
+                    () => m_Transport.GetConfigsContentAsync(
                         pathPrefix: "catalog/",
                         limit: maxConfigsApiPageSize,
                         after: afterCursor,
-                        start: isFirstPage ? true : (bool?)null,
+                        start: isFirstPage ? true : null,
                         schema: m_RequiredSchema,
-                        noVariantTag: true,
                         cancellationToken: cancellationToken),
                     cancellationToken);
 
                 isFirstPage = false;
 
-                if (configsResponse.StatusCode == 404 || string.IsNullOrEmpty(configsResponse.Content))
+                if (configsResponse.StatusCode == 404)
                     break;
 
                 if (!configsResponse.IsSuccess)
-                    throw new ClientException(
-                        $"GetConfigPaths failed (HTTP {configsResponse.StatusCode}). {configsResponse.Content}",
-                        null);
+                    throw new ClientException($"GetConfigsContent failed (HTTP {configsResponse.StatusCode}). {configsResponse.Error}", null);
 
-                var json = JToken.Parse(configsResponse.Content);
-                allItems = json.SelectTokens("$..path")
-                    .Select(t => t.Value<string>())
-                    .Where(p => p != null)
-                    .ToList();
+                configs.AddRange(configsResponse.Content);
 
-                configPaths.AddRange(allItems);
-                afterCursor = allItems.LastOrDefault();
+                afterCursor = GetHeaderValue(configsResponse, "X-Next-Cursor");
 
-            } while (allItems.Count >= maxConfigsApiPageSize);
+                VerifyNotSeenOrThrow(afterCursor, seenCursors);
+            } while (!string.IsNullOrEmpty(afterCursor));
 
-            return configPaths;
+            return configs;
         }
 
         public async Task Upsert(CatalogItem catalogItem, CancellationToken cancellationToken)
@@ -278,18 +266,18 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
 
             if (!exists.IsSuccess && exists.StatusCode != 404)
                 throw new ClientException(
-                    $"Failed to check existence of '{path}' (HTTP {exists.StatusCode}). {exists.Content}",
+                    $"Failed to check existence of '{path}' (HTTP {exists.StatusCode}). {exists.Error}",
                     null);
 
             var dto = catalogItem.ToDto();
             dto.Schemas = BuildSchemas(catalogItem.IsWebshopAvailable);
             PreserveFromExisting(dto, exists);
-            dto.ApplyManagedByMetadata();
+            dto.Metadata = LiveContentMetadata.ApplyManagedBy(dto.Metadata);
 
             var jsonContent = JsonConvert.SerializeObject(dto, k_DtoSettings);
 
-            TransportResult response;
-            if (exists.IsSuccess && !string.IsNullOrEmpty(exists.Content))
+            TransportResult<LiveContentConfig> response;
+            if (exists.IsSuccess && exists.Content != null)
             {
                 response = await SendWithRetry(
                     () => m_Transport.UpdateConfigAsync(path, jsonContent, cancellationToken),
@@ -304,7 +292,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
 
             if (!response.IsSuccess)
                 throw new ClientException(
-                    $"Failed to upsert '{path}' (HTTP {response.StatusCode}). {response.Content}",
+                    $"Failed to upsert '{path}' (HTTP {response.StatusCode}). {response.Error}",
                     null);
         }
 
@@ -316,20 +304,15 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
             return list;
         }
 
-        void PreserveFromExisting(CatalogItemDto dto, TransportResult exists)
+        void PreserveFromExisting(CatalogItemDto dto, TransportResult<LiveContentConfigBody> exists)
         {
-            if (!exists.IsSuccess || string.IsNullOrEmpty(exists.Content))
+            if (!exists.IsSuccess || exists.Content == null)
                 return;
 
-            CatalogItemDto existingDto;
-            try
-            {
-                existingDto = JsonConvert.DeserializeObject<CatalogItemDto>(exists.Content, k_DeserSettings);
-            }
-            catch (Exception e)
+            if (!exists.Content.TryGetContentAs<CatalogItemDto>(out var existingDto, k_DeserializationSettings))
             {
                 m_Logger.LogWarning(
-                    $"Could not parse existing remote item to preserve unknown fields; proceeding without preservation. {e.Message}");
+                    "Could not parse existing remote item to preserve unknown fields; proceeding without preservation.");
                 return;
             }
 
@@ -368,7 +351,19 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
 
             if (!response.IsSuccess)
                 throw new ClientException(
-                    $"Failed to delete '{path}' (HTTP {response.StatusCode}). {response.Content}",
+                    $"Failed to delete '{path}' (HTTP {response.StatusCode}). {response.Error}",
+                    null);
+        }
+
+        static string GetHeaderValue(ITransportResult response, string headerName) =>
+            response.Headers?
+                .FirstOrDefault(h => string.Equals(h.Key, headerName, StringComparison.OrdinalIgnoreCase)).Value;
+
+        static void VerifyNotSeenOrThrow(string afterCursor, HashSet<string> seenCursors)
+        {
+            if (!string.IsNullOrEmpty(afterCursor) && !seenCursors.Add(afterCursor))
+                throw new ClientException(
+                    $"GetConfigsContent returned a previously seen X-Next-Cursor '{afterCursor}'.",
                     null);
         }
     }

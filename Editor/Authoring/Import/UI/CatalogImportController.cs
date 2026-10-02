@@ -460,6 +460,8 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Import.UI
 
             var catalogItem = new CatalogItem
             {
+                // Without the prefix an item fails validation with "Invalid catalog item ID format".
+                CatalogListingId = CatalogItem.CatalogListingIdPrefix + first.Sku,
                 uSku = first.Sku,
                 ProductType = productType,
                 ImageUrl = first.ImageUrl,

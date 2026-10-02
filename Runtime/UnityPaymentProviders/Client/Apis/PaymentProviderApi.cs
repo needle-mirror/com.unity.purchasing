@@ -74,6 +74,16 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
             /// <summary>
             /// Async Operation.
+            /// Register a link-out session.
+            /// </summary>
+            /// <param name="request">Request object for RegisterLinkOutSession.</param>
+            /// <param name="operationConfiguration">Configuration for RegisterLinkOutSession.</param>
+            /// <returns>Task for a Response object containing status code, headers, and LinkOutSessionRegisterResponse object.</returns>
+            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
+            Task<Response<LinkOutSessionRegisterResponse>> RegisterLinkOutSessionAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.RegisterLinkOutSessionRequest request, Configuration operationConfiguration = null);
+
+            /// <summary>
+            /// Async Operation.
             /// Update an order.
             /// </summary>
             /// <param name="request">Request object for UpdateOrder.</param>
@@ -258,6 +268,33 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
             var handledResponse = ResponseHandler.HandleAsyncResponse<Dictionary<string, Dictionary<string, StoreOverrideMatch>>>(response, statusCodeToTypeMap);
             return new Response<Dictionary<string, Dictionary<string, StoreOverrideMatch>>>(response, handledResponse);
+        }
+
+
+        /// <summary>
+        /// Async Operation.
+        /// Register a link-out session.
+        /// </summary>
+        /// <param name="request">Request object for RegisterLinkOutSession.</param>
+        /// <param name="operationConfiguration">Configuration for RegisterLinkOutSession.</param>
+        /// <returns>Task for a Response object containing status code, headers, and LinkOutSessionRegisterResponse object.</returns>
+        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
+        public async Task<Response<LinkOutSessionRegisterResponse>> RegisterLinkOutSessionAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.RegisterLinkOutSessionRequest request,
+            Configuration operationConfiguration = null)
+        {
+            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(LinkOutSessionRegisterResponse)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"422", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   },{"503", typeof(BasicErrorResponse)   } };
+
+            // Merge the operation/request level configuration with the client level configuration.
+            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
+
+            var response = await HttpClient.MakeRequestAsync("POST",
+                request.ConstructUrl(finalConfiguration.BasePath),
+                request.ConstructBody(),
+                request.ConstructHeaders(_accessToken, finalConfiguration),
+                finalConfiguration.RequestTimeout ?? _baseTimeout);
+
+            var handledResponse = ResponseHandler.HandleAsyncResponse<LinkOutSessionRegisterResponse>(response, statusCodeToTypeMap);
+            return new Response<LinkOutSessionRegisterResponse>(response, handledResponse);
         }
 
 

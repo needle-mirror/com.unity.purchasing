@@ -41,10 +41,11 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="externalTransactionTokens">Optional external-link transaction tokens, used by developers to self-report the transaction to Apple/Google. Stored with the order and surfaced in order webhooks; not returned in the order response. Up to two tokens may be supplied because a single Apple external purchase can yield two distinct token types depending on the region — for example an &#x60;acquisition&#x60; token and a &#x60;linkOut&#x60; token.</param>
         /// <param name="redirectUrls">redirectUrls param</param>
         /// <param name="customReferenceId">Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with your internal system. Stored with the order and returned in the order response and order webhooks.</param>
+        /// <param name="linkOutSessionId">Optional, internal. Link-out session ID, for use with webshops.</param>
         /// <param name="metadata">Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks.</param>
         /// <param name="deviceInfo">deviceInfo param</param>
         [Preserve]
-        public OrderRequest(Player player, string currency, List<string> skus = default, List<string> catalogListingIds = default, string country = default, string paymentProvider = default, string uiMode = "hosted", List<OrderRequestExternalTransactionTokensInner> externalTransactionTokens = default, OrderRequestRedirectUrls redirectUrls = default, string customReferenceId = default, Dictionary<string, string> metadata = default, DeviceInfo deviceInfo = default)
+        public OrderRequest(Player player, string currency, List<string> skus = default, List<string> catalogListingIds = default, string country = default, string paymentProvider = default, string uiMode = "hosted", List<OrderRequestExternalTransactionTokensInner> externalTransactionTokens = default, OrderRequestRedirectUrls redirectUrls = default, string customReferenceId = default, System.Guid linkOutSessionId = default, Dictionary<string, string> metadata = default, DeviceInfo deviceInfo = default)
         {
             Player = player;
             Skus = skus;
@@ -56,6 +57,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             ExternalTransactionTokens = externalTransactionTokens;
             RedirectUrls = redirectUrls;
             CustomReferenceId = customReferenceId;
+            LinkOutSessionId = linkOutSessionId;
             Metadata = metadata;
             DeviceInfo = deviceInfo;
         }
@@ -131,6 +133,13 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string CustomReferenceId{ get; }
         
         /// <summary>
+        /// Optional, internal. Link-out session ID, for use with webshops.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "linkOutSessionId", EmitDefaultValue = false)]
+        public System.Guid LinkOutSessionId{ get; }
+        
+        /// <summary>
         /// Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks.
         /// </summary>
         [Preserve]
@@ -192,6 +201,10 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 serializedModel += "customReferenceId," + CustomReferenceId + ",";
             }
+            if (LinkOutSessionId != null)
+            {
+                serializedModel += "linkOutSessionId," + LinkOutSessionId + ",";
+            }
             if (Metadata != null)
             {
                 serializedModel += "metadata," + Metadata.ToString() + ",";
@@ -251,6 +264,12 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 var customReferenceIdStringValue = CustomReferenceId.ToString();
                 dictionary.Add("customReferenceId", customReferenceIdStringValue);
+            }
+            
+            if (LinkOutSessionId != null)
+            {
+                var linkOutSessionIdStringValue = LinkOutSessionId.ToString();
+                dictionary.Add("linkOutSessionId", linkOutSessionIdStringValue);
             }
             
             if (Metadata != null)

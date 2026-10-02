@@ -19,6 +19,16 @@ namespace UnityEngine.Purchasing
         internal virtual IProductService ResolveProductService(string storeName)
             => ResolveController(storeName);
 
+        // Metadata of the requested listing, not the product's base listing: listings of one product
+        // can carry different prices and webshop settings.
+        ProductMetadata? GetListingMetadata(string storeName, string catalogListingId)
+        {
+            var product = ResolveProductService(storeName).GetProductByCatalogListingId(catalogListingId);
+            return product != null && product.catalogListings.TryGetValue(catalogListingId, out var listing)
+                ? listing.metadata
+                : null;
+        }
+
         // PSP purchase extension used by the webshop branch of CompleteChoice
         // to invoke RedirectToWebshop, and by the PSP-identifier branch of
         // PurchaseSelectedOption to invoke the per-call PurchaseProduct overload.
@@ -106,15 +116,15 @@ namespace UnityEngine.Purchasing
 
         (decimal price, string currency)? GetPriceInfo(string storeName, string catalogListingId)
         {
-            var product = ResolveProductService(storeName).GetProductByCatalogListingId(catalogListingId);
-            if (product?.metadata == null)
+            var metadata = GetListingMetadata(storeName, catalogListingId);
+            if (metadata == null)
                 return null;
-            if (product.metadata.localizedPrice <= 0m)
+            if (metadata.localizedPrice <= 0m)
                 return null;
-            var iso = product.metadata.isoCurrencyCode;
+            var iso = metadata.isoCurrencyCode;
             if (string.IsNullOrEmpty(iso))
                 return null;
-            return (product.metadata.localizedPrice, iso);
+            return (metadata.localizedPrice, iso);
         }
 
         public Task<PurchaseOption?> BeginShowPurchaseOption(
@@ -298,8 +308,7 @@ namespace UnityEngine.Purchasing
         /// fabricating a full PaymentProviderProductMetadata.
         internal virtual bool HasWebshop(string catalogListingId)
         {
-            var product = ResolveProductService(PaymentProvider.Name).GetProductByCatalogListingId(catalogListingId);
-            var pspMeta = product?.metadata?.GetPaymentProviderProductMetadata();
+            var pspMeta = GetListingMetadata(PaymentProvider.Name, catalogListingId)?.GetPaymentProviderProductMetadata();
             return pspMeta?.hasWebshop ?? false;
         }
 
@@ -310,8 +319,7 @@ namespace UnityEngine.Purchasing
         /// price isn't actually cheaper. Virtual for the same reason as HasWebshop.
         internal virtual string? ComputeWebshopBadge(string catalogListingId)
         {
-            var product = ResolveProductService(PaymentProvider.Name).GetProductByCatalogListingId(catalogListingId);
-            var metadata = product?.metadata;
+            var metadata = GetListingMetadata(PaymentProvider.Name, catalogListingId);
             if (metadata == null)
                 return null;
             var webshopPrice = metadata.GetPaymentProviderProductMetadata()?.localizedWebshopPrice;

@@ -52,7 +52,8 @@ namespace UnityEngine.Purchasing.WebshopService
             string? country,
             IReadOnlyList<WebshopExternalToken> externalTokens,
             string? customReferenceId,
-            IReadOnlyDictionary<string, string>? customMetadata)
+            IReadOnlyDictionary<string, string>? customMetadata,
+            string? linkOutSessionId)
         {
             CheckForCloudProjectInfo();
 
@@ -75,6 +76,8 @@ namespace UnityEngine.Purchasing.WebshopService
             {
                 linkParams.Add(new WebshopLinkParam(WebshopLinkParam.TypeOptions.Metadata, SerializeMetadataToJson(customMetadata)));
             }
+
+            AddIfPresent(linkParams, WebshopLinkParam.TypeOptions.LinkOutSessionId, linkOutSessionId);
 
             var request = new CreateWebshopLinkRequest(
                 m_CloudProjectId.GetCloudProjectId(),

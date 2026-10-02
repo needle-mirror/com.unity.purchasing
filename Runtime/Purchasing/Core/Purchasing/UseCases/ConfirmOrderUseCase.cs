@@ -70,10 +70,9 @@ namespace UnityEngine.Purchasing
 
             if (matchingRequest != null)
             {
-                if (failedOrder.Info.Receipt == string.Empty)
-                {
-                    failedOrder = new FailedOrder(matchingRequest.OrderToConfirm, failedOrder.FailureReason, failedOrder.Details);
-                }
+                // Stores fabricate their FailedOrder from the cart (e.g. PurchaseFailureDescription.ConvertToFailedOrder),
+                // losing the receipt — rebuild from the matched PendingOrder so its OrderInfo is preserved.
+                failedOrder = new FailedOrder(matchingRequest.OrderToConfirm, failedOrder.FailureReason, failedOrder.Details);
 
                 matchingRequest.Action?.Invoke(matchingRequest.OrderToConfirm, failedOrder);
                 m_ConfirmationRequests.Remove(matchingRequest);

@@ -4,8 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity.Purchasing.Editor.Shared.WebApi;
-using Unity.Services.Core.Editor;
+using Newtonsoft.Json.Linq;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Model;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Service;
 
@@ -16,53 +15,43 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         internal const string Path = "webshop/categories.json";
         const string k_RequiredSchemaPath = "/v1/schemas/UnityWebshopCategories/versions/1.1.0";
 
-        readonly IAccessTokens m_TokenProvider;
-        readonly IConfigsApi m_ConfigsApi;
+        readonly ILiveContentApiTransport m_Transport;
         readonly string m_RequiredSchema;
-        string m_EnvironmentId;
-        string m_ProjectId;
 
-        public WebshopCategoriesClient(IAccessTokens tokenProvider, IConfigsApi configsApi)
-            : this(tokenProvider, configsApi, LiveContentAdminEnvironment.SchemaRegistryBasePath)
-        {
-        }
+        public WebshopCategoriesClient(ILiveContentApiTransport transport)
+            : this(transport, LiveContentAdminEnvironment.SchemaRegistryBasePath) { }
 
         internal WebshopCategoriesClient(
-            IAccessTokens tokenProvider,
-            IConfigsApi configsApi,
+            ILiveContentApiTransport transport,
             string schemaRegistryBasePath)
         {
-            m_TokenProvider = tokenProvider;
-            m_ConfigsApi = configsApi;
+            m_Transport = transport;
             m_RequiredSchema = schemaRegistryBasePath + k_RequiredSchemaPath;
         }
 
-        public async Task Initialize(string environmentId, string projectId, CancellationToken cancellationToken)
+        public Task Initialize(string environmentId, string projectId, CancellationToken cancellationToken)
         {
-            await UpdateToken();
-            m_EnvironmentId = environmentId;
-            m_ProjectId = projectId;
+            return m_Transport.InitializeAsync(environmentId, projectId, cancellationToken);
         }
 
         public async Task<WebshopCategories> Get(CancellationToken cancellationToken)
         {
-            await UpdateToken();
             try
             {
-                var response = await m_ConfigsApi.GetConfigContent(
-                    m_EnvironmentId, m_ProjectId, Path, cancellationToken: cancellationToken);
+                var response = await m_Transport.GetConfigContentAsync(Path, cancellationToken);
 
                 if (response.StatusCode == 404)
                     return null;
-                if (!response.IsSuccessful)
+                if (!response.IsSuccess)
                     throw GetRequestException(response);
-                if (string.IsNullOrEmpty(response.Content))
+                if (response.Content == null)
                     return new WebshopCategories();
 
-                return IsolatedJsonConvert.DeserializeObject<WebshopCategories>(response.Content)
-                    ?? new WebshopCategories();
+                return response.Content.TryGetContentAs<WebshopCategories>(out var categories)
+                    ? categories
+                    : new WebshopCategories();
             }
-            catch (ApiException e)
+            catch (Exception e)
             {
                 throw GetRequestException(e);
             }
@@ -73,29 +62,21 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
             if (categories is null)
                 throw new ArgumentNullException(nameof(categories));
 
-            await UpdateToken();
-
             var body = SerializeBody(categories);
             try
             {
                 // Live Content rejects PUT on a non-existent path; on 404 fall back to POST.
-                var response = await m_ConfigsApi.UpdateConfigFile(
-                    m_EnvironmentId, m_ProjectId, Path, body, cancellationToken: cancellationToken);
-
-                InlineVariantFormat.LogErrorIfDetected(response.Content);
+                var response = await m_Transport.UpdateConfigAsync(Path, body, cancellationToken);
 
                 if (response.StatusCode == 404)
                 {
-                    response = await m_ConfigsApi.CreateConfigFile(
-                        m_EnvironmentId, m_ProjectId, Path, body, cancellationToken: cancellationToken);
-
-                    InlineVariantFormat.LogErrorIfDetected(response.Content);
+                    response = await m_Transport.CreateConfigAsync(Path, body, cancellationToken);
                 }
 
-                if (!response.IsSuccessful)
+                if (!response.IsSuccess)
                     throw GetRequestException(response);
             }
-            catch (ApiException e)
+            catch (Exception e)
             {
                 throw GetRequestException(e);
             }
@@ -103,40 +84,35 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
 
         // Schema must be attached on every write: the storefront's schema-filtered read hides files
         // whose $schema attachment was dropped, and PUT replaces the whole record.
-        Dictionary<string, ApiObject> SerializeBody(WebshopCategories categories)
+        string SerializeBody(WebshopCategories categories)
         {
             var envelope = new BodyEnvelope
             {
                 Schemas = new List<string> { m_RequiredSchema },
-                Categories = categories.Categories,
+                Metadata = LiveContentMetadata.ApplyManagedBy(null),
+                Categories = categories.Categories
             };
-            var json = IsolatedJsonConvert.SerializeObject(envelope,
+            return JsonConvert.SerializeObject(envelope,
                 new JsonSerializerSettings { Formatting = Formatting.Indented });
-            return IsolatedJsonConvert.DeserializeObject<Dictionary<string, ApiObject>>(json);
         }
 
-        async Task UpdateToken()
+        static ClientException GetRequestException(Exception e, [CallerMemberName] string caller = null)
         {
-            await LiveContentAdminApiHeaderConfigurator.UpdateAuthenticationHeaders<WebshopCategoriesClient>(
-                m_ConfigsApi, m_TokenProvider.GetServicesGatewayTokenAsync);
+            return new ClientException($"Request '{caller}' failed unexpectedly. {e.Message}", e);
         }
 
-        static ClientException GetRequestException(ApiException e, [CallerMemberName] string caller = null)
+        static ClientException GetRequestException(ITransportResult response, [CallerMemberName] string caller = null)
         {
-            return new ClientException(
-                $"Request '{caller} - {e.Response.Url}' failed with '{e.Response.StatusCode}'. {e.Message}", e);
-        }
-
-        static ClientException GetRequestException(ApiResponse response, [CallerMemberName] string caller = null)
-        {
-            return new ClientException(
-                $"Request '{caller} - {response.Url}' failed with '{response.StatusCode}'. {response.Content}", null);
+            return new ClientException($"Request '{caller}' failed with '{response.StatusCode}'. {response.Error}", null);
         }
 
         class BodyEnvelope
         {
             [JsonProperty("$schema", NullValueHandling = NullValueHandling.Ignore)]
             public List<string> Schemas;
+
+            [JsonProperty("$metadata")]
+            public JObject Metadata;
 
             [JsonProperty("categories")]
             public List<WebshopCategory> Categories;

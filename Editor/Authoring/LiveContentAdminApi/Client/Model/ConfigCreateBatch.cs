@@ -29,6 +29,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class ConfigCreateBatch : Dictionary<String, ApiObject>
     {
         /// <summary>
+        /// Gets or Sets Metadata
+        /// </summary>
+        [DataMember(Name = "$metadata", EmitDefaultValue = false)]
+        [Preserve]
+        public Object Metadata { get; set; }
+
+        /// <summary>
         /// Gets or Sets Path
         /// </summary>
         [DataMember(Name = "$path", IsRequired = true, EmitDefaultValue = true)]
@@ -36,26 +43,26 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public string Path { get; set; }
 
         /// <summary>
+        /// Gets or Sets Schema
+        /// </summary>
+        [DataMember(Name = "$schema", EmitDefaultValue = false)]
+        [Preserve]
+        public ConfigCreateBatchSchema Schema { get; set; }
+
+        /// <summary>
+        /// Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.
+        /// </summary>
+        /// <value>Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.</value>
+        [DataMember(Name = "$sortIndex", EmitDefaultValue = false)]
+        [Preserve]
+        public long SortIndex { get; set; }
+
+        /// <summary>
         /// Gets or Sets VariantTag
         /// </summary>
         [DataMember(Name = "$variantTag", EmitDefaultValue = false)]
         [Preserve]
         public List<string> VariantTag { get; set; }
-
-        /// <summary>
-        /// JSON Schema URIs that define the structure of the config
-        /// </summary>
-        /// <value>JSON Schema URIs that define the structure of the config</value>
-        [DataMember(Name = "$schema", EmitDefaultValue = false)]
-        [Preserve]
-        public List<string> Schema { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Metadata
-        /// </summary>
-        [DataMember(Name = "$metadata", EmitDefaultValue = false)]
-        [Preserve]
-        public Object Metadata { get; set; }
 
         /// <summary>
         /// Gets or Sets additional properties
@@ -67,21 +74,23 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigCreateBatch" /> class.
         /// </summary>
-        /// <param name="path">path (required).</param>
-        /// <param name="variantTag">variantTag.</param>
-        /// <param name="schema">JSON Schema URIs that define the structure of the config.</param>
         /// <param name="metadata">metadata.</param>
+        /// <param name="path">path (required).</param>
+        /// <param name="schema">schema.</param>
+        /// <param name="sortIndex">Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp..</param>
+        /// <param name="variantTag">variantTag.</param>
         [Preserve]
-        public ConfigCreateBatch(string path = default(string), List<string> variantTag = default(List<string>), List<string> schema = default(List<string>), Object metadata = default(Object)) : base()
+        public ConfigCreateBatch(Object metadata = default(Object), string path = default(string), ConfigCreateBatchSchema schema = default(ConfigCreateBatchSchema), long sortIndex = default(long), List<string> variantTag = default(List<string>)) : base()
         {
             if (path == null)
             {
                 throw new ArgumentNullException("path is a required property for ConfigCreateBatch and cannot be null");
             }
             this.Path = path;
-            this.VariantTag = variantTag;
-            this.Schema = schema;
             this.Metadata = metadata;
+            this.Schema = schema;
+            this.SortIndex = sortIndex;
+            this.VariantTag = variantTag;
             this.AdditionalProperties = new Dictionary<string, object>();
         }
     }

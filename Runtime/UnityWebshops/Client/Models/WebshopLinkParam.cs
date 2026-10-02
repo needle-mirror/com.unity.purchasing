@@ -122,7 +122,12 @@ namespace UnityEngine.Purchasing.WebshopService.Models
             /// Enum Metadata for value: metadata
             /// </summary>
             [EnumMember(Value = "metadata")]
-            Metadata = 12
+            Metadata = 12,
+            /// <summary>
+            /// Enum LinkOutSessionId for value: linkOutSessionId
+            /// </summary>
+            [EnumMember(Value = "linkOutSessionId")]
+            LinkOutSessionId = 13
         }
 
         /// <summary>

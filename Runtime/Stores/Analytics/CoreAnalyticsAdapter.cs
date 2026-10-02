@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Purchasing.Utilities;
 using Unity.Services.Analytics;
 using Unity.Services.Core.Analytics.Internal;
 using Unity.Services.Core.Internal;
@@ -55,6 +56,11 @@ namespace UnityEngine.Purchasing
                 { "productsSpent", GenerateRealCurrencySpentOnPurchase(listing) },
                 { "productsReceived", GenerateItemReceivedForPurchase(item) }
             };
+
+            if (IsAppleAppStore() && !StoreKitSelector.UseStoreKit1())
+            {
+                transactionParameters.Add("revenueValidated", 0);
+            }
 
             return transactionParameters;
         }

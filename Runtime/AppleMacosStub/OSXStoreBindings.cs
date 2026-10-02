@@ -116,7 +116,8 @@ namespace UnityEngine.Purchasing
 
         public void TransactionObserved(string transactionId, string productId, string productJsonRepresentation, double transactionUnixTime, string transactionJsonRepresentation, string signatureJws)
         {
-            throw new NotImplementedException();
+            // Intentionally empty, matching the real macOS binding: macOS is not a supported
+            // platform for attribution.
         }
 
         public void FetchPurchases(string json)

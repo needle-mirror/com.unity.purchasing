@@ -240,7 +240,7 @@ namespace UnityEngine.Purchasing.Extension
             {
                 Debug.unityLogger.LogIAPWarning($"FindOrResolveAsync fell back to sync unknown for '{storeSpecificId}': {e.Message}");
             }
-            return Product.CreateUnknownProduct(storeSpecificId!);
+            return Product.CreateUnknownProduct(storeSpecificId);
         }
     }
 }

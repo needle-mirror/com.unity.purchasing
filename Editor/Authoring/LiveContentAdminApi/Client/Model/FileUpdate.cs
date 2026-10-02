@@ -29,19 +29,19 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class FileUpdate
     {
         /// <summary>
+        /// Base64-encoded SHA-256 (44 chars) or MD5 (22–24 chars, deprecated) hash of the file content
+        /// </summary>
+        /// <value>Base64-encoded SHA-256 (44 chars) or MD5 (22–24 chars, deprecated) hash of the file content</value>
+        [DataMember(Name = "contentHash", EmitDefaultValue = false)]
+        [Preserve]
+        public string ContentHash { get; set; }
+
+        /// <summary>
         /// Gets or Sets ContentSize
         /// </summary>
         [DataMember(Name = "contentSize", EmitDefaultValue = false)]
         [Preserve]
         public long ContentSize { get; set; }
-
-        /// <summary>
-        /// Base64-encoded MD5 hash of the file content
-        /// </summary>
-        /// <value>Base64-encoded MD5 hash of the file content</value>
-        [DataMember(Name = "contentHash", EmitDefaultValue = false)]
-        [Preserve]
-        public string ContentHash { get; set; }
 
         /// <summary>
         /// Gets or Sets ContentType
@@ -58,19 +58,29 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public Object Metadata { get; set; }
 
         /// <summary>
+        /// Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.
+        /// </summary>
+        /// <value>Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.</value>
+        [DataMember(Name = "sortIndex", EmitDefaultValue = false)]
+        [Preserve]
+        public long SortIndex { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FileUpdate" /> class.
         /// </summary>
+        /// <param name="contentHash">Base64-encoded SHA-256 (44 chars) or MD5 (22–24 chars, deprecated) hash of the file content.</param>
         /// <param name="contentSize">contentSize.</param>
-        /// <param name="contentHash">Base64-encoded MD5 hash of the file content.</param>
         /// <param name="contentType">contentType.</param>
         /// <param name="metadata">metadata.</param>
+        /// <param name="sortIndex">Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp..</param>
         [Preserve]
-        public FileUpdate(long contentSize = default(long), string contentHash = default(string), string contentType = default(string), Object metadata = default(Object))
+        public FileUpdate(string contentHash = default(string), long contentSize = default(long), string contentType = default(string), Object metadata = default(Object), long sortIndex = default(long))
         {
-            this.ContentSize = contentSize;
             this.ContentHash = contentHash;
+            this.ContentSize = contentSize;
             this.ContentType = contentType;
             this.Metadata = metadata;
+            this.SortIndex = sortIndex;
         }
     }
 

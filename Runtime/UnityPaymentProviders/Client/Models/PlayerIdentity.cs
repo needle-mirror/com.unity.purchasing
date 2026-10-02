@@ -25,7 +25,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
     /// Player identity information. The identity object is required but can be empty.
     /// </summary>
     [Preserve]
-    [DataContract(Name = "player_identity")]
+    [DataContract(Name = "player-identity")]
     internal class PlayerIdentity
     {
         /// <summary>
@@ -35,7 +35,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="unityInstallationId">Unity installation ID</param>
         /// <param name="unityFid">Unity FID</param>
         /// <param name="unityGaid">Google Advertising ID</param>
-        /// <param name="unityGappid">Google App ID</param>
+        /// <param name="unityGappid">Google App ID (same value as the Firebase app ID). Declared in the contract but not currently populated by the SDK, so this is always empty in practice; use unity.firebase_app_id for the Firebase app ID.</param>
         /// <param name="unityIdfa">iOS Identifier for Advertisers</param>
         /// <param name="unityIdfv">iOS Identifier for Vendors</param>
         /// <param name="unityMegaSessionId">Unity mega session ID</param>
@@ -45,7 +45,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="unityAnalyticsId">UA2 Analytics ID</param>
         /// <param name="unityAppInstanceId">Firebase ID</param>
         /// <param name="unityFirebaseSessionId">Firebase session ID</param>
-        /// <param name="unityFirebaseAppId">Firebase app ID</param>
+        /// <param name="unityFirebaseAppId">Firebase app ID (from google-services.json, set in the Firebase console)</param>
         /// <param name="unityIapSdkVersion">IAP SDK version</param>
         /// <param name="unityEngineVersion">Unity Engine version</param>
         /// <param name="unityApplicationVersion">Developer-set application/build version of the game (e.g. semver)</param>
@@ -105,7 +105,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string UnityGaid{ get; }
         
         /// <summary>
-        /// Google App ID
+        /// Google App ID (same value as the Firebase app ID). Declared in the contract but not currently populated by the SDK, so this is always empty in practice; use unity.firebase_app_id for the Firebase app ID.
         /// </summary>
         [Preserve]
         [DataMember(Name = "unity.gappid", EmitDefaultValue = false)]
@@ -175,7 +175,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string UnityFirebaseSessionId{ get; }
         
         /// <summary>
-        /// Firebase app ID
+        /// Firebase app ID (from google-services.json, set in the Firebase console)
         /// </summary>
         [Preserve]
         [DataMember(Name = "unity.firebase_app_id", EmitDefaultValue = false)]

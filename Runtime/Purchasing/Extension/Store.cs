@@ -107,9 +107,16 @@ namespace UnityEngine.Purchasing.Extension
             {
                 return;
             }
+            ClearCachesForAuthAccountChange();
+            m_OnAuthAccountChanged.Invoke();
+        }
+
+        // Clears account-scoped caches when Unity Authentication reports a different player.
+        // Store implementations override this to also clear their own account-scoped state.
+        internal virtual void ClearCachesForAuthAccountChange()
+        {
             ProductCache.Clear();
             PurchaseCache.Clear();
-            m_OnAuthAccountChanged.Invoke();
         }
 
         internal bool HasAuthAccountChangedSubscriber => m_OnAuthAccountChanged != null;

@@ -53,6 +53,12 @@ namespace UnityEngine.Purchasing
             return str;
         }
 
+        // Keep the delegate alive for the lifetime of the process: native holds the function
+        // pointer, and passing a method group leaves no other reference to collect against. .NET
+        // has always required this. Mono's conservative GC happens not to collect it; the precise
+        // moving GC in newer Unity versions does.
+        static readonly ExternalPurchaseCallback s_NativeCallback = NativeCallback;
+
         [MonoPInvokeCallback(typeof(ExternalPurchaseCallback))]
         static void NativeCallback(IntPtr subjectPtr, IntPtr payloadPtr)
         {
@@ -126,6 +132,28 @@ namespace UnityEngine.Purchasing
             {
                 countryCode = value as string ?? "";
             }
+            string? currencyCode = null;
+            if (data != null && data.TryGetValue("currencyCode", out var currency))
+            {
+                currencyCode = currency as string;
+            }
+
+            // The storefront is the App Store billing country (and, on iOS 17+, its
+            // currency) — a better signal than device settings for orders, so feed it
+            // into the shared location context that PlayerData reads (the Payment Provider
+            // store has no AppleStoreImpl, and no App Store products to take a currency
+            // from). Best-effort: this runs inside a reverse P/Invoke frame and
+            // StoreFactory.Instance() lazily builds the whole factory — a throw must not
+            // escape the native callback (IL2CPP abort) or starve the FetchStorefrontAsync
+            // task awaiting the invoke below.
+            try
+            {
+                StoreFactory.Instance().StoreLocationContext.SetFromStorefront(countryCode, currencyCode);
+            }
+            catch
+            {
+            }
+
             s_FetchStorefrontSuccess?.Invoke(countryCode);
         }
 #endif
@@ -152,7 +180,7 @@ namespace UnityEngine.Purchasing
 #if UNITY_IOS && !UNITY_EDITOR
             s_CheckEligibilitySuccess = successCallback;
             s_CheckEligibilityError = errorCallback;
-            NativeStore?.ExternalPurchaseCheckEligibility(NativeCallback);
+            NativeStore?.ExternalPurchaseCheckEligibility(s_NativeCallback);
 #else
             errorCallback?.Invoke("ExternalPurchaseClient is only supported on iOS devices");
 #endif
@@ -173,7 +201,7 @@ namespace UnityEngine.Purchasing
 #if UNITY_IOS && !UNITY_EDITOR
             s_FetchTokenSuccess = successCallback;
             s_FetchTokenError = errorCallback;
-            NativeStore?.ExternalPurchaseFetchToken(ConvertTokenType(tokenType), NativeCallback);
+            NativeStore?.ExternalPurchaseFetchToken(ConvertTokenType(tokenType), s_NativeCallback);
 #else
             errorCallback?.Invoke("ExternalPurchaseClient is only supported on iOS devices");
 #endif
@@ -195,7 +223,7 @@ namespace UnityEngine.Purchasing
 #if UNITY_IOS && !UNITY_EDITOR
             s_ShowNoticeSuccess = successCallback;
             s_ShowNoticeError = errorCallback;
-            NativeStore?.ExternalPurchaseShowNotice(ConvertNoticeType(noticeType), NativeCallback);
+            NativeStore?.ExternalPurchaseShowNotice(ConvertNoticeType(noticeType), s_NativeCallback);
 #else
             errorCallback?.Invoke("ExternalPurchaseClient is only supported on iOS devices");
 #endif
@@ -258,7 +286,7 @@ namespace UnityEngine.Purchasing
             s_FetchStorefrontError = errorCallback;
             if (NativeStore != null)
             {
-                NativeStore.ExternalPurchaseFetchStorefront(NativeCallback);
+                NativeStore.ExternalPurchaseFetchStorefront(s_NativeCallback);
             }
             else
             {

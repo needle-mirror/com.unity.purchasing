@@ -56,7 +56,9 @@ namespace UnityEngine.Purchasing
         /// Raised after the authenticated end-user account changes; this store's product
         /// and purchase caches are cleared before the event fires. With no subscriber
         /// attached, caches are not cleared on account change. From your handler, re-run
-        /// your init flow for the new account: FetchCatalog → FetchProducts → FetchPurchases.
+        /// your init flow for the new account: fetch your catalog, then FetchProducts, then
+        /// FetchPurchases. How the catalog is fetched depends on where the products are defined,
+        /// so that step is on your catalog provider rather than on this service.
         /// <para>
         /// Requires <c>com.unity.services.authentication</c> 3.0.0 or later. Each active store
         /// fires its own event.

@@ -18,6 +18,9 @@ namespace UnityEngine.Purchasing.PaymentProviderService
         // EligiblePaymentProviders type because this assembly is a dependency of Unity.Purchasing
         // where that type lives. The bool is the resolved value with the wire-default already applied.
         public Task<(List<string> Providers, bool PaymentOptionPopupEnabled)> GetEligiblePaymentProviders();
+        // Returns the backend-minted link-out session id, or null when the backend returns nothing
+        // or an empty GUID.
+        public Task<string> RegisterLinkOutSession(PlayerIdentity playerIdentity, DeviceInfo deviceInfo = null);
     }
 
 }

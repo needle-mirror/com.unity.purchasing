@@ -7,6 +7,9 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
 {
     static class LiveContentAdminApiHeaderConfigurator
     {
+        const string k_HeaderFeatureFlagKey = "X-Feature-Flag";
+        const string k_HeaderFeatureFlagValue = "file-repo-v2";
+
         internal static async Task UpdateAuthenticationHeaders<T>(
             IConfigsApi configsApi,
             Func<Task<string>> getToken)
@@ -27,6 +30,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
                 mergedHeaders[header.Key] = header.Value;
 
             configuration.DefaultHeaders = mergedHeaders;
+        }
+
+        public static void SetInlineVariantFeatureFlag(this IDictionary<string, string> self)
+        {
+            self[k_HeaderFeatureFlagKey] = k_HeaderFeatureFlagValue;
         }
     }
 }

@@ -20,6 +20,11 @@ public protocol PurchaseUseCaseProtocol {
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
+    // Set for purchases the store starts itself (promotional purchase intents) rather than the
+    // managed side. Their failure and deferral callbacks carry it, so they are not taken as the
+    // answer to a managed Purchase call of the same product.
+    @TaskLocal static var isPromotionalPurchase = false
+
     @Dependency private(set) var fetchProductsUseCase: ProductUseCaseProtocol
     @Dependency private(set) var transactionObserver: TransactionObserverUseCaseProtocol
     @Dependency private(set) var storeKitCallback: StoreKitCallbackDelegate
@@ -126,7 +131,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
                 await purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
                 return nil
             case .pending:
-                let jsonString = encodeToJSON( ["products": [product]])
+                let jsonString = encodeToJSON(DeferredPurchasePayload(products: [product], promotional: Self.isPromotionalPurchase ? true : nil))
                 await storeKitCallback.callback(subject: "OnPurchaseDeferred", payload: jsonString, entitlementStatus: 0)
                 return nil
             default:
@@ -164,7 +169,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             await purchaseProductExceptionCallbacks(productID: product.id, error: "User cancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
             return nil
         case .pending:
-            let jsonString = encodeToJSON( ["products": [product]])
+            let jsonString = encodeToJSON(DeferredPurchasePayload(products: [product], promotional: Self.isPromotionalPurchase ? true : nil))
             await storeKitCallback.callback(subject: "OnPurchaseDeferred", payload: jsonString, entitlementStatus: 0)
             return nil
         default:
@@ -175,7 +180,8 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
 #endif
 
     private func purchaseProductExceptionCallbacks(productID: String, error: String, reason : Int) async {
-        let purchaseDetail = PurchaseDetails(productId: productID, verificationError: error, reason: reason)
+        var purchaseDetail = PurchaseDetails(productId: productID, verificationError: error, reason: reason)
+        purchaseDetail.promotional = Self.isPromotionalPurchase ? true : nil
         let jsonString = encodeToJSON(purchaseDetail)
         await storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
     }
@@ -201,14 +207,16 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
                 for await purchaseIntent in PurchaseIntent.intents {
                     if (self.interceptPromotionalPurchases)
                     {
-                        Task.detached(priority: .background, operation: {
+                        Task.detached(priority: .userInitiated, operation: {
                             await self.storeKitCallback.callback(subject: "OnPromotionalPurchaseAttempted", payload: purchaseIntent.id, entitlementStatus: 0)
                         })
 
                         self.interceptedProductIds.append(purchaseIntent.id)
                     } else {
                         // Use the public method with productId string instead of private method with Product
-                        _ = await self.purchaseProduct(productId: purchaseIntent.id, options: options, storefrontChangeCallback: nil)
+                        _ = await PurchaseUseCase.$isPromotionalPurchase.withValue(true) {
+                            await self.purchaseProduct(productId: purchaseIntent.id, options: options, storefrontChangeCallback: nil)
+                        }
                     }
                 }
             }
@@ -222,11 +230,19 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
     public func continuePromotionalPurchases() async {
         let options: [String: AnyObject] = [:]
         for productId in interceptedProductIds {
-            _ = await self.purchaseProduct(productId: productId, options: options, storefrontChangeCallback: nil)
+            _ = await PurchaseUseCase.$isPromotionalPurchase.withValue(true) {
+                await self.purchaseProduct(productId: productId, options: options, storefrontChangeCallback: nil)
+            }
         }
 
         interceptedProductIds.removeAll()
     }
+}
+
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
+struct DeferredPurchasePayload: Encodable {
+    let products: [Product]
+    let promotional: Bool?
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
@@ -238,7 +254,7 @@ extension PurchaseUseCase: SKPaymentTransactionObserver {
     public func paymentQueue(_ queue: SKPaymentQueue, shouldAddStorePayment payment: SKPayment, for product: SKProduct) -> Bool {
         if (interceptPromotionalPurchases)
         {
-            Task.detached(priority: .background, operation: {
+            Task.detached(priority: .userInitiated, operation: {
                 await self.storeKitCallback.callback(subject: "OnPromotionalPurchaseAttempted", payload: product.productIdentifier, entitlementStatus: 0)
             })
             interceptedProductIds.append(product.productIdentifier)

@@ -29,11 +29,12 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class FileCreateBatch
     {
         /// <summary>
-        /// Gets or Sets Path
+        /// Base64-encoded SHA-256 (44 chars) or MD5 (22–24 chars, deprecated) hash of the file content
         /// </summary>
-        [DataMember(Name = "path", IsRequired = true, EmitDefaultValue = true)]
+        /// <value>Base64-encoded SHA-256 (44 chars) or MD5 (22–24 chars, deprecated) hash of the file content</value>
+        [DataMember(Name = "contentHash", IsRequired = true, EmitDefaultValue = true)]
         [Preserve]
-        public string Path { get; set; }
+        public string ContentHash { get; set; }
 
         /// <summary>
         /// Gets or Sets ContentSize
@@ -43,26 +44,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public long ContentSize { get; set; }
 
         /// <summary>
-        /// Base64-encoded MD5 hash of the file content
-        /// </summary>
-        /// <value>Base64-encoded MD5 hash of the file content</value>
-        [DataMember(Name = "contentHash", IsRequired = true, EmitDefaultValue = true)]
-        [Preserve]
-        public string ContentHash { get; set; }
-
-        /// <summary>
         /// Gets or Sets ContentType
         /// </summary>
         [DataMember(Name = "contentType", IsRequired = true, EmitDefaultValue = true)]
         [Preserve]
         public string ContentType { get; set; }
-
-        /// <summary>
-        /// Gets or Sets VariantTag
-        /// </summary>
-        [DataMember(Name = "variantTag", EmitDefaultValue = false)]
-        [Preserve]
-        public List<string> VariantTag { get; set; }
 
         /// <summary>
         /// Gets or Sets Metadata
@@ -72,35 +58,59 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public Object Metadata { get; set; }
 
         /// <summary>
+        /// Gets or Sets Path
+        /// </summary>
+        [DataMember(Name = "path", IsRequired = true, EmitDefaultValue = true)]
+        [Preserve]
+        public string Path { get; set; }
+
+        /// <summary>
+        /// Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.
+        /// </summary>
+        /// <value>Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.</value>
+        [DataMember(Name = "sortIndex", EmitDefaultValue = false)]
+        [Preserve]
+        public long SortIndex { get; set; }
+
+        /// <summary>
+        /// Gets or Sets VariantTag
+        /// </summary>
+        [DataMember(Name = "variantTag", EmitDefaultValue = false)]
+        [Preserve]
+        public List<string> VariantTag { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FileCreateBatch" /> class.
         /// </summary>
-        /// <param name="path">path (required).</param>
+        /// <param name="contentHash">Base64-encoded SHA-256 (44 chars) or MD5 (22–24 chars, deprecated) hash of the file content (required).</param>
         /// <param name="contentSize">contentSize (required).</param>
-        /// <param name="contentHash">Base64-encoded MD5 hash of the file content (required).</param>
         /// <param name="contentType">contentType (required).</param>
-        /// <param name="variantTag">variantTag.</param>
         /// <param name="metadata">metadata.</param>
+        /// <param name="path">path (required).</param>
+        /// <param name="sortIndex">Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp..</param>
+        /// <param name="variantTag">variantTag.</param>
         [Preserve]
-        public FileCreateBatch(string path = default(string), long contentSize = default(long), string contentHash = default(string), string contentType = default(string), List<string> variantTag = default(List<string>), Object metadata = default(Object))
+        public FileCreateBatch(string contentHash = default(string), long contentSize = default(long), string contentType = default(string), Object metadata = default(Object), string path = default(string), long sortIndex = default(long), List<string> variantTag = default(List<string>))
         {
-            if (path == null)
-            {
-                throw new ArgumentNullException("path is a required property for FileCreateBatch and cannot be null");
-            }
-            this.Path = path;
-            this.ContentSize = contentSize;
             if (contentHash == null)
             {
                 throw new ArgumentNullException("contentHash is a required property for FileCreateBatch and cannot be null");
             }
             this.ContentHash = contentHash;
+            this.ContentSize = contentSize;
             if (contentType == null)
             {
                 throw new ArgumentNullException("contentType is a required property for FileCreateBatch and cannot be null");
             }
             this.ContentType = contentType;
-            this.VariantTag = variantTag;
+            if (path == null)
+            {
+                throw new ArgumentNullException("path is a required property for FileCreateBatch and cannot be null");
+            }
+            this.Path = path;
             this.Metadata = metadata;
+            this.SortIndex = sortIndex;
+            this.VariantTag = variantTag;
         }
     }
 

@@ -35,18 +35,12 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         [Preserve]
         public ResourceType? Type { get; set; }
         /// <summary>
-        /// Gets or Sets Id
+        /// Base64-encoded SHA-256 hash of the file content (44 characters in Base64, including padding). MD5 (deprecated) is accepted for legacy compatibility.
         /// </summary>
-        [DataMember(Name = "id", EmitDefaultValue = false)]
+        /// <value>Base64-encoded SHA-256 hash of the file content (44 characters in Base64, including padding). MD5 (deprecated) is accepted for legacy compatibility.</value>
+        [DataMember(Name = "contentHash", EmitDefaultValue = false)]
         [Preserve]
-        public string Id { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Path
-        /// </summary>
-        [DataMember(Name = "path", EmitDefaultValue = false)]
-        [Preserve]
-        public string Path { get; set; }
+        public string ContentHash { get; set; }
 
         /// <summary>
         /// Gets or Sets ContentSize
@@ -54,14 +48,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         [DataMember(Name = "contentSize", EmitDefaultValue = false)]
         [Preserve]
         public long ContentSize { get; set; }
-
-        /// <summary>
-        /// Base64-encoded MD5 hash of the file content
-        /// </summary>
-        /// <value>Base64-encoded MD5 hash of the file content</value>
-        [DataMember(Name = "contentHash", EmitDefaultValue = false)]
-        [Preserve]
-        public string ContentHash { get; set; }
 
         /// <summary>
         /// Gets or Sets ContentType
@@ -78,6 +64,28 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public string ContentUri { get; set; }
 
         /// <summary>
+        /// Gets or Sets Id
+        /// </summary>
+        [DataMember(Name = "id", EmitDefaultValue = false)]
+        [Preserve]
+        public string Id { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Path
+        /// </summary>
+        [DataMember(Name = "path", EmitDefaultValue = false)]
+        [Preserve]
+        public string Path { get; set; }
+
+        /// <summary>
+        /// Reserved. Optional pre-defined sort key.
+        /// </summary>
+        /// <value>Reserved. Optional pre-defined sort key.</value>
+        [DataMember(Name = "sortIndex", EmitDefaultValue = false)]
+        [Preserve]
+        public long SortIndex { get; set; }
+
+        /// <summary>
         /// Gets or Sets VariantTag
         /// </summary>
         [DataMember(Name = "variantTag", EmitDefaultValue = false)]
@@ -87,24 +95,26 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientFile" /> class.
         /// </summary>
-        /// <param name="id">id.</param>
-        /// <param name="path">path.</param>
-        /// <param name="type">type.</param>
+        /// <param name="contentHash">Base64-encoded SHA-256 hash of the file content (44 characters in Base64, including padding). MD5 (deprecated) is accepted for legacy compatibility..</param>
         /// <param name="contentSize">contentSize.</param>
-        /// <param name="contentHash">Base64-encoded MD5 hash of the file content.</param>
         /// <param name="contentType">contentType.</param>
         /// <param name="contentUri">contentUri.</param>
+        /// <param name="id">id.</param>
+        /// <param name="path">path.</param>
+        /// <param name="sortIndex">Reserved. Optional pre-defined sort key..</param>
+        /// <param name="type">type.</param>
         /// <param name="variantTag">variantTag.</param>
         [Preserve]
-        public ClientFile(string id = default(string), string path = default(string), ResourceType? type = default(ResourceType?), long contentSize = default(long), string contentHash = default(string), string contentType = default(string), string contentUri = default(string), List<string> variantTag = default(List<string>))
+        public ClientFile(string contentHash = default(string), long contentSize = default(long), string contentType = default(string), string contentUri = default(string), string id = default(string), string path = default(string), long sortIndex = default(long), ResourceType? type = default(ResourceType?), List<string> variantTag = default(List<string>))
         {
-            this.Id = id;
-            this.Path = path;
-            this.Type = type;
-            this.ContentSize = contentSize;
             this.ContentHash = contentHash;
+            this.ContentSize = contentSize;
             this.ContentType = contentType;
             this.ContentUri = contentUri;
+            this.Id = id;
+            this.Path = path;
+            this.SortIndex = sortIndex;
+            this.Type = type;
             this.VariantTag = variantTag;
         }
     }

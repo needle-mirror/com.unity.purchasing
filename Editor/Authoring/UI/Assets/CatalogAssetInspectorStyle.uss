@@ -5,3 +5,8 @@
 .grow-button {
     flex-grow: 1;
 }
+
+#ValidationMessages {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

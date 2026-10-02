@@ -29,20 +29,27 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class ConfigFileUpdate : Dictionary<String, ApiObject>
     {
         /// <summary>
-        /// JSON Schema URIs that define the structure of the config
-        /// </summary>
-        /// <value>JSON Schema URIs that define the structure of the config</value>
-        [DataMember(Name = "$schema", EmitDefaultValue = false)]
-        [Preserve]
-        public List<string> Schema { get; set; }
-
-        /// <summary>
         /// Metadata about the config
         /// </summary>
         /// <value>Metadata about the config</value>
         [DataMember(Name = "$metadata", EmitDefaultValue = false)]
         [Preserve]
         public Object Metadata { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Schema
+        /// </summary>
+        [DataMember(Name = "$schema", EmitDefaultValue = false)]
+        [Preserve]
+        public ConfigCreateBatchSchema Schema { get; set; }
+
+        /// <summary>
+        /// Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.
+        /// </summary>
+        /// <value>Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp.</value>
+        [DataMember(Name = "$sortIndex", EmitDefaultValue = false)]
+        [Preserve]
+        public long SortIndex { get; set; }
 
         /// <summary>
         /// Gets or Sets additional properties
@@ -54,13 +61,15 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigFileUpdate" /> class.
         /// </summary>
-        /// <param name="schema">JSON Schema URIs that define the structure of the config.</param>
         /// <param name="metadata">Metadata about the config.</param>
+        /// <param name="schema">schema.</param>
+        /// <param name="sortIndex">Reserved. Optional pre-defined sort key. When omitted, the server assigns a default derived from the creation timestamp..</param>
         [Preserve]
-        public ConfigFileUpdate(List<string> schema = default(List<string>), Object metadata = default(Object)) : base()
+        public ConfigFileUpdate(Object metadata = default(Object), ConfigCreateBatchSchema schema = default(ConfigCreateBatchSchema), long sortIndex = default(long)) : base()
         {
-            this.Schema = schema;
             this.Metadata = metadata;
+            this.Schema = schema;
+            this.SortIndex = sortIndex;
             this.AdditionalProperties = new Dictionary<string, object>();
         }
     }

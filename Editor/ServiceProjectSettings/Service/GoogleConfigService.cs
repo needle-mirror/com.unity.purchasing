@@ -4,11 +4,20 @@ namespace UnityEditor.Purchasing
     {
         static GoogleConfigService m_Instance;
 
-        internal GoogleConfigurationData GoogleConfigData { get; }
+        readonly GoogleConfigurationData m_GoogleConfigData;
+
+        internal GoogleConfigurationData GoogleConfigData
+        {
+            get
+            {
+                m_GoogleConfigData.ResetIfCloudProjectChanged();
+                return m_GoogleConfigData;
+            }
+        }
 
         GoogleConfigService()
         {
-            GoogleConfigData = new GoogleConfigurationData();
+            m_GoogleConfigData = new GoogleConfigurationData();
         }
 
         internal static GoogleConfigService Instance()

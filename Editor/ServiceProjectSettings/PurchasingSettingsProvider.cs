@@ -12,6 +12,7 @@ namespace UnityEditor.Purchasing
 
         const string k_Title = "In-App Purchases";
         const string k_Description = "Simplify cross platform In-App Purchasing";
+        const string k_UnlinkedGooglePlayCardName = "UnlinkedGooglePlayCard";
         readonly PurchasingGameService m_Service;
         bool m_CallbacksInitialized;
 
@@ -98,6 +99,23 @@ namespace UnityEditor.Purchasing
 
             InitializeStateMachine();
             InitializeServiceCallbacks();
+            AddUnlinkedGooglePlayCard(rootElement.Q<ScrollView>());
+        }
+
+        // Core draws its own linking UI for an unlinked project and never calls GenerateServiceDetailUI,
+        // so the Google Play card is appended after it. Core clears its view whenever it refreshes, which
+        // detaches the card, so it re-appends itself on the next frame while the project is still unlinked.
+        static void AddUnlinkedGooglePlayCard(ScrollView scrollView)
+        {
+            if (scrollView == null || CloudProjectSettings.projectBound || scrollView.Q(k_UnlinkedGooglePlayCardName) != null)
+            {
+                return;
+            }
+
+            var card = new GooglePlayConfigurationSettingsBlock(isProjectLinked: false).GetUIBlockElement();
+            card.name = k_UnlinkedGooglePlayCardName;
+            card.RegisterCallback<DetachFromPanelEvent>(_ => scrollView.schedule.Execute(() => AddUnlinkedGooglePlayCard(scrollView)));
+            scrollView.Add(card);
         }
 
         void InitializeStateMachine()

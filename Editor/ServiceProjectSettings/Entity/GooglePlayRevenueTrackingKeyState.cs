@@ -7,6 +7,7 @@ namespace UnityEditor.Purchasing
         UnauthorizedUser,
         ServerError,
         CantFetch,
-        NoKey
+        NoKey,
+        Unknown
     }
 }

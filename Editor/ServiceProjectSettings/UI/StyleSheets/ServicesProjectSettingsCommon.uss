@@ -646,6 +646,72 @@
     border-color: var(--unity-theme-border-color-25);
 }
 
+.unlinked-features-heading {
+    -unity-font-style: bold;
+    margin: 8px 0;
+}
+
+.unlinked-feature {
+    padding: 12px 16px;
+}
+
+.unlinked-feature-title {
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.unlinked-feature-description {
+    white-space: normal;
+}
+
+.configuration-info-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 4px;
+    display: none;
+}
+
+.configuration-info-icon.visible {
+    display: flex;
+}
+
+.configuration-badge.visible {
+    display: flex;
+}
+
+/* The label claims most of the row, so the button wraps onto its own line under it, pushed right. */
+.missing-key-box {
+    flex-wrap: wrap;
+}
+
+.missing-key-box > .unity-help-box__label {
+    flex-basis: 90%;
+    flex-grow: 1;
+}
+
+.missing-key-box > .unity-button {
+    margin-left: auto;
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.ignore-warning-toggle {
+    margin: 8px 0;
+}
+
+.ignore-warning-toggle .unity-toggle__text {
+    margin-left: 4px;
+}
+
+.obfuscator-note {
+    font-size: 10px;
+    white-space: normal;
+}
+
+.button-container.obfuscator-buttons {
+    flex-direction: row;
+}
+
 .configuration-toggle {
     width: 16px;
     height: 16px;

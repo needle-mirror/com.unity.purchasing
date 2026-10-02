@@ -1,10 +1,48 @@
 # Changelog
+## [5.4.4] - 2026-10-02
+### Added
+- Added a dependency on `com.unity.services.deployment`, so the Deployment window is available for deploying catalog items without installing it separately.
+- Authoring - Newly created `.ucat` files include a `$schema` reference for editor and CLI validation.
+- Editor - Added a button to migrate a codeless product catalog to the Remote Catalog, on the In-App Purchasing settings page and in the IAP Catalog window.
+- GooglePlay - Android builds now log a warning when no Google Play license key is set in the cloud project settings, or when the project isn't linked to a cloud project.
+- Payment Providers - Added `ProductDescription.catalogListingId` and a `ProductDescription(string, ProductMetadata, string)` constructor that sets it, so a store whose catalog listings share a store-specific id can describe each listing with its own metadata.
+
+### Changed
+- Authoring - `.catalog.csv` columns are now derived from the catalog item model itself, so a property added to a catalog item appears in CSV without a parsing change, and the Editor and the UGS CLI pick the columns up from the same place. Column order, cell formatting and the warnings reported for a malformed file are unchanged.
+- Editor - Codeless In-App Purchasing is closed to new projects. *Services > In-App Purchasing > Create IAP Button*, *Create IAP Listener* and *IAP Catalog* are available only in a project that already has a legacy catalog, and the "IAP Catalog..." button has been removed from the IAP Button inspector. Existing `CodelessIAPButton` and `IAPListener` components keep working, and a project using codeless keeps its menu items.
+- Editor - The In-App Purchasing settings page presents the local catalog as a legacy one. The section is titled "Legacy Catalog", it appears only when the project has an existing legacy catalog to migrate, and its button reads "Migrate to Remote Catalog" rather than opening the catalog editor.
+- Editor - Android store stripping now runs once per player build through a build callback, rather than once per scene through `[PostProcessScene]`. It no longer runs on entering Play Mode.
+
+### Fixed
+- A `FailedOrder` reported through `OnPurchaseConfirmed` now carries the `Info` (receipt, transaction ID) of the `PendingOrder` passed to `ConfirmPurchase`.
+- Analytics - Apple (StoreKit 2) - Fixed transaction data reported to Unity Analytics for revenue validation.
+- Apple - Fixed a main-actor violation under Swift 6 strict concurrency, where native entry points with no guaranteed thread performed reads that are only valid on the main thread.
+- Apple (StoreKit 2) - Fixed the introductory offer data. It is now properly returned in `GetProductDetails` and `GetIntroductoryPriceDictionary`. Both now also include an `isEligibleForIntroOffer` field indicating whether the user can redeem the offer.
+- Apple - `GetProductDetails` and `GetIntroductoryPriceDictionary` now keep products from every fetch instead of only the most recent one. Previously, fetching additional products replaced the previously fetched ones in these dictionaries.
+  - These products are now cleared before the `OnAuthAccountChanged` event is raised, and only when that event has a subscriber; a product fetch in flight at that moment is failed instead of caching the previous account's results.
+- Apple - `bool` values returned from native code are now marshalled as a single byte, matching Objective-C `BOOL` and Swift `Bool`. The default marshalling reads four bytes, so the three unused bytes could make a native `false` surface as `true` in `IAppleExtensions.canMakePayments`.
+- Apple (StoreKit 2) - Fixed intermittent multi-minute delays in product fetches, purchases, and other StoreKit operations while the app was under load, most noticeable on older devices.
+- Apple - Callbacks passed to native code are now kept alive for the lifetime of the process. The previous code relied on garbage collector behaviour that does not hold under CoreCLR, which is available as an experimental build option in 6000.7. Projects using the default Mono scripting backend are unaffected.
+- Apple - Google Analytics identifiers are collected for iOS and tvOS when Google Analytics is linked, or when Developer Data Collection is set to Recommended, in addition to the existing end-user ads consent requirement. Configure this in the Unity Dashboard, under Project Settings > Developer Data.
+- Apple (StoreKit 2) - Fixed a purchase being reported twice when `Transaction.updates` delivered it separately from its `purchase()` call's answer. If the updates delivery came first and the purchase was confirmed before the answer arrived, the answer failed with a spurious `PurchaseFailureReason.DuplicateTransaction`; otherwise `OnPurchasePending` fired a second time. Each purchase is now reported once, whichever copy arrives first; other transactions delivered during a purchase, such as a subscription renewal, are still reported immediately.
+- Authoring - A `.catalog.csv` cell that can't be read is now reported once per row rather than once per read, and a numeric `ProductType`, `Language` or `PromotionType` cell outside the values those types define is reported instead of being stored as a value with no name.
+- Authoring - Fixed an exception when leaving a catalog item inspector with unsaved changes.
+- GooglePlay - Fixed an `ArgumentNullException` when Google Play reports a purchase update with no purchase in flight (e.g. when a cancelled subscription's active period expires) and no product id is known; the failure is now reported with an `UnknownProduct` placeholder product.
+- Payment Providers - The country, currency and locale sent when creating checkout and webshop sessions are now read from the device's OS settings (natively on Windows, macOS, Android, iOS, tvOS and visionOS) instead of .NET `System.Globalization`, which reported `en-US`/`US`/`USD` for many locales regardless of the OS region. Store-provided storefront data still takes precedence when available.
+- Payment Providers - On iOS, fetching the App Store storefront via `ExternalPurchaseClient.FetchStorefrontAsync` now also applies the storefront country, and on iOS 17 and later its currency, to subsequent Payment Provider orders. The currency also needs Xcode 16.3 or newer at build time, and is omitted on older toolchains.
+- Payment Providers - For products with multiple `Product.catalogListings` entries, each catalog listing now shows its own metadata and price, matching what checkout charges.
+  - Purchase Options UI - Discount badges and the webshop option now use the selected catalog listing.
+  - Orders returned after checkout and from `FetchPurchases` now report the catalog listing that was bought, instead of the product's base listing.
+- Payment Providers - Catalog listing titles and descriptions now fall back to an entry matching the player's language (e.g. `en-NG` → `en-US`) before defaulting to the first available entry.
+
 ## [5.4.3] - 2026-09-03
 ### Added
+- Authoring - Payment Provider Routing files (`.iaprouting`) can now be created and deployed from the Unity Editor Deployment Window.
 - Authoring - Added validation preventing deployment of catalog items whose store-specific product ID overrides conflict across different SKUs. Per-item validation also catches empty override values and duplicate store entries.
 - Google Analytics identifiers are collected when Google Analytics is linked, or when Developer Data Collection is set to Recommended, in addition to the existing end-user ads consent requirement. Configure this in the Unity Dashboard, under Project Settings > Developer Data.
 - GooglePlay - Added `IGoogleOrderInfo.OrderId` (accessible via `Order.Info.Google.OrderId`), exposing the Google Play order id of a purchase ([`Purchase.getOrderId()`](https://developer.android.com/reference/com/android/billingclient/api/Purchase#getOrderId())).
 - GooglePlay - Added `IGoogleOrderInfo.PurchaseToken`, exposing the Google Play purchase token under its own name. This returns the same value as `IOrderInfo.TransactionID`, which contains the purchase token on Google Play.
+- Authoring - When catalog items (`.ucat` or `catalog.csv`) are changed, they will now be compared to their remote counterpart if it exists. 
 
 ### Changed
 - Insights - On Unity 6000.7.0a7 and newer, the package uses the Editor's built-in Insights module to report IAP telemetry. Activating the module also collects data classed as essential to its operation, including session and app lifecycle events, device and OS attributes, and identifiers that associate telemetry with a project and session. Collection is governed by Unity's [Developer Data framework](https://docs.unity.com/cloud/en-us/developer-data-framework/overview) and can be managed per project in the Diagnostics section of Project Settings. On older Editor versions, the package reports through the existing gateway, unchanged.

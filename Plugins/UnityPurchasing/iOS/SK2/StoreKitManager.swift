@@ -144,7 +144,7 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
             let jsonString = encodeToJSON(response)
             await storeKitCallback.callback(subject: "OnProductsFetched", payload: jsonString, entitlementStatus: 0)
         } catch {
-            Task(priority: .background, operation: {
+            Task(priority: .medium, operation: {
                 await self.storeKitCallback.callback(subject: "OnProductsFetchFailed", payload: "JSONDecoder An error occurred - \(error.localizedDescription)", entitlementStatus: 0)
             })
         }

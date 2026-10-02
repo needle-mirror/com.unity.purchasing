@@ -29,13 +29,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class DeleteError
     {
         /// <summary>
-        /// Gets or Sets File
-        /// </summary>
-        [DataMember(Name = "file", IsRequired = true, EmitDefaultValue = true)]
-        [Preserve]
-        public FileDeleteBatch File { get; set; }
-
-        /// <summary>
         /// Error message associated with the file
         /// </summary>
         /// <value>Error message associated with the file</value>
@@ -44,23 +37,30 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public string Error { get; set; }
 
         /// <summary>
+        /// Gets or Sets File
+        /// </summary>
+        [DataMember(Name = "file", IsRequired = true, EmitDefaultValue = true)]
+        [Preserve]
+        public FileDeleteBatch File { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="DeleteError" /> class.
         /// </summary>
-        /// <param name="file">file (required).</param>
         /// <param name="error">Error message associated with the file (required).</param>
+        /// <param name="file">file (required).</param>
         [Preserve]
-        public DeleteError(FileDeleteBatch file = default(FileDeleteBatch), string error = default(string))
+        public DeleteError(string error = default(string), FileDeleteBatch file = default(FileDeleteBatch))
         {
-            if (file == null)
-            {
-                throw new ArgumentNullException("file is a required property for DeleteError and cannot be null");
-            }
-            this.File = file;
             if (error == null)
             {
                 throw new ArgumentNullException("error is a required property for DeleteError and cannot be null");
             }
             this.Error = error;
+            if (file == null)
+            {
+                throw new ArgumentNullException("file is a required property for DeleteError and cannot be null");
+            }
+            this.File = file;
         }
     }
 

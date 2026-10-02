@@ -113,9 +113,10 @@ namespace Purchasing.Utilities
         internal AppleSubscriptionInfoResponse DeserializeAppleSubscriptionInfoResponse(Dictionary<string, object> data)
         {
             var introductoryOffer = GetIntroductoryOffer(data);
+            var isEligibleForIntroOffer = data.TryGetValue("isEligibleForIntroOffer", out var eligible) && eligible is bool isEligible && isEligible;
             var promotionalOffers = GetPromotionalOffers(data);
 
-            return new AppleSubscriptionInfoResponse(introductoryOffer, promotionalOffers);
+            return new AppleSubscriptionInfoResponse(introductoryOffer, isEligibleForIntroOffer, promotionalOffers);
         }
 
         private AppleOfferInfoResponse? GetIntroductoryOffer(Dictionary<string, object> data)
@@ -134,10 +135,13 @@ namespace Purchasing.Utilities
             if (data.TryGetValue("promotionalOffers", out var promoOffersData) && promoOffersData is List<object> promoOffersList)
             {
                 var offerDeserializer = new AppleJsonSubscriptionOfferDeserializer();
-                foreach (Dictionary<string, object> promoOffer in promoOffersList)
+                foreach (var promoOfferObj in promoOffersList)
                 {
-                    var offerInfo = offerDeserializer.DeserializeAppleOfferInfoResponse(promoOffer);
-                    promotionalOffers.Add(offerInfo);
+                    if (promoOfferObj is Dictionary<string, object> promoOffer)
+                    {
+                        var offerInfo = offerDeserializer.DeserializeAppleOfferInfoResponse(promoOffer);
+                        promotionalOffers.Add(offerInfo);
+                    }
                 }
             }
             return promotionalOffers;
@@ -160,7 +164,7 @@ namespace Purchasing.Utilities
                 promotionalOffers.Add(promoOffer);
             }
 
-            return new AppleSubscriptionInfo(introductoryOffer, promotionalOffers.AsReadOnly());
+            return new AppleSubscriptionInfo(introductoryOffer, response.isEligibleForIntroOffer, promotionalOffers.AsReadOnly());
         }
     }
     internal class AppleJsonSubscriptionOfferDeserializer
@@ -169,9 +173,17 @@ namespace Purchasing.Utilities
         {
             var paymentMode = data.TryGetString("paymentMode");
             decimal? price = null;
-            if (data.TryGetValue("price", out var priceData) && priceData is decimal priceValueDecimal)
+            if (data.TryGetValue("price", out var priceData) && priceData != null)
             {
-                price = priceValueDecimal;
+                // MiniJson decodes numbers as long or double, never decimal.
+                try
+                {
+                    price = Convert.ToDecimal(priceData);
+                }
+                catch
+                {
+                    // Not a number; leave price null.
+                }
             }
             var displayPrice = data.TryGetString("displayPrice");
 
@@ -215,24 +227,33 @@ namespace Purchasing.Utilities
             var periodUnit = ParseSubscriptionPeriodUnit(response.periodUnit);
             var periodValue = response.periodValue;
             var period = CreateTimeSpanFromApplePeriod(periodUnit, periodValue);
-            var periodCount = Convert.ToInt32(response.periodCount);
+            var periodCount = ClampToInt(response.periodCount);
 
-            var periodNumberOfUnits = periodValue.HasValue ? Convert.ToInt32(periodValue.Value) : 0;
+            var periodNumberOfUnits = ClampToInt(periodValue);
 
             return new AppleOffer(offerType, id, paymentMode, price, displayPrice, period, periodUnit, periodNumberOfUnits, periodCount);
+        }
+
+        // Unlike Convert.ToInt32 (OverflowException outside int range), a corrupt payload
+        // value degrades to int.MinValue/MaxValue instead of faulting the fetch.
+        static int ClampToInt(long? value)
+        {
+            return value.HasValue ? (int)Math.Clamp(value.Value, int.MinValue, int.MaxValue) : 0;
         }
 
         internal SubscriptionPeriodUnit ParseSubscriptionPeriodUnit(string periodUnit)
         {
             switch (periodUnit)
             {
-                case "Day":
+                // The native SK2 plugin remaps period units to the SK1 numbering
+                // (SubscriptionOfferDetails.swift).
+                case "0":
                     return SubscriptionPeriodUnit.Day;
-                case "Week":
+                case "1":
                     return SubscriptionPeriodUnit.Week;
-                case "Month":
+                case "2":
                     return SubscriptionPeriodUnit.Month;
-                case "Year":
+                case "3":
                     return SubscriptionPeriodUnit.Year;
                 default:
                     return SubscriptionPeriodUnit.NotAvailable;
@@ -253,9 +274,9 @@ namespace Purchasing.Utilities
                 case SubscriptionPeriodUnit.Week:
                     return new TimeSpanUnits(Convert.ToDouble(periodValue) * 7, 0, 0);
                 case SubscriptionPeriodUnit.Month:
-                    return new TimeSpanUnits(0.0, Convert.ToInt32(periodValue), 0);
+                    return new TimeSpanUnits(0.0, ClampToInt(periodValue), 0);
                 case SubscriptionPeriodUnit.Year:
-                    return new TimeSpanUnits(0.0, 0, Convert.ToInt32(periodValue));
+                    return new TimeSpanUnits(0.0, 0, ClampToInt(periodValue));
                 default:
                     return null;
             }

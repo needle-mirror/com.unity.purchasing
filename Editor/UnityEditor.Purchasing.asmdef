@@ -11,7 +11,8 @@
         "Unity.Purchasing.Codeless",
         "Unity.Purchasing.Utilities",
         "Unity.Services.Core.Editor",
-        "Unity.Services.Core.Environments.Editor"
+        "Unity.Services.Core.Environments.Editor",
+        "UnityEditor.Purchasing.Authoring"
     ],
     "includePlatforms": [
         "Editor"

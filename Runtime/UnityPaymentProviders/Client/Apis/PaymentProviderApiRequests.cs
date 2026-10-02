@@ -850,6 +850,122 @@ namespace UnityEngine.Purchasing.PaymentProviderService.PaymentProvider
         }
     }
     /// <summary>
+    /// RegisterLinkOutSessionRequest
+    /// Register a link-out session
+    /// </summary>
+    [Preserve]
+    internal class RegisterLinkOutSessionRequest : PaymentProviderApiBaseRequest
+    {
+        /// <summary>Accessor for projectId </summary>
+        [Preserve]
+        public string ProjectId { get; }
+        /// <summary>Accessor for environmentId </summary>
+        [Preserve]
+        public string EnvironmentId { get; }
+        /// <summary>Accessor for linkOutSessionRegisterRequest </summary>
+        [Preserve]
+        public UnityEngine.Purchasing.PaymentProviderService.Models.LinkOutSessionRegisterRequest LinkOutSessionRegisterRequest { get; }
+        string PathAndQueryParams;
+
+        /// <summary>
+        /// RegisterLinkOutSession Request Object.
+        /// Register a link-out session
+        /// </summary>
+        /// <param name="projectId">ID of the Unity project.</param>
+        /// <param name="environmentId">ID of the Unity environment.</param>
+        /// <param name="linkOutSessionRegisterRequest">LinkOutSessionRegisterRequest param</param>
+        [Preserve]
+        public RegisterLinkOutSessionRequest(string projectId, string environmentId, UnityEngine.Purchasing.PaymentProviderService.Models.LinkOutSessionRegisterRequest linkOutSessionRegisterRequest)
+        {
+            ProjectId = projectId;
+
+            EnvironmentId = environmentId;
+
+            LinkOutSessionRegisterRequest = linkOutSessionRegisterRequest;
+            PathAndQueryParams = $"/v1/projects/{projectId}/environments/{environmentId}/link-out-session";
+
+
+        }
+
+        /// <summary>
+        /// Helper function for constructing URL from request base path and
+        /// query params.
+        /// </summary>
+        /// <param name="requestBasePath"></param>
+        /// <returns></returns>
+        public string ConstructUrl(string requestBasePath)
+        {
+            return requestBasePath + PathAndQueryParams;
+        }
+
+        /// <summary>
+        /// Helper for constructing the request body.
+        /// </summary>
+        /// <returns>A list of IMultipartFormSection representing the request body.</returns>
+        public byte[] ConstructBody()
+        {
+            return ConstructBody(LinkOutSessionRegisterRequest);
+        }
+
+        /// <summary>
+        /// Helper function for constructing the headers.
+        /// </summary>
+        /// <param name="accessToken">The auth access token to use.</param>
+        /// <param name="operationConfiguration">The operation configuration to use.</param>
+        /// <returns>A dictionary representing the request headers.</returns>
+        public Dictionary<string, string> ConstructHeaders(IAccessToken accessToken,
+            Configuration operationConfiguration = null)
+        {
+            var headers = new Dictionary<string, string>();
+            if(!string.IsNullOrEmpty(accessToken.AccessToken))
+            {
+                headers.Add("authorization", "Bearer " + accessToken.AccessToken);
+            }
+
+            // Analytics headers
+            headers.Add("Unity-Client-Version", Application.unityVersion);
+            headers.Add("Unity-Client-Mode", Scheduler.EngineStateHelper.IsPlaying ? "play" : "edit");
+
+            string[] contentTypes = {
+                "application/json"
+            };
+
+            string[] accepts = {
+                "application/json",
+                "application/problem+json"
+            };
+
+            var acceptHeader = GenerateAcceptHeader(accepts);
+            if (!string.IsNullOrEmpty(acceptHeader))
+            {
+                headers.Add("Accept", acceptHeader);
+            }
+            var httpMethod = "POST";
+            var contentTypeHeader = GenerateContentTypeHeader(contentTypes);
+            if (!string.IsNullOrEmpty(contentTypeHeader))
+            {
+                headers.Add("Content-Type", contentTypeHeader);
+            }
+            else if (httpMethod == "POST" || httpMethod == "PATCH")
+            {
+                headers.Add("Content-Type", "application/json");
+            }
+
+
+            // We also check if there are headers that are defined as part of
+            // the request configuration.
+            if (operationConfiguration != null && operationConfiguration.Headers != null)
+            {
+                foreach (var pair in operationConfiguration.Headers)
+                {
+                    headers[pair.Key] = pair.Value;
+                }
+            }
+
+            return headers;
+        }
+    }
+    /// <summary>
     /// UpdateOrderRequest
     /// Update an order
     /// </summary>

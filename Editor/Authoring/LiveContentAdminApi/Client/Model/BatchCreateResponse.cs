@@ -29,18 +29,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class BatchCreateResponse
     {
         /// <summary>
-        /// Gets or Sets Error
-        /// </summary>
-        [DataMember(Name = "error", EmitDefaultValue = false)]
-        [Preserve]
-        public List<CreateError> Error { get; set; }
-
-        /// <summary>
         /// Gets or Sets Created
         /// </summary>
         [DataMember(Name = "created", EmitDefaultValue = false)]
         [Preserve]
-        public List<Metadata> Created { get; set; }
+        public List<FileMetadata> Created { get; set; }
 
         /// <summary>
         /// Gets or Sets CreatedIds
@@ -50,17 +43,24 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public List<string> CreatedIds { get; set; }
 
         /// <summary>
+        /// Gets or Sets Error
+        /// </summary>
+        [DataMember(Name = "error", EmitDefaultValue = false)]
+        [Preserve]
+        public List<CreateError> Error { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BatchCreateResponse" /> class.
         /// </summary>
-        /// <param name="error">error.</param>
         /// <param name="created">created.</param>
         /// <param name="createdIds">createdIds.</param>
+        /// <param name="error">error.</param>
         [Preserve]
-        public BatchCreateResponse(List<CreateError> error = default(List<CreateError>), List<Metadata> created = default(List<Metadata>), List<string> createdIds = default(List<string>))
+        public BatchCreateResponse(List<FileMetadata> created = default(List<FileMetadata>), List<string> createdIds = default(List<string>), List<CreateError> error = default(List<CreateError>))
         {
-            this.Error = error;
             this.Created = created;
             this.CreatedIds = createdIds;
+            this.Error = error;
         }
     }
 

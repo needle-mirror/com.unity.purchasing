@@ -32,6 +32,18 @@ namespace UnityEditor.Purchasing
             GameServicesEventSenderHelpers.SendTopMenuCreateIapListenerEvent();
         }
 
+        [MenuItem("GameObject/" + IapMenuConsts.PurchasingDisplayName + "/IAP Listener", true)]
+        static bool ValidateGameObjectCreateUnityIAPListener()
+        {
+            return ProductCatalogEditor.ShouldShowCodelessMenuItems();
+        }
+
+        [MenuItem(IapMenuConsts.MenuItemRoot + "/Create IAP Listener", true)]
+        static bool ValidateCreateUnityIAPListener()
+        {
+            return ProductCatalogEditor.ShouldShowCodelessMenuItems();
+        }
+
         static void CreateUnityIAPListenerInternal()
         {
             var listenerObject = CreateListenerObject();

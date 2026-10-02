@@ -65,6 +65,45 @@ paths:
           $ref: '#/components/responses/error-response-service-unavailable'
       security:
         - Client: []
+  /v1/projects/{projectId}/environments/{environmentId}/link-out-session:
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    post:
+      summary: Register a link-out session
+      description: Registers a link-out session and returns its identifier, for use with webshops.
+      operationId: registerLinkOutSession
+      tags:
+        - Payment provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/link-out-session-register-request'
+      responses:
+        '200':
+          description: Link-out session stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/link-out-session-register-response'
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '422':
+          $ref: '#/components/responses/error-response-unprocessable-entity'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+        '503':
+          $ref: '#/components/responses/error-response-service-unavailable'
+      security:
+        - Client: []
   /v1/projects/{projectId}/environments/{environmentId}/payment-providers:
     parameters:
       - $ref: '#/components/parameters/projectId'
@@ -475,6 +514,10 @@ components:
           type: string
           description: >-
             Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with your internal system. Stored with the order and returned in the order response and order webhooks.
+        linkOutSessionId:
+          type: string
+          format: uuid
+          description: Optional, internal. Link-out session ID, for use with webshops.
         metadata:
           type: object
           additionalProperties:
@@ -503,78 +546,84 @@ components:
           description: Player's locale in BCP 47 format
           example: en-US
         identity:
-          type: object
-          description: Player identity information. The identity object is required but can be empty.
-          properties:
-            unity.impression_id:
-              type: string
-              description: Impression ID
-            unity.installation_id:
-              type: string
-              description: Unity installation ID
-            unity.fid:
-              type: string
-              description: Unity FID
-            unity.gaid:
-              type: string
-              description: Google Advertising ID
-            unity.gappid:
-              type: string
-              description: Google App ID
-            unity.idfa:
-              type: string
-              description: iOS Identifier for Advertisers
-            unity.idfv:
-              type: string
-              description: iOS Identifier for Vendors
-            unity.mega_session_id:
-              type: string
-              description: Unity mega session ID
-            session.id:
-              type: string
-              description: Session ID
-            unity.consent_state.ads_intent:
-              type: string
-              description: User consent for ads
-            unity.consent_state.analytics_intent:
-              type: string
-              description: User consent for analytics
-            unity.analytics_id:
-              type: string
-              description: UA2 Analytics ID
-            unity.app_instance_id:
-              type: string
-              description: Firebase ID
-            unity.firebase_session_id:
-              type: string
-              description: Firebase session ID
-            unity.firebase_app_id:
-              type: string
-              description: Firebase app ID
-            unity.iap_sdk_version:
-              type: string
-              description: IAP SDK version
-            unity.engine_version:
-              type: string
-              description: Unity Engine version
-            unity.application_version:
-              type: string
-              description: Developer-set application/build version of the game (e.g. semver)
-            unity.user_id:
-              type: string
-              description: Unity user identifier provided by the Game Developer
-            unity.installation_timestamp:
-              type: string
-              format: date-time
-              description: RFC 3339 timestamp of when the game was installed on the player's device
-          additionalProperties:
-            type: string
-          example:
-            unity.installation_id: 'abc123'
-            session.id: 'xyz789'
+          $ref: '#/components/schemas/player-identity'
       required:
         - locale
         - identity
+    player-identity:
+      title: PlayerIdentity
+      type: object
+      description: Player identity information. The identity object is required but can be empty.
+      properties:
+        unity.impression_id:
+          type: string
+          description: Impression ID
+        unity.installation_id:
+          type: string
+          description: Unity installation ID
+        unity.fid:
+          type: string
+          description: Unity FID
+        unity.gaid:
+          type: string
+          description: Google Advertising ID
+        unity.gappid:
+          type: string
+          description: >-
+            Google App ID (same value as the Firebase app ID). Declared in the
+            contract but not currently populated by the SDK, so this is always
+            empty in practice; use unity.firebase_app_id for the Firebase app ID.
+        unity.idfa:
+          type: string
+          description: iOS Identifier for Advertisers
+        unity.idfv:
+          type: string
+          description: iOS Identifier for Vendors
+        unity.mega_session_id:
+          type: string
+          description: Unity mega session ID
+        session.id:
+          type: string
+          description: Session ID
+        unity.consent_state.ads_intent:
+          type: string
+          description: User consent for ads
+        unity.consent_state.analytics_intent:
+          type: string
+          description: User consent for analytics
+        unity.analytics_id:
+          type: string
+          description: UA2 Analytics ID
+        unity.app_instance_id:
+          type: string
+          description: Firebase ID
+        unity.firebase_session_id:
+          type: string
+          description: Firebase session ID
+        unity.firebase_app_id:
+          type: string
+          description: Firebase app ID (from google-services.json, set in the Firebase console)
+        unity.iap_sdk_version:
+          type: string
+          description: IAP SDK version
+        unity.engine_version:
+          type: string
+          description: Unity Engine version
+        unity.application_version:
+          type: string
+          description: Developer-set application/build version of the game (e.g. semver)
+        unity.user_id:
+          type: string
+          description: Unity user identifier provided by the Game Developer
+        unity.installation_timestamp:
+          type: string
+          format: date-time
+          description: RFC 3339 timestamp of when the game was installed on the player's device
+      additionalProperties:
+        type: string
+      example:
+        unity.installation_id: 'abc123'
+        session.id: 'xyz789'
     payment-providers-response:
       title: PaymentProvidersResponse
       type: object
@@ -635,6 +684,25 @@ components:
           format: int64
           description: Total device storage in bytes.
           example: 256000000000
+    link-out-session-register-request:
+      title: LinkOutSessionRegisterRequest
+      type: object
+      required:
+        - identity
+      properties:
+        identity:
+          $ref: '#/components/schemas/player-identity'
+        deviceInfo:
+          $ref: '#/components/schemas/device-info'
+    link-out-session-register-response:
+      title: LinkOutSessionRegisterResponse
+      type: object
+      properties:
+        linkOutSessionId:
+          type: string
+          format: uuid
+          description: Backend-minted opaque key the webshop relays at order-create.
+          example: 7f3d8c2a-1b4e-4c6a-9d2f-7a1b2c3d4e5f
     order-response:
       title: OrderResponse
       type: object

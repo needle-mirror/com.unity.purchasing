@@ -29,13 +29,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class BatchDeleteResponse
     {
         /// <summary>
-        /// Gets or Sets Error
-        /// </summary>
-        [DataMember(Name = "error", EmitDefaultValue = false)]
-        [Preserve]
-        public List<DeleteError> Error { get; set; }
-
-        /// <summary>
         /// Gets or Sets DeletedIds
         /// </summary>
         [DataMember(Name = "deletedIds", EmitDefaultValue = false)]
@@ -43,15 +36,22 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public List<string> DeletedIds { get; set; }
 
         /// <summary>
+        /// Gets or Sets Error
+        /// </summary>
+        [DataMember(Name = "error", EmitDefaultValue = false)]
+        [Preserve]
+        public List<DeleteError> Error { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="BatchDeleteResponse" /> class.
         /// </summary>
-        /// <param name="error">error.</param>
         /// <param name="deletedIds">deletedIds.</param>
+        /// <param name="error">error.</param>
         [Preserve]
-        public BatchDeleteResponse(List<DeleteError> error = default(List<DeleteError>), List<string> deletedIds = default(List<string>))
+        public BatchDeleteResponse(List<string> deletedIds = default(List<string>), List<DeleteError> error = default(List<DeleteError>))
         {
-            this.Error = error;
             this.DeletedIds = deletedIds;
+            this.Error = error;
         }
     }
 

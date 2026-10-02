@@ -40,11 +40,6 @@
             "define": "IAP_ANALYTICS_SERVICE_ENABLED_WITH_SERVICE_COMPONENT"
         },
         {
-            "name": "com.unity.ads",
-            "expression": "4.16.4",
-            "define": "IAP_UNITY_ATTRIBUTION"
-        },
-        {
             "name": "com.unity.services.authentication",
             "expression": "3.0.0",
             "define": "IAP_UNITY_AUTH_ENABLED"

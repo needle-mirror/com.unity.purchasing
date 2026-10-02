@@ -48,13 +48,15 @@ namespace UnityEngine.Purchasing
         [DllImport("__Internal")]
         static extern void unityPurchasing_FinishTransaction(string transactionId, bool logFinishTransaction);
 
+        // Native is void: the result is delivered asynchronously through OnCheckEntitlement.
         [DllImport("__Internal")]
-        static extern bool unityPurchasing_checkEntitlement(string productId);
+        static extern void unityPurchasing_checkEntitlement(string productId);
 
         [DllImport("__Internal")]
         private static extern void unityPurchasing_RestoreTransactions();
 
         [DllImport("__Internal")]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool unityPurchasing_CanMakePayments();
 
         [DllImport("__Internal")]
@@ -94,7 +96,6 @@ namespace UnityEngine.Purchasing
         [DllImport("__Internal")]
         private static extern void unityPurchasing_RefreshAppReceipt();
 
-#if IAP_UNITY_ATTRIBUTION
 #region Objective-C for Attribution
         [DllImport("__Internal")]
         private static extern void unityPurchasing_TransactionObserved(
@@ -105,7 +106,6 @@ namespace UnityEngine.Purchasing
             string transactionJsonRepresentation,
             string signatureJws);
 #endregion
-#endif
 
 
 #region StoreKit1Bindings
@@ -140,12 +140,14 @@ namespace UnityEngine.Purchasing
         private static extern string getUnityPurchasingTransactionReceiptForProductId (string productId);
 
         [DllImport("__Internal")]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool getUnityPurchasingCanMakePayments ();
 
         [DllImport ("__Internal")]
         private static extern void setSimulateAskToBuy (bool enabled);
 
         [DllImport ("__Internal")]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool getSimulateAskToBuy ();
 
         [DllImport("__Internal")]
@@ -302,7 +304,12 @@ namespace UnityEngine.Purchasing
             {
                 return false;
             }
-            return unityPurchasing_checkEntitlement(productId);
+
+            unityPurchasing_checkEntitlement(productId);
+
+            // Fire-and-forget: entitlement arrives via OnCheckEntitlement. No caller reads this
+            // return value; INativeStore.CheckEntitlement should be void (follow-up in ULO-11995).
+            return false;
         }
 
         public void RestoreTransactions()
@@ -455,7 +462,6 @@ namespace UnityEngine.Purchasing
             string transactionJsonRepresentation,
             string signatureJws)
         {
-#if IAP_UNITY_ATTRIBUTION
             transactionId ??= string.Empty;
             productId ??= string.Empty;
             productJsonRepresentation ??= "{}";
@@ -469,7 +475,6 @@ namespace UnityEngine.Purchasing
                 transactionUnixTime,
                 transactionJsonRepresentation,
                 signatureJws);
-#endif
         }
 
         public string FetchAdvertisingIdentifier()

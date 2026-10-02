@@ -40,7 +40,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         /// </summary>
         [DataMember(Name = "updated", EmitDefaultValue = false)]
         [Preserve]
-        public List<Metadata> Updated { get; set; }
+        public List<FileMetadata> Updated { get; set; }
 
         /// <summary>
         /// Gets or Sets UpdatedIds
@@ -56,7 +56,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         /// <param name="updated">updated.</param>
         /// <param name="updatedIds">updatedIds.</param>
         [Preserve]
-        public BatchUpdateResponse(List<CreateError> error = default(List<CreateError>), List<Metadata> updated = default(List<Metadata>), List<string> updatedIds = default(List<string>))
+        public BatchUpdateResponse(List<CreateError> error = default(List<CreateError>), List<FileMetadata> updated = default(List<FileMetadata>), List<string> updatedIds = default(List<string>))
         {
             this.Error = error;
             this.Updated = updated;

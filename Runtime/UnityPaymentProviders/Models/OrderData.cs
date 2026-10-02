@@ -33,6 +33,8 @@ namespace UnityEngine.Purchasing.PaymentProviderService
     internal struct LineItem
     {
         public string unitySku;
+        // Null for legacy-catalog products and orders created before the backend reported it.
+        public string? catalogListingId;
         public string productType;
     }
 }

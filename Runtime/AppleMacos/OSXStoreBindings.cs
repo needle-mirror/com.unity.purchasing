@@ -36,13 +36,15 @@ namespace UnityEngine.Purchasing
         [DllImport("unitypurchasing")]
         static extern void unityPurchasing_FinishTransaction(string transactionId, bool logFinishTransaction);
 
+        // Native is void: the result is delivered asynchronously through OnCheckEntitlement.
         [DllImport("unitypurchasing")]
-        static extern bool unityPurchasing_checkEntitlement(string productId);
+        static extern void unityPurchasing_checkEntitlement(string productId);
 
         [DllImport("unitypurchasing")]
         private static extern void unityPurchasing_RestoreTransactions();
 
         [DllImport("unitypurchasing")]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool unityPurchasing_CanMakePayments();
 
         [DllImport("unitypurchasing")]
@@ -115,12 +117,14 @@ namespace UnityEngine.Purchasing
         private static extern string getUnityPurchasingTransactionReceiptForProductId (string productId);
 
         [DllImport("unitypurchasing")]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool getUnityPurchasingCanMakePayments ();
 
         [DllImport ("unitypurchasing")]
         private static extern void setSimulateAskToBuy (bool enabled);
 
         [DllImport ("unitypurchasing")]
+        [return: MarshalAs(UnmanagedType.I1)]
         private static extern bool getSimulateAskToBuy ();
 
         [DllImport("unitypurchasing")]
@@ -275,7 +279,12 @@ namespace UnityEngine.Purchasing
             {
                 return false;
             }
-            return unityPurchasing_checkEntitlement(productId);
+
+            unityPurchasing_checkEntitlement(productId);
+
+            // Fire-and-forget: entitlement arrives via OnCheckEntitlement. No caller reads this
+            // return value; INativeStore.CheckEntitlement should be void (follow-up in ULO-11995).
+            return false;
         }
 
         public void RestoreTransactions()

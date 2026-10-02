@@ -107,9 +107,34 @@ When this event fires, Unity IAP **clears the cached product list and purchase l
 ```csharp
 store.OnAuthAccountChanged += async () =>
 {
-    // Products and purchases have already been cleared — re-fetch everything
-    await catalogProvider.FetchRemoteCatalog();       // D2C only
-    store.FetchProducts(productDefinitions);          // standard IAP
+    // Products and purchases have already been cleared — re-fetch everything.
+
+    // Using the Remote Catalog. Works for native stores and D2C alike: a catalog
+    // listing carries store-specific IDs for Apple, Google, macOS and Xbox.
+    var catalogProvider = new RemoteCatalogProvider();
+
+    // Stop if the fetch failed, after its retries are exhausted. A failed fetch leaves
+    // the provider with no definitions, and forwarding that empty list only produces a
+    // second, more confusing failure from FetchProducts.
+    var catalogResult = await catalogProvider.FetchRemoteCatalog();
+    if (!catalogResult.Success)
+    {
+        Debug.LogError($"Remote Catalog fetch failed: {catalogResult.Exception?.Message}");
+        return;
+    }
+
+    // Pass the same store name the controller was created with, so the catalog
+    // hands over that store's IDs:
+    //   UnityIAPServices.StoreController()                     -> UnityIAPServices.GetDefaultStore()
+    //   UnityIAPServices.StoreController(PaymentProvider.Name) -> PaymentProvider.Name
+    // The one-argument FetchProducts overload assumes the platform default, which
+    // is wrong for a Payment Provider controller.
+    var storeName = UnityIAPServices.GetDefaultStore();
+    catalogProvider.FetchProducts(store.FetchProductsWithNoRetries, storeName);
+
+    // Or, if the products come from a local list rather than the Remote Catalog:
+    // store.FetchProducts(productDefinitions);
+
     store.FetchPurchases();
 };
 ```

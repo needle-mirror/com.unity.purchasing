@@ -225,6 +225,7 @@ namespace UnityEngine.Purchasing
 #else
             di.AddService<DotNetCurrencyFormatter>();
 #endif
+            di.AddService<LinkOutSessionIdProvider>();
             di.AddService<PaymentProviderImpl>();
 
             di.AddInstance(PaymentProviderServiceProvider.Instance());

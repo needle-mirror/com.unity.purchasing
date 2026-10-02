@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -53,6 +52,7 @@ namespace UnityEngine.Purchasing.Stores
         static readonly AsyncLocal<PurchaseFlowContext?> s_FlowContext = new();
 
         ILogger m_Logger;
+        readonly ILinkOutSessionIdProvider m_LinkOutSessionIdProvider;
 
         protected readonly CheckoutLauncherCoordinator m_CheckoutCoordinator;
 
@@ -66,7 +66,8 @@ namespace UnityEngine.Purchasing.Stores
             ILogger logger,
             IUtil util,
             IPlayerData playerData,
-            ICurrencyFormatter currencyFormatter
+            ICurrencyFormatter currencyFormatter,
+            ILinkOutSessionIdProvider linkOutSessionIdProvider
             )
         {
             m_PaymentProviderClientWrapper = paymentProviderClientWrapper;
@@ -76,6 +77,7 @@ namespace UnityEngine.Purchasing.Stores
             m_Util = util;
             m_PlayerData = playerData;
             m_CurrencyFormatter = currencyFormatter;
+            m_LinkOutSessionIdProvider = linkOutSessionIdProvider;
             m_CheckoutCoordinator = new CheckoutLauncherCoordinator(util, logger);
             m_Util.focusChanged += OnFocusChanged;
         }
@@ -90,6 +92,7 @@ namespace UnityEngine.Purchasing.Stores
             IUtil util,
             IPlayerData playerData,
             ICurrencyFormatter currencyFormatter,
+            ILinkOutSessionIdProvider linkOutSessionIdProvider,
             CheckoutLauncherCoordinator coordinator
         )
         {
@@ -100,6 +103,7 @@ namespace UnityEngine.Purchasing.Stores
             m_Util = util;
             m_PlayerData = playerData;
             m_CurrencyFormatter = currencyFormatter;
+            m_LinkOutSessionIdProvider = linkOutSessionIdProvider;
             m_CheckoutCoordinator = coordinator;
             m_Util.focusChanged += OnFocusChanged;
         }
@@ -479,11 +483,14 @@ namespace UnityEngine.Purchasing.Stores
                     Debug.unityLogger.LogIAPWarning(
                         $"Catalog paging incomplete after cursor {failedAt}; delivering partial product set.");
                 }
+                // One snapshot for the whole catalog: every listing is localized from the same
+                // read, so a transient native-read failure can't produce a mixed catalog.
+                var location = m_PlayerData.GetCheckoutLocation();
                 // Key metadata by catalogListingId so multi-listing products (multiple results sharing
                 // the same unitySku but with distinct catalogListingIds) don't collapse into one entry.
                 var metadata = fetchResult.Results.ToDictionary(
                     result => result.CatalogListingId ?? result.USku,
-                    CreateProductMetadataFromCatalogListing
+                    result => CreateProductMetadataFromCatalogListing(result, location)
                 );
 
                 var productsFetched = MergeResultsWithProductDefinitions(productDefinitions, metadata);
@@ -515,29 +522,31 @@ namespace UnityEngine.Purchasing.Stores
             }
         }
 
-        ProductMetadata CreateProductMetadataFromCatalogListing(CatalogListingDto catalogListingDto)
+        ProductMetadata CreateProductMetadataFromCatalogListing(CatalogListingDto catalogListingDto, CheckoutLocation location)
         {
             var localizer = new CatalogListingLocalization(m_CurrencyFormatter);
             var locales = catalogListingDto.ProductDetails
                 .Select(pd => pd.Language).OfType<string>()
                 .ToList() ?? new List<string>();
-            var locale = localizer.SelectLanguage(locales, m_PlayerData.Locale, RegionInfo.CurrentRegion, CultureInfo.CurrentCulture);
+            var locale = localizer.SelectLanguage(locales, location.Locale);
             var productDetails = catalogListingDto.ProductDetails
                 .FirstOrDefault(pd => pd.Language == locale);
 
             var currencies = catalogListingDto.Pricing?
                 .Select(p => p.CurrencyCode).OfType<string>()
                 .ToList() ?? new List<string>();
-            var currency = localizer.SelectCurrency(currencies, m_PlayerData.CurrencyCode, RegionInfo.CurrentRegion, CultureInfo.CurrentCulture);
+            var currency = localizer.SelectCurrency(currencies, location.CurrencyCode);
 
+            // Same case-insensitive equality as SelectCurrency — a casing mismatch here
+            // would silently produce a price of 0, not a fallback.
             var pricingDetails = catalogListingDto.Pricing?
-                .FirstOrDefault(p => p.CurrencyCode == currency);
+                .FirstOrDefault(p => string.Equals(p.CurrencyCode, currency, StringComparison.OrdinalIgnoreCase));
             var priceInMicros =  pricingDetails?.Amount ?? 0;
             var price = priceInMicros / 1000000.00m;
-            var priceString = localizer.CreatePriceString(price, currency, m_PlayerData.Locale, CultureInfo.CurrentCulture);
+            var priceString = localizer.CreatePriceString(price, currency, location.Locale);
             var webshopPriceInMicros = pricingDetails?.WebshopPrice;
             var webshopPrice = webshopPriceInMicros / 1000000.00m;
-            var webshopPriceString = webshopPrice != null ? localizer.CreatePriceString((decimal) webshopPrice, currency, m_PlayerData.Locale, CultureInfo.CurrentCulture) : null;
+            var webshopPriceString = webshopPrice != null ? localizer.CreatePriceString((decimal) webshopPrice, currency, location.Locale) : null;
 
 
             return new PaymentProviderProductMetadata(
@@ -644,8 +653,12 @@ namespace UnityEngine.Purchasing.Stores
             {
                 var product = ProductCache.Find(lineItem.unitySku) ?? Product.CreateUnknownProduct(lineItem.unitySku);
 
-                // There is no receipt for PaymentProvider purchases
-                var sourceListing = product.baseListing;
+                // There is no receipt for PaymentProvider purchases.
+                // Use the listing the order was placed for; orders without a listing id fall back to the base.
+                var sourceListing = lineItem.catalogListingId != null
+                    && product.catalogListings.TryGetValue(lineItem.catalogListingId, out var orderListing)
+                        ? orderListing
+                        : product.baseListing;
 // Obsolete: Product.transactionID
 #pragma warning disable 618, 612
                 var updatedProduct = new Product(sourceListing?.definition, sourceListing?.metadata)
@@ -994,9 +1007,12 @@ namespace UnityEngine.Purchasing.Stores
                     }
 
                     productsFetched.Add(
+                        // Listings without a store override share storeSpecificId (the uSku);
+                        // the listing id is what tells them apart.
                         new ProductDescription(
                             product.storeSpecificId,
-                            productMetadata
+                            productMetadata,
+                            product.catalogListingId
                         )
                     );
                 }
@@ -1142,17 +1158,21 @@ namespace UnityEngine.Purchasing.Stores
         async Task<string> FetchWebshopUrl(string? catalogListingId, string? impressionId, IReadOnlyList<PaymentProviderToken>? externalTokens)
         {
             LogVerbose($"Fetching webshop link for catalog listing: {catalogListingId ?? "<no catalog listing id>"}.");
+            var location = m_PlayerData.GetCheckoutLocation();
+            var linkOutSessionId = await m_LinkOutSessionIdProvider.GetLinkOutSessionId(
+                m_PlayerData, () => ConvertDeviceInfoToGeneratedModel(BuildDeviceInfo()));
             var link = await m_WebshopClientWrapper
                 .GetWebshopService()
                 .GetWebshopLink(
                     catalogListingId,
                     impressionId,
-                    m_PlayerData.Locale,
-                    m_PlayerData.CurrencyCode,
-                    m_PlayerData.RegionCode,
+                    location.Locale,
+                    location.CurrencyCode,
+                    location.CountryCode,
                     MapWebshopExternalTokens(externalTokens),
                     m_CustomReferenceId,
-                    m_CustomMetadata
+                    m_CustomMetadata,
+                    linkOutSessionId
                 );
 
             if (!link.Live)
@@ -1214,14 +1234,15 @@ namespace UnityEngine.Purchasing.Stores
         {
             LogVerbose($"Calling GetUrl to create new order and get redirect URL for catalog listing: {catalogListingId}.");
             var deviceInfo = BuildDeviceInfo();
+            var location = m_PlayerData.GetCheckoutLocation();
             return await m_PaymentProviderClientWrapper
                 .GetPaymentProviderService()
                 .GetUrl(
                     catalogListingId: catalogListingId,
                     displayName: m_PlayerData.DisplayName,
-                    locale: m_PlayerData.Locale,
-                    currencyCode: m_PlayerData.CurrencyCode,
-                    country: m_PlayerData.RegionCode,
+                    locale: location.Locale,
+                    currencyCode: location.CurrencyCode,
+                    country: location.CountryCode,
                     playerIdentity: await m_PlayerData.CreatePlayerIdentityAsync(ImpressionIdContext.TakeOrMint()),
                     paymentProviderOverride: paymentProviderName ?? m_PaymentProviderOverride,
                     customReferenceId: m_CustomReferenceId,

@@ -15,6 +15,7 @@ namespace UnityEngine.Purchasing.WebshopService
             string? country,
             IReadOnlyList<WebshopExternalToken> externalTokens,
             string? customReferenceId,
-            IReadOnlyDictionary<string, string>? customMetadata);
+            IReadOnlyDictionary<string, string>? customMetadata,
+            string? linkOutSessionId);
     }
 }

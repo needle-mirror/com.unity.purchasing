@@ -6,7 +6,7 @@ using UnityEditor.ProjectWindowCallback;
 namespace UnityEditor.Purchasing.Editor.Authoring.Model
 {
 #if UNITY_6000_4_OR_NEWER
-    abstract class CreateCatalogAssetAction : AssetCreationEndAction
+    abstract class CreateAssetAction : AssetCreationEndAction
     {
         protected abstract string GenerateContent();
 
@@ -18,7 +18,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
         }
     }
 #else
-    abstract class CreateCatalogAssetAction : EndNameEditAction
+    abstract class CreateAssetAction : EndNameEditAction
     {
         protected abstract string GenerateContent();
 
@@ -31,7 +31,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
     }
 #endif
 
-    class CreateCatalogCsvAssetAction : CreateCatalogAssetAction
+    class CreateCatalogCsvAssetAction : CreateAssetAction
     {
         protected override string GenerateContent()
         {
@@ -39,7 +39,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
         }
     }
 
-    class CreateCatalogItemAssetAction : CreateCatalogAssetAction
+    class CreateCatalogItemAssetAction : CreateAssetAction
     {
         protected override string GenerateContent()
         {
@@ -47,6 +47,16 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
                 CatalogItem.CreateDefaultCatalog(),
                 Formatting.Indented,
                 EditorCatalogItem.GetSerializationSettings());
+        }
+    }
+
+    class CreateRoutingAssetAction : CreateAssetAction
+    {
+        protected override string GenerateContent()
+        {
+            return JsonConvert.SerializeObject(
+                ProviderRoutingConfig.CreateDefault(),
+                Formatting.Indented);
         }
     }
 }

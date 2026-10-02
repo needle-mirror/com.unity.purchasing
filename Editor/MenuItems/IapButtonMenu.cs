@@ -33,6 +33,18 @@ namespace UnityEditor.Purchasing
             GameServicesEventSenderHelpers.SendTopMenuCreateCodelessIapButtonEvent();
         }
 
+        [MenuItem("GameObject/" + IapMenuConsts.PurchasingDisplayName + "/IAP Button", true)]
+        static bool ValidateGameObjectCreateUnityCodelessIAPButton()
+        {
+            return ProductCatalogEditor.ShouldShowCodelessMenuItems();
+        }
+
+        [MenuItem(IapMenuConsts.MenuItemRoot + "/Create IAP Button", true)]
+        static bool ValidateCreateUnityCodelessIAPButton()
+        {
+            return ProductCatalogEditor.ShouldShowCodelessMenuItems();
+        }
+
         static void CreateUnityCodelessIAPButtonInternal(string name)
         {
             var emptyObject = ItemCreationUtility.CreateGameObject(name);

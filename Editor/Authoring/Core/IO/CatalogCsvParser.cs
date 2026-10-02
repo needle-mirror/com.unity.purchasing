@@ -1,42 +1,26 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Model;
 
 namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
 {
+    /// <summary>
+    /// Reads and writes .catalog.csv. Which columns exist, what they convert to and where they sit on the
+    /// model all come from <see cref="CatalogCsvSchema"/>, so what remains here is only what the CSV shape
+    /// itself imposes: how rows gather into items, and what to say when two rows of one item disagree.
+    /// </summary>
     class CatalogCsvParser : ICatalogCsvParser
     {
         public const string ParseStateType = "CatalogCsvParseIssue";
 
-        const string k_ColumnCatalogListingId = "CatalogListingId";
-        const string k_ColumnSku = "Sku";
-        const string k_ColumnTitle = "Title";
-        const string k_ColumnDescription = "Description";
-        const string k_ColumnSubtitle = "Subtitle";
-        const string k_ColumnBadgeText = "BadgeText";
-        const string k_ColumnBadgeImageUrl = "BadgeImageUrl";
-        const string k_ColumnLanguage = "Language";
-        const string k_ColumnProductType = "ProductType";
-        const string k_ColumnCurrencyCode = "CurrencyCode";
-        const string k_ColumnAmount = "Amount";
-        const string k_ColumnWebshopPrice = "WebshopPrice";
-        const string k_ColumnImageUrl = "ImageUrl";
-        const string k_ColumnGoogleOverride = "GoogleOverride";
-        const string k_ColumnAppleOverride = "AppleOverride";
-        const string k_ColumnXboxStoreOverride = "XboxStoreOverride";
-        const string k_ColumnMacAppStoreOverride = "MacAppStoreOverride";
-        const string k_ColumnIsWebshopAvailable = "IsWebshopAvailable";
-        // Per-row (one entry per row, aggregated by CatalogListingId on parse).
-        const string k_ColumnCategory = "Category";
-        const string k_ColumnHdImageUrl = "HdImageUrl";
-        const string k_ColumnHdImageAltText = "HdImageAltText";
-        // Per-item (set on first row, conflict-checked on subsequent rows).
-        const string k_ColumnPromotionType = "PromotionType";
-        const string k_ColumnPromotionStartsAt = "PromotionStartsAt";
-        const string k_ColumnPromotionEndsAt = "PromotionEndsAt";
+        static readonly char[] k_NeedsQuoting = { ',', '"', '\n', '\r' };
+
+        static readonly CatalogCsvSchema s_Schema = CatalogCsvSchema.Catalog;
+        static readonly CsvColumn s_Sku = s_Schema.Identity(nameof(CatalogItem.uSku));
+        static readonly CsvColumn s_ListingId = s_Schema.Identity(nameof(CatalogItem.CatalogListingId));
 
         public List<CatalogItem> Parse(string csvContent, out List<AssetState> issues)
         {
@@ -53,370 +37,350 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                 return new List<CatalogItem>();
             }
 
-            var header = lines[0];
-            var columnMap = BuildColumnMap(header);
-
+            var row = new CsvRow(BuildColumnMap(lines[0]), issues);
             var idOrder = new List<string>();
-            var groups = new Dictionary<string, CatalogItem>(StringComparer.OrdinalIgnoreCase);
-            var conflictMessages = new List<string>();
-            var duplicateMessages = new List<string>();
+            var items = new Dictionary<string, CatalogItem>(StringComparer.OrdinalIgnoreCase);
+            var conflicts = new List<string>();
+            var duplicates = new List<string>();
             var firstRowFor = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             for (var i = 1; i < lines.Count; i++)
             {
-                var rowNumber = i + 1;
                 var fields = lines[i];
                 if (fields.Length == 0 || (fields.Length == 1 && string.IsNullOrWhiteSpace(fields[0])))
                 {
                     continue;
                 }
 
-                var sku = GetField(fields, columnMap, k_ColumnSku);
+                row.Begin(fields, i + 1);
+
+                var sku = row.Raw(s_Sku);
                 if (string.IsNullOrWhiteSpace(sku))
                 {
                     issues.Add(new AssetState(
-                        $"Row {rowNumber} skipped: missing Sku",
+                        $"Row {row.Number} skipped: missing Sku",
                         "Each data row must have a non-empty Sku.",
                         SeverityLevel.Warning, ParseStateType));
                     continue;
                 }
 
-                var catalogListingIdField = GetField(fields, columnMap, k_ColumnCatalogListingId);
-                var catalogListingId = string.IsNullOrWhiteSpace(catalogListingIdField)
+                var declaredId = row.Raw(s_ListingId);
+                var catalogListingId = string.IsNullOrWhiteSpace(declaredId)
                     ? CatalogItem.CatalogListingIdPrefix + sku
-                    : catalogListingIdField;
+                    : declaredId;
 
-                var isFirstRow = !groups.TryGetValue(catalogListingId, out var item);
-                if (isFirstRow)
+                if (!items.TryGetValue(catalogListingId, out var item))
                 {
-                    item = new CatalogItem
+                    item = new CatalogItem { CatalogListingId = catalogListingId, uSku = sku };
+                    foreach (var group in s_Schema.RowGroups)
                     {
-                        CatalogListingId = catalogListingId,
-                        uSku = sku,
-                        ProductType = ParseProductType(GetField(fields, columnMap, k_ColumnProductType), rowNumber, issues),
-                        ImageUrl = NullIfEmpty(GetField(fields, columnMap, k_ColumnImageUrl)),
-                        ProductDetails = new List<ProductDetails>(),
-                        PricingDetails = new List<PricingDetails>(),
-                        IsWebshopAvailable = ParseWebshopAvailability(GetField(fields, columnMap, k_ColumnIsWebshopAvailable)),
-                        Categories = new List<string>(),
-                        HdImages = new List<HdImage>(),
-                        Promotion = ParsePromotion(
-                            GetField(fields, columnMap, k_ColumnPromotionType),
-                            GetField(fields, columnMap, k_ColumnPromotionStartsAt),
-                            GetField(fields, columnMap, k_ColumnPromotionEndsAt),
-                            rowNumber, issues),
-                    };
-                    item.SetStoreIdOverride(StoreId.Google, NullIfEmpty(GetField(fields, columnMap, k_ColumnGoogleOverride)));
-                    item.SetStoreIdOverride(StoreId.Apple, NullIfEmpty(GetField(fields, columnMap, k_ColumnAppleOverride)));
-                    item.SetStoreIdOverride(StoreId.XboxStore, NullIfEmpty(GetField(fields, columnMap, k_ColumnXboxStoreOverride)));
-                    item.SetStoreIdOverride(StoreId.MacAppStore, NullIfEmpty(GetField(fields, columnMap, k_ColumnMacAppStoreOverride)));
-                    groups[catalogListingId] = item;
+                        // Eagerly created so collecting an entry never has to null-check; the ones that
+                        // prefer null to empty are cleared again once every row has been seen.
+                        group.CreateList(item);
+                    }
+
+                    Apply(item, s_Schema.Item.Target, row);
+
+                    items[catalogListingId] = item;
                     idOrder.Add(catalogListingId);
-                    firstRowFor[catalogListingId] = rowNumber;
+                    firstRowFor[catalogListingId] = row.Number;
                 }
                 else
                 {
-                    var imageUrl = NullIfEmpty(GetField(fields, columnMap, k_ColumnImageUrl));
-                    AddConflictIfChanged(imageUrl, item.ImageUrl,
-                        nameof(CatalogItem.ImageUrl), catalogListingId,
-                        rowNumber, firstRowFor[catalogListingId], conflictMessages);
-
-                    var productTypeField = GetField(fields, columnMap, k_ColumnProductType);
-                    var parsedType = !string.IsNullOrWhiteSpace(productTypeField)
-                        ? ParseProductType(productTypeField, rowNumber, issues)
-                        : (ProductType?)null;
-                    AddConflictIfChanged(parsedType, item.ProductType,
-                        nameof(CatalogItem.ProductType), catalogListingId,
-                        rowNumber, firstRowFor[catalogListingId], conflictMessages);
-
-                    var google = NullIfEmpty(GetField(fields, columnMap, k_ColumnGoogleOverride));
-                    AddConflictIfChanged(google, item.GetStoreIdOverride(StoreId.Google),
-                        k_ColumnGoogleOverride, catalogListingId,
-                        rowNumber, firstRowFor[catalogListingId], conflictMessages);
-
-                    var apple = NullIfEmpty(GetField(fields, columnMap, k_ColumnAppleOverride));
-                    AddConflictIfChanged(apple, item.GetStoreIdOverride(StoreId.Apple),
-                        k_ColumnAppleOverride, catalogListingId,
-                        rowNumber, firstRowFor[catalogListingId], conflictMessages);
-
-                    var xbox = NullIfEmpty(GetField(fields, columnMap, k_ColumnXboxStoreOverride));
-                    AddConflictIfChanged(xbox, item.GetStoreIdOverride(StoreId.XboxStore),
-                        k_ColumnXboxStoreOverride, catalogListingId,
-                        rowNumber, firstRowFor[catalogListingId], conflictMessages);
-
-                    var macos = NullIfEmpty(GetField(fields, columnMap, k_ColumnMacAppStoreOverride));
-                    AddConflictIfChanged(macos, item.GetStoreIdOverride(StoreId.MacAppStore),
-                        k_ColumnMacAppStoreOverride, catalogListingId,
-                        rowNumber, firstRowFor[catalogListingId], conflictMessages);
-
-                    CheckWebshopConflicts(item, fields, columnMap, catalogListingId,
-                        rowNumber, firstRowFor[catalogListingId], conflictMessages);
+                    ReportItemConflicts(item, row, catalogListingId, firstRowFor[catalogListingId], conflicts);
                 }
 
-                var title = GetField(fields, columnMap, k_ColumnTitle);
-                var description = GetField(fields, columnMap, k_ColumnDescription);
-                var language = ParseLocale(GetField(fields, columnMap, k_ColumnLanguage), rowNumber, issues);
-
-                if (!string.IsNullOrWhiteSpace(title))
+                foreach (var group in s_Schema.RowGroups)
                 {
-                    var subtitle = NullIfEmpty(GetField(fields, columnMap, k_ColumnSubtitle));
-                    var badge = BuildBadge(
-                        GetField(fields, columnMap, k_ColumnBadgeText),
-                        GetField(fields, columnMap, k_ColumnBadgeImageUrl));
-
-                    Predicate<ProductDetails> matchesProductValues = d =>
-                        d.Title == title
-                        && d.Description == (description ?? string.Empty)
-                        && d.Subtitle == subtitle
-                        && AreBadgesEqual(d.Badge, badge);
-
-                    var existingDetail = item.ProductDetails.Find(d => d.Language == language);
-                    var detailKey = $"{catalogListingId}|{language}";
-                    if (existingDetail == null)
-                    {
-                        firstRowFor[detailKey] = rowNumber;
-                        item.ProductDetails.Add(new ProductDetails
-                        {
-                            Title = title,
-                            Description = description ?? string.Empty,
-                            Language = language,
-                            Subtitle = subtitle,
-                            Badge = badge,
-                        });
-                    }
-                    else
-                    {
-                        CheckDuplicate(matchesProductValues(existingDetail),
-                            nameof(ProductDetails), $"{catalogListingId}, {language}",
-                            rowNumber, firstRowFor[detailKey],
-                            duplicateMessages, conflictMessages);
-                    }
+                    CollectEntry(item, group, row, catalogListingId, firstRowFor, duplicates, conflicts);
                 }
-
-                var currencyCode = GetField(fields, columnMap, k_ColumnCurrencyCode);
-                var amountStr = GetField(fields, columnMap, k_ColumnAmount);
-
-                if (!string.IsNullOrWhiteSpace(currencyCode)
-                    && double.TryParse(amountStr, NumberStyles.Float | NumberStyles.AllowThousands,
-                        CultureInfo.InvariantCulture, out var amount))
-                {
-                    var webshopPriceStr = GetField(fields, columnMap, k_ColumnWebshopPrice);
-                    double webshopPrice = 0;
-                    if (!string.IsNullOrWhiteSpace(webshopPriceStr))
-                        double.TryParse(webshopPriceStr, NumberStyles.Float | NumberStyles.AllowThousands,
-                            CultureInfo.InvariantCulture, out webshopPrice);
-
-                    Predicate<PricingDetails> matchesPricingValues = p =>
-                        p.Amount == amount && p.WebshopPrice == webshopPrice;
-
-                    var existingPricing = item.PricingDetails.Find(p =>
-                        string.Equals(p.CurrencyCode, currencyCode, StringComparison.OrdinalIgnoreCase));
-                    var pricingKey = $"{catalogListingId}|{currencyCode}";
-                    if (existingPricing == null)
-                    {
-                        firstRowFor[pricingKey] = rowNumber;
-                        item.PricingDetails.Add(new PricingDetails
-                        {
-                            CurrencyCode = currencyCode,
-                            Amount = amount,
-                            WebshopPrice = webshopPrice,
-                        });
-                    }
-                    else
-                    {
-                        CheckDuplicate(matchesPricingValues(existingPricing),
-                            nameof(PricingDetails), $"{catalogListingId}, {currencyCode}",
-                            rowNumber, firstRowFor[pricingKey],
-                            duplicateMessages, conflictMessages);
-                    }
-                }
-
-                AppendWebshopRowEntries(item, fields, columnMap);
-            }
-
-            foreach (var id in idOrder)
-            {
-                NullOutEmptyWebshopCollections(groups[id]);
-            }
-
-            if (conflictMessages.Count > 0)
-            {
-                var sb = new StringBuilder();
-                foreach (var detail in conflictMessages)
-                {
-                    sb.Append("- ").AppendLine(detail);
-                }
-                issues.Add(new AssetState(
-                    "Row Conflicts (first occurrence kept)",
-                    sb.ToString(),
-                    SeverityLevel.Warning, ParseStateType));
-            }
-
-            if (duplicateMessages.Count > 0)
-            {
-                var sb = new StringBuilder();
-                foreach (var detail in duplicateMessages)
-                {
-                    sb.Append("- ").AppendLine(detail);
-                }
-                issues.Add(new AssetState(
-                    "Duplicate Rows (safely ignored)",
-                    sb.ToString(),
-                    SeverityLevel.Info, ParseStateType));
             }
 
             var result = new List<CatalogItem>(idOrder.Count);
             foreach (var id in idOrder)
             {
-                result.Add(groups[id]);
+                NullOutEmptyCollections(items[id]);
+                result.Add(items[id]);
             }
+
+            AddAggregate(issues, conflicts, "Row Conflicts (first occurrence kept)", SeverityLevel.Warning);
+            AddAggregate(issues, duplicates, "Duplicate Rows (safely ignored)", SeverityLevel.Info);
 
             return result;
         }
 
-        static bool ParseWebshopAvailability(string value)
+        public string Serialize(List<CatalogItem> items)
         {
-            return !string.IsNullOrWhiteSpace(value)
-                && bool.TryParse(value, out var result)
-                && result;
-        }
+            var sb = new StringBuilder();
+            sb.AppendLine(s_Schema.Header);
 
-        static Promotion ParsePromotion(string typeField, string startsAt, string endsAt,
-            int rowNumber, List<AssetState> issues)
-        {
-            if (string.IsNullOrWhiteSpace(typeField))
-                return null;
-            if (!Enum.TryParse<PromotionType>(typeField, true, out var type))
+            var lists = new IList[s_Schema.RowGroups.Length];
+
+            foreach (var item in items)
             {
-                issues.Add(new AssetState(
-                    $"Row {rowNumber}: unknown {k_ColumnPromotionType} '{typeField}'",
-                    $"Expected one of: {string.Join(", ", Enum.GetNames(typeof(PromotionType)))}.",
-                    SeverityLevel.Warning, ParseStateType));
-                return null;
+                if (string.IsNullOrWhiteSpace(item.uSku))
+                {
+                    continue;
+                }
+
+                // One row per entry of the longest collection: an item with three languages and one
+                // price spreads over three rows, its item-level cells repeated on each.
+                var rowCount = 1;
+                for (var g = 0; g < lists.Length; g++)
+                {
+                    lists[g] = s_Schema.RowGroups[g].ReadList(item);
+                    rowCount = Math.Max(rowCount, lists[g]?.Count ?? 0);
+                }
+
+                for (var i = 0; i < rowCount; i++)
+                {
+                    for (var c = 0; c < s_Schema.Columns.Length; c++)
+                    {
+                        if (c > 0)
+                        {
+                            sb.Append(',');
+                        }
+
+                        sb.Append(CsvEscape(Cell(item, s_Schema.Columns[c], lists, i)));
+                    }
+
+                    sb.AppendLine();
+                }
             }
-            return new Promotion
-            {
-                Type = type,
-                StartsAt = ParseDateTimeOffset(startsAt),
-                EndsAt = ParseDateTimeOffset(endsAt),
-            };
+
+            return sb.ToString();
         }
 
-        static DateTimeOffset? ParseDateTimeOffset(string value)
+        static string Cell(CatalogItem item, CsvColumn column, IList[] lists, int rowIndex)
         {
-            if (string.IsNullOrWhiteSpace(value))
-                return null;
-            if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture,
-                    DateTimeStyles.RoundtripKind, out var result))
-                return result;
+            if (column.Identity)
+            {
+                // An item that never set a listing id writes its bare Sku, which the admin API then
+                // rejects for missing the 'catalog/' prefix — by design, so the author sees it.
+                return column == s_ListingId
+                    ? (string.IsNullOrWhiteSpace(item.CatalogListingId) ? item.uSku : item.CatalogListingId)
+                    : item.uSku;
+            }
+
+            object value;
+            if (column.Group.IsItem)
+            {
+                value = column.Read(item);
+            }
+            else
+            {
+                var list = lists[column.Group.Index];
+                if (list == null || rowIndex >= list.Count)
+                {
+                    // This row is past the end of the column's collection, so there's no entry to read.
+                    // What the column declared as its fallback still stands: that's why Language spells
+                    // out en-US on a row carrying nothing but a category.
+                    return column.DeclaredFallback == null
+                        ? string.Empty
+                        : column.Converter.ToCsv(column.DeclaredFallback);
+                }
+
+                var entry = list[rowIndex];
+                value = column.Group.ScalarElement ? entry : column.Read(entry);
+            }
+
+            if (value == null || column.IsAbsent(value))
+            {
+                return string.Empty;
+            }
+
+            if (!column.EmitWhenDefault && value.Equals(column.TypeDefault))
+            {
+                return string.Empty;
+            }
+
+            return column.Converter.ToCsv(value);
+        }
+
+        /// <summary>Fills an object from the row, creating nested objects only where required cells exist.</summary>
+        static void Apply(object target, CsvTarget shape, CsvRow row)
+        {
+            foreach (var column in shape.Columns)
+            {
+                if (column.Identity)
+                {
+                    continue;
+                }
+
+                column.Member.SetValue(target, row.Value(column));
+            }
+
+            foreach (var nested in shape.Nested)
+            {
+                if (!row.TryRequired(nested.RequiredColumn, out _))
+                {
+                    continue;
+                }
+
+                var instance = nested.Create();
+                nested.Write(target, instance);
+                Apply(instance, nested.Target, row);
+            }
+        }
+
+        /// <summary>The first row of an item wins; a later row whose item-level cells disagree is reported.</summary>
+        static void ReportItemConflicts(CatalogItem item, CsvRow row, string context,
+            int firstRow, List<string> conflicts)
+        {
+            foreach (var column in s_Schema.ItemConflictColumns)
+            {
+                if (string.IsNullOrWhiteSpace(row.Raw(column)))
+                {
+                    // Leaving an item-level cell blank on a continuation row isn't disagreeing — it's
+                    // how most authors write them.
+                    continue;
+                }
+
+                var incoming = row.Value(column);
+                if (incoming == null)
+                {
+                    continue;
+                }
+
+                if (!incoming.Equals(column.Read(item)))
+                {
+                    AddMessage(conflicts, row.Number, context, column.Name, "conflicts with", firstRow);
+                }
+            }
+        }
+
+        /// <summary>Takes the row's entry for one collection, keyed by the group's key column.</summary>
+        static void CollectEntry(CatalogItem item, CsvGroup group, CsvRow row, string context,
+            Dictionary<string, int> firstRowFor, List<string> duplicates, List<string> conflicts)
+        {
+            // Converted before the row has earned an entry, so an unrecognized Language is reported
+            // whether or not this row goes on to contribute a product detail.
+            var key = row.Value(group.KeyColumn);
+
+            foreach (var required in group.RequiredColumns)
+            {
+                if (!row.TryRequired(required, out _))
+                {
+                    return;
+                }
+            }
+
+            var list = group.ReadList(item) ?? group.CreateList(item);
+            var keyText = key?.ToString() ?? string.Empty;
+            var seenAt = $"{context}|{group.Name}|{keyText}";
+            var existing = FindEntry(list, group, key);
+
+            if (existing == null)
+            {
+                firstRowFor[seenAt] = row.Number;
+                list.Add(group.ScalarElement ? key : BuildEntry(group, row));
+                return;
+            }
+
+            if (!group.ReportDuplicates)
+            {
+                return;
+            }
+
+            CheckDuplicate(IsIdentical(existing, group, row), group.Name, $"{context}, {keyText}",
+                row.Number, firstRowFor[seenAt], duplicates, conflicts);
+        }
+
+        static object BuildEntry(CsvGroup group, CsvRow row)
+        {
+            var entry = group.CreateElement();
+            Apply(entry, group.Target, row);
+            return entry;
+        }
+
+        static object FindEntry(IList list, CsvGroup group, object key)
+        {
+            foreach (var entry in list)
+            {
+                var candidate = group.ScalarElement ? entry : group.KeyColumn.Read(entry);
+                if (KeyMatches(group, candidate, key))
+                {
+                    return entry;
+                }
+            }
+
             return null;
         }
 
-        // Per-row aggregation for webshop multi-entry columns (Category and HdImageUrl/HdImageAltText).
-        // Same shape as ProductDetails / PricingDetails: one entry per row, dedup by natural key
-        // (string value for Category, Url for HdImage).
-        static void AppendWebshopRowEntries(CatalogItem item, string[] fields, Dictionary<string, int> columnMap)
+        static bool KeyMatches(CsvGroup group, object candidate, object key)
         {
-            var category = NullIfEmpty(GetField(fields, columnMap, k_ColumnCategory));
-            if (category is not null && !item.Categories.Contains(category))
-                item.Categories.Add(category);
-
-            var hdImageUrl = NullIfEmpty(GetField(fields, columnMap, k_ColumnHdImageUrl));
-            if (hdImageUrl is not null && !item.HdImages.Exists(h => h.Url == hdImageUrl))
+            if (group.IgnoreKeyCase && candidate is string text && key is string other)
             {
-                item.HdImages.Add(new HdImage
+                return string.Equals(text, other, StringComparison.OrdinalIgnoreCase);
+            }
+
+            return Equals(candidate, key);
+        }
+
+        /// <summary>Whether a repeated key says the same thing as the entry already collected.</summary>
+        static bool IsIdentical(object existing, CsvGroup group, CsvRow row)
+        {
+            foreach (var column in group.ComparedColumns)
+            {
+                // A cell the row wouldn't build holds nothing, the same as an absent nested object.
+                var incoming = RowBuildsColumn(column, row) ? row.Value(column) : null;
+                if (!Equals(incoming, column.Read(existing)))
                 {
-                    Url = hdImageUrl,
-                    AltText = NullIfEmpty(GetField(fields, columnMap, k_ColumnHdImageAltText)),
-                });
+                    return false;
+                }
             }
+
+            return true;
         }
 
-        // Per-row collections are eagerly initialized in the first-row branch so AppendWebshopRowEntries
-        // doesn't need a null check. Items that never see a webshop entry should still expose null
-        // (matches the StoreIdOverrides convention — null means "not set", empty list means "explicit").
-        static void NullOutEmptyWebshopCollections(CatalogItem item)
+        static bool RowBuildsColumn(CsvColumn column, CsvRow row)
         {
-            if (item.Categories is { Count: 0 })
-                item.Categories = null;
-            if (item.HdImages is { Count: 0 })
-                item.HdImages = null;
-        }
-
-        static void CheckWebshopConflicts(CatalogItem item, string[] fields, Dictionary<string, int> columnMap,
-            string catalogListingId, int rowNumber, int firstRow, List<string> conflictMessages)
-        {
-            var availability = GetField(fields, columnMap, k_ColumnIsWebshopAvailable);
-            if (!string.IsNullOrWhiteSpace(availability)
-                && ParseWebshopAvailability(availability) != item.IsWebshopAvailable)
+            for (var nested = column.Nested; nested != null; nested = nested.Parent)
             {
-                AddMessage(conflictMessages, rowNumber, catalogListingId,
-                    k_ColumnIsWebshopAvailable, "conflicts with", firstRow);
+                if (!row.TryRequired(nested.RequiredColumn, out _))
+                {
+                    return false;
+                }
             }
 
-            AddConflictIfChanged(
-                NullIfEmpty(GetField(fields, columnMap, k_ColumnPromotionType)),
-                item.Promotion?.Type.ToString(),
-                k_ColumnPromotionType, catalogListingId, rowNumber, firstRow, conflictMessages);
-
-            AddDateTimeOffsetConflictIfChanged(
-                GetField(fields, columnMap, k_ColumnPromotionStartsAt),
-                item.Promotion?.StartsAt,
-                k_ColumnPromotionStartsAt, catalogListingId, rowNumber, firstRow, conflictMessages);
-
-            AddDateTimeOffsetConflictIfChanged(
-                GetField(fields, columnMap, k_ColumnPromotionEndsAt),
-                item.Promotion?.EndsAt,
-                k_ColumnPromotionEndsAt, catalogListingId, rowNumber, firstRow, conflictMessages);
+            return true;
         }
 
-        // Compare DateTimeOffsets as parsed values, not strings — the round-trip format of
-        // ToString("o") doesn't match common CSV inputs like "2026-01-01T00:00:00Z" (it expands
-        // to ".0000000+00:00"), which would otherwise false-positive-conflict on repeat rows.
-        static void AddDateTimeOffsetConflictIfChanged(string newValue, DateTimeOffset? existing,
-            string fieldName, string context, int rowNumber, int originalRow, List<string> conflictMessages)
+        // Null means "the CSV said nothing about this", empty means "the author cleared it" — the
+        // convention StoreIdOverrides and the webshop fields follow. Product details and pricing keep
+        // their empty lists, so the inspector has something to add a first row to.
+        static void NullOutEmptyCollections(CatalogItem item)
         {
-            if (string.IsNullOrWhiteSpace(newValue))
+            foreach (var group in s_Schema.RowGroups)
+            {
+                if (!group.NullWhenEmpty)
+                {
+                    continue;
+                }
+
+                var list = group.ReadList(item);
+                if (list != null && list.Count == 0)
+                {
+                    group.Collection.SetValue(item, null);
+                }
+            }
+        }
+
+        static void AddAggregate(List<AssetState> issues, List<string> messages,
+            string description, SeverityLevel level)
+        {
+            if (messages.Count == 0)
+            {
                 return;
-            var parsed = ParseDateTimeOffset(newValue);
-            if (parsed.HasValue && parsed != existing)
-                AddMessage(conflictMessages, rowNumber, context, fieldName, "conflicts with", originalRow);
-        }
-
-        static ProductBadge BuildBadge(string text, string imageUrl)
-        {
-            if (string.IsNullOrEmpty(text))
-            {
-                return null;
             }
-            return new ProductBadge
-            {
-                Text = text,
-                ImageUrl = NullIfEmpty(imageUrl),
-            };
-        }
 
-        static bool AreBadgesEqual(ProductBadge a, ProductBadge b)
-        {
-            if (a == null || b == null)
+            var detail = new StringBuilder();
+            foreach (var message in messages)
             {
-                return a == null && b == null;
+                detail.Append("- ").AppendLine(message);
             }
-            return a.Text == b.Text && a.ImageUrl == b.ImageUrl;
-        }
 
-        static bool IsConflict<T>(T newValue, T existingValue)
-        {
-            return newValue is not null && !newValue.Equals(existingValue);
-        }
-
-        static void AddConflictIfChanged<T>(T newValue, T existingValue, string fieldName,
-            string context, int rowNumber, int originalRow, List<string> conflictMessages)
-        {
-            if (IsConflict(newValue, existingValue))
-            {
-                AddMessage(conflictMessages, rowNumber, context, fieldName, "conflicts with", originalRow);
-            }
+            issues.Add(new AssetState(description, detail.ToString(), level, ParseStateType));
         }
 
         static void CheckDuplicate(bool isIdentical, string fieldName, string context,
@@ -439,18 +403,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
             messages.Add($"Row {rowNumber}: ({context}) {fieldName} — {verb} row {originalRow}");
         }
 
-        static string NullIfEmpty(string value) => string.IsNullOrEmpty(value) ? null : value;
-
-        static string GetField(string[] fields, Dictionary<string, int> columnMap, string columnName)
-        {
-            if (!columnMap.TryGetValue(columnName, out var index) || index >= fields.Length)
-            {
-                return string.Empty;
-            }
-
-            return fields[index]?.Trim() ?? string.Empty;
-        }
-
         static Dictionary<string, int> BuildColumnMap(string[] headerFields)
         {
             var map = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -462,123 +414,9 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                     map[name] = i;
                 }
             }
+
             return map;
         }
-
-        static ProductType ParseProductType(string value, int rowNumber, List<AssetState> issues)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return ProductType.Consumable;
-            if (Enum.TryParse<ProductType>(value, true, out var result))
-                return result;
-
-            issues.Add(new AssetState(
-                $"Row {rowNumber}: unknown ProductType '{value}'",
-                $"Defaulting to {ProductType.Consumable}.",
-                SeverityLevel.Warning, ParseStateType));
-            return ProductType.Consumable;
-        }
-
-        static TranslationLocale ParseLocale(string value, int rowNumber, List<AssetState> issues)
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                return TranslationLocale.en_US;
-            // Schema/BCP-47 uses hyphens (e.g. "en-US"); the C# enum name uses underscores
-            // (e.g. en_US). Accept both.
-            var normalized = value.Replace('-', '_');
-            if (Enum.TryParse<TranslationLocale>(normalized, true, out var result))
-                return result;
-
-            issues.Add(new AssetState(
-                $"Row {rowNumber}: unknown Language '{value}'",
-                $"Defaulting to {FormatLocale(TranslationLocale.en_US)}.",
-                SeverityLevel.Warning, ParseStateType));
-            return TranslationLocale.en_US;
-        }
-
-        static string FormatLocale(TranslationLocale locale) => locale.ToString().Replace('_', '-');
-
-        public string Serialize(List<CatalogItem> items)
-        {
-            var sb = new StringBuilder();
-            sb.AppendLine(
-                $"{k_ColumnCatalogListingId},{k_ColumnSku},{k_ColumnTitle},{k_ColumnDescription}," +
-                $"{k_ColumnSubtitle},{k_ColumnBadgeText},{k_ColumnBadgeImageUrl}," +
-                $"{k_ColumnLanguage},{k_ColumnProductType}," +
-                $"{k_ColumnCurrencyCode},{k_ColumnAmount},{k_ColumnWebshopPrice}," +
-                $"{k_ColumnImageUrl},{k_ColumnGoogleOverride},{k_ColumnAppleOverride}," +
-                $"{k_ColumnXboxStoreOverride},{k_ColumnMacAppStoreOverride}," +
-                $"{k_ColumnIsWebshopAvailable},{k_ColumnCategory}," +
-                $"{k_ColumnHdImageUrl},{k_ColumnHdImageAltText}," +
-                $"{k_ColumnPromotionType},{k_ColumnPromotionStartsAt},{k_ColumnPromotionEndsAt}");
-
-            foreach (var item in items)
-            {
-                if (string.IsNullOrWhiteSpace(item.uSku))
-                {
-                    continue;
-                }
-
-                var catalogListingId = string.IsNullOrWhiteSpace(item.CatalogListingId) ? item.uSku : item.CatalogListingId;
-                var details = item.ProductDetails ?? new List<ProductDetails>();
-                var pricing = item.PricingDetails ?? new List<PricingDetails>();
-                var categories = item.Categories ?? new List<string>();
-                var hdImages = item.HdImages ?? new List<HdImage>();
-                var googleOverride = item.GetStoreIdOverride(StoreId.Google);
-                var appleOverride = item.GetStoreIdOverride(StoreId.Apple);
-                var xboxStoreOverride = item.GetStoreIdOverride(StoreId.XboxStore);
-                var macAppStoreOverride = item.GetStoreIdOverride(StoreId.MacAppStore);
-                var promotionType = item.Promotion?.Type.ToString() ?? string.Empty;
-                var promotionStartsAt = FormatDateTimeOffset(item.Promotion?.StartsAt);
-                var promotionEndsAt = FormatDateTimeOffset(item.Promotion?.EndsAt);
-
-                var rowCount = Math.Max(1, Math.Max(
-                    Math.Max(details.Count, pricing.Count),
-                    Math.Max(categories.Count, hdImages.Count)));
-
-                for (var i = 0; i < rowCount; i++)
-                {
-                    var detail = i < details.Count ? details[i] : null;
-                    var price = i < pricing.Count ? pricing[i] : null;
-                    var category = i < categories.Count ? categories[i] : string.Empty;
-                    var hdImg = i < hdImages.Count ? hdImages[i] : null;
-
-                    sb.Append(CsvEscape(catalogListingId)).Append(',');
-                    sb.Append(CsvEscape(item.uSku)).Append(',');
-                    sb.Append(CsvEscape(detail?.Title ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(detail?.Description ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(detail?.Subtitle ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(detail?.Badge?.Text ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(detail?.Badge?.ImageUrl ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(detail != null ? FormatLocale(detail.Language) : "en-US")).Append(',');
-                    sb.Append(CsvEscape(item.ProductType.ToString())).Append(',');
-                    sb.Append(CsvEscape(price?.CurrencyCode ?? string.Empty)).Append(',');
-                    sb.Append(price != null
-                        ? price.Amount.ToString("G", CultureInfo.InvariantCulture)
-                        : string.Empty).Append(',');
-                    sb.Append(price != null && price.IsWebshopPriceSet
-                        ? price.WebshopPrice.ToString("G", CultureInfo.InvariantCulture)
-                        : string.Empty).Append(',');
-                    sb.Append(CsvEscape(item.ImageUrl ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(googleOverride ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(appleOverride ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(xboxStoreOverride ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(macAppStoreOverride ?? string.Empty)).Append(',');
-                    sb.Append(item.IsWebshopAvailable ? "true" : string.Empty).Append(',');
-                    sb.Append(CsvEscape(category)).Append(',');
-                    sb.Append(CsvEscape(hdImg?.Url ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(hdImg?.AltText ?? string.Empty)).Append(',');
-                    sb.Append(CsvEscape(promotionType)).Append(',');
-                    sb.Append(CsvEscape(promotionStartsAt)).Append(',');
-                    sb.AppendLine(CsvEscape(promotionEndsAt));
-                }
-            }
-
-            return sb.ToString();
-        }
-
-        static string FormatDateTimeOffset(DateTimeOffset? value) =>
-            value?.ToString("o", CultureInfo.InvariantCulture) ?? string.Empty;
 
         static string CsvEscape(string value)
         {
@@ -587,7 +425,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                 return string.Empty;
             }
 
-            if (value.Contains(",") || value.Contains("\"") || value.Contains("\n") || value.Contains("\r"))
+            if (value.IndexOfAny(k_NeedsQuoting) >= 0)
             {
                 return "\"" + value.Replace("\"", "\"\"") + "\"";
             }
@@ -659,6 +497,111 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// One row, plus the header map that says which cell each column lives in. Conversion happens here
+        /// so every column reports an unusable cell the same way.
+        /// </summary>
+        class CsvRow
+        {
+            readonly Dictionary<string, int> m_Columns;
+            readonly List<AssetState> m_Issues;
+            readonly HashSet<string> m_Reported = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            string[] m_Fields;
+
+            public int Number { get; private set; }
+
+            public CsvRow(Dictionary<string, int> columns, List<AssetState> issues)
+            {
+                m_Columns = columns;
+                m_Issues = issues;
+            }
+
+            public void Begin(string[] fields, int number)
+            {
+                m_Fields = fields;
+                Number = number;
+                m_Reported.Clear();
+            }
+
+            /// <summary>The cell as written, or an empty string when the file omits the column entirely.</summary>
+            public string Raw(CsvColumn column)
+            {
+                if (!m_Columns.TryGetValue(column.Name, out var index) || index >= m_Fields.Length)
+                {
+                    return string.Empty;
+                }
+
+                return m_Fields[index]?.Trim() ?? string.Empty;
+            }
+
+            /// <summary>The converted cell, or the column's fallback when it is blank or unusable.</summary>
+            public object Value(CsvColumn column)
+            {
+                var raw = Raw(column);
+                if (string.IsNullOrWhiteSpace(raw))
+                {
+                    return column.Fallback;
+                }
+
+                if (column.Converter.TryFromCsv(raw, out var value))
+                {
+                    return value;
+                }
+
+                ReportInvalid(column, raw);
+                return column.Fallback;
+            }
+
+            /// <summary>A cell that must be usable for its entry to exist; false leaves the entry unbuilt.</summary>
+            public bool TryRequired(CsvColumn column, out object value)
+            {
+                var raw = Raw(column);
+                if (string.IsNullOrWhiteSpace(raw))
+                {
+                    value = null;
+                    return false;
+                }
+
+                if (column.Converter.TryFromCsv(raw, out value) && value != null)
+                {
+                    // A cell spelling out the column's "not set" value leaves the entry unbuilt, the
+                    // same as a blank one: a promotion of type None is no promotion.
+                    if (column.IsAbsent(value))
+                    {
+                        value = null;
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                ReportInvalid(column, raw);
+                value = null;
+                return false;
+            }
+
+            void ReportInvalid(CsvColumn column, string raw)
+            {
+                var detail = column.Converter.InvalidValueDetail;
+                if (detail == null)
+                {
+                    // Numbers and dates have always failed quietly: the entry drops and the row moves on.
+                    return;
+                }
+
+                if (!m_Reported.Add(column.Name))
+                {
+                    // One complaint per cell, however many times the row reads it — a column that is
+                    // both the key of its collection and part of the entry gets read twice.
+                    return;
+                }
+
+                m_Issues.Add(new AssetState(
+                    $"Row {Number}: unknown {column.Name} '{raw}'", detail,
+                    SeverityLevel.Warning, ParseStateType));
+            }
         }
     }
 }

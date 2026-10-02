@@ -121,7 +121,8 @@ namespace UnityEngine.Purchasing
         static ProductDescription? GetMatchingDescription(ProductDefinition definition, IReadOnlyList<ProductDescription> productsRetrieved)
         {
             return productsRetrieved.FirstOrDefault(description =>
-                description.storeSpecificId == definition.storeSpecificId);
+                description.storeSpecificId == definition.storeSpecificId &&
+                (description.catalogListingId == null || description.catalogListingId == definition.catalogListingId));
         }
 
         CatalogListing CreateMatchedCatalogListing(ProductDefinition definition, ProductDescription description)

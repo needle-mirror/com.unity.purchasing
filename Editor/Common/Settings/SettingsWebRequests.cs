@@ -103,6 +103,6 @@ namespace UnityEditor.Purchasing
         }
 
         string GetIAPApiPath() =>
-            $"{IapSettingsConsts.ProductionPath}{IapSettingsConsts.ApiPath}";
+            $"{PurchasingUrls.ServicesHost}{IapSettingsConsts.ApiPath}";
     }
 }

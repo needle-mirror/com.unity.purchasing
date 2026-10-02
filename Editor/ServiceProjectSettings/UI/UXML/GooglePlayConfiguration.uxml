@@ -1,7 +1,8 @@
 <UXML xmlns="UnityEngine.UIElements">
+    <VisualElement name="UnlinkedSeparator" class="separator" />
     <VisualElement name="GoogleConfigBlock" class="project-settings-title-container">
-        <Label text="Payment Provider Configuration" class="configuration-title"/>
-        <VisualElement class="configuration-item">
+        <Label name="PaymentProviderConfigurationTitle" text="Payment Provider Configuration" class="configuration-title"/>
+        <VisualElement name="CodaConfigItem" class="configuration-item">
             <VisualElement class="configuration-item-header">
                 <Image class="configuration-icon coda" />
                 <VisualElement class="configuration-info">
@@ -35,17 +36,38 @@
                 </VisualElement>
             </VisualElement>
         </VisualElement>
-        <VisualElement class="configuration-item">
+        <VisualElement name="UnlinkedFeatures">
+            <Label text="Link a cloud project to unlock these FREE features:" class="unlinked-features-heading" />
+            <VisualElement class="configuration-item unlinked-feature">
+                <Label text="Revenue reporting" class="unlinked-feature-title" />
+                <Label text="See purchases and revenue across stores in the Unity Dashboard. Data only starts collecting once your project is linked." class="unlinked-feature-description" />
+            </VisualElement>
+            <VisualElement class="configuration-item unlinked-feature">
+                <Label text="Remote catalog" class="unlinked-feature-title" />
+                <Label text="Manage products and prices for every store in one catalog. Import your existing SKUs from the Editor, or upload a CSV." class="unlinked-feature-description" />
+            </VisualElement>
+            <VisualElement class="configuration-item unlinked-feature">
+                <Label text="Webshops" class="unlinked-feature-title" />
+                <Label text="Sell to players directly on the web, alongside the app stores." class="unlinked-feature-description" />
+            </VisualElement>
+            <VisualElement class="configuration-item unlinked-feature">
+                <Label text="Payment Providers" class="unlinked-feature-title" />
+                <Label text="Accept web payments through Stripe or Coda." class="unlinked-feature-description" />
+            </VisualElement>
+            <VisualElement class="separator" />
+        </VisualElement>
+        <VisualElement name="GooglePlayConfigItem" class="configuration-item">
             <VisualElement class="configuration-item-header">
                 <Image class="configuration-icon google-play" />
                 <VisualElement class="configuration-info">
                     <VisualElement class="configuration-name">
                         <Label text="Google Play" />
-                        <VisualElement class="configuration-badge configured">
+                        <VisualElement name="GoogleKeyInfoIcon" class="configuration-info-icon" tooltip="How to find your Google license key&#10;&#10;1. Go to Google Play Console.&#10;2. Select your app.&#10;3. Go to Monetization setup to find your license key." />
+                        <VisualElement name="GoogleKeyConfiguredBadge" class="configuration-badge configured">
                             <Label text="Configured" />
                         </VisualElement>
-                        <VisualElement class="configuration-badge">
-                            <Label text="Not Configured" />
+                        <VisualElement name="GoogleKeyMissingBadge" class="configuration-badge missing-key">
+                            <Label text="Missing license key" />
                         </VisualElement>
                     </VisualElement>
                     <Label text="Google Play Store in-app payment." class="configuration-description" />
@@ -53,51 +75,38 @@
                 <VisualElement class="configuration-toggle" />
             </VisualElement>
             <VisualElement class="configuration-item-body">
-                <VisualElement>
-                    <Label text="Please follow these steps to get your license key:" class="description"/>
-                    <VisualElement class="label-container">
-                        <Label text="1. Go to " class="numbered-item"/>
-                        <VisualElement name="GooglePlayLink" class="link-container-integrated">
-                            <TextElement text="Google Play Developer Console" class="link-button"/>
-                            <VisualElement class="external-link-icon"/>
-                        </VisualElement>
-                    </VisualElement>
-                    <Label text="2. Go to your appropriate project." class="numbered-item"/>
-                    <Label text="3. Go to &quot;Monetization setup&quot;, there you will find your License Key " class="numbered-item"/>
-                </VisualElement>
-                <VisualElement class="invisible-separator" />
                 <VisualElement name="RevenueValidationBlock">
-                    <Label text="Revenue Validation" class="project-settings-subtitle"/>
-                    <Label text="Enter your Google Play key on your project's dashboard:" />
-                    <VisualElement name="DashboardSettingsLink" class="link-container-integrated">
-                        <TextElement text="Unity Project Settings in the dashboard" class="link-button"/>
-                        <VisualElement class="external-link-icon"/>
+                    <VisualElement name="missing-key-mode">
+                        <HelpBox text="Your Google license key is missing. To remove this warning, add your license key to your cloud project settings, or enter it in the Receipt Obfuscator field below and push to the cloud." message-type="Warning" class="missing-key-box">
+                            <Button name="GoToCloudProjectButton" text="Go to cloud project" />
+                        </HelpBox>
                     </VisualElement>
-                    <VisualElement name="verified-mode">
-                        <Label text="Great! You will now be able to track verified transactions taking place on your app." class="description"/>
+                    <VisualElement name="error-unauthorized-user">
+                        <HelpBox text="You are not authorized to view or set the license key of this cloud project." message-type="Error" />
                     </VisualElement>
-                    <VisualElement name="unverified-mode">
-                        <VisualElement name="error-request-format">
-                            <HelpBox text="The request to get the key on the dashboard was invalid. Please report this as a possible bug." message-type="Error" />
-                        </VisualElement>
-                        <VisualElement name="error-unauthorized-user">
-                            <HelpBox text="You are not authorized to set the license key." message-type="Error" />
-                        </VisualElement>
-                        <VisualElement name="error-server-error">
-                            <HelpBox text="There was an error retrieving the key from the backend. Please try again later." message-type="Error" />
-                        </VisualElement>
-                        <VisualElement name="error-fetch-key">
-                            <HelpBox text="There seems to be no existing key set on the backend. Please verify the key in your Dashboard's Project Settings via the link above. Under In-App Purchasing Settings, set the Google License Key for this application, in order to ensure revenue numbers reflect verified payments for Google." message-type="Error" />
-                        </VisualElement>
+                    <VisualElement name="error-server-error">
+                        <HelpBox text="There was an error retrieving the key from the backend. Please try again later." message-type="Error" />
+                    </VisualElement>
+                    <VisualElement name="error-request-format">
+                        <HelpBox text="The request to get the key on the dashboard was invalid. Please report this as a possible bug." message-type="Error" />
                     </VisualElement>
                 </VisualElement>
+                <VisualElement name="unlinked-missing-key-mode">
+                    <HelpBox text="Your Google license key is missing. To remove this warning, connect to a cloud project and add your license key to your cloud project settings." message-type="Warning" />
+                </VisualElement>
+                <Toggle name="IgnoreGoogleLicenseKeyWarningToggle" text="Ignore Google license key warning in the editor logs." class="ignore-warning-toggle" />
                 <VisualElement class="invisible-separator" />
                 <VisualElement name="ReceiptObfuscatorBlock">
-                    <Label text="Receipt Obfuscator" class="project-settings-subtitle"/>
-                    <Label text="Receipt obfuscation for Google Play will create a Tangle class in your project, note that this does not replace server side validation." class="label-container"/>
-                    <TextField name="GooglePlayKeyEntry" class="multiline-field-value" text="-Enter Key-" multiline="true"/>
-                    <VisualElement class="button-container">
-                        <Button name="ObfuscateKeysButton" text="Obfuscate License Keys" class="submit-button"/>
+                    <Label text="Receipt Obfuscator (client-side)" class="project-settings-subtitle"/>
+                    <Label text="Enter your license key in the input field below" class="label-container"/>
+                    <TextField name="GooglePlayKeyEntry" class="multiline-field-value" multiline="true"/>
+                    <Label text="Receipt obfuscation for Google Play will create a Tangle class in your project, note that this does not replace server side validation." class="label-container obfuscator-note"/>
+                    <VisualElement class="button-container obfuscator-buttons">
+                        <Button name="ObfuscateKeysButton" text="Obfuscate License Key" class="submit-button"/>
+                        <Button name="PushLicenseKeyButton" text="Push License Key to Cloud" class="submit-button"/>
+                    </VisualElement>
+                    <VisualElement name="push-error">
+                        <HelpBox message-type="Error" />
                     </VisualElement>
                     <VisualElement name="verification">
                         <Label text="GooglePlayTangle.cs has been generated and exists in your project." class="label-container"/>
@@ -108,7 +117,7 @@
                 </VisualElement>
             </VisualElement>
         </VisualElement>
-        <VisualElement class="configuration-item">
+        <VisualElement name="StripeConfigItem" class="configuration-item">
             <VisualElement class="configuration-item-header">
                 <Image class="configuration-icon stripe" />
                 <VisualElement class="configuration-info">

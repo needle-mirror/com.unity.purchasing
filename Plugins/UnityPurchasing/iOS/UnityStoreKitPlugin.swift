@@ -17,6 +17,90 @@ func printLog(_ message: String, file: String = #file, function: String = #funct
         print("Unity IAP: Function: \(function) File: \(className ?? "")\n\(message)")
 }
 
+#if os(iOS) || os(tvOS) || os(visionOS)
+/// Device values UIKit publishes on the main actor, served to the nonisolated `@_cdecl` entry
+/// points below. Unity does not guarantee which thread it calls those on, so they must not touch
+/// `UIDevice` directly: under Swift 6 that is a main-actor violation, and asserting isolation
+/// there would trap rather than warn if the assumption were ever wrong.
+///
+/// Primed at initialisation, and again on any main-thread read while a value is still missing. A
+/// read before priming falls back to reading directly, but only after confirming the main thread,
+/// so the assertion below can never trap.
+///
+/// Each value tracks its own availability rather than sharing one flag. `identifierForVendor` is
+/// nil until the first unlock after a reboot, and a nil must never be recorded as the final answer:
+/// doing so would stop every later read from retrying once one becomes available.
+final class UnityPurchasingDeviceValues: @unchecked Sendable {
+    static let shared = UnityPurchasingDeviceValues()
+
+    private let lock = NSLock()
+    private var systemVersion: String?
+    private var vendorIdentifier: String?
+
+    @MainActor
+    func prime() {
+        let version = UIDevice.current.systemVersion
+        let identifier = UIDevice.current.identifierForVendor?.uuidString
+        lock.lock()
+        systemVersion = version
+        // Only record a real identifier. A nil here means it is not available yet, not that there
+        // is none, so leaving the slot empty keeps later reads retrying.
+        if identifier != nil {
+            vendorIdentifier = identifier
+        }
+        lock.unlock()
+    }
+
+    var osVersion: String? {
+        primeIfOnMainThread()
+        lock.lock()
+        defer { lock.unlock() }
+        return systemVersion
+    }
+
+    var idfv: String? {
+        primeIfOnMainThread()
+        lock.lock()
+        defer { lock.unlock() }
+        return vendorIdentifier
+    }
+
+    var isPrimed: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return systemVersion != nil
+    }
+
+    private var isMissingAValue: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return systemVersion == nil || vendorIdentifier == nil
+    }
+
+    /// Primes only from the main thread, so the isolation assertion below cannot trap. Checking the
+    /// thread is what makes `assumeIsolated` safe here: unchecked, it would abort the process.
+    ///
+    /// Retries while any value is still missing rather than once overall, so an identifier that was
+    /// unavailable at the first read is picked up later. The reads themselves are cheap.
+    func primeIfOnMainThread() {
+        guard isMissingAValue, Thread.isMainThread else {
+            return
+        }
+        MainActor.assumeIsolated { prime() }
+    }
+
+    /// Schedules a prime for callers that reached a missing value off the main thread, where
+    /// reading UIKit directly is not permitted. Does not help the current call, which still falls
+    /// back, but means the next one is served from the cache.
+    func schedulePrimeIfNeeded() {
+        guard isMissingAValue else {
+            return
+        }
+        Task { @MainActor in prime() }
+    }
+}
+#endif
+
 /**
 Set NativeCallback delegate from C#. The function is declared in C# as: static extern void
  - Parameters:
@@ -26,6 +110,15 @@ Set NativeCallback delegate from C#. The function is declared in C# as: static e
 @_cdecl("unityPurchasing_SetNativeCallback")
 public func unityPurchasing_SetNativeCallback(_ callback: UnityPurchasingCallbackDelegateType) {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
+#if os(iOS) || os(tvOS) || os(visionOS)
+    // Prime the device values here, at initialisation, rather than during a purchase. Unity calls
+    // this on the main thread in practice, in which case priming completes before this returns and
+    // there is no window at all; the Task is the backup for when it does not.
+    UnityPurchasingDeviceValues.shared.primeIfOnMainThread()
+    if !UnityPurchasingDeviceValues.shared.isPrimed {
+        Task { @MainActor in UnityPurchasingDeviceValues.shared.prime() }
+    }
+#endif
     DependencyInjector.InitialiseWithCallback(callback)
 }
 
@@ -47,7 +140,7 @@ public func unityPurchasing_AddTransactionObserver() {
 public func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CChar>) {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productJson = String(cString: productJsonCString)
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .medium, operation: {
         await StoreKitManager.instance.fetchProducts(productJson: productJson)
     })
 }
@@ -61,7 +154,7 @@ public func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productJson = String(cString: productJsonCString)
     let optionsDict = dictionaryFromJSONCstr(optionsJsonCString) ?? [:]
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         await StoreKitManager.instance.purchase(productJson: productJson, options: optionsDict, storefrontChangeCallback: nil)
     })
 }
@@ -135,7 +228,24 @@ public func unityPurchasing_FetchNativeDeviceInfo() -> UnsafeMutablePointer<CCha
 
     var osVersion: String
     #if os(iOS) || os(tvOS) || os(visionOS)
-    osVersion = UIDevice.current.systemVersion
+    if let cached = UnityPurchasingDeviceValues.shared.osVersion {
+        osVersion = cached
+    } else {
+        // Only reachable when called off the main thread before initialisation primed the cache,
+        // which the standalone Payment Provider path can do: it builds native bindings without
+        // registering the callback that primes, so nothing has run on the main actor yet.
+        //
+        // ProcessInfo always reports three components where UIDevice drops a zero patch, so the
+        // shape is matched here deliberately. Reporting "18.5.0" where every other record says
+        // "18.5" would split the same OS across two values in telemetry.
+        let v = ProcessInfo.processInfo.operatingSystemVersion
+        osVersion = v.patchVersion == 0
+            ? "\(v.majorVersion).\(v.minorVersion)"
+            : "\(v.majorVersion).\(v.minorVersion).\(v.patchVersion)"
+        // Cannot read UIKit from here, so ask the main actor to fill the cache for the next caller.
+        UnityPurchasingDeviceValues.shared.schedulePrimeIfNeeded()
+        printLog("Device values were not primed before the first read; reporting osVersion \(osVersion) from ProcessInfo.")
+    }
     #else
     let v = ProcessInfo.processInfo.operatingSystemVersion
     osVersion = "\(v.majorVersion).\(v.minorVersion).\(v.patchVersion)"
@@ -158,6 +268,37 @@ public func unityPurchasing_FetchNativeDeviceInfo() -> UnsafeMutablePointer<CCha
         return nil
     }
 
+    return unityPurchasingMakeHeapAllocatedStringCopy(jsonString)
+}
+
+/// Returns the device's current locale as heap-allocated JSON, e.g.
+/// {"countryCode": "NG", "localeIdentifier": "en_NG", "currencyCode": "NGN"}.
+/// Used instead of .NET System.Globalization, whose Mono implementation collapses
+/// locales without a Windows LCID to en-US (UUM-151469).
+/// Caller must deallocate with unityPurchasing_DeallocateMemory.
+@_cdecl("unityPurchasing_GetDeviceLocale")
+public func unityPurchasing_GetDeviceLocale() -> UnsafeMutablePointer<CChar>? {
+    let locale = Locale.current
+    var dict: [String: Any] = ["localeIdentifier": locale.identifier]
+    if #available(iOS 16.0, macOS 13.0, tvOS 16.0, visionOS 1.0, *) {
+        if let region = locale.region?.identifier {
+            dict["countryCode"] = region
+        }
+        if let currency = locale.currency?.identifier {
+            dict["currencyCode"] = currency
+        }
+    } else {
+        if let region = locale.regionCode {
+            dict["countryCode"] = region
+        }
+        if let currency = locale.currencyCode {
+            dict["currencyCode"] = currency
+        }
+    }
+    guard let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: []),
+          let jsonString = String(data: jsonData, encoding: .utf8) else {
+        return nil
+    }
     return unityPurchasingMakeHeapAllocatedStringCopy(jsonString)
 }
 
@@ -185,7 +326,7 @@ public func unityPurchasing_FormatCurrency(
 @_cdecl("unityPurchasing_FetchPurchases")
 public func unityPurchasing_FetchPurchases() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .medium, operation: {
         await StoreKitManager.instance.fetchPurchasedProducts()
     })
 }
@@ -195,7 +336,7 @@ public func unityPurchasing_FetchPurchases() {
 public func unityPurchasing_FetchTransactionForProductId(_ productIdCString: UnsafePointer<CChar>) {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productIdCString)
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .medium, operation: {
         await StoreKitManager.instance.fetchTransactions(for: [productId])
     })
 }
@@ -211,7 +352,7 @@ public func unityPurchasing_CanMakePayments() -> Bool {
 @_cdecl("unityPurchasing_PresentCodeRedemptionSheet")
 public func unityPurchasing_PresentCodeRedemptionSheet() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         await StoreKitManager.instance.presentCodeRedemptionSheet()
     })
 }
@@ -220,7 +361,7 @@ public func unityPurchasing_PresentCodeRedemptionSheet() {
 @_cdecl("unityPurchasing_RefreshAppReceipt")
 public func unityPurchasing_RefreshAppReceipt() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         await StoreKitManager.instance.refreshAppReceipt()
     })
 }
@@ -230,7 +371,7 @@ public func unityPurchasing_RefreshAppReceipt() {
 public func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar>, logFinishTransaction: Bool) {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let transactionIdString = String(cString: transactionId)
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         if let transactionIdUInt64 = UInt64(transactionIdString)
         {
             await StoreKitManager.instance.finishTransaction(transactionId: transactionIdUInt64, logFinishTransaction: logFinishTransaction)
@@ -248,7 +389,7 @@ public func unityPurchasing_FinishTransaction(transactionId: UnsafePointer<CChar
 public func unityPurchasing_checkEntitlement(_ productJsonCString: UnsafePointer<CChar>) {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productJsonCString)
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .medium, operation: {
         await StoreKitManager.instance.checkEntitlement(productId: productId)
     })
 }
@@ -257,7 +398,7 @@ public func unityPurchasing_checkEntitlement(_ productJsonCString: UnsafePointer
 @_cdecl("unityPurchasing_RestoreTransactions")
 public func unityPurchasing_RestoreTransactions() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached (priority: .background, operation : {
+    Task.detached (priority: .userInitiated, operation : {
         await StoreKitManager.instance.restoreTransactions()
     })
 }
@@ -266,7 +407,7 @@ public func unityPurchasing_RestoreTransactions() {
 @_cdecl("unityPurchasing_FetchStorePromotionOrder")
 public func unityPurchasing_FetchStorePromotionOrder() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached (priority: .background, operation : {
+    Task.detached (priority: .medium, operation : {
         await StoreKitManager.instance.fetchStorePromotionOrder()
     })
 }
@@ -279,7 +420,7 @@ public func unityPurchasing_UpdateStorePromotionOrder(_ jsonCString: UnsafePoint
         let jsonString = String(cString: jsonCString)
 
         let productIds = try decodeJSONToType(jsonString, [String].self)
-        Task.detached (priority: .background, operation : {
+        Task.detached (priority: .medium, operation : {
             await StoreKitManager.instance.updateStorePromotionOrder(productIds: productIds)
         })
     } catch {
@@ -292,7 +433,7 @@ public func unityPurchasing_UpdateStorePromotionOrder(_ jsonCString: UnsafePoint
 public func unityPurchasing_FetchStorePromotionVisibility(productIdCString: UnsafePointer<CChar>) {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productIdCString)
-    Task.detached (priority: .background, operation : {
+    Task.detached (priority: .medium, operation : {
         await StoreKitManager.instance.fetchStorePromotionVisibility(productId: productId)
     })
 }
@@ -303,7 +444,7 @@ public func unityPurchasing_UpdateStorePromotionVisibility(productIdCString: Uns
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productId = String(cString: productIdCString)
     let visibility = String(cString: visibilityCString)
-    Task.detached (priority: .background, operation : {
+    Task.detached (priority: .medium, operation : {
         await StoreKitManager.instance.updateStorePromotionVisibility(productId: productId, visibilityStr: visibility)
     })
 }
@@ -312,7 +453,7 @@ public func unityPurchasing_UpdateStorePromotionVisibility(productIdCString: Uns
 @_cdecl("unityPurchasing_InterceptPromotionalPurchases")
 public func unityPurchasing_InterceptPromotionalPurchases() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached (priority: .background, operation : {
+    Task.detached (priority: .medium, operation : {
         await StoreKitManager.instance.interceptPromotionalPurchases()
     })
 }
@@ -321,7 +462,7 @@ public func unityPurchasing_InterceptPromotionalPurchases() {
 @_cdecl("unityPurchasing_ContinuePromotionalPurchases")
 public func unityPurchasing_ContinuePromotionalPurchases() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached (priority: .background, operation : {
+    Task.detached (priority: .userInitiated, operation : {
         await StoreKitManager.instance.continuePromotionalPurchases()
     })
 }
@@ -330,7 +471,7 @@ public func unityPurchasing_ContinuePromotionalPurchases() {
 @_cdecl("unityPurchasing_FetchStorefront")
 public func unityPurchasing_FetchStorefront() {
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
-    Task.detached (priority: .background, operation : {
+    Task.detached (priority: .medium, operation : {
         await StoreKitManager.instance.fetchStorefront()
     })
 }
@@ -354,7 +495,12 @@ public func unityPurchasing_FetchAdvertisingIdentifier() -> UnsafeMutablePointer
 public func unityPurchasing_FetchVendorIdentifier() -> UnsafeMutablePointer<CChar>? {
     var idfv: String?
 #if os(iOS) || os(tvOS)
-    idfv = UIDevice.current.identifierForVendor?.uuidString
+    idfv = UnityPurchasingDeviceValues.shared.idfv
+    if idfv == nil {
+        // Either not yet primed, or the identifier is genuinely unavailable until the first unlock
+        // after a reboot. Either way the next read should find it, so prime off this one.
+        UnityPurchasingDeviceValues.shared.schedulePrimeIfNeeded()
+    }
 #endif
     return unityPurchasingMakeHeapAllocatedStringCopy(idfv)
 }
@@ -364,7 +510,7 @@ public func unityPurchasing_FetchVendorIdentifier() -> UnsafeMutablePointer<CCha
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("externalPurchase_CheckEligibility")
 public func externalPurchase_CheckEligibility(_ callback: @escaping ExternalPurchaseCallbackDelegateType) {
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         await ExternalPurchaseStandalone.checkEligibility(callback: callback)
     })
 }
@@ -373,7 +519,7 @@ public func externalPurchase_CheckEligibility(_ callback: @escaping ExternalPurc
 @_cdecl("externalPurchase_FetchToken")
 public func externalPurchase_FetchToken(_ tokenTypeCString: UnsafePointer<CChar>, _ callback: @escaping ExternalPurchaseCallbackDelegateType) {
     let tokenType = String(cString: tokenTypeCString)
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         await ExternalPurchaseStandalone.fetchToken(tokenType: tokenType, callback: callback)
     })
 }
@@ -382,7 +528,7 @@ public func externalPurchase_FetchToken(_ tokenTypeCString: UnsafePointer<CChar>
 @_cdecl("externalPurchase_ShowNotice")
 public func externalPurchase_ShowNotice(_ noticeTypeCString: UnsafePointer<CChar>, _ callback: @escaping ExternalPurchaseCallbackDelegateType) {
     let noticeType = String(cString: noticeTypeCString)
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         await ExternalPurchaseStandalone.showNotice(noticeType: noticeType, callback: callback)
     })
 }
@@ -390,7 +536,7 @@ public func externalPurchase_ShowNotice(_ noticeTypeCString: UnsafePointer<CChar
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("externalPurchase_FetchStorefront")
 public func externalPurchase_FetchStorefront(_ callback: @escaping ExternalPurchaseCallbackDelegateType) {
-    Task.detached(priority: .background, operation: {
+    Task.detached(priority: .userInitiated, operation: {
         await ExternalPurchaseStandalone.fetchStorefront(callback: callback)
     })
 }

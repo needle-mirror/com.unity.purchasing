@@ -10,27 +10,50 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     [DataContract]
     public partial class CatalogItem
     {
+        [JsonProperty("$schema", Order = -100)]
+        public string Schema => "https://ugs-config-schemas.unity3d.com/v1/purchasing-catalog.schema.json";
+
+        [CsvColumn("Sku", 1, Identity = true)]
         [DataMember(Name = "uSKU"), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string uSku { get; set; }
+        [CsvColumn("ProductType", 8, Fallback = ProductType.Consumable)]
         [DataMember(Name = "type")]
         [JsonConverter(typeof(StringEnumConverter)), JsonProperty(DefaultValueHandling = DefaultValueHandling.Include)]
         public ProductType ProductType { get; set; }
+        [CsvRowCollection(
+            KeyMember = nameof(Model.ProductDetails.Language),
+            RequiredMembers = new[] { nameof(Model.ProductDetails.Title) })]
         [DataMember(Name = "productDetails")]
         public List<ProductDetails> ProductDetails { get; set; }
+        [CsvRowCollection(
+            KeyMember = nameof(Model.PricingDetails.CurrencyCode),
+            IgnoreKeyCase = true,
+            RequiredMembers = new[]
+            {
+                nameof(Model.PricingDetails.CurrencyCode),
+                nameof(Model.PricingDetails.Amount),
+            })]
         [DataMember(Name = "pricing")]
         public List<PricingDetails> PricingDetails { get; set; }
+        [CsvColumn("ImageUrl", 12)]
         [DataMember(Name = "imageUrl")]
         public string ImageUrl  { get; set; }
         // SDK-internal opt-in flag for the Webshop schema. Drives whether ConvertToDto adds
         // the UnityRemoteCatalogWebshop schema URL and emits Categories/HdImages/Promotion.
         // Persists to the .ucat asset; never sent to the admin API (the DTO doesn't model it,
         // server derives state from $schema presence).
+        [CsvColumn("IsWebshopAvailable", 17, EmitWhenDefault = false)]
         [DataMember(Name = "isWebshopAvailable"), JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public bool IsWebshopAvailable { get; set; }
+        [CsvColumn("Category", 18)]
+        [CsvRowCollection(ReportDuplicates = false, NullWhenEmpty = true)]
         [DataMember(Name = "categories"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<string> Categories { get; set; }
+        [CsvRowCollection(
+            KeyMember = nameof(HdImage.Url), ReportDuplicates = false, NullWhenEmpty = true)]
         [DataMember(Name = "hdImages"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<HdImage> HdImages { get; set; }
+        [CsvNested(RequiredMember = nameof(Model.Promotion.Type))]
         [DataMember(Name = "promotion"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Promotion Promotion { get; set; }
         [DataMember(Name = "storeIdOverrides"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -38,6 +61,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
 
         public bool ShouldSerializeStoreIdOverrides() => false;
 
+        [CsvColumn("GoogleOverride", 13)]
         [IgnoreDataMember, JsonProperty("googleOverride", NullValueHandling = NullValueHandling.Ignore)]
         string GoogleOverride
         {
@@ -45,6 +69,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             set => SetStoreIdOverride(StoreId.Google, value);
         }
 
+        [CsvColumn("AppleOverride", 14)]
         [IgnoreDataMember, JsonProperty("appleOverride", NullValueHandling = NullValueHandling.Ignore)]
         string AppleOverride
         {
@@ -52,6 +77,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             set => SetStoreIdOverride(StoreId.Apple, value);
         }
 
+        [CsvColumn("XboxStoreOverride", 15)]
         [IgnoreDataMember, JsonProperty("xboxStoreOverride", NullValueHandling = NullValueHandling.Ignore)]
         string XboxStoreOverride
         {
@@ -59,6 +85,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             set => SetStoreIdOverride(StoreId.XboxStore, value);
         }
 
+        [CsvColumn("MacAppStoreOverride", 16)]
         [IgnoreDataMember, JsonProperty("macAppStoreOverride", NullValueHandling = NullValueHandling.Ignore)]
         string MacAppStoreOverride
         {
@@ -93,6 +120,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         // Persistent identifier as stored remotely i.e.: "catalog/{filename-no-ext}";
         // CSV: from the CatalogListingId column, fallback to Sku column). Not serialized to
         // the ucat JSON body — its source of truth is the file name or CSV column.
+        [CsvColumn("CatalogListingId", 0, Identity = true)]
         [IgnoreDataMember, JsonIgnore]
         public string CatalogListingId { get; set; }
 
@@ -222,15 +250,23 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     [Serializable, DataContract]
     public class ProductDetails
     {
+        [CsvColumn("Title", 2)]
         [DataMember(Name = "title")]
         public string Title;
+        // A blank cell keeps an empty string rather than null: a detail row always has a description
+        // field, even an empty one.
+        [CsvColumn("Description", 3, Fallback = "")]
         [DataMember(Name = "description")]
         public string Description;
+        [CsvColumn("Language", 7,
+            Fallback = TranslationLocale.en_US, Converter = typeof(CsvLocaleConverter))]
         [DataMember(Name = "language")]
         [JsonConverter(typeof(StringEnumConverter))]
         public TranslationLocale Language;
+        [CsvColumn("Subtitle", 4)]
         [DataMember(Name = "subtitle"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string Subtitle;
+        [CsvNested(RequiredMember = nameof(ProductBadge.Text))]
         [DataMember(Name = "badge"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public ProductBadge Badge;
 
@@ -249,8 +285,10 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     [Serializable, DataContract]
     public class ProductBadge
     {
+        [CsvColumn("BadgeText", 5)]
         [DataMember(Name = "text")]
         public string Text;
+        [CsvColumn("BadgeImageUrl", 6)]
         [DataMember(Name = "imageUrl"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string ImageUrl;
 
@@ -289,10 +327,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         // Sub-cent values aren't a real commercial price.
         public const double WebshopPriceUnsetThreshold = 0.001;
 
+        [CsvColumn("CurrencyCode", 9)]
         [DataMember(Name = "currencyCode")]
         public string CurrencyCode;
+        [CsvColumn("Amount", 10)]
         [DataMember(Name = "amount")]
         public double Amount;
+        [CsvColumn("WebshopPrice", 11, Converter = typeof(CsvWebshopPriceConverter))]
         [DataMember(Name = "webshopPrice")]
         public double WebshopPrice;
 
@@ -314,8 +355,10 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     [Serializable, DataContract]
     public class HdImage
     {
+        [CsvColumn("HdImageUrl", 19)]
         [DataMember(Name = "url")]
         public string Url;
+        [CsvColumn("HdImageAltText", 20)]
         [DataMember(Name = "altText"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string AltText;
 
@@ -331,11 +374,17 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     [Serializable, DataContract]
     public class Promotion
     {
+        // No Fallback: a promotion with an unrecognized type is no promotion at all, and the parser
+        // says which types it knows instead of quietly picking one. None says the same thing in a name
+        // the enum defines, so it reads as no promotion and writes as a blank cell.
+        [CsvColumn("PromotionType", 21, Absent = PromotionType.None)]
         [DataMember(Name = "type")]
         [JsonConverter(typeof(StringEnumConverter))]
         public PromotionType Type;
+        [CsvColumn("PromotionStartsAt", 22)]
         [DataMember(Name = "startsAt"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTimeOffset? StartsAt;
+        [CsvColumn("PromotionEndsAt", 23)]
         [DataMember(Name = "endsAt"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTimeOffset? EndsAt;
 
@@ -351,6 +400,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
 
     public enum PromotionType
     {
+        None,
         Sale,
         Bonus,
         Limited,

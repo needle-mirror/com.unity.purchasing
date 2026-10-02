@@ -16,6 +16,7 @@ using UnityEditor.Purchasing.Editor.Authoring.Core.Service;
 using UnityEditor.Purchasing.Editor.Authoring.Deployment;
 using UnityEditor.Purchasing.Editor.Authoring.IO;
 using UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi;
+using UnityEditor.Purchasing.Editor.Authoring.RoutingAdminApi;
 using CoreLiveContentConfigClient = UnityEditor.Purchasing.Editor.Authoring.Core.LiveContentConfigClient;
 using UnityEditor.Purchasing.Editor.Authoring.Model;
 using static Unity.Purchasing.Editor.Shared.DependencyInversion.Factories;
@@ -40,10 +41,16 @@ namespace UnityEditor.Purchasing.Editor.Authoring
             Instance.Initialize(new ServiceCollection());
             var deploymentItemProvider = Instance.GetService<DeploymentProvider>();
             Deployments.Instance.DeploymentProviders.Add(deploymentItemProvider);
+
+            var routingProvider = Instance.GetService<RoutingDeploymentProvider>();
+            Deployments.Instance.DeploymentProviders.Add(routingProvider);
         }
 
         public override void Register(ServiceCollection collection)
         {
+            var liveContentApiConfig = new ApiConfiguration { BasePath = LiveContentAdminEnvironment.BasePath };
+            liveContentApiConfig.DefaultHeaders.SetInlineVariantFeatureFlag();
+
             // This is the Dependency Inversion container for the assembly
             collection.Register(Default<ICommonAnalytics, CommonAnalytics>);
 #if UNITY_2023_2_OR_NEWER
@@ -59,13 +66,14 @@ namespace UnityEditor.Purchasing.Editor.Authoring
             collection.Register(_ => OrganizationProvider.Organization);
             collection.Register(Default<DeleteRemoteCommand>);
             collection.Register(Default<DeleteRemoteCommandWrapper>);
+            collection.Register(Default<SyncItemsWithRemoteCommand>);
             collection.Register(Default<ICatalogDeploymentHandler, CatalogDeploymentHandler>);
             //Command initializes it, but depended on by handler
             collection.Register<IRetryPolicy>(_ => null);
             collection.Register(Default<IApiClient, ApiClient>);
             collection.Register<IConfigsApi>(sp => new ConfigsApi(
                 (IApiClient)sp.GetService(typeof(IApiClient)),
-                new ApiConfiguration { BasePath = LiveContentAdminEnvironment.BasePath }));
+                liveContentApiConfig));
             collection.Register(Default<ILiveContentApiTransport, EditorLiveContentApiTransport>);
             collection.RegisterSingleton<ILiveContentConfigClient>(sp => new CoreLiveContentConfigClient(
                 (ILiveContentApiTransport)sp.GetService(typeof(ILiveContentApiTransport)),
@@ -82,6 +90,15 @@ namespace UnityEditor.Purchasing.Editor.Authoring
 
             collection.Register(Default<ILogger, Logger>);
             collection.Register(Default<IFileSystem, FileSystem>);
+
+            // Routing
+            collection.RegisterSingleton(Default<ObservableRoutingAssets>);
+            collection.Register(Default<IRoutingDeploymentHandler, RoutingDeploymentHandler>);
+            collection.RegisterSingleton(Default<IRoutingClient, RoutingClient>);
+            collection.Register(Default<RoutingDeployCommand>);
+            collection.Register(Default<RoutingDeleteRemoteCommand>);
+            collection.Register(Default<RoutingOpenDashboardCommand>);
+            collection.RegisterStartupSingleton(Default<RoutingDeploymentProvider>);
         }
     }
 }

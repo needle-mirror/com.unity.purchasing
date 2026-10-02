@@ -48,6 +48,13 @@ namespace UnityEngine.Purchasing
         static AppleStoreImpl? s_Instance;
         static Action? s_QuittingHandler;
 
+        // Keep the delegates alive for the lifetime of the process: native holds the function
+        // pointers, and passing a method group leaves no other reference to collect against. .NET
+        // has always required this. Mono's conservative GC happens not to collect them; the precise
+        // moving GC in newer Unity versions does.
+        static readonly UnityPurchasingCallback s_MessageCallback = MessageCallback;
+        static readonly Sk1UnityPurchasingCallback s_Sk1MessageCallback = Sk1MessageCallback;
+
         string? appReceipt;
 
         bool m_IsTransactionObserverEnabled;
@@ -59,6 +66,23 @@ namespace UnityEngine.Purchasing
         // Both native paths surfacing expired transactions (Transaction.updates
         // and FetchPurchases) can report the same transaction in one session.
         readonly HashSet<string> m_ExpiredPurchasesProcessed = new();
+
+        // Transaction.updates can deliver a purchase before or after its purchase() call
+        // returns, and the second copy must not be reported again. Every delivery is processed as it
+        // arrives; only repeats of a transaction the developer already received are suppressed.
+        // The state below is not locked: every native callback reaches it on the main thread
+        // (StoreKitCallback.callback hops through MainActor.run, MessageCallback through RunOnMainThread).
+        readonly Dictionary<string, int> m_InFlightPurchases = new();
+        // Transactions delivered unsolicited while purchases were in flight, recorded under each of
+        // those purchases' requested products: if one of their answers resolves to such a
+        // transaction, it is the same purchase, already reported. Recorded under the requested
+        // products rather than the transaction's own, as an answer's transaction can belong to
+        // another product (a subscription downgrade is answered with the active subscription's
+        // transaction), and only for flights already open, so a purchase started later is unaffected.
+        readonly Dictionary<string, HashSet<string>> m_DeliveredDuringFlight = new();
+        // Transactions delivered as a pending order and not confirmed yet; past the confirm the
+        // transaction log takes over.
+        readonly HashSet<string> m_UnconfirmedDeliveries = new();
 
         protected AppleStoreImpl(ICartValidator cartValidator, IAppleFetchProductsService fetchProductsService,
             ITransactionLog transactionLog,
@@ -75,6 +99,14 @@ namespace UnityEngine.Purchasing
             m_TransactionLog = transactionLog;
             m_StoreLocationContext = storeLocationContext;
         }
+        internal override void ClearCachesForAuthAccountChange()
+        {
+            base.ClearCachesForAuthAccountChange();
+            // The fetched-products accumulator feeding GetProductDetails and
+            // GetIntroductoryPriceDictionary is account-scoped too.
+            m_FetchProductsService.ClearFetchedProducts();
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         static void ResetStaticsOnLoad()
         {
@@ -98,12 +130,12 @@ namespace UnityEngine.Purchasing
             Application.quitting += s_QuittingHandler;
             if (StoreKitSelector.UseStoreKit1())
             {
-                apple.Sk1SetUnityPurchasingCallback(Sk1MessageCallback);
+                apple.Sk1SetUnityPurchasingCallback(s_Sk1MessageCallback);
 
             }
             else
             {
-                apple.SetUnityPurchasingCallback(MessageCallback);
+                apple.SetUnityPurchasingCallback(s_MessageCallback);
             }
         }
 
@@ -137,6 +169,7 @@ namespace UnityEngine.Purchasing
         protected override void FinishTransaction(ProductDefinition? productDefinition, string transactionId)
         {
             m_TransactionLog.Record(transactionId);
+            m_UnconfirmedDeliveries.Remove(transactionId);
             base.FinishTransaction(productDefinition, transactionId);
         }
 
@@ -183,8 +216,60 @@ namespace UnityEngine.Purchasing
             m_CartValidator.Validate(cart);
             var cartItem = cart.Items().First();
             var productDefinition = cartItem.Product.catalogListings[cartItem.CatalogListingId].definition;
+            if (!StoreKitSelector.UseStoreKit1())
+            {
+                m_InFlightPurchases.TryGetValue(productDefinition.storeSpecificId, out var count);
+                m_InFlightPurchases[productDefinition.storeSpecificId] = count + 1;
+            }
             var purchaseOptions = PurchaseOptions();
             Purchase(productDefinition, purchaseOptions);
+        }
+
+        void ResolveInFlightPurchase(string productId)
+        {
+            if (!m_InFlightPurchases.TryGetValue(productId, out var count))
+            {
+                return;
+            }
+
+            if (count > 1)
+            {
+                m_InFlightPurchases[productId] = count - 1;
+            }
+            else
+            {
+                m_InFlightPurchases.Remove(productId);
+                m_DeliveredDuringFlight.Remove(productId);
+            }
+        }
+
+        void MarkDeliveredDuringFlights(string transactionId)
+        {
+            foreach (var productId in m_InFlightPurchases.Keys)
+            {
+                if (!m_DeliveredDuringFlight.TryGetValue(productId, out var transactionIds))
+                {
+                    transactionIds = new HashSet<string>();
+                    m_DeliveredDuringFlight[productId] = transactionIds;
+                }
+                transactionIds.Add(transactionId);
+            }
+        }
+
+        // Consumed on use, under every product: one answer per unsolicited delivery is the same
+        // purchase; a further answer resolving to the transaction (e.g. a second press) is reported.
+        bool ConsumeDeliveredDuringFlight(string requestedProductId, string transactionId)
+        {
+            if (!m_DeliveredDuringFlight.TryGetValue(requestedProductId, out var transactionIds) || !transactionIds.Contains(transactionId))
+            {
+                return false;
+            }
+
+            foreach (var marked in m_DeliveredDuringFlight.Values)
+            {
+                marked.Remove(transactionId);
+            }
+            return true;
         }
 
         string PurchaseOptions()
@@ -346,10 +431,37 @@ namespace UnityEngine.Purchasing
             var productDescription = productDescriptions.FirstOrDefault();
             if (productDescription != null)
             {
+                // Resolved before reporting, so a throwing developer callback cannot leave the flight open.
+                if (!IsPromotional(JSONSerializer.DeserializePurchaseDetails(productDetails)))
+                {
+                    ResolveInFlightPurchase(productDescription.storeSpecificId);
+                }
                 Guid? appAccountToken = null; // passed as null as there is only a promise of a purchase
                 var deferredOrder = await GenerateAppleDeferredOrder(productDescription.storeSpecificId, productDescription.transactionId, "", OwnershipType.Undefined, appAccountToken, null);
                 PurchaseCallback?.OnPurchaseDeferred(deferredOrder);
             }
+        }
+
+        void OnPurchaseFailedSk2(string json)
+        {
+            // A failed purchase also resolves the flight: without this, the product's flight state
+            // would outlive the purchase and match an unrelated later answer. Resolved before
+            // reporting, so a throwing developer callback cannot leave the flight open.
+            var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(json);
+            var productId = purchaseDetails.TryGetString("productId");
+            if (productId != null && !IsPromotional(purchaseDetails))
+            {
+                ResolveInFlightPurchase(productId);
+            }
+
+            OnPurchaseFailed(json);
+        }
+
+        // Failures and deferrals of purchases the store starts itself (promotional purchase
+        // intents) answer no Purchase call, so they must not resolve one of the same product.
+        static bool IsPromotional(Dictionary<string, object> payload)
+        {
+            return payload.TryGetValue("promotional", out var promotional) && promotional is true;
         }
 
         void OnPromotionalPurchaseAttempted(string productId)
@@ -622,7 +734,7 @@ namespace UnityEngine.Purchasing
                     OnPurchaseSucceeded(payload);
                     break;
                 case "OnPurchaseFailed":
-                    OnPurchaseFailed(payload);
+                    OnPurchaseFailedSk2(payload);
                     break;
                 case "OnPurchasesFetched":
                     OnPurchasesFetched(payload);
@@ -668,11 +780,9 @@ namespace UnityEngine.Purchasing
                 case "onAppReceiptRefreshFailed":
                     OnAppReceiptRefreshedFailed(payload);
                     break;
-#if IAP_UNITY_ATTRIBUTION
                 case "onTransactionObserved":
                     OnTransactionObserved(payload);
                     break;
-#endif
                 case "OnFetchStorefrontSucceeded":
                     OnFetchStorefrontSucceeded(payload);
                     break;
@@ -771,11 +881,7 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            var alpha2 = IsoCountryCodeConverter.ToAlpha2(countryCode);
-            if (alpha2 != null)
-            {
-                m_StoreLocationContext.CountryCode = alpha2;
-            }
+            m_StoreLocationContext.SetFromStorefront(countryCode, storefrontData.TryGetString("currencyCode"));
 
             var storefront = new AppleStorefront(id, countryCode);
             m_FetchStorefrontSuccessCallback?.Invoke(storefront);
@@ -807,7 +913,6 @@ namespace UnityEngine.Purchasing
             }
         }
 
-#if IAP_UNITY_ATTRIBUTION
         void OnTransactionObserved(string payload)
         {
             var purchaseDetails = JSONSerializer.DeserializePurchaseDetails(payload);
@@ -829,7 +934,12 @@ namespace UnityEngine.Purchasing
         double ParseTransactionDate(Dictionary<string, object> purchaseDetails)
         {
             double transactionUnixTime = 0.0;
-            if (purchaseDetails.TryGetValue("transactionDate", out var dateObj))
+            // Two payloads reach this: the observation callback spells the field transactionDate,
+            // while a purchase answer spells it purchaseDate. Reading only one leaves the other at
+            // zero, which the native bridge substitutes with the current date, so a purchase
+            // redelivered on a later launch would be attributed to the relaunch.
+            if (purchaseDetails.TryGetValue("transactionDate", out var dateObj)
+                || purchaseDetails.TryGetValue("purchaseDate", out dateObj))
             {
                 if (dateObj is double d) transactionUnixTime = d;
                 else if (dateObj is long l) transactionUnixTime = l;
@@ -838,7 +948,6 @@ namespace UnityEngine.Purchasing
             }
             return transactionUnixTime;
         }
-#endif
 
         public override void CheckEntitlement(ProductDefinition productDefinition)
         {
@@ -970,13 +1079,11 @@ namespace UnityEngine.Purchasing
                 appAccountToken = parsedToken;
             }
 
-#if IAP_UNITY_ATTRIBUTION
             var productJsonRepresentation = purchaseDetails.TryGetString("productJsonRepresentation") ?? "{}";
             var transactionJsonRepresentation = purchaseDetails.TryGetString("transactionJsonRepresentation") ?? "{}";
             double transactionUnixTime = ParseTransactionDate(purchaseDetails);
 
             OnTransactionObserved(transactionId, productId, productJsonRepresentation, transactionUnixTime, transactionJsonRepresentation, signatureJws);
-#endif
             await ProcessValidPurchase(productId, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo, requestedProductId);
         }
 
@@ -997,13 +1104,44 @@ namespace UnityEngine.Purchasing
 
         async Task ProcessValidPurchase(string id, string transactionId, string originalTransactionId, string expirationDate, OwnershipType ownershipType, Guid? appAccountToken, string signatureJws, IAppleTransactionSubscriptionInfo? subscriptionInfo, string? requestedProductId)
         {
-            if (!m_TransactionLog.HasRecordOf(transactionId))
+            var answeredProductId = requestedProductId;
+            try
             {
-                await ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+                if (answeredProductId != null && ConsumeDeliveredDuringFlight(answeredProductId, transactionId))
+                {
+                    // Transaction.updates delivered this purchase before its answer: the developer already
+                    // has it, so the answer is handled as a redelivery rather than reported again.
+                    requestedProductId = null;
+                }
+
+                if (!m_TransactionLog.HasRecordOf(transactionId))
+                {
+                    // A solicited answer always delivers: a new purchase() call is answered with the same
+                    // transaction while its pending order is unconfirmed, and the redelivery is the
+                    // developer's recovery path.
+                    if (requestedProductId != null || !m_UnconfirmedDeliveries.Contains(transactionId))
+                    {
+                        if (requestedProductId == null && m_InFlightPurchases.Count > 0)
+                        {
+                            MarkDeliveredDuringFlights(transactionId);
+                        }
+                        m_UnconfirmedDeliveries.Add(transactionId);
+                        await ProcessNewPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo);
+                    }
+                }
+                else
+                {
+                    await ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo, requestedProductId);
+                }
             }
-            else
+            finally
             {
-                await ProcessLoggedPurchase(id, transactionId, originalTransactionId, expirationDate, ownershipType, appAccountToken, signatureJws, subscriptionInfo, requestedProductId);
+                // Resolved even if processing throws (e.g. a developer callback): a flight left open
+                // keeps marking unsolicited deliveries, and a stale mark silences a later answer.
+                if (answeredProductId != null)
+                {
+                    ResolveInFlightPurchase(answeredProductId);
+                }
             }
         }
 
@@ -1083,7 +1221,7 @@ namespace UnityEngine.Purchasing
         }
 
 #region StoreKit1
-    [MonoPInvokeCallback(typeof(UnityPurchasingCallback))]
+        [MonoPInvokeCallback(typeof(Sk1UnityPurchasingCallback))]
         static void Sk1MessageCallback(string subject, string payload, string receipt, string transactionId, string originalTransactionId, bool isRestored)
         {
             s_Util?.RunOnMainThread(() =>

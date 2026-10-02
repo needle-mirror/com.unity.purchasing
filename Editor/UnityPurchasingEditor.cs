@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using UnityEditor.Callbacks;
 using UnityEditor.Connect;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
@@ -154,10 +153,6 @@ namespace UnityEditor.Purchasing
             return ConfiguredAppStore();
         }
 
-        // Unfortunately the UnityEditor API updates only the in-memory list of
-        // files available to the build when what we want is a persistent modification
-        // to the .meta files. So we must also rely upon the PostProcessScene attribute
-        // below to process the
         private static void ConfigureProject(AppStore target)
         {
             foreach (var mapping in StoreSpecificFiles)
@@ -233,16 +228,8 @@ namespace UnityEditor.Purchasing
             return config.androidStore;
         }
 
-        // Run me to configure the project's set of Android stores before build
-        [PostProcessScene(0)]
-        internal static void OnPostProcessScene()
+        internal static void ConfigureAndroidStoresForBuild()
         {
-            
-            // PostProcessScene also fires on every Play Mode entry. The Android store
-            // plugin stripping only affects player builds, so skip the work otherwise.
-            if (!BuildPipeline.isBuildingPlayer)
-                return;
-
             if (File.Exists(ModePath))
             {
                 try

@@ -8,8 +8,21 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
 {
     public static class CatalogItemDtoExtensions
     {
-        const string k_ManagedByKey   = "managedBy";
-        const string k_ManagedByValue = "In App Purchase";
+
+        /// <summary>
+        /// Returns <c>true</c> when the two items have the same content as they would appear
+        /// on the remote service. Metadata (e.g. "managedBy") is excluded from the comparison
+        /// because it is tool-managed and changes on every write.
+        /// </summary>
+        public static bool ContentEquals(this CatalogItem item, CatalogItem other)
+        {
+            if (other is null) return false;
+            var dtoA = item.ToDto();
+            var dtoB = other.ToDto();
+            dtoA.Metadata = null;
+            dtoB.Metadata = null;
+            return JToken.DeepEquals(JToken.FromObject(dtoA), JToken.FromObject(dtoB));
+        }
 
         public static CatalogItemDto ToDto(this CatalogItem item)
         {
@@ -73,12 +86,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
             dto.AdditionalProperties = source.AdditionalProperties;
             dto.Metadata = source.Metadata;
             ForwardUnknownSchemas(dto, source);
-        }
-
-        public static void ApplyManagedByMetadata(this CatalogItemDto dto)
-        {
-            dto.Metadata ??= new JObject();
-            dto.Metadata[k_ManagedByKey] = k_ManagedByValue;
         }
 
         static ProductDetailsDto ConvertToDto(ProductDetails pd)
@@ -155,7 +162,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
             new HdImage { Url = h.Url, AltText = h.AltText };
 
         static PromotionDto ConvertToDto(Promotion p) =>
-            p is null ? null : new PromotionDto
+            p is null || p.Type == PromotionType.None ? null : new PromotionDto
             {
                 Type = ConvertPromotionTypeToDto(p.Type),
                 StartsAt = p.StartsAt,

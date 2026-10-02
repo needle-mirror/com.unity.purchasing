@@ -89,7 +89,10 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        public async Task<string?> FetchSessionIdAsync()
+        // No timeout on Android: the request waits for Firebase.
+        public async Task<(string? sessionId, bool timedOut)> FetchSessionIdAsync() => (await FetchSessionIdValueAsync(), false);
+
+        async Task<string?> FetchSessionIdValueAsync()
         {
             if (!FirebaseAvailable())
             {

@@ -62,7 +62,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         /// Enum Type for value: type
         /// </summary>
         [EnumMember(Value = "type")]
-        Type = 6
+        Type = 6,
+
+        /// <summary>
+        /// Enum SortIndex for value: sortIndex
+        /// </summary>
+        [EnumMember(Value = "sortIndex")]
+        SortIndex = 7
 
     }
 

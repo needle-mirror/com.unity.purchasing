@@ -57,7 +57,9 @@ namespace UnityEngine.Purchasing
                 return;
             }
             m_CatalogListings[listing.id] = listing;
-            if (uSku != null && listing.definition?.id == uSku)
+            // Every listing of a product has definition.id == uSku; only the base listing's own id is the uSku.
+            // A product with no such listing keeps its first listing as base, refreshed when re-attached.
+            if (uSku != null && (listing.id == uSku || listing.id == m_BaseListing?.id))
             {
                 m_BaseListing = listing;
             }
@@ -65,7 +67,10 @@ namespace UnityEngine.Purchasing
 
         internal static Product CreateUnknownProduct(string productId)
         {
-            return new Product(new ProductDefinition(productId, ProductType.Unknown), new ProductMetadata());
+            // A null id would be used as a dictionary key in the Product constructor and throw
+            // ArgumentNullException (e.g. Google fires onPurchasesUpdated with no purchase in
+            // flight when a cancelled subscription's active period expired, so no last-known product id exists).
+            return new Product(new ProductDefinition(productId ?? "UnknownProduct", ProductType.Unknown), new ProductMetadata());
         }
 
         // Overload for callers that also know the native storeSpecificId and the backend-reported
@@ -99,9 +104,9 @@ namespace UnityEngine.Purchasing
         public IReadOnlyDictionary<string, CatalogListing> catalogListings { get; }
 
         /// <summary>
-        /// The base listing for this product — the listing whose <see cref="CatalogListing.definition"/>
-        /// id equals <see cref="uSku"/>. Cached at construction and refreshed by
-        /// <see cref="AddCatalogListing"/> when a newly attached listing matches uSku.
+        /// The base listing for this product — the listing whose <see cref="CatalogListing.id"/>
+        /// equals <see cref="uSku"/>. Cached at construction and refreshed by
+        /// <see cref="AddCatalogListing"/> when a newly attached listing's id matches uSku.
         /// </summary>
         internal CatalogListing baseListing => m_BaseListing;
 

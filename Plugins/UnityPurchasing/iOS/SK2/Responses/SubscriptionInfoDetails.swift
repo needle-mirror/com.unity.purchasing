@@ -34,11 +34,9 @@ struct SubscriptionInfoDetails: Codable {
         subscriptionPeriodValue = subscriptionInfo.subscriptionPeriod.value
 
         self.isEligibleForIntroOffer = isEligibleForIntroOffer
-        if isEligibleForIntroOffer {
-            introductoryOffer = subscriptionInfo.introductoryOffer.map({SubscriptionOfferDetails($0)})
-        } else {
-            introductoryOffer = nil
-        }
+        // The offer is product metadata and is always returned, like on SK1.
+        // Use isEligibleForIntroOffer to know if the user can redeem it.
+        introductoryOffer = subscriptionInfo.introductoryOffer.map({SubscriptionOfferDetails($0)})
         promotionalOffers = subscriptionInfo.promotionalOffers.map({ offer in
             SubscriptionOfferDetails(offer)
         })

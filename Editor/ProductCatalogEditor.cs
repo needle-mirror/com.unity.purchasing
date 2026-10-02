@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using UnityEditor.Connect;
+using UnityEditor.Purchasing.Editor.Authoring.Import.Legacy;
 using UnityEngine;
 using UnityEngine.Purchasing;
 
@@ -38,6 +39,12 @@ namespace UnityEditor.Purchasing
 
             GenericEditorMenuItemClickEventSenderHelpers.SendIapMenuOpenCatalogEvent();
             GameServicesEventSenderHelpers.SendTopMenuIapCatalogEvent();
+        }
+
+        [MenuItem(ProductCatalogEditorMenuPath, true)]
+        static bool ValidateShowWindow()
+        {
+            return ShouldShowCodelessMenuItems();
         }
 
         private static readonly GUIContent windowTitle = new GUIContent("IAP Catalog");
@@ -86,6 +93,26 @@ namespace UnityEditor.Purchasing
         internal static bool DoesPrevCatalogPathExist()
         {
             return File.Exists(ProductCatalog.kPrevCatalogPath);
+        }
+
+        /// <summary>
+        /// Whether the codeless menu items should be available. They exist for projects already
+        /// using codeless, so they follow the legacy catalog rather than being compiled out for
+        /// every project.
+        /// </summary>
+        /// <remarks>
+        /// Resolved the way the runtime resolves it, rather than by testing the two paths this
+        /// class knows about. <c>Resources.Load</c> searches every folder named Resources, so a
+        /// catalog kept somewhere other than the default still loads at runtime and must still
+        /// count here; testing fixed paths would disable the menus for a project that works.
+        /// </remarks>
+        internal static bool ShouldShowCodelessMenuItems()
+        {
+#if IAP_CODELESS_MENUS
+            return true;
+#else
+            return Resources.Load<TextAsset>("IAPProductCatalog") != null;
+#endif
         }
 
         /// <summary>
@@ -164,6 +191,47 @@ namespace UnityEditor.Purchasing
 
         private Vector2 scrollPosition = new Vector2();
 
+        /// <summary>
+        /// Offers the same migration as the In-App Purchasing settings page, for people who work
+        /// in this window. Hidden when there is nothing to migrate.
+        /// </summary>
+        void ShowMigrateToRemoteCatalogGui()
+        {
+            if (Catalog == null || Catalog.IsEmpty())
+            {
+                return;
+            }
+
+            EditorGUILayout.HelpBox(
+                "Catalog authoring has moved to the Remote Catalog. Convert this catalog to a "
+                + "catalog CSV you can deploy; this file is left untouched and keeps working.",
+                MessageType.Info);
+
+            if (GUILayout.Button("Migrate to Remote Catalog"))
+            {
+                // Edits are saved on a delay, and migration reads the file back, so flush first
+                // or the CSV is built from the previous on-disk values.
+                if (dirty)
+                {
+                    Save();
+                }
+
+                var path = LegacyCatalogMigration.Migrate();
+                if (path == null)
+                {
+                    Debug.unityLogger.LogIAPWarning("No products found in the legacy catalog, so nothing was migrated.");
+                }
+                else
+                {
+                    Debug.unityLogger.LogIAP($"Migrated the legacy catalog to {path}. "
+                        + "Review it, then deploy it from the Deployment Window.");
+                    EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(path));
+                }
+            }
+
+            EditorGUILayout.Space();
+        }
+
         void OnGUI()
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition, false, false, GUI.skin.horizontalScrollbar,
@@ -171,6 +239,8 @@ namespace UnityEditor.Purchasing
 
             ShowValidationResultsGUI(validation);
             ValidateProductIds();
+
+            ShowMigrateToRemoteCatalogGui();
 
             EditorGUI.BeginChangeCheck();
 
@@ -1158,9 +1228,8 @@ namespace UnityEditor.Purchasing
                 if (!valid)
                 {
                     Debug.unityLogger.LogIAPWarning($"{storeName} Product Catalog is invalid. Automatically " +
-                        "fixing for export. Manually fix Catalog errors by opening IAP Catalog editor window with " +
-                        $"{ProductCatalogEditorMenuPath} menu, performing App Store Export for this store, and " +
-                        "resolving reported issues.");
+                        "fixing for export. Author your catalog with the Remote Catalog instead: create items with " +
+                        "Assets > Create > Services > IAP Catalog Item and deploy them from the Deployment Window.");
                     catalog = exporter.NormalizeToType(catalog);
                 }
 

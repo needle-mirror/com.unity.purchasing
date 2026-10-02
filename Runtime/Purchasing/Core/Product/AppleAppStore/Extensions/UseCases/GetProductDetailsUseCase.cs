@@ -20,7 +20,7 @@ namespace UnityEngine.Purchasing.UseCases
 
         public Dictionary<string, string> GetProductDetails()
         {
-            var json = m_FetchProductsService.LastRequestProductsJson;
+            var json = m_FetchProductsService.FetchedProductsJson;
             return StoreKitSelector.UseStoreKit1()
                 ? JSONSerializer.DeserializeProductDetailsSK1(json)
                 : JSONSerializer.DeserializeProductDetailsSK2(json);

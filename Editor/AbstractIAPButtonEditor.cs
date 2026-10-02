@@ -9,7 +9,7 @@ namespace UnityEditor.Purchasing
     /// <summary>
     /// Customer Editor class for the IAPButtons. This class handle how the IAPButtons should represent itself in the UnityEditor.
     /// </summary>
-    public abstract class AbstractIAPButtonEditor : Editor
+    public abstract class AbstractIAPButtonEditor : UnityEditor.Editor
     {
         private static readonly string[] excludedFields = new string[] { "m_Script", "onTransactionsRestored" };
         private static readonly string[] restoreButtonExcludedFields = new string[] { "m_Script", "automaticallyConfirmTransaction", "onPurchaseFetched", "onProductFetched", "onProductFetchFailed", "onOrderPending", "onOrderConfirmed", "onOrderDeferred", "onPurchaseFailed", "titleText", "descriptionText", "priceText" };
@@ -54,11 +54,6 @@ namespace UnityEditor.Purchasing
                 EditorGUILayout.LabelField(new GUIContent("Product ID:", "Select a product from the IAP catalog."));
                 LoadProductIdsFromCodelessCatalog();
                 m_ProductIDProperty.stringValue = GetCurrentlySelectedProduct(productId);
-
-                if (GUILayout.Button("IAP Catalog..."))
-                {
-                    ProductCatalogEditor.ShowWindow();
-                }
             }
         }
 

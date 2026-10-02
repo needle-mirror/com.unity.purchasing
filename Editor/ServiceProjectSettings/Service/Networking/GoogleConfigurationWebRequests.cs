@@ -7,6 +7,9 @@ namespace UnityEditor.Purchasing
 {
     class GoogleConfigurationWebRequests
     {
+        // Reported by a push when the editor was relinked before the key was sent; nothing was written.
+        internal const long k_PushCancelledProjectChanged = -1;
+
         readonly Action<string, GooglePlayRevenueTrackingKeyState> m_GetGooglePlayKeyCallback;
         IAccessTokens m_CoreAccessTokens;
 
@@ -16,41 +19,80 @@ namespace UnityEditor.Purchasing
             m_CoreAccessTokens = new AccessTokens();
         }
 
+        // async void, so nothing may escape: an exception would surface in the Console with no caller to handle it.
         internal async void RequestRetrieveKeyOperation()
         {
-            await GetGatewayTokenAndThenRetrieveGooglePlayKey();
+            var projectId = CloudProjectSettings.projectId;
+            string key = null;
+            GooglePlayRevenueTrackingKeyState state;
+            try
+            {
+                (key, state) = await RetrieveGooglePlayKey(projectId);
+            }
+            catch (Exception)
+            {
+                // Core's token exchange throws when offline or signed out; same outcome as a failed request.
+                state = GooglePlayRevenueTrackingKeyState.CantFetch;
+            }
+
+            // A relink while this was in flight means the result describes a project that is no longer linked.
+            if (CloudProjectSettings.projectId == projectId)
+            {
+                m_GetGooglePlayKeyCallback(key, state);
+            }
         }
 
-        async Task GetGatewayTokenAndThenRetrieveGooglePlayKey()
+        internal async void RequestPushKeyOperation(string googlePlayKey, Action<long> onPushed)
+        {
+            // The key was confirmed for the project linked at click time; never send it anywhere else.
+            var projectId = CloudProjectSettings.projectId;
+            long responseCode;
+            try
+            {
+                var gatewayToken = await m_CoreAccessTokens.GetServicesGatewayTokenAsync();
+                if (CloudProjectSettings.projectId != projectId)
+                {
+                    responseCode = k_PushCancelledProjectChanged;
+                }
+                else
+                {
+                    responseCode = string.IsNullOrEmpty(gatewayToken)
+                        ? 401
+                        : await GetGoogleKeyWebRequest.PushGooglePlayKeyAsync(gatewayToken, projectId, googlePlayKey);
+                }
+            }
+            catch (Exception)
+            {
+                // No response at all; reported as "Couldn't reach Unity services".
+                responseCode = 0;
+            }
+
+            onPushed(responseCode);
+        }
+
+        async Task<(string, GooglePlayRevenueTrackingKeyState)> RetrieveGooglePlayKey(string projectId)
         {
             var gatewayToken = await m_CoreAccessTokens.GetServicesGatewayTokenAsync();
-            if (!string.IsNullOrEmpty(gatewayToken))
+            if (string.IsNullOrEmpty(gatewayToken))
             {
-                await GetGooglePlayKey(gatewayToken);
+                return (null, GooglePlayRevenueTrackingKeyState.ServerError);
             }
-            else
-            {
-                m_GetGooglePlayKeyCallback(null, GooglePlayRevenueTrackingKeyState.ServerError);
-            }
+
+            var result = await GetGoogleKeyWebRequest.RequestGooglePlayKeyAsync(gatewayToken, projectId);
+            return (result.GooglePlayKey, InterpretKeyState(result.ResponseCode, result.GooglePlayKey));
         }
 
-        async Task GetGooglePlayKey(string gatewayToken)
-        {
-            var googlePlayKeyResult = await GetGoogleKeyWebRequest.RequestGooglePlayKeyAsync(gatewayToken);
-            ReportGooglePlayKeyAndTrackingState(googlePlayKeyResult.GooglePlayKey, googlePlayKeyResult.ResponseCode);
-        }
-
-        void ReportGooglePlayKeyAndTrackingState(string googlePlayKey, long responseCode)
+        internal static GooglePlayRevenueTrackingKeyState InterpretKeyState(long responseCode, string googlePlayKey)
         {
             var trackingState = InterpretKeyStateFromProtocolError(responseCode);
 
+            // Settings exist for the project but no Google key was ever entered.
             if (trackingState == GooglePlayRevenueTrackingKeyState.Verified && string.IsNullOrEmpty(googlePlayKey))
             {
-                trackingState = GooglePlayRevenueTrackingKeyState.InvalidFormat;
+                trackingState = GooglePlayRevenueTrackingKeyState.NoKey;
             }
 
-            m_GetGooglePlayKeyCallback(googlePlayKey, trackingState);
-
+            return trackingState;
         }
 
         static GooglePlayRevenueTrackingKeyState InterpretKeyStateFromProtocolError(long responseCode)
@@ -63,8 +105,10 @@ namespace UnityEditor.Purchasing
                 case 403:
                     return GooglePlayRevenueTrackingKeyState.UnauthorizedUser;
                 case 400:
+                    return GooglePlayRevenueTrackingKeyState.InvalidFormat;
                 case 404:
-                    return GooglePlayRevenueTrackingKeyState.CantFetch;
+                    // iap-settings answers 404 when the project has never had settings saved.
+                    return GooglePlayRevenueTrackingKeyState.NoKey;
                 case 405:
                 case 500:
                     return GooglePlayRevenueTrackingKeyState.ServerError;

@@ -118,3 +118,7 @@
 .configuration-toggle {
     background-image: resource("d_tab_next@2x");
 }
+.configuration-badge.missing-key {
+    color: #FFC107;
+    border-color: #FFC107;
+}

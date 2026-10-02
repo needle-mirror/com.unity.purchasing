@@ -19,7 +19,7 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Additional information for Apple subscription products.
         /// </summary>
-        IAppleSubscriptionInfo subscriptionInfo { get; }
+        internal IAppleSubscriptionInfo subscriptionInfo { get; }
 
         internal AppleProductMetadata(ProductMetadata baseProductMetadata, bool isFamilyShareable, IAppleSubscriptionInfo subscriptionInfo = null)
             : base(baseProductMetadata)
@@ -39,17 +39,20 @@ namespace UnityEngine.Purchasing
     internal interface IAppleSubscriptionInfo
     {
         public IAppleOffer IntroductoryOffer { get; }
+        public bool IsEligibleForIntroOffer { get; }
         public ReadOnlyCollection<IAppleOffer> PromotionalOffers { get; }
     }
 
     internal class AppleSubscriptionInfo : IAppleSubscriptionInfo
     {
         public IAppleOffer IntroductoryOffer { get; }
+        public bool IsEligibleForIntroOffer { get; }
         public ReadOnlyCollection<IAppleOffer> PromotionalOffers { get; }
 
-        internal AppleSubscriptionInfo(IAppleOffer introductoryOffer, ReadOnlyCollection<IAppleOffer> promotionalOffers)
+        internal AppleSubscriptionInfo(IAppleOffer introductoryOffer, bool isEligibleForIntroOffer, ReadOnlyCollection<IAppleOffer> promotionalOffers)
         {
             IntroductoryOffer = introductoryOffer;
+            IsEligibleForIntroOffer = isEligibleForIntroOffer;
             PromotionalOffers = promotionalOffers;
         }
     }
@@ -78,13 +81,16 @@ namespace UnityEngine.Purchasing
         // public string subscriptionPeriodUnit;
         // public int subscriptionPeriodValue;
         public AppleOfferInfoResponse? introductoryOffer;
+        public bool isEligibleForIntroOffer;
         public IList<AppleOfferInfoResponse> promotionalOffers;
         // public List<AppleOfferInfoResponse> winBackOffers;
 
         internal AppleSubscriptionInfoResponse(AppleOfferInfoResponse? introductoryOffer,
+            bool isEligibleForIntroOffer,
             IList<AppleOfferInfoResponse> promotionalOffers)
         {
             this.introductoryOffer = introductoryOffer;
+            this.isEligibleForIntroOffer = isEligibleForIntroOffer;
             this.promotionalOffers = promotionalOffers;
         }
     }

@@ -1,54 +1,15 @@
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Unity.Services.DeploymentApi.Editor;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Validations;
 
 namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
 {
-    class CatalogCsvDeploymentItem : IDeploymentItem, ITypedItem
+    class CatalogCsvDeploymentItem : DeploymentItemBase
     {
-        float m_Progress;
-        DeploymentStatus m_Status;
-        string m_Path;
-        string m_Name;
+        public CatalogCsvDeploymentItem(string path) : base(path) { }
 
-        public CatalogCsvDeploymentItem(string path)
-        {
-            Name = System.IO.Path.GetFileName(path);
-            Path = path;
-        }
-
-        public string Type => "Catalog CSV";
-
-        public string Name
-        {
-            get => m_Name;
-            set => SetField(ref m_Name, value);
-        }
-
-        public string Path
-        {
-            get => m_Path;
-            set => SetField(ref m_Path, value);
-        }
-
-        public float Progress
-        {
-            get => m_Progress;
-            set => SetField(ref m_Progress, value);
-        }
-
-        public DeploymentStatus Status
-        {
-            get => m_Status;
-            set => SetField(ref m_Status, value);
-        }
-
-        public ObservableCollection<AssetState> States { get; } = new();
+        public override string Type => "Catalog CSV";
 
         public List<CatalogItem> CatalogItems { get; set; } = new();
 
@@ -121,40 +82,15 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             if (item != null)
             {
                 if (!string.IsNullOrEmpty(item.CatalogListingId))
+                {
                     return item.CatalogListingId;
+                }
                 if (!string.IsNullOrEmpty(item.uSku))
+                {
                     return item.uSku;
+                }
             }
             return string.IsNullOrEmpty(entry.Name) ? "(unnamed)" : entry.Name;
-        }
-
-        internal void ClearTypedStates(string ownedType)
-        {
-            var i = 0;
-            while (i < States.Count)
-            {
-                if (States[i].Type == ownedType)
-                    States.RemoveAt(i);
-                else
-                    i++;
-            }
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void SetField<T>(
-            ref T field,
-            T value,
-            Action<T> onFieldChanged = null,
-            [CallerMemberName] string propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value))
-            {
-                return;
-            }
-            field = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            onFieldChanged?.Invoke(field);
         }
     }
 }

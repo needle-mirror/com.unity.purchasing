@@ -16,6 +16,8 @@ public struct PurchaseDetails: Codable {
     // Carries the product that was requested, which can differ from the transaction's product
     // (e.g. a subscription downgrade is answered with the active subscription's transaction).
     var requestedProductId: String?
+    // Set on failures from a purchase the store started itself (see PurchaseUseCase.isPromotionalPurchase).
+    var promotional: Bool?
     var purchaseDate: Double?
     var signatureJws: String?
     var transactionId: UInt64?
@@ -41,6 +43,7 @@ public struct PurchaseDetails: Codable {
         case productId
         case productType
         case requestedProductId
+        case promotional
         case purchaseDate
         case signatureJws
         case transactionId

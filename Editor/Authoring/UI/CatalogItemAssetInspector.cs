@@ -15,6 +15,7 @@ namespace UnityEditor.Purchasing.Authoring
     {
         const string k_Uxml = "Packages/com.unity.purchasing/Editor/Authoring/UI/Assets/CatalogAssetInspector.uxml";
         const string k_MinimumPriceTooltip = "Prices below the minimum might not be supported by certain payment processors. Verify the minimum supported value with the processor you plan to use.";
+        const string k_SaveChangesMessage = "The catalog item has unsaved changes.";
 
         VisualElement m_RootElement;
         VisualElement m_InfoRootElement;
@@ -32,6 +33,9 @@ namespace UnityEditor.Purchasing.Authoring
         public override VisualElement CreateInspectorGUI()
         {
             m_TargetItemAsset = target as CatalogItemAsset;
+#if UNITY_2022_1_OR_NEWER
+            saveChangesMessage = k_SaveChangesMessage;
+#endif
 
             m_RootElement = new VisualElement();
 
@@ -135,7 +139,7 @@ namespace UnityEditor.Purchasing.Authoring
         void SerializedObjectValueChanged(SerializedObject obj)
         {
             ClearInfoElements();
-            var areObjectsEqual = AreSerializedObjectsEqual(m_SerializedObjectOriginal, m_SerializedObjectCurrent);
+            var areObjectsEqual = CatalogInspectorHelper.AreSerializedObjectsEqual(m_SerializedObjectOriginal, m_SerializedObjectCurrent);
             UpdateApplyRevertButtons(!areObjectsEqual);
             UpdatePricingDetailsWarnings();
 #if UNITY_2022_1_OR_NEWER
@@ -238,24 +242,5 @@ namespace UnityEditor.Purchasing.Authoring
             UpdateApplyRevertButtons(false);
         }
 
-        static bool AreSerializedObjectsEqual(SerializedObject obj1, SerializedObject obj2)
-        {
-            if (obj1 == null || obj2 == null)
-                return false;
-
-            var iterator1 = obj1.GetIterator();
-            var iterator2 = obj2.GetIterator();
-
-            while (iterator1.NextVisible(true) && iterator2.NextVisible(true))
-            {
-                if (iterator1.propertyType != iterator2.propertyType || iterator1.name != iterator2.name)
-                    return false;
-
-                if (!SerializedProperty.DataEquals(iterator1, iterator2))
-                    return false;
-            }
-
-            return true;
-        }
     }
 }

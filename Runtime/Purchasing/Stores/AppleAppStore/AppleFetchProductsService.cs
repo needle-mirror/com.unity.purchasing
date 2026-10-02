@@ -15,10 +15,15 @@ namespace UnityEngine.Purchasing
     {
         INativeAppleStore? m_NativeStore;
 
-        public string? LastRequestProductsJson { get; private set; }
+        public string? FetchedProductsJson { get; private set; }
 
         readonly TaskQueue queue = new();
         TaskCompletionSource<List<ProductDescription>>? m_CurrentRequestCompletionSource;
+
+        // Bumped by ClearFetchedProducts (auth account change). A response to a request
+        // started under an older generation must not repopulate the accumulator.
+        int m_ClearGeneration;
+        int m_RequestGeneration;
 
         public void SetNativeStore(INativeAppleStore nativeStore)
         {
@@ -44,6 +49,7 @@ namespace UnityEngine.Purchasing
         {
             try
             {
+                m_RequestGeneration = m_ClearGeneration;
                 m_CurrentRequestCompletionSource = new TaskCompletionSource<List<ProductDescription>>();
                 m_NativeStore?.FetchProducts(JSONSerializer.SerializeProductDefs(products));
                 return await m_CurrentRequestCompletionSource.Task;
@@ -56,7 +62,17 @@ namespace UnityEngine.Purchasing
 
         public void OnProductsFetched(string json)
         {
-            LastRequestProductsJson = json;
+            // Stale fetch from before an auth account change — the data is account-scoped, drop it.
+            // Fail here, not at the clear: native responses carry no request id.
+            if (m_RequestGeneration != m_ClearGeneration)
+            {
+                m_CurrentRequestCompletionSource?.TrySetException(new FetchProductsException(
+                    new ProductFetchFailureDescription(ProductFetchFailureReason.Unknown,
+                        "The product fetch was invalidated by an auth account change.", true)));
+                return;
+            }
+
+            FetchedProductsJson = JSONSerializer.MergeProductsJson(FetchedProductsJson, json);
 
             // get product list
             List<ProductDescription> productDescriptions;
@@ -69,7 +85,15 @@ namespace UnityEngine.Purchasing
                 productDescriptions= JSONSerializer.DeserializeProductDescriptionsFromFetchProductsSk2(json);
             }
 
-            m_CurrentRequestCompletionSource?.SetResult(productDescriptions);
+            m_CurrentRequestCompletionSource?.TrySetResult(productDescriptions);
+        }
+
+        public void ClearFetchedProducts()
+        {
+            // An in-flight request keeps the queue occupied until its native callback
+            // arrives; OnProductsFetched then discards the stale response and fails it.
+            m_ClearGeneration++;
+            FetchedProductsJson = null;
         }
 
         public void OnProductDetailsRetrieveFailed(string errorMessage)
@@ -77,7 +101,7 @@ namespace UnityEngine.Purchasing
             var failureDescription =
                 new ProductFetchFailureDescription(ProductFetchFailureReason.Unknown,
                     $"Retrieve apple product details, failed with error message: {errorMessage}", true);
-            m_CurrentRequestCompletionSource?.SetException(new FetchProductsException(failureDescription));
+            m_CurrentRequestCompletionSource?.TrySetException(new FetchProductsException(failureDescription));
         }
     }
 }

@@ -56,7 +56,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         /// Enum CreatedAt for value: createdAt
         /// </summary>
         [EnumMember(Value = "createdAt")]
-        CreatedAt = 5
+        CreatedAt = 5,
+
+        /// <summary>
+        /// Enum SortIndex for value: sortIndex
+        /// </summary>
+        [EnumMember(Value = "sortIndex")]
+        SortIndex = 6
 
     }
 

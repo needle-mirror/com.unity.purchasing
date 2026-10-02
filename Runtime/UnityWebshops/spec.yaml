@@ -140,7 +140,7 @@ components:
             Allowlisted link parameters. Each is applied to the resulting URL as a
             query parameter named for its type, except catalogListingId, which
             deep-links to a product detail page.
-          maxItems: 12
+          maxItems: 13
           items:
             $ref: "#/components/schemas/WebshopLinkParam"
     WebshopLinkParam:
@@ -163,6 +163,7 @@ components:
             - google
             - customReferenceId
             - metadata
+            - linkOutSessionId
         value:
           type: string
           description: The parameter value, URL-encoded onto the link.

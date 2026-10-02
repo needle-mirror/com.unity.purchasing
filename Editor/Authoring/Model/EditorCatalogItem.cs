@@ -12,10 +12,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
     [Serializable]
     class EditorCatalogItem : CatalogItem
     {
-        // Schema does not exist yet
-        // [JsonProperty("$schema")]
-        // public string Schema => "https://ugs-config-schemas.unity3d.com/v1/my-service.schema.json";
-
         [JsonIgnore]
         public string Extension => Constants.FileExtension;
 

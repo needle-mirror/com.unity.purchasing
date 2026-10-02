@@ -12,8 +12,9 @@ namespace UnityEngine.Purchasing
         void SetNativeStore(INativeAppleStore nativeStore);
         Task<List<ProductDescription>> FetchProducts(IReadOnlyCollection<ProductDefinition> products);
         void OnProductsFetched(string json);
+        void ClearFetchedProducts();
         public void OnProductDetailsRetrieveFailed(string errorMessage);
 
-        public string? LastRequestProductsJson { get; }
+        public string? FetchedProductsJson { get; }
     }
 }

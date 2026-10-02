@@ -29,11 +29,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
     internal partial class CreateError
     {
         /// <summary>
-        /// Gets or Sets File
+        /// Gets or Sets Details
         /// </summary>
-        [DataMember(Name = "file", IsRequired = true, EmitDefaultValue = true)]
+        [DataMember(Name = "details", EmitDefaultValue = false)]
         [Preserve]
-        public Metadata File { get; set; }
+        public List<Object> Details { get; set; }
 
         /// <summary>
         /// Error message associated with the file
@@ -44,31 +44,31 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
         public string Error { get; set; }
 
         /// <summary>
-        /// Gets or Sets Details
+        /// Gets or Sets File
         /// </summary>
-        [DataMember(Name = "details", EmitDefaultValue = false)]
+        [DataMember(Name = "file", IsRequired = true, EmitDefaultValue = true)]
         [Preserve]
-        public List<Object> Details { get; set; }
+        public FileMetadata File { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CreateError" /> class.
         /// </summary>
-        /// <param name="file">file (required).</param>
-        /// <param name="error">Error message associated with the file (required).</param>
         /// <param name="details">details.</param>
+        /// <param name="error">Error message associated with the file (required).</param>
+        /// <param name="file">file (required).</param>
         [Preserve]
-        public CreateError(Metadata file = default(Metadata), string error = default(string), List<Object> details = default(List<Object>))
+        public CreateError(List<Object> details = default(List<Object>), string error = default(string), FileMetadata file = default(FileMetadata))
         {
-            if (file == null)
-            {
-                throw new ArgumentNullException("file is a required property for CreateError and cannot be null");
-            }
-            this.File = file;
             if (error == null)
             {
                 throw new ArgumentNullException("error is a required property for CreateError and cannot be null");
             }
             this.Error = error;
+            if (file == null)
+            {
+                throw new ArgumentNullException("file is a required property for CreateError and cannot be null");
+            }
+            this.File = file;
             this.Details = details;
         }
     }

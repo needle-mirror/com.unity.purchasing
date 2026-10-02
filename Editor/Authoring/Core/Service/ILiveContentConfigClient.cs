@@ -20,6 +20,12 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Service
         /// <returns>The entries of the catalog as a list</returns>
         Task<List<CatalogItem>> List(CancellationToken cancellationToken);
 
+        /// <summary> Fetches a single catalog item by its listing ID, or null if not found remotely. </summary>
+        /// <param name="catalogListingId">The catalog listing ID (path) of the item</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>The catalog item, or null if it does not exist remotely.</returns>
+        Task<CatalogItem> Get(string catalogListingId, CancellationToken cancellationToken);
+
         /// <summary> Creates or updates the specified catalog item remotely. </summary>
         /// <param name="catalogItem">The item </param>
         /// <param name="cancellationToken">Cancellation Token</param>

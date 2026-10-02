@@ -126,10 +126,18 @@ namespace UnityEngine.Purchasing
             var detailsDictionary = new Dictionary<string, IAppleSubscriptionInfo>();
             if (dict != null && dict.TryGetValue("productDetails", out var productDetailsObj) && productDetailsObj is Dictionary<string, object> productDetails)
             {
-                var deserializer = new AppleJsonProductDetailsDeserializer();
-                var response = deserializer.DeserializeAppleProductDetailsResponse(productDetails);
-                var converter = new AppleDataConverter();
-                detailsDictionary = converter.ConvertAppleProductDetailsResponseToSubscriptionInfoMap(response);
+                try
+                {
+                    var deserializer = new AppleJsonProductDetailsDeserializer();
+                    var response = deserializer.DeserializeAppleProductDetailsResponse(productDetails);
+                    var converter = new AppleDataConverter();
+                    detailsDictionary = converter.ConvertAppleProductDetailsResponseToSubscriptionInfoMap(response);
+                }
+                catch (Exception e)
+                {
+                    // Degrade to products without subscription info rather than dropping the fetch.
+                    Debug.unityLogger.LogIAPError($"Failed to parse SK2 productDetails, continuing without subscription info: {e}");
+                }
             }
             if (dict != null && dict.TryGetValue("products", out var productsObj) && productsObj is List<object> products)
             {
@@ -138,37 +146,46 @@ namespace UnityEngine.Purchasing
                     var productDetail = product as Dictionary<string, object>;
                     if (productDetail == null)
                     {
-                        break;
+                        continue;
                     }
 
                     var id = productDetail.TryGetString("id");
 
-                    IAppleSubscriptionInfo subscriptionInfo = null;
-                    if (id != null && detailsDictionary.ContainsKey(id))
-                    {
-                        subscriptionInfo = detailsDictionary[id];
-                    }
-
-                    var priceString = productDetail.TryGetString("displayPrice");
-                    var title = productDetail.TryGetString("displayName");
-                    var description = productDetail.TryGetString("description");
-                    var currencyCode = productDetail.TryGetString("currencyCode");
-                    decimal localizedPrice;
+                    // Contain failures to the product: one malformed entry (e.g. an
+                    // unrecognized "type") must not drop the rest of the catalog.
                     try
                     {
-                        localizedPrice = Convert.ToDecimal(productDetail["price"]);
-                    }
-                    catch
-                    {
-                        localizedPrice = 0.0m;
-                    }
-                    var isFamilyShareable = Convert.ToBoolean(productDetail.TryGetString("isFamilyShareable"));
-                    var metadata = new AppleProductMetadata(priceString, title, description, currencyCode,
-                        localizedPrice, isFamilyShareable, subscriptionInfo);
-                    var type = productDetail.TryGetString("type").ToProductType();
-                    var productDescription = new ProductDescription(id, metadata, "", "", type);
+                        IAppleSubscriptionInfo subscriptionInfo = null;
+                        if (id != null && detailsDictionary.ContainsKey(id))
+                        {
+                            subscriptionInfo = detailsDictionary[id];
+                        }
 
-                    results.Add(productDescription);
+                        var priceString = productDetail.TryGetString("displayPrice");
+                        var title = productDetail.TryGetString("displayName");
+                        var description = productDetail.TryGetString("description");
+                        var currencyCode = productDetail.TryGetString("currencyCode");
+                        decimal localizedPrice;
+                        try
+                        {
+                            localizedPrice = Convert.ToDecimal(productDetail["price"]);
+                        }
+                        catch
+                        {
+                            localizedPrice = 0.0m;
+                        }
+                        var isFamilyShareable = Convert.ToBoolean(productDetail.TryGetString("isFamilyShareable"));
+                        var metadata = new AppleProductMetadata(priceString, title, description, currencyCode,
+                            localizedPrice, isFamilyShareable, subscriptionInfo);
+                        var type = productDetail.TryGetString("type").ToProductType();
+                        var productDescription = new ProductDescription(id, metadata, "", "", type);
+
+                        results.Add(productDescription);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.unityLogger.LogIAPError($"Skipping malformed SK2 product '{id}': {e.Message}");
+                    }
                 }
             }
 
@@ -239,6 +256,189 @@ namespace UnityEngine.Purchasing
             }
 
             return result;
+        }
+
+        public static Dictionary<string, string> DeserializeSubscriptionDescriptionsSK2(string json)
+        {
+            var result = new Dictionary<string, string>();
+            var root = MiniJson.JsonDecode(json) as Dictionary<string, object>;
+            if (root == null)
+            {
+                return result;
+            }
+
+            var productsLookup = BuildSk2ProductsLookup(root);
+            var detailsLookup = BuildSk2ProductDetailsLookup(root);
+            var allIds = productsLookup.Count > 0 ? productsLookup.Keys : detailsLookup.Keys;
+
+            foreach (var productId in allIds)
+            {
+                productsLookup.TryGetValue(productId, out var product);
+                detailsLookup.TryGetValue(productId, out var detail);
+
+                // Same key contract as the SK1 DeserializeSubscriptionDescriptions output.
+                var subscription = new Dictionary<string, string>
+                {
+                    ["introductoryPrice"] = "",
+                    ["introductoryPriceLocale"] = "",
+                    ["introductoryPriceNumberOfPeriods"] = "",
+                    ["numberOfUnits"] = "",
+                    ["unit"] = ""
+                };
+
+                if (detail != null &&
+                    detail.TryGetValue("subscriptionInfo", out var subInfoObj) &&
+                    subInfoObj is Dictionary<string, object> subInfo)
+                {
+                    var eligibility = subInfo.TryGetString("isEligibleForIntroOffer");
+                    if (eligibility != null)
+                    {
+                        subscription["isEligibleForIntroOffer"] = eligibility.ToLowerInvariant();
+                    }
+
+                    if (subInfo.TryGetValue("introductoryOffer", out var introOfferObj) &&
+                        introOfferObj is Dictionary<string, object> introOffer)
+                    {
+                        subscription["introductoryPrice"] = introOffer.TryGetString("price") ?? "";
+                        subscription["introductoryPriceLocale"] = product?.TryGetString("currencyCode") ?? "";
+                        subscription["introductoryPriceNumberOfPeriods"] = introOffer.TryGetString("periodCount") ?? "";
+                        subscription["numberOfUnits"] = introOffer.TryGetString("period.value") ?? "";
+                        subscription["unit"] = introOffer.TryGetString("period.unit") ?? "";
+
+                        // this is a double check for Apple side's bug
+                        if (!string.IsNullOrEmpty(subscription["numberOfUnits"]) && string.IsNullOrEmpty(subscription["unit"]))
+                        {
+                            subscription["unit"] = "0";
+                        }
+                    }
+                }
+
+                result.Add(productId, MiniJson.JsonEncode(subscription));
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Merges a new fetch-products payload into the previous one so products from earlier
+        /// fetches are kept. Products present in both take the newest values.
+        /// Handles both the SK1 shape (top-level array) and the SK2 shape ({products, productDetails}).
+        /// </summary>
+        public static string MergeProductsJson(string previousJson, string currentJson)
+        {
+            if (string.IsNullOrEmpty(previousJson))
+            {
+                return currentJson;
+            }
+
+            var previous = MiniJson.JsonDecode(previousJson);
+            var current = MiniJson.JsonDecode(currentJson);
+
+            if (previous is Dictionary<string, object> previousRoot && current is Dictionary<string, object> currentRoot)
+            {
+                MergeSk2Products(previousRoot, currentRoot);
+                MergeSk2ProductDetails(previousRoot, currentRoot);
+                return MiniJson.JsonEncode(currentRoot);
+            }
+
+            if (previous is List<object> previousList && current is List<object> currentList)
+            {
+                MergeSk1Products(previousList, currentList);
+                return MiniJson.JsonEncode(currentList);
+            }
+
+            return currentJson;
+        }
+
+        static void MergeSk2Products(Dictionary<string, object> previousRoot, Dictionary<string, object> currentRoot)
+        {
+            var previousProducts = previousRoot.TryGetValue("products", out var pp) ? pp as List<object> : null;
+            if (previousProducts == null)
+            {
+                return;
+            }
+
+            if (!(currentRoot.TryGetValue("products", out var cp) && cp is List<object> currentProducts))
+            {
+                currentRoot["products"] = previousProducts;
+                return;
+            }
+
+            var currentIds = new HashSet<string>();
+            foreach (var item in currentProducts)
+            {
+                if (item is Dictionary<string, object> product)
+                {
+                    var id = product.TryGetString("id");
+                    if (id != null)
+                    {
+                        currentIds.Add(id);
+                    }
+                }
+            }
+
+            foreach (var item in previousProducts)
+            {
+                if (item is Dictionary<string, object> product)
+                {
+                    var id = product.TryGetString("id");
+                    if (id != null && !currentIds.Contains(id))
+                    {
+                        currentProducts.Add(item);
+                    }
+                }
+            }
+        }
+
+        static void MergeSk2ProductDetails(Dictionary<string, object> previousRoot, Dictionary<string, object> currentRoot)
+        {
+            var previousDetails = previousRoot.TryGetValue("productDetails", out var pd) ? pd as Dictionary<string, object> : null;
+            if (previousDetails == null)
+            {
+                return;
+            }
+
+            if (!(currentRoot.TryGetValue("productDetails", out var cd) && cd is Dictionary<string, object> currentDetails))
+            {
+                currentRoot["productDetails"] = previousDetails;
+                return;
+            }
+
+            foreach (var kvp in previousDetails)
+            {
+                if (!currentDetails.ContainsKey(kvp.Key))
+                {
+                    currentDetails.Add(kvp.Key, kvp.Value);
+                }
+            }
+        }
+
+        static void MergeSk1Products(List<object> previousList, List<object> currentList)
+        {
+            var currentIds = new HashSet<string>();
+            foreach (var item in currentList)
+            {
+                if (item is Dictionary<string, object> product)
+                {
+                    var id = product.TryGetString("storeSpecificId");
+                    if (id != null)
+                    {
+                        currentIds.Add(id);
+                    }
+                }
+            }
+
+            foreach (var item in previousList)
+            {
+                if (item is Dictionary<string, object> product)
+                {
+                    var id = product.TryGetString("storeSpecificId");
+                    if (id != null && !currentIds.Contains(id))
+                    {
+                        currentList.Add(item);
+                    }
+                }
+            }
         }
 
         public static Dictionary<string, string> DeserializeProductDetailsSK1(string json)
@@ -321,37 +521,8 @@ namespace UnityEngine.Purchasing
                 return result;
             }
 
-            // Build a lookup from the products array (has currencyCode, etc.)
-            var productsLookup = new Dictionary<string, Dictionary<string, object>>();
-            if (root.TryGetValue("products", out var productsObj) &&
-                productsObj is List<object> products)
-            {
-                foreach (var item in products)
-                {
-                    if (item is Dictionary<string, object> product)
-                    {
-                        var id = product.TryGetString("id");
-                        if (id != null)
-                        {
-                            productsLookup[id] = product;
-                        }
-                    }
-                }
-            }
-
-            // Build subscription info lookup from productDetails (has subscriptionInfo)
-            var detailsLookup = new Dictionary<string, Dictionary<string, object>>();
-            if (root.TryGetValue("productDetails", out var productDetailsObj) &&
-                productDetailsObj is Dictionary<string, object> productDetails)
-            {
-                foreach (var kvp in productDetails)
-                {
-                    if (kvp.Value is Dictionary<string, object> detail)
-                    {
-                        detailsLookup[kvp.Key] = detail;
-                    }
-                }
-            }
+            var productsLookup = BuildSk2ProductsLookup(root);
+            var detailsLookup = BuildSk2ProductDetailsLookup(root);
 
             // Use whichever source has entries as the key set
             var allIds = productsLookup.Count > 0 ? productsLookup.Keys : detailsLookup.Keys;
@@ -403,6 +574,12 @@ namespace UnityEngine.Purchasing
                         details["subscriptionPeriodUnit"] = subInfo.TryGetString("subscriptionPeriod.unit");
                         details["subscriptionGroupID"] = subInfo.TryGetString("subscriptionGroupID");
 
+                        var eligibility = subInfo.TryGetString("isEligibleForIntroOffer");
+                        if (eligibility != null)
+                        {
+                            details["isEligibleForIntroOffer"] = eligibility.ToLowerInvariant();
+                        }
+
                         // this is a double check for Apple side's bug
                         if (!string.IsNullOrEmpty(details["subscriptionNumberOfUnits"]) && string.IsNullOrEmpty(details["subscriptionPeriodUnit"]))
                         {
@@ -413,6 +590,7 @@ namespace UnityEngine.Purchasing
                             introOfferObj is Dictionary<string, object> introOffer)
                         {
                             details["introductoryPrice"] = introOffer.TryGetString("price");
+                            details["introductoryPriceLocale"] = product?.TryGetString("currencyCode");
                             details["introductoryType"] = introOffer.TryGetString("paymentMode");
                             details["introductoryOfferId"] = introOffer.TryGetString("id");
                             details["introductoryPriceNumberOfPeriods"] = introOffer.TryGetString("periodCount");
@@ -434,6 +612,47 @@ namespace UnityEngine.Purchasing
             return result;
         }
 
+        // Build a lookup from the SK2 products array (has currencyCode, etc.)
+        static Dictionary<string, Dictionary<string, object>> BuildSk2ProductsLookup(Dictionary<string, object> root)
+        {
+            var productsLookup = new Dictionary<string, Dictionary<string, object>>();
+            if (root.TryGetValue("products", out var productsObj) &&
+                productsObj is List<object> products)
+            {
+                foreach (var item in products)
+                {
+                    if (item is Dictionary<string, object> product)
+                    {
+                        var id = product.TryGetString("id");
+                        if (id != null)
+                        {
+                            productsLookup[id] = product;
+                        }
+                    }
+                }
+            }
+
+            return productsLookup;
+        }
+
+        // Build a lookup from the SK2 productDetails dictionary (has subscriptionInfo)
+        static Dictionary<string, Dictionary<string, object>> BuildSk2ProductDetailsLookup(Dictionary<string, object> root)
+        {
+            var detailsLookup = new Dictionary<string, Dictionary<string, object>>();
+            if (root.TryGetValue("productDetails", out var productDetailsObj) &&
+                productDetailsObj is Dictionary<string, object> productDetails)
+            {
+                foreach (var kvp in productDetails)
+                {
+                    if (kvp.Value is Dictionary<string, object> detail)
+                    {
+                        detailsLookup[kvp.Key] = detail;
+                    }
+                }
+            }
+
+            return detailsLookup;
+        }
 
         public static PurchaseFailureDescription DeserializeFailureReason(string json, IProductCache productCache)
         {
