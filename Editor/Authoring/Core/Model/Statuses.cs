@@ -7,6 +7,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     {
         public const string k_Ahead = "Ahead";
         public const string k_NotDeployed = "Not Deployed";
+        public const string k_Deployed = "Deployed";
 
         public static readonly DeploymentStatus FailedToLoad = new ("Failed to load", string.Empty, SeverityLevel.Error);
 
@@ -20,7 +21,10 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         public static DeploymentStatus GetDeploying(string details = null)
             => new ( "Deploying", details ?? string.Empty, SeverityLevel.Info);
         public static DeploymentStatus GetDeployed(string details)
-            => new ("Deployed",  details, SeverityLevel.Success);
+            => new (k_Deployed,  details, SeverityLevel.Success);
+
+        public static bool IsDeployed(DeploymentStatus status)
+            => status.Message == k_Deployed && status.MessageSeverity == SeverityLevel.Success;
 
         public static DeploymentStatus GetFailedToLoad(Exception e, string path)
             => new ("Failed to load", $"Failed to load '{path}'. Reason: {e.Message}", SeverityLevel.Error);
@@ -52,13 +56,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         public static readonly DeploymentStatus Checking =
             new("Checking", string.Empty, SeverityLevel.Info);
 
-        public static DeploymentStatus GetUpToDate() =>
-            new("Up to date", string.Empty, SeverityLevel.Success);
-
         public static DeploymentStatus GetAhead(string details) =>
             new(k_Ahead, details, SeverityLevel.Warning);
 
         public static DeploymentStatus GetNotDeployed() =>
             new(k_NotDeployed, string.Empty, SeverityLevel.Warning);
+
+        public static readonly DeploymentStatus NoItemsToDeploy =
+            new("No items to deploy", string.Empty, SeverityLevel.Warning);
     }
 }

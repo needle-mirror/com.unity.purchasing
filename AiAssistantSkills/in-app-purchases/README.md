@@ -17,6 +17,7 @@ This skill helps you implement, configure, debug, and migrate Unity In-App Purch
 | **Assess/Convert RevenueCat** | Project uses RevenueCat — evaluate/implement observer mode to work with Unity IAP 5 |
 | **Assess/Convert Adapty** | Project uses Adapty — evaluate/implement observer mode to work with Unity IAP 5 |
 | **Implement IAP D2C Capabilities** | Add third-party payment provider (Stripe or Coda) via Unity Cloud |
+| **Migrate to `PurchasingController`** | Project using `StoreController` (one, or one per store such as Google Play + D2C) — offered, and done only if you agree |
 
 The skill always scans the project first and routes to the correct path automatically. You can also specify a path manually if you know exactly which one you need.
 
@@ -51,6 +52,9 @@ Add Stripe payment support via Unity IAP D2C Capabilities.
 ```
 Add a web checkout option for my players using Unity's IAP D2C Capabilities with Coda.
 ```
+```
+Replace my Google Play and payment provider StoreControllers with a single PurchasingController.
+```
 
 ---
 
@@ -75,10 +79,10 @@ Add a web checkout option for my players using Unity's IAP D2C Capabilities with
 
 ### Migrate v4 → v5
 
-**What it does:** Replaces the listener-based `IStoreListener` / `UnityPurchasing.Initialize` / `ConfigurationBuilder` pattern with the event-driven `StoreController` pattern.
+**What it does:** Replaces the listener-based `IStoreListener` / `UnityPurchasing.Initialize` / `ConfigurationBuilder` pattern with the event-driven `PurchasingController` pattern (v5.5+; on older versions the skill recommends upgrading first).
 
 **Limitations:**
-- `product.receipt` and `product.hasReceipt` are removed. The skill migrates ownership checks to `store.CheckEntitlement(product)` — verify your entitlement logic after migration.
+- `product.receipt` and `product.hasReceipt` are removed. The skill migrates ownership checks to `controller.CheckEntitlement(product)` — verify your entitlement logic after migration.
 - Apple local validation via `CrossPlatformValidator` still compiles but is a no-op under StoreKit 2. If your project validates Apple receipts locally, this validation silently stops working after migration.
 - Developer payload (the third `Purchase()` argument) is removed. If your backend uses it, a backend change is required.
 - `SubscriptionManager` is replaced — subscription info is now on `order.Info.PurchasedProductInfo`, not on `CartItem`.
@@ -118,7 +122,7 @@ Add a web checkout option for my players using Unity's IAP D2C Capabilities with
 - **Promotional offer signing** (`SKPaymentDiscount` / SK2 signed offers) is a hard blocker — Unity IAP has no equivalent for server-signed promotional offers.
 - **Win-back offers** (StoreKit 2) are not supported in Unity IAP 5.4.
 - **`SKStorefront`** (region detection via storefront change observer) is not exposed in Unity IAP.
-- **`SKReceiptRefreshRequest`** has no direct equivalent — `store.FetchPurchases()` covers the purchase re-delivery use case but not manual receipt refresh.
+- **`SKReceiptRefreshRequest`** has no direct equivalent — `controller.FetchPurchases()` covers the purchase re-delivery use case but not manual receipt refresh.
 - ObjC/Swift plugin files cannot use C# `#if` defines. The skill guards only the C# call sites — the native files remain in `Assets/Plugins/iOS/` and compile unconditionally.
 - A mixed native StoreKit + Unity IAP architecture is not supported — both register as `SKPaymentQueue` observers and only one reliably receives callbacks.
 
@@ -139,7 +143,7 @@ Add a web checkout option for my players using Unity's IAP D2C Capabilities with
 - Only the Billing service is affected. All other Essential Kit services (Notification, GameServices, etc.) are left completely untouched.
 - **Product IDs must not change.** The same IDs used in Essential Kit must be carried over to Unity IAP to preserve store history.
 - If your project uses **server-side receipt validation**, the receipt format changes from `transaction.RawData` (Android) and `transaction.Receipt` (iOS JWS) to `order.Info.Receipt` and `order.Info.Apple?.jwsRepresentation`. Document the backend change required.
-- Subscriptions are fully supported, but the restore path changes — EK's `OnRestorePurchasesComplete` maps to both `store.OnPurchasesFetched` and the `RestoreTransactions` callback in Unity IAP.
+- Subscriptions are fully supported, but the restore path changes — EK's `OnRestorePurchasesComplete` maps to both `controller.OnPurchasesFetched` and the `RestoreTransactions` callback in Unity IAP.
 
 **Best practices:**
 - Run `Assets > External Dependency Manager > Android Resolver > Force Resolve` after removing the Gradle billing dependency — do not skip this step.
@@ -219,6 +223,21 @@ Add a web checkout option for my players using Unity's IAP D2C Capabilities with
 - Configure a **Cancel Redirect URL** in the payment provider dashboard — without it, the checkout page has no "Back" button and players who change their mind are stuck in the browser.
 - The SDK remembers the **last used payment provider per player per device** (provider memory). This is expected behavior, not a bug. Clear app data to reset it during testing.
 - Deploy the **Deployment package** (`com.unity.services.deployment`) early — it is required to push `.ucat` product definitions to the Remote Catalog. Without it, the catalog cannot be deployed and `FetchRemoteCatalog()` returns no products.
+
+---
+
+### Migrate to PurchasingController
+
+**What it does:** Replaces one `StoreController` per store (typically the platform store plus `PaymentProvider.Name`) with a single `PurchasingController`: one set of event subscriptions that report which store fired, one `Connect()`, and purchases that go to the store their product came from.
+
+**Limitations:**
+- Requires a version of Unity IAP that contains `PurchasingController` (v5.5+).
+- Offered when your project uses `StoreController`, and only done if you agree — `StoreController` remains supported. If you decline, the skill stays on `StoreController` for that project, new code included; it never mixes the two.
+- Event handlers change shape (the store name is the first parameter) and getters such as `GetProducts` need a store name, so every IAP call site is touched.
+
+**Best practices:**
+- Fetch products once per store (`FetchProducts(definitions, storeName)`); one catalog provider can serve every store.
+- Include the platform default store in the controller when using the payment options picker, so its purchases arrive on the controller's events.
 
 ---
 

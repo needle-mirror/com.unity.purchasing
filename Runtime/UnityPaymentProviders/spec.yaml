@@ -61,8 +61,12 @@ paths:
           $ref: '#/components/responses/error-response-too-many-requests'
         '500':
           $ref: '#/components/responses/error-response-internal-server-error'
+        '502':
+          $ref: '#/components/responses/error-response-bad-gateway'
         '503':
           $ref: '#/components/responses/error-response-service-unavailable'
+        '504':
+          $ref: '#/components/responses/error-response-gateway-timeout'
       security:
         - Client: []
   /v1/projects/{projectId}/environments/{environmentId}/link-out-session:
@@ -70,8 +74,13 @@ paths:
       - $ref: '#/components/parameters/projectId'
       - $ref: '#/components/parameters/environmentId'
     post:
-      summary: Register a link-out session
-      description: Registers a link-out session and returns its identifier, for use with webshops.
+      summary: Register link-out device context
+      description: |-
+        Registers the in-game IAP SDK's device-context bundle (device identifiers and
+        device info) before a webshop link-out and returns a backend-minted
+        linkOutSessionId. These identifiers are PII and must not travel on the link URL:
+        the webshop carries only the opaque key and order-create resolves it server-side.
+        The bundle is bound to the authenticated player and retained with a short TTL.
       operationId: registerLinkOutSession
       tags:
         - Payment provider
@@ -113,8 +122,12 @@ paths:
       description: |-
         Returns the list of configured payment providers the calling player is eligible for, based on their Live Releases
         variant tags and the project's tag-to-provider routing configuration. Providers are listed in priority
-        order, highest first; clients should use the first entry by default. An empty list means no provider is
-        eligible for this player; clients should handle this as a normal "external payment unavailable" state.
+        order, highest first; clients should use the first entry by default. When tag-based routing yields no
+        configured provider, the project's legacy default provider is returned instead, if configured.
+
+        Read `testMode` first. While it is true, targeting is not applied and the list is the Mock Provider alone.
+
+        An empty list means no provider is eligible; clients should handle this as a normal "external payment unavailable" state.
       operationId: listPaymentProviders
       tags:
         - Payment provider
@@ -178,6 +191,51 @@ paths:
           $ref: '#/components/responses/error-response-service-unavailable'
       security:
         - Client: []
+  /v1/projects/{projectId}/environments/{environmentId}/orders/purchase-eligibility:
+    parameters:
+      - $ref: '#/components/parameters/projectId'
+      - $ref: '#/components/parameters/environmentId'
+    post:
+      summary: Check purchase eligibility
+      description: |-
+        Tells the player whether they can order each requested catalog listing now, given the listing's purchase limit.
+        The player comes from the token. Only player tokens are accepted; service-account and Cloud Code tokens are not.
+        Each unique requested ID appears once, in `listings` or in `failures`, in request order.
+
+        `eligible` only answers whether the player is within the listing's purchase limit. A listing the player has not paid for
+        since the start of the current UTC month is eligible without a catalog read, so an unknown or removed listing ID also
+        comes back eligible; create order still rejects it. For any other listing, the service reads its purchase limit from the
+        catalog, and a failed read puts the listing in `failures`. Entitlements are not considered.
+
+        `remaining` appears only for listings that have a purchase limit the service read.
+      operationId: getPurchaseEligibility
+      tags:
+        - Payment provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/purchase-eligibility-request'
+      responses:
+        '200':
+          description: Eligibility per catalog listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/purchase-eligibility-response'
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
+        '401':
+          $ref: '#/components/responses/error-response-unauthorized'
+        '403':
+          $ref: '#/components/responses/error-response-forbidden'
+        '429':
+          $ref: '#/components/responses/error-response-too-many-requests'
+        '500':
+          $ref: '#/components/responses/error-response-internal-server-error'
+      security:
+        - Client: []
   /v1/projects/{projectId}/environments/{environmentId}/orders/{orderId}:
     parameters:
       - $ref: '#/components/parameters/projectId'
@@ -214,7 +272,7 @@ paths:
     patch:
       summary: Update an order
       description: |-
-        Updates an order. Used to mark an order as fulfilled or cancelled.
+        Updates an order. Used to mark an order as fulfilled, cancelled, or revoked.
       operationId: updateOrder
       tags:
         - Payment provider
@@ -231,6 +289,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/order-response'
+        '400':
+          $ref: '#/components/responses/error-response-bad-request'
         '401':
           $ref: '#/components/responses/error-response-unauthorized'
         '403':
@@ -353,6 +413,49 @@ components:
             type: object
       required:
         - type
+    basic-conflict-error-response:
+      title: BasicConflictErrorResponse
+      description: A basic error response whose `type` is pinned to `problems/basic`, so it never matches another problem type.
+      allOf:
+        - $ref: '#/components/schemas/basic-error-response'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - problems/basic
+    purchase-limit-reached-error-response:
+      title: PurchaseLimitReachedErrorResponse
+      description: The player reached the catalog listing's purchase limit for the current UTC period.
+      type: object
+      x-examples:
+        example-1:
+          type: problems/purchase-limit-reached
+          title: Purchase limit reached
+          status: 409
+          code: 40901
+          detail: purchase limit of 1 per day reached for this listing
+      properties:
+        type:
+          type: string
+          enum:
+            - problems/purchase-limit-reached
+        title:
+          type: string
+        status:
+          type: integer
+          enum:
+            - 409
+        code:
+          type: integer
+          enum:
+            - 40901
+        detail:
+          type: string
+      required:
+        - type
+        - status
+        - code
     validation-error-body:
       title: ValidationErrorBody
       type: object
@@ -417,7 +520,7 @@ components:
           type: string
           enum: [fulfilled, cancelled, revoked]
           description: >-
-            Updates the order status. Supported values are `fulfilled`, `cancelled`, and `revoked`. Only orders with `created` status can be marked as `cancelled`. Orders with `created` or `fulfilled` status can be marked as `revoked`. Once cancelled or revoked, an order cannot be changed to another status.
+            Updates the order status. Supported values are `fulfilled`, `cancelled`, and `revoked`. Only orders with `created` status can be marked as `cancelled`. Only orders with `paid` status can be marked as `fulfilled`. Orders with `paid` or `fulfilled` status can be marked as `revoked`. Once cancelled or revoked, an order cannot be changed to another status.
           example: fulfilled
       required:
         - status
@@ -470,6 +573,11 @@ components:
           description: >-
             Optional. One of `hosted` or `embedded`. How the checkout is presented. `hosted` (default) returns a provider-hosted checkout page in `url`. `embedded` returns an `embeddedInfo` object (client secret, plus a publishable key for Stripe) for rendering an in-page form via the payment provider's JS SDK and leaves `url` empty. Only `stripe` supports `embedded`; other providers reject the request. In `embedded` mode the player is never redirected, so only payment methods that don't require a redirect are offered (cards, Apple Pay, Google Pay, Link).
           example: 'embedded'
+        entryChannel:
+          type: string
+          description: >-
+            Optional. The player-journey channel the order started from, independent of the referer-derived purchase origin. One of `game_deeplink` or `direct`: `game_deeplink` means the session began at the in-game Purchase UI (i.e. a deep-linked webshop session); `direct` means an organic browser first webshop visit. Client-asserted and analytics-grade (same trust level as the `player.identity` map). Honored only for orders arriving with a webshop referer; ignored for in-app/SDK orders (which are always treated as `game_deeplink`) and silently dropped when unrecognized. When omitted, the channel is left unspecified.
+          example: 'game_deeplink'
         externalTransactionTokens:
           type: array
           description: >-
@@ -505,7 +613,7 @@ components:
             cancelUrl:
               type: string
               description: >-
-                Redirect target when the player cancels or abandons checkout. Applies to Stripe checkout only; ignored by providers without a cancel step. Must be on the project's webshop host.
+                Redirect target when the player cancels or abandons checkout. Applies to providers with a cancel step (Stripe and mock checkout); ignored by providers without one. Must be on the project's webshop host.
               maxLength: 2048
               example: 'https://shop.unity.com/studio/game?status=cancelled'
           required:
@@ -517,13 +625,16 @@ components:
         linkOutSessionId:
           type: string
           format: uuid
-          description: Optional, internal. Link-out session ID, for use with webshops.
+          description: >-
+            Optional, internal. The opaque, backend-minted key from a prior link-out session registration (see registerLinkOutSession). Relayed verbatim by the webshop on a game-deeplinked order; the backend exchanges it for the registered device context. Ignored when absent, unrecognised, or when the session's owner does not match the ordering player.
         metadata:
           type: object
+          maxProperties: 20
           additionalProperties:
             type: string
+            maxLength: 100
           description: >-
-            Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks.
+            Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks. Limited to 20 keys; each key is limited to 40 bytes and each value to 100 bytes. Limits are enforced on the UTF-8 byte length, not the character count, so multi-byte characters count multiple times. Orders exceeding these limits are rejected.
         deviceInfo:
           $ref: '#/components/schemas/device-info'
       required:
@@ -570,9 +681,7 @@ components:
         unity.gappid:
           type: string
           description: >-
-            Google App ID (same value as the Firebase app ID). Declared in the
-            contract but not currently populated by the SDK, so this is always
-            empty in practice; use unity.firebase_app_id for the Firebase app ID.
+            Google App ID (same value as the Firebase app ID). Declared in the contract but not currently populated by the SDK, so this is always empty in practice; use unity.firebase_app_id for the Firebase app ID.
         unity.idfa:
           type: string
           description: iOS Identifier for Advertisers
@@ -627,22 +736,27 @@ components:
     payment-providers-response:
       title: PaymentProvidersResponse
       type: object
-      description: |-
-        List of configured payment provider identifiers the calling player is eligible for, listed in priority order, highest
-        first. The list may be empty when no provider is eligible.
+      description: The providers this player may use, and whether the environment is in test mode.
       required:
         - providers
         - paymentOptionsPopupEnabled
+        - testMode
       properties:
         providers:
           type: array
-          description: Ordered, deduplicated list of configured payment provider identifiers eligible for the calling player.
+          description: Ordered, deduplicated list of payment provider identifiers eligible for the calling player.
           items:
             type: string
             example: stripe
         paymentOptionsPopupEnabled:
           type: boolean
           description: Indicates whether the client should display the payment options popup (interstitial) before initiating checkout.
+        testMode:
+          type: boolean
+          description: |-
+            Whether the environment is in test mode. While true, orders are simulated and embedded checkout is
+            unavailable. Environments start in test mode. It can be turned off while no provider is connected, and
+            connecting a provider turns it off.
     device-info:
       title: DeviceInfo
       type: object
@@ -697,12 +811,95 @@ components:
     link-out-session-register-response:
       title: LinkOutSessionRegisterResponse
       type: object
+      required:
+        - linkOutSessionId
       properties:
         linkOutSessionId:
           type: string
           format: uuid
           description: Backend-minted opaque key the webshop relays at order-create.
           example: 7f3d8c2a-1b4e-4c6a-9d2f-7a1b2c3d4e5f
+    purchase-eligibility-request:
+      title: PurchaseEligibilityRequest
+      type: object
+      required:
+        - catalogListingIds
+      properties:
+        catalogListingIds:
+          type: array
+          minItems: 1
+          maxItems: 50
+          description: Catalog listings to check. Duplicates are ignored.
+          items:
+            type: string
+            minLength: 1
+          example:
+            - 'product-00001.json'
+            - 'product-00002.json'
+    purchase-eligibility-response:
+      title: PurchaseEligibilityResponse
+      type: object
+      required:
+        - listings
+        - failures
+      properties:
+        listings:
+          type: array
+          description: Listings that were checked.
+          items:
+            $ref: '#/components/schemas/listing-eligibility'
+        failures:
+          type: array
+          description: Listings that could not be checked. Do not treat them as eligible.
+          items:
+            $ref: '#/components/schemas/listing-eligibility-failure'
+    listing-eligibility:
+      title: ListingEligibility
+      type: object
+      required:
+        - catalogListingId
+        - eligible
+      properties:
+        catalogListingId:
+          type: string
+          example: 'product-00001.json'
+        eligible:
+          type: boolean
+          description: Whether the player can order this listing now.
+        nextEligibleAt:
+          type: string
+          format: date-time
+          description: Start of the next UTC period of the listing's purchase limit. Present only when `eligible` is false.
+          example: '2026-10-02T00:00:00Z'
+        remaining:
+          type: integer
+          minimum: 0
+          description: |-
+            How many more orders the player can create in the current UTC period of the listing's purchase limit. 0 when
+            `eligible` is false. Absent when the listing has no purchase limit, or when the player has not paid for it since
+            the start of the current UTC month; use the catalog listing's `purchaseLimit.count` then.
+          example: 2
+    listing-eligibility-failure:
+      title: ListingEligibilityFailure
+      type: object
+      required:
+        - catalogListingId
+        - reason
+      properties:
+        catalogListingId:
+          type: string
+          example: 'product-00002.json'
+        reason:
+          type: string
+          description: |-
+            Why the listing could not be checked.
+            - `catalog_unavailable`: the catalog could not be read. Retry the request.
+            - `listing_not_found`: the listing no longer exists in the catalog.
+            - `invalid_purchase_limit`: the listing's purchase limit is misconfigured.
+          enum:
+            - catalog_unavailable
+            - listing_not_found
+            - invalid_purchase_limit
     order-response:
       title: OrderResponse
       type: object
@@ -808,7 +1005,7 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Additional metadata about the player
+          description: The key/value metadata provided at order creation.
         createdAt:
           type: string
           format: date-time
@@ -922,11 +1119,23 @@ components:
           schema:
             $ref: '#/components/schemas/basic-error-response'
     error-response-order-already-entitled:
-      description: Conflict. The player is already entitled to the item being purchased.
+      description: |-
+        Conflict. The `type` field tells the cases apart:
+          - `problems/purchase-limit-reached`: the player has bought this catalog listing as many times as its
+            `purchaseLimit` allows in the current UTC period (hour, day or month).
+          - `problems/basic`: the player is already entitled to the item, or another order for the player is in
+            progress or was just paid.
       content:
         application/problem+json:
           schema:
-            $ref: '#/components/schemas/basic-error-response'
+            oneOf:
+              - $ref: '#/components/schemas/basic-conflict-error-response'
+              - $ref: '#/components/schemas/purchase-limit-reached-error-response'
+            discriminator:
+              propertyName: type
+              mapping:
+                'problems/basic': '#/components/schemas/basic-conflict-error-response'
+                'problems/purchase-limit-reached': '#/components/schemas/purchase-limit-reached-error-response'
     error-response-order-invalid-state-transition:
       description: |-
         Conflict. The order is not in a state that allows the requested status change.
@@ -943,6 +1152,18 @@ components:
             $ref: '#/components/schemas/basic-error-response'
     error-response-internal-server-error:
       description: Internal Server Error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-bad-gateway:
+      description: Bad Gateway. The payment provider failed to process the request.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/basic-error-response'
+    error-response-gateway-timeout:
+      description: Gateway Timeout. An upstream service timed out while processing the request.
       content:
         application/problem+json:
           schema:

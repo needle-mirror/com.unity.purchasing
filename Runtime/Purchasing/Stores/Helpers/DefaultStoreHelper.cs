@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing
                     return AppleAppStore.Name;
                 case RuntimePlatform.Android:
                     return SelectedAndroidStoreHelper.GetSelectedAndroidStoreName();
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
                 case RuntimePlatform.WindowsPlayer:
                 case RuntimePlatform.GameCoreXboxOne:
                 case RuntimePlatform.GameCoreXboxSeries:
@@ -72,7 +72,7 @@ namespace UnityEngine.Purchasing
                     return AppStore.AppleAppStore;
                 case RuntimePlatform.Android:
                     return SelectedAndroidStoreHelper.GetSelectedAndroidStore();
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
                 case RuntimePlatform.WindowsPlayer:
                 case RuntimePlatform.GameCoreXboxOne:
                 case RuntimePlatform.GameCoreXboxSeries:

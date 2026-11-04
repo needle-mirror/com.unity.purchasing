@@ -1,5 +1,7 @@
 # Unity IAP Platform-Specific Notes
 
+`controller` in this file is your `PurchasingController` (see [purchasing-controller.md](purchasing-controller.md)): its own events take the store name first, while the extended-service events below keep their signatures — each extended service belongs to one store.
+
 ## Table of Contents
 
 - [Apple App Store Extensions](#apple-app-store-extensions)
@@ -11,23 +13,23 @@
 
 ## Apple App Store Extensions
 
-Access via `store.AppleStoreExtendedPurchaseService` (for purchase features) and `store.AppleStoreExtendedService` (for store features).
+Access via `controller.AppleStoreExtendedPurchaseService` (for purchase features) and `controller.AppleStoreExtendedService` (for store features).
 
 ### Promotional Purchases
 
 Apple can present purchases from the App Store product page. Intercept and handle them:
 
 ```csharp
-if (store.AppleStoreExtendedPurchaseService != null)
+if (controller.AppleStoreExtendedPurchaseService != null)
 {
-    store.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += (product) =>
+    controller.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += (product) =>
     {
         // Player tapped "Buy" on App Store product page
         // You can delay the purchase (e.g., show a loading screen first)
         Debug.Log($"Promotional purchase intercepted: {product.definition.id}");
 
         // When ready, continue the purchase
-        store.AppleStoreExtendedPurchaseService.ContinuePromotionalPurchases();
+        controller.AppleStoreExtendedPurchaseService.ContinuePromotionalPurchases();
     };
 }
 ```
@@ -39,7 +41,7 @@ if (store.AppleStoreExtendedPurchaseService != null)
 On devices with Family Sharing and a child account, purchases may require parental approval:
 
 ```csharp
-store.OnPurchaseDeferred += (deferredOrder) =>
+controller.OnPurchaseDeferred += (storeName, deferredOrder) =>
 {
     // Purchase is waiting for parental approval
     // Show UI: "Purchase pending approval"
@@ -54,7 +56,7 @@ For testing in sandbox:
 
 ```csharp
 // Simulate Ask-to-Buy in the editor/sandbox
-store.AppleStoreExtendedPurchaseService.simulateAskToBuy = true;
+controller.AppleStoreExtendedPurchaseService.simulateAskToBuy = true;
 ```
 
 ### Offer Code Redemption
@@ -62,7 +64,7 @@ store.AppleStoreExtendedPurchaseService.simulateAskToBuy = true;
 Present the Apple offer code redemption sheet:
 
 ```csharp
-store.AppleStoreExtendedPurchaseService.PresentCodeRedemptionSheet();
+controller.AppleStoreExtendedPurchaseService.PresentCodeRedemptionSheet();
 ```
 
 ### Entitlement Revocation
@@ -70,7 +72,7 @@ store.AppleStoreExtendedPurchaseService.PresentCodeRedemptionSheet();
 Listen for revoked entitlements (e.g., refund granted):
 
 ```csharp
-store.AppleStoreExtendedPurchaseService.OnEntitlementRevoked += (productId) =>
+controller.AppleStoreExtendedPurchaseService.OnEntitlementRevoked += (productId) =>
 {
     Debug.Log($"Entitlement revoked for: {productId}");
     // Remove the content/feature from the player
@@ -81,13 +83,13 @@ store.AppleStoreExtendedPurchaseService.OnEntitlementRevoked += (productId) =>
 
 ```csharp
 // Check if the device can make payments (parental controls may block)
-bool canPay = store.AppleStoreExtendedService.canMakePayments;
+bool canPay = controller.AppleStoreExtendedService.canMakePayments;
 
 // Set App Account Token for server-to-server verification
-store.AppleStoreExtendedService.SetAppAccountToken(Guid.NewGuid());
+controller.AppleStoreExtendedService.SetAppAccountToken(Guid.NewGuid());
 
 // Fetch storefront info (StoreKit 2 only)
-store.AppleStoreExtendedService.FetchStorefront(
+controller.AppleStoreExtendedService.FetchStorefront(
     (storefront) => Debug.Log($"Storefront: {storefront.CountryCode}"),
     (error) => Debug.LogError($"Storefront error: {error}")
 );
@@ -95,7 +97,7 @@ store.AppleStoreExtendedService.FetchStorefront(
 
 ## Google Play Store Extensions
 
-Access via `store.GooglePlayStoreExtendedPurchaseService` (for purchase features) and `store.GooglePlayStoreExtendedService` (for store features).
+Access via `controller.GooglePlayStoreExtendedPurchaseService` (for purchase features) and `controller.GooglePlayStoreExtendedService` (for store features).
 
 ### Subscription Upgrade/Downgrade
 
@@ -104,9 +106,9 @@ Change a player's subscription tier:
 ```csharp
 // Get the current subscription order and the new product
 Order currentOrder = /* the player's current subscription order */;
-Product newProduct = store.GetProductById("com.mygame.vip_annual");
+Product newProduct = controller.GetProductById("com.mygame.vip_annual", GooglePlay.Name);
 
-store.GooglePlayStoreExtendedPurchaseService.UpgradeDowngradeSubscription(
+controller.GooglePlayStoreExtendedPurchaseService.UpgradeDowngradeSubscription(
     currentOrder,
     newProduct,
     GooglePlayReplacementMode.ChargeFullPrice
@@ -129,21 +131,21 @@ store.GooglePlayStoreExtendedPurchaseService.UpgradeDowngradeSubscription(
 Set obfuscated account/profile IDs for fraud detection:
 
 ```csharp
-store.GooglePlayStoreExtendedService.SetObfuscatedAccountId("hashed_account_id");
-store.GooglePlayStoreExtendedService.SetObfuscatedProfileId("hashed_profile_id");
+controller.GooglePlayStoreExtendedService.SetObfuscatedAccountId("hashed_account_id");
+controller.GooglePlayStoreExtendedService.SetObfuscatedProfileId("hashed_profile_id");
 ```
 
 Retrieve them from an order:
 
 ```csharp
-string accountId = store.GooglePlayStoreExtendedPurchaseService.GetObfuscatedAccountId(order);
-string profileId = store.GooglePlayStoreExtendedPurchaseService.GetObfuscatedProfileId(order);
+string accountId = controller.GooglePlayStoreExtendedPurchaseService.GetObfuscatedAccountId(order);
+string profileId = controller.GooglePlayStoreExtendedPurchaseService.GetObfuscatedProfileId(order);
 ```
 
 ### Deferred Payment Events
 
 ```csharp
-store.GooglePlayStoreExtendedPurchaseService.OnDeferredPaymentUntilRenewalDate += (deferredOrder) =>
+controller.GooglePlayStoreExtendedPurchaseService.OnDeferredPaymentUntilRenewalDate += (deferredOrder) =>
 {
     Debug.Log($"Payment deferred until renewal: {deferredOrder.SubscriptionOrdered.definition.id}");
 };
@@ -154,7 +156,7 @@ store.GooglePlayStoreExtendedPurchaseService.OnDeferredPaymentUntilRenewalDate +
 For server-side Apple receipt validation (replacing the deprecated `CrossPlatformValidator`):
 
 ```csharp
-store.OnPurchasePending += (pendingOrder) =>
+controller.OnPurchasePending += (storeName, pendingOrder) =>
 {
     // Access the JWS-signed transaction
     string jws = pendingOrder.Info.Apple?.jwsRepresentation;
@@ -165,6 +167,8 @@ store.OnPurchasePending += (pendingOrder) =>
 
 The `jwsRepresentation` contains a signed JSON Web Signature that can be verified using Apple's public keys.
 
+When the server checks the transaction's `bundleId`, compare it with the bundle ID the server is configured with (the app's bundle ID in App Store Connect). Never derive it from the product IDs: they are free-form strings, so a prefix match against them is not a valid check. For example, a new app record that kept an older app's product IDs fails that check for every genuine purchase. Apple's App Store Server Library does the check for you: its `SignedDataVerifier` takes the bundle ID.
+
 ## SubscriptionInfo Platform Nuances
 
 | Method | Apple | Google |
@@ -174,11 +178,15 @@ The `jwsRepresentation` contains a signed JSON Web Signature that can be verifie
 
 Always check `IsSubscribed()` first — if the result is `Result.Unsupported`, the platform doesn't provide that information.
 
+`Order.Info.PurchaseDate` follows the same split for subscriptions: on Apple each renewal is its own transaction, so it is the renewal date; on Google it is the original purchase date. Don't compare it across platforms to find when a subscription last renewed.
+
+For Payment Provider orders, `Order.Info.PurchaseDate` is the order's `createdAt`: when the order was created at checkout, not when payment completed. It is `null` until the order is paid.
+
 ## Cross-Platform Best Practices
 
 | Concern | Recommendation |
 |---|---|
-| Restore button | Required on iOS (Apple guideline). Add a "Restore Purchases" button that calls `store.RestoreTransactions()`. |
+| Restore button | Required on iOS (Apple guideline). Add a "Restore Purchases" button that calls `controller.RestoreTransactions((storeName, success, error) => ...)`. |
 | Receipt validation | **Google Play:** Use `CrossPlatformValidator(GooglePlayTangle.Data(), Application.identifier)` for local validation. **Apple (StoreKit 2):** Local validation via `CrossPlatformValidator` is a **no-op** — use `order.Info.Apple?.jwsRepresentation` for server-side validation instead. |
 | Pending purchases | Always handle `OnPurchasePending` and call `ConfirmPurchase`. Unconfirmed purchases persist across launches. |
 | Product IDs | Use reverse-domain naming: `com.company.game.product` |
@@ -197,8 +205,8 @@ Always check `IsSubscribed()` first — if the result is `Result.Unsupported`, t
 **CRITICAL:** Always null-check platform extensions before use:
 
 ```csharp
-if (store.AppleStoreExtendedPurchaseService != null)
+if (controller.AppleStoreExtendedPurchaseService != null)
 {
-    store.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += HandlePromo;
+    controller.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += HandlePromo;
 }
 ```

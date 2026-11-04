@@ -1,3 +1,4 @@
+#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_STANDALONE_OSX) && !UNITY_EDITOR
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -311,3 +312,4 @@ namespace UnityEngine.Purchasing.Security
         }
     }
 }
+#endif

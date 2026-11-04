@@ -45,6 +45,8 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Model
             Categories = config.Categories?.Count > 0 ? new List<string>(config.Categories) : null;
             HdImages = BuildHdImages(config.HdImages);
             Promotion = config.Promotion is not null ? new Promotion(config.Promotion) : null;
+            // Keep a half-filled limit so validation can block it; only a fully empty one means no limit.
+            PurchaseLimit = config.PurchaseLimit is { } limit && (limit.Period != PurchaseLimitPeriod.None || limit.Count != 0) ? new PurchaseLimit(limit) : null;
             StoreIdOverrides = null;
             SetStoreIdOverride(StoreId.Apple, config.AppleOverride);
             SetStoreIdOverride(StoreId.Google, config.GoogleOverride);

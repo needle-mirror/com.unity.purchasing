@@ -156,8 +156,11 @@ namespace UnityEngine.Purchasing.Services
 
         public void PresentCodeRedemptionSheet()
         {
-            IsStoreConnected();
-            m_PresentCodeRedemptionSheetUseCase.PresentCodeRedemptionSheet();
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                IsStoreConnected();
+                m_PresentCodeRedemptionSheetUseCase.PresentCodeRedemptionSheet();
+            }
         }
 
         protected override void RestoreTransactionsInternal(Action<bool, string?>? callback)
@@ -173,7 +176,10 @@ namespace UnityEngine.Purchasing.Services
 
         public void ContinuePromotionalPurchases()
         {
-            m_ContinuePromotionalPurchasesUseCase.ContinuePromotionalPurchases();
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                m_ContinuePromotionalPurchasesUseCase.ContinuePromotionalPurchases();
+            }
         }
 
         public bool simulateAskToBuy
@@ -185,7 +191,10 @@ namespace UnityEngine.Purchasing.Services
         // TODO: IAP-3929
         public void RefreshAppReceipt(Action<string> successCallback, Action<string> errorCallback)
         {
-            m_RefreshAppReceiptUseCase.RefreshAppReceipt(successCallback, errorCallback);
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                m_RefreshAppReceiptUseCase.RefreshAppReceipt(successCallback, errorCallback);
+            }
         }
 
         // TODO: IAP-3929

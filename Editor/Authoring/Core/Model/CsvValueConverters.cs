@@ -42,6 +42,39 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     }
 
     /// <summary>
+    /// Purchase limit count. A cell that isn't a whole number reads as -1 so validation blocks the deploy
+    /// instead of the limit quietly dropping and clearing the remote one.
+    /// </summary>
+    class CsvPurchaseLimitCountConverter : ICsvValueConverter
+    {
+        public string InvalidValueDetail => null;
+
+        public string ToCsv(object value) => ((int)value).ToString(CultureInfo.InvariantCulture);
+
+        public bool TryFromCsv(string text, out object value)
+        {
+            value = int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : -1;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Purchase limit period. An unknown period reads as a value outside the enum so validation blocks the
+    /// deploy instead of the limit quietly dropping and clearing the remote one.
+    /// </summary>
+    class CsvPurchaseLimitPeriodConverter : CsvEnumConverter
+    {
+        public CsvPurchaseLimitPeriodConverter(Type memberType, object fallback) : base(memberType, fallback) { }
+
+        public override bool TryFromCsv(string text, out object value)
+        {
+            if (!base.TryFromCsv(text, out value))
+                value = (PurchaseLimitPeriod)(-1);
+            return true;
+        }
+    }
+
+    /// <summary>
     /// A price that doubles as its own "is it set" flag: Unity's inspector can't render Nullable&lt;T&gt;,
     /// so anything below <see cref="PricingDetails.WebshopPriceUnsetThreshold"/> means unset and writes a
     /// blank cell. Sub-cent values aren't a real commercial price.

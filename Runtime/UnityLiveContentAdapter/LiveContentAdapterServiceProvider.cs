@@ -10,5 +10,11 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService
         }
 
         static ILiveContentAdapterClientWrapper s_Instance;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
     }
 }

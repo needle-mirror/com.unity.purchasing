@@ -26,14 +26,18 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         const string k_SchemaRegistryBasePathProduction =
             "https://services.api.unity.com/schema-registry";
         internal const string k_RequiredSchemaPath =
-            "/v1/schemas/UnityRemoteCatalog/versions/1.1.0";
+            "/v1/schemas/UnityRemoteCatalog/versions/1.2.0";
+        // List by base URL + version range so listings deployed under older 1.x schemas stay visible.
+        internal const string k_RequiredSchemaBasePath = "/v1/schemas/UnityRemoteCatalog";
+        internal const string k_RequiredSchemaVersionRange = ">=1.1.0,<2.0.0";
+        internal const string k_RequiredSchemaMarker = "/schemas/UnityRemoteCatalog/versions/";
         internal const string k_WebshopSchemaPath =
             "/v1/schemas/UnityRemoteCatalogWebshop/versions/1.1.0";
         internal const string k_WebshopMarker = "UnityRemoteCatalogWebshop";
 
         // Partial-path match — survives prod/staging base-URL differences.
         internal static bool IsSdkControlled(string url) =>
-            url != null && (url.Contains(k_RequiredSchemaPath) || url.Contains(k_WebshopMarker));
+            url != null && (url.Contains(k_RequiredSchemaMarker) || url.Contains(k_WebshopMarker));
 
         readonly OperationRetryPolicy m_RetryPolicy = OperationRetryPolicy.Create()
             .WithMaxRetries(3)
@@ -46,6 +50,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         readonly ILogger m_Logger;
         readonly ILiveContentApiTransport m_Transport;
         readonly string m_RequiredSchema;
+        readonly string m_RequiredSchemaBase;
         readonly string m_WebshopSchema;
 
         public LiveContentConfigClient(ILiveContentApiTransport transport, ILogger logger)
@@ -59,6 +64,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
             m_Transport = transport;
             m_Logger = logger;
             m_RequiredSchema = schemaRegistryBasePath + k_RequiredSchemaPath;
+            m_RequiredSchemaBase = schemaRegistryBasePath + k_RequiredSchemaBasePath;
             m_WebshopSchema = schemaRegistryBasePath + k_WebshopSchemaPath;
         }
 
@@ -67,6 +73,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
             string projectId,
             CancellationToken cancellationToken)
         {
+            // An empty id produces a request path the gateway answers with 404, which callers
+            // would misread as "config not found".
+            if (string.IsNullOrEmpty(environmentId))
+                throw new ClientException("Cannot initialize without an environment id.", null);
+            if (string.IsNullOrEmpty(projectId))
+                throw new ClientException("Cannot initialize without a project id.", null);
+
             await m_Transport.InitializeAsync(environmentId, projectId, cancellationToken);
         }
 
@@ -151,8 +164,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
                 () => m_Transport.GetConfigContentAsync(path, cancellationToken),
                 cancellationToken);
 
-            if (result.StatusCode == 404 || !result.IsSuccess)
+            if (result.StatusCode == 404)
                 return null;
+
+            // Only a 404 means the config doesn't exist. Any other failure (e.g. an auth token
+            // that isn't ready yet) must not be reported as "not deployed".
+            if (!result.IsSuccess)
+                throw new ClientException($"GetConfigContent failed (HTTP {result.StatusCode}). {result.Error}", null);
 
             return result.Content;
         }
@@ -214,7 +232,8 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
                         limit: maxConfigsApiPageSize,
                         after: afterCursor,
                         start: isFirstPage ? true : null,
-                        schema: m_RequiredSchema,
+                        schema: m_RequiredSchemaBase,
+                        schemaVersion: k_RequiredSchemaVersionRange,
                         cancellationToken: cancellationToken),
                     cancellationToken);
 

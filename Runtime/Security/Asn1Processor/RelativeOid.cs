@@ -1,3 +1,4 @@
+#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_STANDALONE_OSX) && !UNITY_EDITOR
 using System;
 using System.IO;
 
@@ -67,3 +68,4 @@ namespace LipingShare.LCLib.Asn1Processor
 
     }
 }
+#endif

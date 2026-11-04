@@ -3,7 +3,8 @@ using System.Runtime.InteropServices;
 using UnityEngine.Purchasing.Extension;
 using Purchasing.Utilities;
 
-#if !UNITY_EDITOR
+// ULO-13058: Platform gating should be in the asmdef, move there when possible
+#if (UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS) && !UNITY_EDITOR
 namespace UnityEngine.Purchasing
 {
     internal class iOSStoreBindings : INativeAppleStore
@@ -18,7 +19,7 @@ namespace UnityEngine.Purchasing
         static extern void unityPurchasing_FetchProducts(string json);
 
         [DllImport("__Internal")]
-        static extern void unityPurchasing_PurchaseProduct(string productJson, string optionsJson, StorefrontChangeCallback storefrontCallbackDelegate);
+        static extern void unityPurchasing_PurchaseProduct(string productJson, string optionsJson, StorefrontChangeCallback storefrontCallbackDelegate, string impressionId);
 
         [DllImport("__Internal")]
         static extern IntPtr unityPurchasing_FetchAppReceipt();
@@ -37,6 +38,13 @@ namespace UnityEngine.Purchasing
 
         [DllImport("__Internal")]
         static extern void externalPurchase_FetchStorefront(ExternalPurchaseCallback callback);
+
+        [DllImport("__Internal")]
+        [return: MarshalAs(UnmanagedType.I1)]
+        static extern bool unityPurchasing_IsSceneFrontmost();
+
+        [DllImport("__Internal")]
+        static extern void unityPurchasing_SetSceneBecameFrontmostCallback(SceneBecameFrontmostCallback callback);
 
         [DllImport("__Internal")]
         static extern void unityPurchasing_FetchPurchases();
@@ -283,7 +291,7 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            Purchase(productJSON, developerPayload, null);
+            Purchase(productJSON, developerPayload, impressionId: null);
         }
 
         public void FinishTransaction(string productDescription, string transactionId)
@@ -408,7 +416,19 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            unityPurchasing_PurchaseProduct(productJson, optionsJson, callback);
+            unityPurchasing_PurchaseProduct(productJson, optionsJson, callback, null);
+        }
+
+        public void Purchase(string productJson, string optionsJson, string impressionId)
+        {
+            // StoreKit 1 purchases are sent to the SK transaction listener and cannot hold an impression_id
+            if (useStoreKit1)
+            {
+                unityPurchasingPurchase(productJson, optionsJson);
+                return;
+            }
+
+            unityPurchasing_PurchaseProduct(productJson, optionsJson, null, impressionId);
         }
 
         // TODO: IAP-3929
@@ -432,6 +452,16 @@ namespace UnityEngine.Purchasing
             }
 
             unityPurchasing_FetchStorefront();
+        }
+
+        public bool IsSceneFrontmost()
+        {
+            return unityPurchasing_IsSceneFrontmost();
+        }
+
+        public void SetSceneBecameFrontmostCallback(SceneBecameFrontmostCallback callback)
+        {
+            unityPurchasing_SetSceneBecameFrontmostCallback(callback);
         }
 
         public string FetchNativeDeviceInfo()

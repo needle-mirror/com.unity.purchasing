@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_STANDALONE_OSX) && !UNITY_EDITOR
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using LipingShare.LCLib.Asn1Processor;
@@ -90,3 +91,4 @@ namespace UnityEngine.Purchasing.Security
     /// </summary>
 	public class InvalidRSAData : IAPSecurityException { }
 }
+#endif

@@ -16,6 +16,8 @@ namespace UnityEngine.Purchasing.Interfaces
         string? obfuscatedProfileId { get; }
         string originalJson { get; }
         string purchaseToken { get; }
+        // Milliseconds since Unix epoch
+        long purchaseTime { get; }
         public IEnumerable<ProductDescription> productDescriptions { get; }
         string? sku { get; }
         bool IsAcknowledged();

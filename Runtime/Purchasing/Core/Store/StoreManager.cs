@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.Collections.Generic;
+using UnityEngine.Purchasing.Extension;
 
 namespace UnityEngine.Purchasing
 {
@@ -37,6 +38,10 @@ namespace UnityEngine.Purchasing
                 }
 
                 var store = m_StoreFactory.CreateStore(name);
+                if (store.instance.ProductCache is ProductCache productCache)
+                {
+                    productCache.StoreName = store.name;
+                }
                 m_InstantiatedStores[name] = store;
             }
 

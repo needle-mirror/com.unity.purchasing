@@ -22,26 +22,28 @@ using UnityEngine.Purchasing.PaymentProviderService.Http;
 namespace UnityEngine.Purchasing.PaymentProviderService.Models
 {
     /// <summary>
-    /// List of configured payment provider identifiers the calling player is eligible for, listed in priority order, highest first. The list may be empty when no provider is eligible.
+    /// The providers this player may use, and whether the environment is in test mode.
     /// </summary>
     [Preserve]
     [DataContract(Name = "payment-providers-response")]
     internal class PaymentProvidersResponse
     {
         /// <summary>
-        /// List of configured payment provider identifiers the calling player is eligible for, listed in priority order, highest first. The list may be empty when no provider is eligible.
+        /// The providers this player may use, and whether the environment is in test mode.
         /// </summary>
-        /// <param name="providers">Ordered, deduplicated list of configured payment provider identifiers eligible for the calling player.</param>
+        /// <param name="providers">Ordered, deduplicated list of payment provider identifiers eligible for the calling player.</param>
         /// <param name="paymentOptionsPopupEnabled">Indicates whether the client should display the payment options popup (interstitial) before initiating checkout.</param>
+        /// <param name="testMode">Whether the environment is in test mode. While true, orders are simulated and embedded checkout is unavailable. Environments start in test mode. It can be turned off while no provider is connected, and connecting a provider turns it off.</param>
         [Preserve]
-        public PaymentProvidersResponse(List<string> providers, bool paymentOptionsPopupEnabled)
+        public PaymentProvidersResponse(List<string> providers, bool paymentOptionsPopupEnabled, bool testMode)
         {
             Providers = providers;
             PaymentOptionsPopupEnabled = paymentOptionsPopupEnabled;
+            TestMode = testMode;
         }
 
         /// <summary>
-        /// Ordered, deduplicated list of configured payment provider identifiers eligible for the calling player.
+        /// Ordered, deduplicated list of payment provider identifiers eligible for the calling player.
         /// </summary>
         [Preserve]
         [DataMember(Name = "providers", IsRequired = true, EmitDefaultValue = true)]
@@ -53,6 +55,13 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         [Preserve]
         [DataMember(Name = "paymentOptionsPopupEnabled", IsRequired = true, EmitDefaultValue = true)]
         public bool PaymentOptionsPopupEnabled{ get; }
+        
+        /// <summary>
+        /// Whether the environment is in test mode. While true, orders are simulated and embedded checkout is unavailable. Environments start in test mode. It can be turned off while no provider is connected, and connecting a provider turns it off.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "testMode", IsRequired = true, EmitDefaultValue = true)]
+        public bool TestMode{ get; }
     
         /// <summary>
         /// Formats a PaymentProvidersResponse into a string of key-value pairs for use as a path parameter.
@@ -66,7 +75,8 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 serializedModel += "providers," + Providers.ToString() + ",";
             }
-            serializedModel += "paymentOptionsPopupEnabled," + PaymentOptionsPopupEnabled.ToString();
+            serializedModel += "paymentOptionsPopupEnabled," + PaymentOptionsPopupEnabled.ToString() + ",";
+            serializedModel += "testMode," + TestMode.ToString();
             return serializedModel;
         }
 
@@ -86,6 +96,9 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             
             var paymentOptionsPopupEnabledStringValue = PaymentOptionsPopupEnabled.ToString();
             dictionary.Add("paymentOptionsPopupEnabled", paymentOptionsPopupEnabledStringValue);
+            
+            var testModeStringValue = TestMode.ToString();
+            dictionary.Add("testMode", testModeStringValue);
             
             return dictionary;
         }

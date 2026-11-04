@@ -24,9 +24,18 @@ namespace UnityEngine.Purchasing
 
         public void Clear()
         {
-            if (!string.IsNullOrEmpty(m_PersistentDataPath))
+            if (string.IsNullOrEmpty(m_PersistentDataPath) || !Directory.Exists(m_PersistentDataPath))
+            {
+                return;
+            }
+
+            try
             {
                 Directory.Delete(m_PersistentDataPath, true);
+            }
+            catch (Exception clearPathException)
+            {
+                Debug.unityLogger.LogException(clearPathException);
             }
         }
 

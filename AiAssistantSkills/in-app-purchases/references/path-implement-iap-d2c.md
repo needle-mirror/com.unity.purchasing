@@ -33,7 +33,7 @@ Use this reference when the user explicitly asks to add IAP D2C Capabilities (th
 | Requirement | Detail |
 |---|---|
 | Unity Editor | **2022.3 or later** — IAP 5.4 does not support older Editor versions |
-| `com.unity.purchasing` | **v5.4+** |
+| `com.unity.purchasing` | **v5.4+** for IAP D2C Capabilities; **v5.5+** for `PurchasingController`, which all code in this path uses. On 5.4.x, recommend upgrading; fall back to `StoreController` only if the user can't or won't upgrade |
 | `com.unity.services.authentication` | **v3.7.1+** — IAP D2C Capabilities will not initialize without this version or later |
 | `com.unity.services.core` | **v1.18.0+** — required by IAP 5.4 |
 | Unity Gaming Services initialized | `UnityServices.InitializeAsync()` and sign-in must complete **before** IAP D2C Capabilities initialization |
@@ -160,6 +160,7 @@ So a file named `coins_100.ucat` with no `uSKU` field gives you `uSKU = "coins_1
 | `categories` | string[] | | Webshop taxonomy. Only meaningful when `isWebshopAvailable=true`. |
 | `hdImages` | array | | Webshop hero images. Only meaningful when `isWebshopAvailable=true`. See sub-schema below. |
 | `promotion` | object | | Webshop promotion overlay. Only meaningful when `isWebshopAvailable=true`. See sub-schema below. |
+| `purchaseLimit` | object | | Max purchases per player per UTC period. Enforced for Payment Provider purchases only. See sub-schema below. |
 
 **`productDetails[]`:** `language` (required, enum e.g. `en_US`, `fr_FR`), `title` (required, 1–50 chars), `subtitle` (optional, 1–50 chars), `description` (optional, 1–250 chars), `badge` (optional, `{ text (required), imageUrl (optional HTTPS) }`).
 
@@ -171,11 +172,13 @@ So a file named `coins_100.ucat` with no `uSKU` field gives you `uSKU = "coins_1
 
 **`promotion`:** `type` (required, enum: `"Sale"`, `"Bonus"`, `"Limited"`), `startsAt` (optional, ISO 8601 UTC), `endsAt` (optional, ISO 8601 UTC).
 
+**`purchaseLimit`:** `count` (required, integer ≥1), `period` (required, enum: `"Hour"`, `"Day"`, `"Month"` in the `.ucat`; lowercase on the wire). `"None"` means no limit and is not uploaded.
+
 **Local vs uploaded shape.** The `.ucat` on disk is what devs edit; the payload sent to the Live Content admin API is converted by `LiveContentConfigClient.ConvertToDto`:
 
 - `amount` and `webshopPrice` go from decimal major units on disk (`1.99`) to micros integer on the wire (`1990000`). Rounding: `Math.Round(amount * 1_000_000, MidpointRounding.AwayFromZero)`.
 - `$schema` is populated by the SDK on upload — never in the on-disk `.ucat`:
-  - Always: `https://services.api.unity.com/schema-registry/v1/schemas/UnityRemoteCatalog/versions/1.1.0`
+  - Always: `https://services.api.unity.com/schema-registry/v1/schemas/UnityRemoteCatalog/versions/1.2.0`
   - Added when `isWebshopAvailable=true`: `https://services.api.unity.com/schema-registry/v1/schemas/UnityRemoteCatalogWebshop/versions/1.1.0`
 - `isWebshopAvailable` is never uploaded — the server infers webshop-ness from the `$schema` array.
 - `categories`, `hdImages`, `promotion` are only emitted on upload when `isWebshopAvailable=true`. Toggling it off and re-uploading erases the server-side webshop data.
@@ -186,7 +189,7 @@ Remind the user that `.ucat` files must be **deployed to the Remote Catalog** be
 
 An alternative to per-item `.ucat` JSON is a single `.catalog.csv` file at any location under `Assets/`. The parser is `Editor/Authoring/Core/IO/CatalogCsvParser.cs`; each row is aggregated by `CatalogListingId` into the same `CatalogItem` model as the `.ucat` path, so uploaded output is identical.
 
-**Columns (23):**
+**Columns (26):**
 
 | Column | Maps to | Aggregation |
 |---|---|---|
@@ -214,9 +217,11 @@ An alternative to per-item `.ucat` JSON is a single `.catalog.csv` file at any l
 | `PromotionType` | `promotion.type` (Sale / Bonus / Limited) | per-item, first row wins, conflicts on later rows flagged |
 | `PromotionStartsAt` | `promotion.startsAt` (ISO 8601 UTC) | per-item, first row wins |
 | `PromotionEndsAt` | `promotion.endsAt` (ISO 8601 UTC) | per-item, first row wins |
+| `PurchaseLimitCount` | `purchaseLimit.count` (integer ≥1) | per-item, first row wins |
+| `PurchaseLimitPeriod` | `purchaseLimit.period` (Hour / Day / Month) | per-item, first row wins, conflicts on later rows flagged |
 
 **Aggregation rules:**
-- **per-item** columns (Sku, ProductType, imageUrl, overrides, IsWebshopAvailable, Promotion*): set once on the first row of a given `CatalogListingId`. Subsequent rows are conflict-checked and flagged if they disagree.
+- **per-item** columns (Sku, ProductType, imageUrl, overrides, IsWebshopAvailable, Promotion*, PurchaseLimit*): set once on the first row of a given `CatalogListingId`. Subsequent rows are conflict-checked and flagged if they disagree.
 - **per-row** columns without aggregation (Language/Title/Subtitle/Description/Badge*/CurrencyCode/Amount/WebshopPrice): one `productDetails` or `pricing` entry per row.
 - **per-row, aggregated** (Category, HdImageUrl, HdImageAltText): each row contributes one entry to the corresponding array on the item.
 
@@ -240,71 +245,97 @@ The same amount/schema conversion applies on upload as for `.ucat`.
 
 1. Open **Services > Deployment** in the Unity Editor. If the menu is missing, install the Unity Deployment package via **Window > Package Manager > Unity Registry > Deployment**.
 2. The Deployment window lists the `.ucat` and `.catalog.csv` files discovered under `Assets/` alongside any other deployable assets.
-3. Select the catalog files and click **Deploy**.
+3. Select only the catalog files and click **Deploy**. Don't deploy the whole list: it also deploys every other item, such as a Cloud Code module at whatever commit is checked out, which can overwrite what production runs.
 4. On success, the window marks each file as deployed. The products are now fetchable by the client via `FetchRemoteCatalog()` (see Step 5).
 
 The deployment targets the environment configured in **Edit > Project Settings > Services > Environments** (Development / Staging / Production). To move a catalog between environments, switch the active environment and re-deploy. For environment configuration, project linking, and multi-environment workflows, see the [build-live-games](https://github.com/Unity-Technologies/skills) skill (also shipped with Unity AI Assistant).
 
 ## Step 4 — IAPManager with PaymentProvider
 
-### Key difference from standard IAP 5
+### One PurchasingController for native + D2C
 
-IAP D2C Capabilities uses a `PaymentProvider.Name` parameter when obtaining the `StoreController`:
+IAP D2C Capabilities is one more store on the same `PurchasingController` — the payment provider store, `PaymentProvider.Name`:
 
 ```csharp
-// Standard IAP 5
-_storeController = UnityIAPServices.StoreController();
+// After UnityServices.InitializeAsync() and player sign-in (see Initialization sequence)
+var nativeStore = UnityIAPServices.GetDefaultStore();   // Apple App Store / Google Play
+_controller = new PurchasingController(nativeStore, PaymentProvider.Name);
 
-// IAP D2C Capabilities — pass the payment provider name
-_storeController = UnityIAPServices.StoreController(PaymentProvider.Name);
+// D2C only (no native billing): new PurchasingController(PaymentProvider.Name)
 ```
 
 `PaymentProvider.Name` is a constant that identifies the third-party provider integration. It does **not** return the display name of the provider (Stripe/Coda).
 
+- Every event takes the store name first; one subscription covers both stores.
+- Native fallback when no provider is eligible: `_controller.PurchaseProduct(catalogListingId, nativeStore)` — no second controller.
+- Fetch the Remote Catalog once, then fetch products per store from the same `RemoteCatalogProvider` (Step 5) — see [purchasing-controller.md](purchasing-controller.md#fetching-products-per-store).
+
 ### Initialization sequence
 
-IAP D2C Capabilities requires Unity Gaming Services and player sign-in to complete **before** `StoreController` is obtained. Follow this order:
+IAP D2C Capabilities requires Unity Gaming Services and player sign-in to complete **before** the `PurchasingController` is created with `PaymentProvider.Name`. Follow this order:
 
 1. `await UnityServices.InitializeAsync()`
 2. Sign the player in via Unity Authentication
-3. Only after sign-in succeeds: obtain `StoreController(PaymentProvider.Name)` and call `Connect()`
+3. Only after sign-in succeeds: `new PurchasingController(nativeStore, PaymentProvider.Name)`, subscribe to every event, then call `Connect()`
 
-Do not call `StoreController(PaymentProvider.Name)` before the player is authenticated.
+Do not create the controller with `PaymentProvider.Name` before the player is authenticated.
 
 **Anonymous sign-in warning:** Do not use anonymous sign-in as the authentication method for D2C purchases. Anonymous sign-in does not persist purchases after the session token is lost — if the player reinstalls the app or clears app data, their purchase history becomes unrecoverable. Use a persistent identity method (e.g., Unity Authentication with a linked account, or your own identity provider).
 
-### Payment provider services on the StoreController
+### Payment provider services on the PurchasingController
 
-The `StoreController` (scoped to `PaymentProvider.Name`) exposes the payment-provider APIs through **two** properties. Use the exact property names below — do not substitute the interface name for the property name, and do not use `PurchaseService.PaymentProviders` (that is a different entry point that returns the purchase-extended interface). Both properties are typed as nullable, but on a `PaymentProvider.Name`-scoped `StoreController` the factory always populates them — they are only `null` when reached from a `StoreController` scoped to another store (Apple / Google), where the payment-provider extensions do not apply. Guard with `?.` if the same code path could see either kind of controller.
+The `PurchasingController` exposes the payment-provider APIs through **two** properties, taken from its `PaymentProvider.Name` store. Use the exact property names below — do not substitute the interface name for the property name, and do not use `PurchaseService.PaymentProviders` (that is a different entry point that returns the purchase-extended interface). Both properties are nullable: they are `null` when the controller has no `PaymentProvider.Name` store. Guard with `?.`.
 
-| StoreController property | Returns interface | Members used in this doc |
+| PurchasingController property | Returns interface | Members used in this doc |
 | --- | --- | --- |
-| `store.PaymentProviderStoreExtendedService` | `IPaymentProvidersExtendedService` | `GetEligiblePaymentProviders`, `GetPaymentOptionProviderUGUI`, `GetPaymentOptionProviderUITK`, `SetCheckoutPresentationMode`, `SetWebshopPresentationMode`, `SetDeepLinkScheme` |
-| `store.PaymentProvidersExtendedPurchaseService` | `IPaymentProvidersExtendedPurchaseService` | `PurchaseProduct`, `RedirectToWebshop`, `GenerateURL`, `SetComplianceCheck`, `SetPaymentProviderOverride` |
+| `controller.PaymentProvidersExtendedService` | `IPaymentProvidersExtendedService` | `GetEligiblePaymentProviders`, `GetPurchaseEligibility`, `GetPaymentOptionProviderUGUI`, `GetPaymentOptionProviderUITK`, `SetCheckoutPresentationMode`, `SetWebshopPresentationMode`, `SetDeepLinkScheme` |
+| `controller.PaymentProvidersExtendedPurchaseService` | `IPaymentProvidersExtendedPurchaseService` | `RedirectToWebshop`, `GenerateURL`, `SetComplianceCheck`, `SetPaymentProviderOverride` |
 
-Note the naming asymmetry: the presentation-service property is singular (`PaymentProvider`**Store**`ExtendedService`) while the purchase-service property is plural (`PaymentProviders`**ExtendedPurchase**`Service`). This mirrors the Apple/Google split (`...ExtendedService` + `...ExtendedPurchaseService`).
+`GetPurchaseEligibility` checks catalog listings against their purchase limits (1 to 50 ids). It never throws; every id passed in has an entry. Fetch products first so `Remaining` is filled in for listings the player has not bought yet.
 
-### Coexistence with existing Apple / Google StoreController
+```csharp
+var service = controller.PaymentProvidersExtendedService;
+if (service == null)
+    return;   // no Payment Provider store on this controller
+var results = await service.GetPurchaseEligibility(new[] { "catalog/gem_pack" });
+var gems = results["catalog/gem_pack"];
+if (gems.FailureReason != null)
+    Debug.LogWarning($"Could not check catalog/gem_pack: {gems.FailureReason} {gems.FailureMessage}");
+else if (gems.Eligible)
+    Debug.Log(gems.Remaining is int left ? $"{left} purchases left" : "No purchase limit");
+else
+    Debug.Log($"Purchase limit reached. Available again at {gems.NextEligibleAt:u}");
+```
 
-If the project already has a `StoreController` for Apple App Store or Google Play (standard IAP 5):
+On a `StoreController`, this property was named `PaymentProviderStoreExtendedService` before IAP 5.5; 5.5 keeps that name working. Always generate `PaymentProvidersExtendedService`, and use the old name only for a `StoreController` on 5.4.x. `PurchasingController` has only the new name.
 
-- **Always create a new, separate `StoreController`** scoped to `PaymentProvider.Name`. Never modify or replace the existing one.
-- The two controllers are independent — they manage different products on different billing backends and do not interfere with each other.
-- After the new IAP D2C Capabilities `StoreController` is successfully created and connected, **prompt the user:**
+### Projects that already use StoreController
+
+If the project already has a `StoreController` (Apple App Store / Google Play, standard IAP 5):
+
+- **Offer to migrate it** into the same `PurchasingController` (see [purchasing-controller.md](purchasing-controller.md#migrating-from-storecontroller)) — do it only if the user agrees. Never modify or replace the existing controller unasked.
+- **If the user declines:** stay on `StoreController` throughout — do not add a `PurchasingController`, since the two must not be mixed. Leave the existing controller and its initialization untouched, and write the D2C code against `UnityIAPServices.StoreController(PaymentProvider.Name)`, the same pattern as before `PurchasingController` (see the `StoreController` section in [api-notes.md](api-notes.md)). Document the two-controller setup in code comments.
+- After the D2C controller is created and connected, **prompt the user:**
 
   > "An existing Apple/Google StoreController was found. Would you like to:
-  > - **Keep both** — run Apple/Google billing and IAP D2C Capabilities side by side (existing products stay on Apple/Google, new products use IAP D2C Capabilities)
-  > - **Remove the Apple/Google StoreController** — migrate fully to IAP D2C Capabilities (note: existing Apple/Google products and purchase history will no longer be managed by the app)"
+  > - **Keep native billing** — run Apple/Google billing and IAP D2C Capabilities side by side (existing products stay on Apple/Google, new products use IAP D2C Capabilities). I can also merge both into one `PurchasingController` if you want.
+  > - **Remove native billing** — migrate fully to IAP D2C Capabilities (note: existing Apple/Google products and purchase history will no longer be managed by the app)"
 
-- If the user chooses **keep both**: leave the existing `StoreController` and its initialization code untouched. Document the dual-controller setup in code comments.
-- If the user chooses **remove**: wrap the existing `StoreController` code in `#if !USE_IAP_D2C_ONLY` guards — do not delete it. Mark it `[Obsolete]` and document the removal decision. Instruct the user to also retire the corresponding products in App Store Connect / Play Console as needed.
+- If the user chooses **remove**: wrap the existing native code in `#if !USE_IAP_D2C_ONLY` guards — do not delete it. Mark it `[Obsolete]` and document the removal decision. Instruct the user to also retire the corresponding products in App Store Connect / Play Console as needed.
 
 ### Checking eligible payment providers
 
 Before initiating purchase, use `GetEligiblePaymentProviders()` to confirm that at least one payment provider is available for the current user and region. Call this after `Connect()` and `FetchProducts()` succeed:
 
 ```csharp
-var eligible = await store.PaymentProviderStoreExtendedService?.GetEligiblePaymentProviders();
+var svc = controller.PaymentProvidersExtendedService;
+if (svc == null)
+{
+    // No payment provider service — hide purchase UI or show an error
+    return;
+}
+
+var eligible = await svc.GetEligiblePaymentProviders();
 if (eligible == null || eligible.Providers.Count == 0)
 {
     // No payment providers available — hide purchase UI or show an error
@@ -327,45 +358,41 @@ Obtain `IPaymentOptionProvider` once after connect and store it:
 
 **UGUI** (for projects using Unity UI):
 ```csharp
-var m_PaymentOptionProvider = store.PaymentProviderStoreExtendedService?.GetPaymentOptionProviderUGUI();
+var m_PaymentOptionProvider = controller.PaymentProvidersExtendedService?.GetPaymentOptionProviderUGUI();
 ```
 
 **UI Toolkit** (for projects using UI Toolkit):
 ```csharp
-var m_PaymentOptionProvider = store.PaymentProviderStoreExtendedService?.GetPaymentOptionProviderUITK(hostDocument);
+var m_PaymentOptionProvider = controller.PaymentProvidersExtendedService?.GetPaymentOptionProviderUITK(hostDocument);
 ```
+
+The picker's purchases arrive on the controller's events (`OnPurchasePending(storeName, order)` etc.) because stores share their services — the controller must include every store the picker can offer (the platform default store and `PaymentProvider.Name`).
 
 Then initiate purchase with the `catalogListingId`:
 ```csharp
+readonly string m_NativeStore = UnityIAPServices.GetDefaultStore();   // Apple App Store / Google Play
+
 public async void Buy(string catalogListingId)
 {
-    var eligibility = await store.PaymentProviderStoreExtendedService?.GetEligiblePaymentProviders();
+    var svc = controller.PaymentProvidersExtendedService;
+    var eligibility = svc != null ? await svc.GetEligiblePaymentProviders() : null;
     if (eligibility?.Providers.Count > 0)
     {
         // Show the Purchase Options UI — lets the player pick native, D2C, or webshop
         await m_PaymentOptionProvider.ShowPurchaseOption(catalogListingId);
     }
-    else if (m_NativeStore != null)
-    {
-        // No PSP available — fall back to a NATIVE StoreController (App Store / Google Play).
-        // `store` above is scoped to PaymentProvider.Name, so calling PurchaseProduct on it
-        // would still route through the PSP flow (not native billing). The fallback must use
-        // a separate native-scoped StoreController that the app kept alive alongside `store` —
-        // see "Coexistence with existing Apple / Google StoreController" above.
-        m_NativeStore.PurchaseProduct(catalogListingId);
-    }
     else
     {
-        // No PSP available AND no native controller — the sale can't proceed.
-        // Surface the error to the caller so it can show an appropriate message.
-        Debug.LogWarning($"No payment path available for {catalogListingId}.");
+        // No PSP available — buy through the native store on the same controller.
+        // (On a D2C-only controller this is reported through OnPurchaseFailed: the native store isn't on it.)
+        controller.PurchaseProduct(catalogListingId, m_NativeStore);
     }
 }
 ```
 
 `GetEligiblePaymentProviders()` returns an `EligiblePaymentProviders` bundle. An empty `Providers` list means no routing rules match the player or no payment providers are available for their region.
 
-**Do not call `PurchaseProduct` on the PSP-scoped `StoreController` as a "native fallback"** — it routes through the payment provider store regardless. Native billing requires a separate `StoreController()` (default constructor = platform default). Projects that already have an Apple/Google `StoreController` should reuse it here; greenfield D2C-only projects have no native fallback path and should surface a "payment unavailable" error instead.
+**The native fallback must name the native store** — `controller.PurchaseProduct(catalogListingId, nativeStore)`. A `Product` fetched by the payment provider store always purchases through the payment provider (`PurchaseProduct(product)` routes by `product.StoreName`). D2C-only projects (no native store on the controller) have no native fallback path and should surface a "payment unavailable" error instead.
 
 `EligiblePaymentProviders` also exposes `PaymentOptionPopupEnabled` (server-driven killswitch) — check it before showing the picker if you want to respect the server's suppression.
 
@@ -393,11 +420,11 @@ Implications to be aware of:
 ### IAPManager responsibilities
 
 Same as standard IAP 5 (see `path-add-iap-to-new-project.md` Step 4), with these additions:
-- Hold the `PaymentProvider.Name`-scoped `StoreController` instance.
+- Hold the `PurchasingController` instance (native store + `PaymentProvider.Name`).
 - Hold the `IPaymentOptionProvider` instance (UGUI or UI Toolkit, matching project's UI system).
-- Expose `Buy(string catalogListingId)` — calls `ShowPurchaseOption(catalogListingId)` if eligible, falls back to `PurchaseProduct(catalogListingId)` if not.
+- Expose `Buy(string catalogListingId)` — calls `ShowPurchaseOption(catalogListingId)` if eligible, falls back to `PurchaseProduct(catalogListingId, nativeStore)` if not.
 - Expose `RestorePurchases()` only if NonConsumable products exist.
-- Ensure `UnityServices.InitializeAsync()` and player sign-in both complete before `StoreController(PaymentProvider.Name)` is obtained and `Connect()` is called.
+- Ensure `UnityServices.InitializeAsync()` and player sign-in both complete before the `PurchasingController` is created with `PaymentProvider.Name` and `Connect()` is called.
 - Call `GetEligiblePaymentProviders()` after connect and use the result to gate purchase UI visibility.
 - **Only automatic entitlement delivery is supported.** Do not implement server-authoritative grant logic in this path unless the user explicitly requests it.
 
@@ -415,14 +442,14 @@ var result = await catalogProvider.FetchRemoteCatalog();
 if (!result.Success)
     throw result.Exception;
 
-// 3. Pass fetched definitions to the StoreController
-var productDefinitions = catalogProvider.GetProducts();
-_storeController.FetchProducts(productDefinitions);
+// 3. Fetch every store on the controller, each with its own definitions
+foreach (var store in _controller.StoreNames)
+    catalogProvider.FetchProducts(defs => _controller.FetchProductsWithNoRetries(defs, store), store);
 ```
 
 - `FetchRemoteCatalog` fetches the catalog deployed to the Unity Cloud environment configured in **Edit > Project Settings > Services > Environments** (Development / Staging / Production).
 - Call `FetchRemoteCatalog` after `Connect()` succeeds.
-- `catalogProvider.GetProducts()` returns `List<ProductDefinition>` — pass directly to `store.FetchProducts()`.
+- One `RemoteCatalogProvider` serves every store: fetch each store with its own store name, `catalogProvider.FetchProducts(defs => controller.FetchProductsWithNoRetries(defs, store), store)`. After `OnAuthAccountChanged`, call `FetchRemoteCatalog()` again on it, then fetch the products again.
 - If `result.Success` is false, do not proceed — surface the error to the user.
 
 ### CatalogListing and multiple offers per product
@@ -432,26 +459,25 @@ IAP D2C Capabilities supports products with multiple purchasable offers, each id
 ```csharp
 // Look up the Product that owns a given catalogListingId (set in Unity Cloud dashboard).
 // GetProductByCatalogListingId returns the Product; grab the specific CatalogListing off it.
-var product = _storeController.GetProductByCatalogListingId("coins_100_offer_usd");
+var product = _controller.GetProductByCatalogListingId("coins_100_offer_usd", PaymentProvider.Name);
 if (product != null
     && product.catalogListings.TryGetValue("coins_100_offer_usd", out var listing)
     && listing.availableToPurchase)
 {
     // listing.definition  — ProductDefinition (id, type, catalogListingId)
     // listing.metadata    — ProductMetadata (localizedTitle, localizedPriceString, etc.)
-    _storeController.PaymentProvidersExtendedPurchaseService?
-        .PurchaseProduct("coins_100_offer_usd", PaymentProvider.Name);
+    _controller.PurchaseProduct("coins_100_offer_usd", PaymentProvider.Name);   // this listing, not the product's base one
 }
 ```
 
-Use `catalogListingId` when a single product (uSKU) has multiple regional or promotional offers. If products have only one offer each, `GetProductById(uSKU)` is sufficient and `CatalogListing` lookup is not needed.
+Use `catalogListingId` when a single product (uSKU) has multiple regional or promotional offers. If products have only one offer each, `GetProductById(uSKU, PaymentProvider.Name)` is sufficient and `CatalogListing` lookup is not needed.
 
 ### Iterating catalog listings on a fetched product
 
 After `OnProductsFetched` fires, each `Product` object exposes a `catalogListings` dictionary. Iterate its values to enumerate all available offers for that product:
 
 ```csharp
-void OnProductsFetched(List<Product> products)
+void OnProductsFetched(string storeName, List<Product> products)
 {
     foreach (var product in products)
     {
@@ -487,8 +513,14 @@ Returns `null` when the product wasn't fetched through the PaymentProvider store
 Skip the picker entirely and open the webshop for a specific listing (or the generic Unity webshop when `catalogListingId` is null):
 
 ```csharp
-await store.PaymentProvidersExtendedPurchaseService?
-    .RedirectToWebshop("coins_100_offer_usd");
+var svc = controller.PaymentProvidersExtendedPurchaseService;
+if (svc == null)
+{
+    // No payment provider purchase service — surface an error or hide the entry point
+    return;
+}
+
+await svc.RedirectToWebshop("coins_100_offer_usd");
 ```
 
 The SDK fetches the webshop URL, runs the registered compliance callback (`SetComplianceCheck`), and opens the URL on approval. Network failures propagate as exceptions on the returned `Task`; compliance rejection routes through the standard `OnPurchaseFailed` path.
@@ -513,7 +545,7 @@ Unity IAP 5.4 provides a programmatic API to register the deep link scheme direc
 
 ```csharp
 // Pass the SCHEME ONLY (the part before "://"), not the full redirect URL.
-store.PaymentProviderStoreExtendedService?.SetDeepLinkScheme("mygame");
+controller.PaymentProvidersExtendedService?.SetDeepLinkScheme("mygame");
 ```
 
 Call `SetDeepLinkScheme` before `Connect()`. The SDK matches incoming deep links against `<scheme>:` — passing the full URL (e.g. `"mygame://iapresult/okay"`) produces the prefix `"mygame://iapresult/okay:"` which will never match. Register only the scheme portion of whatever redirect URL is configured in the Unity Cloud IAP payment provider dashboard.
@@ -586,14 +618,14 @@ Purchase handling follows the same save-before-confirm contract as standard IAP 
 
 IAP D2C Capabilities-specific notes:
 
-- **Checkout presentation mode:** By default, the payment flow opens in the device's external browser. Unity IAP 5.4 also supports an in-app WebView via `CheckoutPresentationMode`. Set the mode before purchase via `store.PaymentProviderStoreExtendedService` (the `IPaymentProvidersExtendedService` accessor — see "Payment provider services on the StoreController" above):
+- **Checkout presentation mode:** By default, the payment flow opens in the device's external browser. Unity IAP 5.4 also supports an in-app WebView via `CheckoutPresentationMode`. Set the mode before purchase via `controller.PaymentProvidersExtendedService` (the `IPaymentProvidersExtendedService` accessor — see "Payment provider services on the PurchasingController" above):
 
   ```csharp
   // External browser (default)
-  store.PaymentProviderStoreExtendedService?.SetCheckoutPresentationMode(CheckoutPresentationMode.ExternalBrowser);
+  controller.PaymentProvidersExtendedService?.SetCheckoutPresentationMode(CheckoutPresentationMode.ExternalBrowser);
 
   // In-app WebView
-  store.PaymentProviderStoreExtendedService?.SetCheckoutPresentationMode(CheckoutPresentationMode.WebView);
+  controller.PaymentProvidersExtendedService?.SetCheckoutPresentationMode(CheckoutPresentationMode.WebView);
   ```
 
   When using `ExternalBrowser`, the game is suspended during payment and resumes via the deep link redirect. When using `WebView`, the game remains active and the WebView is dismissed on completion. `OnPurchasePending` fires in both cases after the payment is processed.
@@ -602,10 +634,10 @@ IAP D2C Capabilities-specific notes:
 
   ```csharp
   // External browser (default)
-  store.PaymentProviderStoreExtendedService?.SetWebshopPresentationMode(CheckoutPresentationMode.ExternalBrowser);
+  controller.PaymentProvidersExtendedService?.SetWebshopPresentationMode(CheckoutPresentationMode.ExternalBrowser);
 
   // In-app WebView
-  store.PaymentProviderStoreExtendedService?.SetWebshopPresentationMode(CheckoutPresentationMode.WebView);
+  controller.PaymentProvidersExtendedService?.SetWebshopPresentationMode(CheckoutPresentationMode.WebView);
   ```
 
 - `OnPurchaseDeferred` fires if the payment is not immediately completed. Do not grant — show pending UI.
@@ -613,7 +645,7 @@ IAP D2C Capabilities-specific notes:
 
 ### Apple and Google external purchase compliance
 
-Apple and Google allow external web payments only in select regions and under their own program rules. Unity does not perform compliance on your behalf — the developer is responsible for eligibility and disclosure requirements.
+Apple and Google allow external web payments only in select regions and under their own program rules. Unity does not perform compliance on your behalf — the developer is responsible for eligibility and disclosure requirements. Read [Platform compliance](https://docs.unity.com/en-us/iap/platform-compliance) for what each region and program requires, and point the user to it instead of treating compliance as a blocker.
 
 Three compliance tools are available:
 
@@ -622,7 +654,7 @@ Three compliance tools are available:
 Register a callback via `SetComplianceCheck` that runs before any purchase is initiated. Return `false` to block the purchase for ineligible players:
 
 ```csharp
-store.PaymentProvidersExtendedPurchaseService?.SetComplianceCheck(async (context) =>
+controller.PaymentProvidersExtendedPurchaseService?.SetComplianceCheck(async (context) =>
 {
     bool isEligible = await CheckRegionalEligibility(context);
     return isEligible;
@@ -637,10 +669,10 @@ Some Apple and Google program rules require showing or disclosing the checkout U
 
 ```csharp
 // Get the URL without opening checkout
-string url = await store.PaymentProvidersExtendedPurchaseService.GenerateURL(catalogListingId);
+string url = await controller.PaymentProvidersExtendedPurchaseService.GenerateURL(catalogListingId);
 
 // Disclose or display the URL to the player, then proceed
-store.PaymentProvidersExtendedPurchaseService.PurchaseProduct(catalogListingId, PaymentProvider.Name);
+controller.PurchaseProduct(catalogListingId, PaymentProvider.Name);
 ```
 
 If `GenerateURL` was already called for the same listing, `PurchaseProduct` reuses the same order — no duplicate charge.
@@ -655,7 +687,7 @@ var tokens = new List<PaymentProviderToken>
     new PaymentProviderToken { store = "apple", token = appleToken, type = "acquisition" },
     new PaymentProviderToken { store = "google", token = googleToken }
 };
-await store.PaymentProvidersExtendedPurchaseService.GenerateURL(catalogListingId, tokens);
+await controller.PaymentProvidersExtendedPurchaseService.GenerateURL(catalogListingId, tokens);
 ```
 
 Tokens are stored with the order and surfaced in the `order.paid` webhook payload under `externalTransactionTokens`. You can supply up to two tokens per order (e.g., one for EU, one for Japan).

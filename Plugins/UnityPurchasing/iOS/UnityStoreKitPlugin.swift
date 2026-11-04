@@ -2,7 +2,9 @@ import Foundation
 #if canImport(UIKit)
 import UIKit
 #endif
-#if os(iOS) || os(tvOS) || os(macOS)
+// IAP_DISABLE_IDFA is set by AppleCapabilities when the project defines the scripting symbol of the same name.
+// Apps in Apple's Kids Category are rejected for any ASIdentifierManager reference, called or not.
+#if (os(iOS) || os(tvOS)) && !IAP_DISABLE_IDFA
 import AdSupport
 #endif
 
@@ -101,6 +103,78 @@ final class UnityPurchasingDeviceValues: @unchecked Sendable {
 }
 #endif
 
+#if os(iOS) || os(tvOS) || os(visionOS)
+// Declared in C# as: delegate void SceneBecameFrontmostCallback();
+public typealias SceneBecameFrontmostCallbackDelegateType = @convention(c) () -> Void
+
+/// iPad windowing can keep the app active while another app's window covers it, so focus doesn't say whether it's
+/// in front; `activeAppearance` does. Everywhere else the app counts as frontmost.
+@MainActor
+enum UnityPurchasingFrontmost {
+    static var callback: SceneBecameFrontmostCallbackDelegateType?
+    private static var observing = false
+
+    static var isPad: Bool {
+#if os(iOS)
+        return UIDevice.current.userInterfaceIdiom == .pad
+#else
+        return false
+#endif
+    }
+
+    static func isFrontmost() -> Bool {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard isPad, !scenes.isEmpty else {
+            return true
+        }
+        guard #available(iOS 14.0, tvOS 14.0, *) else {
+            return true
+        }
+        return scenes.contains { $0.traitCollection.activeAppearance == .active }
+    }
+
+    static func observe() {
+        guard isPad, !observing else {
+            return
+        }
+        guard #available(iOS 17.0, tvOS 17.0, visionOS 1.0, *) else {
+            return
+        }
+        observing = true
+        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+            scene.registerForTraitChanges([UITraitActiveAppearance.self]) { (scene: UIWindowScene, previous: UITraitCollection) in
+                if previous.activeAppearance != .active && scene.traitCollection.activeAppearance == .active {
+                    callback?()
+                }
+            }
+        }
+    }
+}
+
+/// Always true except on iPad, and off the main thread.
+@_cdecl("unityPurchasing_IsSceneFrontmost")
+public func unityPurchasing_IsSceneFrontmost() -> Bool {
+    guard Thread.isMainThread else {
+        return true
+    }
+    return MainActor.assumeIsolated { UnityPurchasingFrontmost.isFrontmost() }
+}
+
+/// Called on the main thread when one of the app's scenes becomes frontmost. iPad only.
+@_cdecl("unityPurchasing_SetSceneBecameFrontmostCallback")
+public func unityPurchasing_SetSceneBecameFrontmostCallback(_ callback: SceneBecameFrontmostCallbackDelegateType) {
+    let register: @MainActor () -> Void = {
+        UnityPurchasingFrontmost.callback = callback
+        UnityPurchasingFrontmost.observe()
+    }
+    if Thread.isMainThread {
+        MainActor.assumeIsolated { register() }
+    } else {
+        Task { @MainActor in register() }
+    }
+}
+#endif
+
 /**
 Set NativeCallback delegate from C#. The function is declared in C# as: static extern void
  - Parameters:
@@ -150,12 +224,15 @@ public func unityPurchasing_FetchProducts(_ productJsonCString: UnsafePointer<CC
  */
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
 @_cdecl("unityPurchasing_PurchaseProduct")
-public func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<CChar>, optionsJsonCString: UnsafePointer<CChar>) {
+public func unityPurchasing_PurchaseProduct(_ productJsonCString: UnsafePointer<CChar>, optionsJsonCString: UnsafePointer<CChar>, _ unusedStorefrontChangeCallback: UnsafeRawPointer?, impressionIdCString: UnsafePointer<CChar>?) {
+    // The third argument is the storefront change callback slot of the managed DllImport. It has
+    // only ever been passed null and is unused, but must be declared so impressionId lines up.
     guard #available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *) else { return }
     let productJson = String(cString: productJsonCString)
     let optionsDict = dictionaryFromJSONCstr(optionsJsonCString) ?? [:]
+    let impressionId = impressionIdCString.map { String(cString: $0) }
     Task.detached(priority: .userInitiated, operation: {
-        await StoreKitManager.instance.purchase(productJson: productJson, options: optionsDict, storefrontChangeCallback: nil)
+        await StoreKitManager.instance.purchase(productJson: productJson, options: optionsDict, impressionId: impressionId, storefrontChangeCallback: nil)
     })
 }
 
@@ -481,13 +558,12 @@ public func unityPurchasing_FetchStorefront() {
 @_cdecl("unityPurchasing_FetchAdvertisingIdentifier")
 public func unityPurchasing_FetchAdvertisingIdentifier() -> UnsafeMutablePointer<CChar>? {
     var idfa: String?
-#if os(iOS) || os(tvOS)
+#if IAP_DISABLE_IDFA
+    // Excluded from the build: report no advertising identifier.
+#elseif os(iOS) || os(tvOS)
     idfa = ASIdentifierManager.shared().advertisingIdentifier.uuidString
-#elseif os(macOS)
-    if #available(macOS 13.1, *) {
-        idfa = ASIdentifierManager.shared().advertisingIdentifier.uuidString
-    }
 #endif
+    // No IDFA on macOS: its bundle is prebuilt, so IAP_DISABLE_IDFA could not strip it for Kids Category apps.
     return unityPurchasingMakeHeapAllocatedStringCopy(idfa)
 }
 

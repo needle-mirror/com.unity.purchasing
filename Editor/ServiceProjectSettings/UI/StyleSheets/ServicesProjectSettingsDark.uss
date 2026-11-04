@@ -115,10 +115,67 @@
     -unity-background-image-tint-color:#d32222;  /*from dark.uss --theme-console-status-error-text-color*/
 }
 
-.configuration-toggle {
-    background-image: resource("d_tab_next@2x");
+/* Service cards */
+.configuration-item {
+    background-color: #444444;
+    border-color: #2B2B2B;
 }
+
+.configuration-toggle {
+    border-color: #D2D2D2; /*from dark.uss --unity-text-color*/
+}
+
+.configuration-badge {
+    background-color: #1E1E1E;
+    border-color: #8A8A8A;
+    color: #C4C4C4;
+}
+
 .configuration-badge.missing-key {
     color: #FFC107;
     border-color: #FFC107;
+}
+
+.configuration-badge.connected {
+    color: #7BCB7F;
+    border-color: #7BCB7F;
+}
+
+.configuration-link {
+    color: #4C7EFF; /*from dark.uss link label*/
+}
+
+.configuration-link:hover {
+    color: #81B4FF; /*from dark.uss --unity-active-text-color*/
+}
+.configuration-help-box {
+    background-color: #4A4A4A;
+    border-color: #353535;
+}
+
+.configuration-info-icon {
+    background-color: #C4C4C4;
+    color: #383838;
+}
+
+/* Page layout: header, tabs and sections */
+.iap-tab {
+    color: #A4A4A4;
+}
+
+.iap-tab:hover {
+    color: #D2D2D2;
+}
+
+.iap-tab.iap-tab--unavailable:hover {
+    color: #A4A4A4;
+}
+
+.iap-tab.iap-tab--selected {
+    color: #EEEEEE;
+    border-bottom-color: #D2D2D2;
+}
+
+.iap-section-heading {
+    color: #EEEEEE;
 }

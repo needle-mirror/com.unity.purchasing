@@ -66,6 +66,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring
             collection.Register(_ => OrganizationProvider.Organization);
             collection.Register(Default<DeleteRemoteCommand>);
             collection.Register(Default<DeleteRemoteCommandWrapper>);
+            collection.Register(Default<ICloudProjectLink, CloudProjectLink>);
             collection.Register(Default<SyncItemsWithRemoteCommand>);
             collection.Register(Default<ICatalogDeploymentHandler, CatalogDeploymentHandler>);
             //Command initializes it, but depended on by handler

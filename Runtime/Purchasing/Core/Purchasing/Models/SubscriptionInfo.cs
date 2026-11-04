@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
 using Unity.XGamingRuntime;
 #endif
 using UnityEngine;
@@ -135,7 +135,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
         // It is assumed that xStoreProduct is a subscription product here
         public SubscriptionInfo(string productId, XStoreProduct xStoreProduct)
         {

@@ -1,14 +1,12 @@
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Purchasing
 {
     class AppleConfigurationSettingsBlock : IPurchasingSettingsUIBlock
     {
-        readonly VisualElement m_AppleConfigurationBlock;
         readonly AppleObfuscatorSection m_ObfuscatorSection;
         VisualElement m_ConfigurationBlock;
-        readonly string m_AppleErrorMessage;
-        readonly string m_GoogleErrorMessage;
 
         internal AppleConfigurationSettingsBlock()
         {
@@ -26,6 +24,7 @@ namespace UnityEditor.Purchasing
 
             m_ObfuscatorSection.SetupObfuscatorBlock(m_ConfigurationBlock);
             SetupStyleSheets();
+            StoreCardUtils.SetupCard(m_ConfigurationBlock, "AppleIcon", Color.black, "BuildSettings.iPhone");
 
             return m_ConfigurationBlock;
         }
@@ -34,6 +33,29 @@ namespace UnityEditor.Purchasing
         {
             m_ConfigurationBlock.AddStyleSheetPath(UIResourceUtils.purchasingCommonUssPath);
             m_ConfigurationBlock.AddStyleSheetPath(EditorGUIUtility.isProSkin ? UIResourceUtils.purchasingDarkUssPath : UIResourceUtils.purchasingLightUssPath);
+        }
+    }
+
+    static class StoreCardUtils
+    {
+        const string k_ExpandedClass = "expanded";
+
+        internal static void SetupCard(VisualElement block, string iconName, Color logoColor, params string[] builtinIconNames)
+        {
+            var icon = block.Q<Image>(iconName);
+            // The pro-skin ("d_") variant is white, so tinting it gives the exact logo colour on the white tile in both skins.
+            foreach (var builtinIconName in builtinIconNames)
+            {
+                icon.image = EditorGUIUtility.FindTexture("d_" + builtinIconName);
+                if (icon.image != null)
+                {
+                    break;
+                }
+            }
+            icon.tintColor = logoColor;
+
+            block.Query(className: "configuration-item-header").ForEach(header =>
+                header.RegisterCallback<ClickEvent>(_ => header.parent.ToggleInClassList(k_ExpandedClass)));
         }
     }
 }

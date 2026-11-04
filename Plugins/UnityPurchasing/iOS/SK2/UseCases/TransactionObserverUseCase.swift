@@ -122,6 +122,7 @@ public class TransactionObserverUseCase: TransactionObserverUseCaseProtocol, @un
                     } else {
                         // Provide access to the product identified by
                         // transaction.productID.
+                        await PurchasedTransactions.shared.keep(transaction)
                         let purchaseDetails = await self.createPurchaseDetails(from: result)
                         await self.updatePurchasedIdentifier(purchaseDetails)
                     }

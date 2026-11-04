@@ -109,7 +109,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
                 if (entries.Count == 0)
                 {
                     csv.Progress = 100f;
-                    csv.Status = new DeploymentStatus("No items to deploy", string.Empty, SeverityLevel.Warning);
+                    csv.Status = Statuses.NoItemsToDeploy;
                     continue;
                 }
 

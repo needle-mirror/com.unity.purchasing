@@ -188,6 +188,22 @@ namespace UnityEngine.Purchasing.PaymentProviderService
             });
         }
 
+        public async Task<PurchaseEligibilityResponse> GetPurchaseEligibility(List<string> catalogListingIds)
+        {
+            CheckForCloudProjectInfo();
+            var request = new GetPurchaseEligibilityRequest(
+                m_CloudProjectId.GetCloudProjectId(),
+                m_EnvironmentId.EnvironmentId,
+                new PurchaseEligibilityRequest(catalogListingIds)
+            );
+
+            return await m_ServiceExceptionMapper.InvokeAndMapServiceExceptions(async () =>
+            {
+                var response = await PaymentProviderApiClient.GetPurchaseEligibilityAsync(request, Configuration);
+                return response.Result;
+            });
+        }
+
         public async Task<string> RegisterLinkOutSession(PlayerIdentity playerIdentity, DeviceInfo deviceInfo)
         {
             CheckForCloudProjectInfo();

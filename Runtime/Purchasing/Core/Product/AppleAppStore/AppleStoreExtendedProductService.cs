@@ -38,7 +38,10 @@ namespace UnityEngine.Purchasing.Services
 
         public void FetchStorePromotionOrder(Action<List<Product>> successCallback, Action<string> errorCallback)
         {
-            m_FetchStorePromotionOrderUseCase.FetchStorePromotionOrder(successCallback, errorCallback);
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                m_FetchStorePromotionOrderUseCase.FetchStorePromotionOrder(successCallback, errorCallback);
+            }
         }
 
         public void FetchStorePromotionVisibility(Product product, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)
@@ -48,13 +51,16 @@ namespace UnityEngine.Purchasing.Services
 
         public void FetchStorePromotionVisibility(string catalogListingId, Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback)
         {
-            var product = GetProductById(catalogListingId);
-            if (product == null || !product.catalogListings.TryGetValue(catalogListingId, out var listing))
+            using (ImpressionScope.Shared.EnterNone())
             {
-                errorCallback?.Invoke($"No catalog listing found for id: {catalogListingId}");
-                return;
+                var product = GetProductById(catalogListingId);
+                if (product == null || !product.catalogListings.TryGetValue(catalogListingId, out var listing))
+                {
+                    errorCallback?.Invoke($"No catalog listing found for id: {catalogListingId}");
+                    return;
+                }
+                m_FetchStorePromotionVisibilityUseCase.FetchStorePromotionVisibility(listing.definition.storeSpecificId, successCallback, errorCallback);
             }
-            m_FetchStorePromotionVisibilityUseCase.FetchStorePromotionVisibility(listing.definition.storeSpecificId, successCallback, errorCallback);
         }
 
         public Dictionary<string, string> GetIntroductoryPriceDictionary()

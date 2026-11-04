@@ -28,7 +28,7 @@ namespace UnityEditor.Purchasing
         }
 
 
-        static Dictionary<string, object> GetJsonDictionaryWithinJsonDictionary(Dictionary<string, object> container, string key)
+        internal static Dictionary<string, object> GetJsonDictionaryWithinJsonDictionary(Dictionary<string, object> container, string key)
         {
             object value = null;
             container?.TryGetValue(key, out value);

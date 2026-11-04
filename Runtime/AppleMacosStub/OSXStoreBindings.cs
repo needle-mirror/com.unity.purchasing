@@ -130,6 +130,11 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
+        public void Purchase(string productJson, string optionsJson, string impressionId)
+        {
+            throw new NotImplementedException();
+        }
+
         public void FetchStorefront()
         {
             throw new NotImplementedException();
@@ -161,6 +166,16 @@ namespace UnityEngine.Purchasing
         }
 
         public void ExternalPurchaseFetchStorefront(ExternalPurchaseCallback callback)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsSceneFrontmost()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetSceneBecameFrontmostCallback(SceneBecameFrontmostCallback callback)
         {
             throw new NotImplementedException();
         }

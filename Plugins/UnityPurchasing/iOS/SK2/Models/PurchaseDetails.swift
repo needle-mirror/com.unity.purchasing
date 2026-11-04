@@ -18,6 +18,8 @@ public struct PurchaseDetails: Codable {
     var requestedProductId: String?
     // Set on failures from a purchase the store started itself (see PurchaseUseCase.isPromotionalPurchase).
     var promotional: Bool?
+    // Echoes the impression_id the managed Purchase call passed in (see PurchaseUseCase.impressionId).
+    var impressionId: String?
     var purchaseDate: Double?
     var signatureJws: String?
     var transactionId: UInt64?
@@ -44,6 +46,7 @@ public struct PurchaseDetails: Codable {
         case productType
         case requestedProductId
         case promotional
+        case impressionId
         case purchaseDate
         case signatureJws
         case transactionId

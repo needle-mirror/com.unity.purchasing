@@ -133,6 +133,8 @@ Check the exact `com.unity.purchasing` version from `Packages/manifest.json` and
 >
 > If you want to add new products, modify purchase logic, or handle platform-specific billing behavior, work within UniPay's API (see FLOBUK documentation). If you want to remove UniPay entirely and use Unity IAP 5 directly, that is a manual refactor — ask specifically for that and describe which UniPay features you are replacing."
 
+If the user later removes UniPay and calls Unity IAP directly, write that code against `PurchasingController` (v5.5+ — recommend upgrading if the installed package doesn't contain it); see [purchasing-controller.md](purchasing-controller.md).
+
 **If `com.unity.purchasing` is v5.4+:**
 
 > "This project already uses UniPay [version] with Unity IAP v5.4+ as its billing backend. UniPay handles the IAP layer — no migration or conversion is needed.

@@ -10,5 +10,11 @@ namespace UnityEngine.Purchasing.WebshopService
         }
 
         static IWebshopClientWrapper s_Instance;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
     }
 }

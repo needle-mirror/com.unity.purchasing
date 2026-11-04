@@ -119,10 +119,69 @@
     -unity-background-image-tint-color:#5a0000; /*from light.uss --theme-console-status-error-text-color*/
 }
 
-.configuration-toggle {
-    background-image: resource("tab_next@2x");
+/* Service cards */
+.configuration-item {
+    background-color: #D6D6D6;
+    border-color: #A9A9A9;
 }
+
+/* Quieter than the card title, as the chevron is in dark skin. */
+.configuration-toggle {
+    border-color: #4E4E4E;
+}
+
+.configuration-badge {
+    background-color: #F2F2F2;
+    border-color: #6E6E6E;
+    color: #303030;
+}
+
 .configuration-badge.missing-key {
     color: #7A5800;
-    border-color: #7A5800;
+    border-color: #B8860B;
+}
+
+.configuration-badge.connected {
+    color: #1E6B2A;
+    border-color: #2E8B3E;
+}
+
+.configuration-link {
+    color: #0A4AAE; /*link blue, at least 4.5:1 on the light card*/
+}
+
+.configuration-link:hover {
+    color: #074492; /*from light.uss --unity-active-text-color*/
+}
+.configuration-help-box {
+    background-color: #E0E0E0;
+    border-color: #B4B4B4;
+}
+
+.configuration-info-icon {
+    background-color: #4A4A4A;
+    color: #E4E4E4;
+}
+
+/* Page layout: header, tabs and sections */
+/* Same tint as the muted field labels, so inactive tabs read as selectable, not disabled. */
+.iap-tab {
+    color: #4c4c4c;
+}
+
+.iap-tab:hover {
+    color: #101010;
+}
+
+.iap-tab.iap-tab--unavailable:hover {
+    color: #4c4c4c;
+}
+
+.iap-tab.iap-tab--selected {
+    color: #090909;
+    border-bottom-color: #303030;
+}
+
+.iap-section-heading {
+    color: #090909;
 }

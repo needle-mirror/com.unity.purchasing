@@ -43,6 +43,7 @@ namespace UnityEngine.Purchasing
         public FailedOrder(Order order, PurchaseFailureReason reason, string details)
             : base(order.CartOrdered, order.Info)
         {
+            StoreName = order.StoreName;
             m_FailureReason = reason;
             m_Details = details;
         }

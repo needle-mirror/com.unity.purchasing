@@ -115,7 +115,7 @@ Generate all 18 sections. Do not skip any.
 9. **Non-consumable acknowledgement behavior mapping** — native `acknowledgePurchase` → Unity IAP `ConfirmPurchase` (only after grant)
 10. **Subscription behavior mapping** — detected subscription products, restore path, renewal handling
 11. **Google-specific features detected** — list each (see Blocker Detection below)
-12. **Unity IAP 5.2 migration blockers** — features that cannot be cleanly mapped
+12. **Unity IAP 5.x migration blockers** — features that cannot be cleanly mapped
 13. **Proposed new Unity IAP architecture** — new files and their roles
 14. **Code files to create** — with paths
 15. **Code files to modify** — with nature of each change
@@ -200,13 +200,15 @@ public interface IStorePurchaseService
 
 Create `UnityIapStorePurchaseService`:
 
-1. **Initialization** — `UnityIAPServices.StoreController()`, subscribe all events **before** `Connect()`.
-2. **Product fetching** — build `List<ProductDefinition>` from catalog, call `store.FetchProducts()`, handle `OnProductsFetched` / `OnProductsFetchFailed`.
-3. **Purchase initiation** — `store.PurchaseProduct(product)`.
+All Unity IAP code in this conversion uses `PurchasingController` (v5.5+; if the installed package doesn't contain it, recommend upgrading — fall back to `StoreController` only if the user can't or won't). `controller` below is that `PurchasingController`: every event handler takes the store name first (`(storeName, order) => ...`), getters take a store name, and the `RestoreTransactions` callback is `(storeName, success, error)`. See [purchasing-controller.md](purchasing-controller.md).
+
+1. **Initialization** — `new PurchasingController(UnityIAPServices.GetDefaultStore())`, subscribe all events **before** `Connect()`.
+2. **Product fetching** — build `List<ProductDefinition>` from catalog, call `controller.FetchProducts(definitions, storeName)`, handle `OnProductsFetched` / `OnProductsFetchFailed`.
+3. **Purchase initiation** — `controller.PurchaseProduct(product)` (goes to `product.StoreName`).
 4. **Purchase callback** — `OnPurchasePending`: validate receipt → grant entitlement → `ConfirmPurchase(pendingOrder)`. **Never confirm before grant.**
 5. **Deferred purchases** — `OnPurchaseDeferred`: show pending UI, do not grant.
 6. **Failed purchases** — `OnPurchaseFailed`: map `FailureReason` to user-facing error.
-7. **Restore / fetch** — `store.FetchPurchases()` (re-delivers unconfirmed via `OnPurchasePending`) + `store.RestoreTransactions(callback)` for explicit iOS restore button.
+7. **Restore / fetch** — `controller.FetchPurchases()` (re-delivers unconfirmed via `OnPurchasePending`) + `controller.RestoreTransactions(callback)` for explicit iOS restore button.
 8. **Validation handoff** — send `order.Info.Receipt` (and `order.Info.Apple?.jwsRepresentation` on Apple) to backend in place of legacy `purchaseToken` + `originalJson` + `signature`. Document any backend change required.
 
 ### Phase 4 — Compatibility Facade
@@ -256,33 +258,33 @@ If the backend parses `purchaseToken` or `originalJson` fields directly, documen
 
 ### Obfuscated IDs
 
-If native code sets `setObfuscatedAccountId` / `setObfuscatedProfileId` in `BillingFlowParams`, set the equivalent **after** `await store.Connect()`:
+If native code sets `setObfuscatedAccountId` / `setObfuscatedProfileId` in `BillingFlowParams`, set the equivalent **after** `await controller.Connect()`:
 
 ```csharp
-store.GooglePlayStoreExtendedService?.SetObfuscatedAccountId("hashed_id");
-store.GooglePlayStoreExtendedService?.SetObfuscatedProfileId("hashed_profile_id");
+controller.GooglePlayStoreExtendedService?.SetObfuscatedAccountId("hashed_id");
+controller.GooglePlayStoreExtendedService?.SetObfuscatedProfileId("hashed_profile_id");
 ```
 
 Retrieve per-order:
 
 ```csharp
-string accountId = store.GooglePlayStoreExtendedPurchaseService?.GetObfuscatedAccountId(order);
+string accountId = controller.GooglePlayStoreExtendedPurchaseService?.GetObfuscatedAccountId(order);
 ```
 
 ### Pending Purchases
 
 If native code handles `BillingClient.enablePendingPurchases()` or checks purchase state for `PENDING`:
 
-- Unity IAP surfaces deferred purchases via `store.OnPurchaseDeferred`.
+- Unity IAP surfaces deferred purchases via `controller.OnPurchaseDeferred`.
 - On `OnPurchaseDeferred`: show "pending approval" UI. Do not grant.
-- When approved, the store re-delivers via `store.OnPurchasePending`.
+- When approved, the store re-delivers via `controller.OnPurchasePending`.
 
 ### Subscription Upgrade / Downgrade
 
 If native code calls `launchBillingFlow` with a `subscriptionUpdateParams` (prorating an existing subscription):
 
 ```csharp
-store.GooglePlayStoreExtendedPurchaseService?.UpgradeDowngradeSubscription(
+controller.GooglePlayStoreExtendedPurchaseService?.UpgradeDowngradeSubscription(
     currentOrder,       // Order object of the current subscription
     newProduct,         // Product to upgrade/downgrade to
     GooglePlayReplacementMode.ChargeFullPrice  // choose appropriate mode
@@ -295,14 +297,14 @@ See [platform-notes.md](platform-notes.md) for all `GooglePlayReplacementMode` v
 
 | Native Google Billing | Unity IAP 5.x |
 |---|---|
-| `ProductDetails` | `Product` (via `store.GetProductById`) |
+| `ProductDetails` | `Product` (via `controller.GetProductById(id, storeName)`) |
 | `Purchase` | `PendingOrder` (on `OnPurchasePending`) |
 | `purchaseToken` | `order.Info.Receipt` (contains the token) |
 | `originalJson` | embedded in `order.Info.Receipt` |
 | `signature` | embedded in `order.Info.Receipt` |
-| `acknowledgePurchase` | `store.ConfirmPurchase(pendingOrder)` |
-| `consumeAsync` | `store.ConfirmPurchase(pendingOrder)` |
-| `queryPurchasesAsync` | `store.FetchPurchases()` → `OnPurchasesFetched` |
+| `acknowledgePurchase` | `controller.ConfirmPurchase(pendingOrder)` |
+| `consumeAsync` | `controller.ConfirmPurchase(pendingOrder)` |
+| `queryPurchasesAsync` | `controller.FetchPurchases()` → `OnPurchasesFetched` |
 | `BillingResult` / `BillingResponseCode` | `FailedOrder.FailureReason` / `StoreConnectionFailureDescription` |
 | `ProductType.INAPP` | `ProductType.Consumable` or `ProductType.NonConsumable` (distinguish by consume behavior) |
 | `ProductType.SUBS` | `ProductType.Subscription` |

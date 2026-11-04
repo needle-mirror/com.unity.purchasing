@@ -1,3 +1,4 @@
+#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_STANDALONE_OSX) && !UNITY_EDITOR
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -258,3 +259,4 @@ namespace UnityEngine.Purchasing.Security
     /// </summary>
 	public class InvalidX509Data : IAPSecurityException { }
 }
+#endif

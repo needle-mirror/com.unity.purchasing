@@ -1,65 +1,47 @@
-.multi-field-block {
-    padding:10px 0 0 10px;
-    flex-grow:1;
-    flex-shrink:1; /* shrink to fit container */
-    flex-direction:row;
+.editor-setup {
+    padding: 4px 8px 0 8px;
 }
 
-/* Setting Titles */
-.multi-field-block .title {
-    -unity-font-style:bold;
-    padding-left:0;
-    padding-bottom:5px;
-    padding-top:5px;
-    white-space:normal;
-    width: 30%; /* width of virtual column */
-}
-
-.platform-tag {
-    -unity-font-style:bold;
-    margin-left:4px;
-    margin-bottom:4px;
-    border-radius:2px;
-    padding:0px 5px;
-}
-
-.multi-field-block .tag-container {
-    padding:0;
-    flex-direction:row;
-    flex-grow: 0; /* fit tightly */
-    flex-wrap:wrap;
-    align-self: flex-start;
-}
-
-/*padding around any text item*/
-.multi-field-block .unity-text-element {
-    padding: 3px;
-}
-
-.icon-text__image {
-    flex-direction:row;
-    flex-grow: 0;
-    width:24px;
-    height:24px;
-    padding: 3px;
-}
-
-.icon-text__label {
-    flex-direction:row;
-    flex-grow: 0;
-    padding: 3px;
-}
-
-.label {
-    padding: 3px;
-    justify-content: center;
+.editor-setup-header {
+    flex-direction: row;
     align-items: center;
+    margin-bottom: 8px;
 }
 
-.imgui-editorguipopup {
-    flex-direction:row;
-    flex-grow: 0;
+.editor-setup-title {
+    -unity-font-style: bold;
+    font-size: 12px;
+    padding: 0;
+    margin: 0 6px 0 0;
+}
 
-    width: 200px;
-    height: 24px;
+.editor-setup-button {
+    margin: 0;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.editor-setup-row {
+    flex-direction: row;
+    align-items: center;
+    min-height: 18px;
+}
+
+.editor-setup-label {
+    width: 160px;
+    flex-shrink: 0;
+    padding: 0;
+    margin: 0;
+}
+
+.editor-setup-value {
+    flex-shrink: 1;
+    white-space: normal;
+    padding: 0;
+    margin: 0;
+}
+
+.editor-setup-dropdown {
+    flex-grow: 1;
+    margin: 0;
 }

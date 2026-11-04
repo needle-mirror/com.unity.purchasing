@@ -27,11 +27,21 @@ namespace UnityEngine.Purchasing.TransactionVerifier.Scheduler
         {
             IsPlaying = Application.isPlaying;
 #if UNITY_EDITOR
+            // Init runs from both attributes above, so drop an earlier subscription first. On reload, drop both:
+            // under CoreCLR a handler left on an Editor event keeps this assembly loaded.
+            Unsubscribe();
             EditorApplication.playModeStateChanged += ModeChanged;
+            AssemblyReloadEvents.beforeAssemblyReload += Unsubscribe;
 #endif
         }
 
 #if UNITY_EDITOR
+        static void Unsubscribe()
+        {
+            EditorApplication.playModeStateChanged -= ModeChanged;
+            AssemblyReloadEvents.beforeAssemblyReload -= Unsubscribe;
+        }
+
         static void ModeChanged(PlayModeStateChange playModeState)
         {
             if (playModeState == PlayModeStateChange.EnteredEditMode)

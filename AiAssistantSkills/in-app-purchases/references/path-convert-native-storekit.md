@@ -142,9 +142,9 @@ Generate all sections before touching any file. Do not skip any.
 4. **Product catalog discovered** — all product IDs found
 5. **Product type mapping** — inferred type + confidence + source of inference for each product
 6. **Purchase flow mapping** — native → Unity IAP step-by-step
-7. **Restore purchase flow mapping** — `restoreCompletedTransactions` / `Transaction.currentEntitlements` → `store.FetchPurchases()` + `store.RestoreTransactions(callback)`
+7. **Restore purchase flow mapping** — `restoreCompletedTransactions` / `Transaction.currentEntitlements` → `controller.FetchPurchases()` + `controller.RestoreTransactions(callback)`
 8. **Backend validation mapping** — what data the old flow sent vs what Unity IAP provides (see Behavior Change Rules — receipt format is a breaking change)
-9. **Transaction finish behavior mapping** — `finishTransaction:` → `store.ConfirmPurchase(pendingOrder)` (only after grant)
+9. **Transaction finish behavior mapping** — `finishTransaction:` → `controller.ConfirmPurchase(pendingOrder)` (only after grant)
 10. **Subscription behavior mapping** — detected subscription products, restore path, renewal handling, introductory price usage
 11. **StoreKit-specific features detected** — list each (see Blocker Detection)
 12. **Migration blockers** — features that cannot be cleanly mapped
@@ -166,7 +166,7 @@ Report these as migration blockers if detected. Do not silently remove them.
 | Promotional offer signing (SK1 `SKPaymentDiscount`) | `SKPaymentDiscount`, `paymentDiscount`, `offerIdentifier`, `keyIdentifier`, `nonce`, `signature` | **Hard** — requires server-side signed offers; Unity IAP has no equivalent |
 | SK2 promotional offer signing | `promotionalOffer`, `PromotionalOffer`, `eligiblePromotionOfferSignature` | **Hard** — not exposed in Unity IAP |
 | Win-back offers (SK2) | `winBackOffer`, `eligibleWinBackOffers` | **Hard** — not supported in Unity IAP 5.4 |
-| `SKReceiptRefreshRequest` (manual receipt refresh) | `SKReceiptRefreshRequest` | **Soft** — `store.FetchPurchases()` covers the re-delivery use case; document loss of explicit refresh |
+| `SKReceiptRefreshRequest` (manual receipt refresh) | `SKReceiptRefreshRequest` | **Soft** — `controller.FetchPurchases()` covers the re-delivery use case; document loss of explicit refresh |
 | `SKStorefront` / storefront change observer | `SKStorefront`, `paymentQueueDidChangeStorefront` | **Soft** — not exposed in Unity IAP; document loss |
 | Multi-quantity purchases | `quantity > 1` in `SKMutablePayment` | **Hard** — Unity IAP does not support quantity > 1 per transaction |
 | Custom `SKPaymentQueue` observers remaining alongside Unity IAP | Other `addTransactionObserver` calls not being removed | **Hard** — both observers compete; only one reliably receives callbacks |
@@ -234,19 +234,21 @@ public interface IStorePurchaseService
 
 Create `UnityIapStorePurchaseService`:
 
-1. **Initialization** — `UnityIAPServices.StoreController()`, subscribe all events **before** `Connect()`.
-2. **Product fetching** — build `List<ProductDefinition>` from catalog, call `store.FetchProducts()`, handle `OnProductsFetched` / `OnProductsFetchFailed`.
-3. **Purchase initiation** — `store.PurchaseProduct(product)`.
+All Unity IAP code in this conversion uses `PurchasingController` (v5.5+; if the installed package doesn't contain it, recommend upgrading — fall back to `StoreController` only if the user can't or won't). `controller` below is that `PurchasingController`: every event handler takes the store name first (`(storeName, order) => ...`), getters take a store name, and the `RestoreTransactions` callback is `(storeName, success, error)`. See [purchasing-controller.md](purchasing-controller.md).
+
+1. **Initialization** — `new PurchasingController(UnityIAPServices.GetDefaultStore())`, subscribe all events **before** `Connect()`.
+2. **Product fetching** — build `List<ProductDefinition>` from catalog, call `controller.FetchProducts(definitions, storeName)`, handle `OnProductsFetched` / `OnProductsFetchFailed`.
+3. **Purchase initiation** — `controller.PurchaseProduct(product)` (goes to `product.StoreName`).
 4. **Purchase callback** — `OnPurchasePending`: validate receipt → grant entitlement → `ConfirmPurchase(pendingOrder)`. **Never confirm before grant.**
 5. **Deferred purchases (Ask-to-Buy)** — `OnPurchaseDeferred`: show pending UI, do not grant. When approved, `OnPurchasePending` fires.
 6. **Promotional purchase interception** — if the existing plugin intercepts App Store promotional purchases, wire up:
    ```csharp
-   if (store.AppleStoreExtendedPurchaseService != null)
-       store.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += OnPromotionalPurchase;
+   if (controller.AppleStoreExtendedPurchaseService != null)
+       controller.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += OnPromotionalPurchase;
    ```
-   Call `store.AppleStoreExtendedPurchaseService?.ContinuePromotionalPurchases()` when ready to proceed.
+   Call `controller.AppleStoreExtendedPurchaseService?.ContinuePromotionalPurchases()` when ready to proceed.
 7. **Failed purchases** — `OnPurchaseFailed`: map `FailureReason` to user-facing error.
-8. **Restore** — `store.FetchPurchases()` re-delivers unconfirmed purchases via `OnPurchasePending`. Add `store.RestoreTransactions(callback)` for the explicit "Restore Purchases" button (required on iOS).
+8. **Restore** — `controller.FetchPurchases()` re-delivers unconfirmed purchases via `OnPurchasePending`. Add `controller.RestoreTransactions(callback)` for the explicit "Restore Purchases" button (required on iOS).
 9. **Validation handoff** — send `order.Info.Apple?.jwsRepresentation` to backend in place of the SK1 receipt bundle. Document the backend endpoint change required (see Behavior Change Rules).
 
 ### Phase 4 — Compatibility Facade
@@ -289,7 +291,7 @@ Unity IAP uses StoreKit 2 under the hood (on iOS 15+). The resulting receipt is 
 
 | Native StoreKit | Unity IAP |
 |---|---|
-| `SKPaymentQueue.default().finishTransaction(transaction)` — called after grant for all types | `store.ConfirmPurchase(pendingOrder)` — called after grant for all types |
+| `SKPaymentQueue.default().finishTransaction(transaction)` — called after grant for all types | `controller.ConfirmPurchase(pendingOrder)` — called after grant for all types |
 
 **Never call `ConfirmPurchase` before the entitlement is safely granted and saved.**
 
@@ -297,10 +299,10 @@ Unity IAP uses StoreKit 2 under the hood (on iOS 15+). The resulting receipt is 
 
 | Native StoreKit | Unity IAP |
 |---|---|
-| `SKPaymentQueue.default().restoreCompletedTransactions()` | `store.RestoreTransactions(callback)` — for the explicit "Restore Purchases" button |
-| Checking for existing transactions at startup | `store.FetchPurchases()` — re-delivers any unconfirmed purchases via `OnPurchasePending` |
+| `SKPaymentQueue.default().restoreCompletedTransactions()` | `controller.RestoreTransactions(callback)` — for the explicit "Restore Purchases" button |
+| Checking for existing transactions at startup | `controller.FetchPurchases()` — re-delivers any unconfirmed purchases via `OnPurchasePending` |
 
-`store.FetchPurchases()` should be called at startup. `RestoreTransactions` is only needed for the user-triggered restore button (required on iOS for Apple App Store compliance).
+`controller.FetchPurchases()` should be called at startup. `RestoreTransactions` is only needed for the user-triggered restore button (required on iOS for Apple App Store compliance).
 
 ### App Account Token (replacing `applicationUsername`)
 
@@ -308,26 +310,26 @@ If the native plugin set `SKMutablePayment.applicationUsername` to associate pur
 
 ```csharp
 // Set after Connect() — accepts a Guid, not a string hash
-store.AppleStoreExtendedService?.SetAppAccountToken(Guid.Parse(userAccountGuid));
+controller.AppleStoreExtendedService?.SetAppAccountToken(Guid.Parse(userAccountGuid));
 ```
 
-Must be called **after** `await store.Connect()`. The token is attached to the transaction and surfaced in the JWS payload.
+Must be called **after** `await controller.Connect()`. The token is attached to the transaction and surfaced in the JWS payload.
 
 ### Ask-to-Buy (Deferred Purchases)
 
 | Native StoreKit | Unity IAP |
 |---|---|
-| `SKPaymentTransactionStatePurchasing` + parent approval pending → `paymentQueue:removedTransactions:` | `store.OnPurchaseDeferred` — show pending UI, do not grant |
-| Purchase approved → `paymentQueue:updatedTransactions:` with `SKPaymentTransactionStatePurchased` | `store.OnPurchasePending` — grant content, then confirm |
+| `SKPaymentTransactionStatePurchasing` + parent approval pending → `paymentQueue:removedTransactions:` | `controller.OnPurchaseDeferred` — show pending UI, do not grant |
+| Purchase approved → `paymentQueue:updatedTransactions:` with `SKPaymentTransactionStatePurchased` | `controller.OnPurchasePending` — grant content, then confirm |
 
-If the existing plugin simulates Ask-to-Buy via `store.AppleStoreExtendedPurchaseService?.simulateAskToBuy`, that property is still available in Unity IAP 5.
+If the existing plugin simulates Ask-to-Buy via `controller.AppleStoreExtendedPurchaseService?.simulateAskToBuy`, that property is still available in Unity IAP 5.
 
 ### Code Redemption Sheet
 
 If the native plugin calls `SKPaymentQueue.default().presentCodeRedemptionSheet()`:
 
 ```csharp
-store.AppleStoreExtendedPurchaseService?.PresentCodeRedemptionSheet();
+controller.AppleStoreExtendedPurchaseService?.PresentCodeRedemptionSheet();
 ```
 
 Available after `Connect()`. Null-check required — only non-null on iOS.
@@ -338,13 +340,13 @@ If the native plugin intercepts App Store promotional purchases (products promot
 
 ```csharp
 // Subscribe after Connect() — if() required (?.+= does not work with events)
-if (store.AppleStoreExtendedPurchaseService != null)
-    store.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += OnPromotionalPurchase;
+if (controller.AppleStoreExtendedPurchaseService != null)
+    controller.AppleStoreExtendedPurchaseService.OnPromotionalPurchaseIntercepted += OnPromotionalPurchase;
 
 void OnPromotionalPurchase(Product product)
 {
     // Show confirmation UI, then:
-    store.AppleStoreExtendedPurchaseService?.ContinuePromotionalPurchases();
+    controller.AppleStoreExtendedPurchaseService?.ContinuePromotionalPurchases();
 }
 ```
 
@@ -356,37 +358,37 @@ void OnPromotionalPurchase(Product product)
 
 | Native StoreKit 1 | Unity IAP 5.x |
 |---|---|
-| `SKProduct` | `Product` (via `store.GetProductById`) |
+| `SKProduct` | `Product` (via `controller.GetProductById(id, storeName)`) |
 | `SKPaymentTransaction` | `PendingOrder` (on `OnPurchasePending`) |
 | `SKPaymentTransaction.transactionIdentifier` | `pendingOrder.Info.TransactionID` |
 | `SKPaymentTransaction.payment.productIdentifier` | `pendingOrder.CartOrdered.Items().First().Product.definition.id` |
 | App receipt (`appStoreReceiptURL` base64) | `order.Info.Apple?.jwsRepresentation` (per-transaction JWS — see receipt format note) |
-| `SKPaymentQueue.default().finishTransaction:` | `store.ConfirmPurchase(pendingOrder)` |
-| `SKPaymentQueue.default().restoreCompletedTransactions()` | `store.RestoreTransactions(callback)` |
-| `SKPaymentTransactionStatePurchased` | `store.OnPurchasePending` |
-| `SKPaymentTransactionStateFailed` | `store.OnPurchaseFailed` |
-| `SKPaymentTransactionStateDeferred` | `store.OnPurchaseDeferred` |
-| `SKPaymentTransactionStateRestored` | `store.OnPurchasesFetched` (via `FetchPurchases`) or `store.OnPurchasePending` (via `RestoreTransactions`) |
-| `SKProductsRequest` + `productsRequest:didReceiveResponse:` | `store.FetchProducts(definitions)` → `store.OnProductsFetched` |
-| `SKPaymentQueue.canMakePayments()` | `store.AppleStoreExtendedService?.canMakePayments` (after `Connect()`) |
-| `SKMutablePayment.applicationUsername` | `store.AppleStoreExtendedService?.SetAppAccountToken(Guid)` (after `Connect()`) |
+| `SKPaymentQueue.default().finishTransaction:` | `controller.ConfirmPurchase(pendingOrder)` |
+| `SKPaymentQueue.default().restoreCompletedTransactions()` | `controller.RestoreTransactions(callback)` |
+| `SKPaymentTransactionStatePurchased` | `controller.OnPurchasePending` |
+| `SKPaymentTransactionStateFailed` | `controller.OnPurchaseFailed` |
+| `SKPaymentTransactionStateDeferred` | `controller.OnPurchaseDeferred` |
+| `SKPaymentTransactionStateRestored` | `controller.OnPurchasesFetched` (via `FetchPurchases`) or `controller.OnPurchasePending` (via `RestoreTransactions`) |
+| `SKProductsRequest` + `productsRequest:didReceiveResponse:` | `controller.FetchProducts(definitions, UnityIAPServices.GetDefaultStore())` → `controller.OnProductsFetched` |
+| `SKPaymentQueue.canMakePayments()` | `controller.AppleStoreExtendedService?.canMakePayments` (after `Connect()`) |
+| `SKMutablePayment.applicationUsername` | `controller.AppleStoreExtendedService?.SetAppAccountToken(Guid)` (after `Connect()`) |
 | `SKPaymentDiscount` (promotional offer) | **Not supported** — report as hard blocker |
-| `SKReceiptRefreshRequest` | No direct equivalent — `store.FetchPurchases()` covers re-delivery |
+| `SKReceiptRefreshRequest` | No direct equivalent — `controller.FetchPurchases()` covers re-delivery |
 | `SKStorefront` | Not exposed in Unity IAP |
-| `product.subscriptionPeriod` | `store.AppleStoreExtendedProductService?.GetProductDetails()` (returns raw JSON) |
-| `product.introductoryPrice` | `store.AppleStoreExtendedProductService?.GetIntroductoryPriceDictionary()` |
+| `product.subscriptionPeriod` | `controller.AppleStoreExtendedProductService?.GetProductDetails()` (returns raw JSON) |
+| `product.introductoryPrice` | `controller.AppleStoreExtendedProductService?.GetIntroductoryPriceDictionary()` |
 
 ### StoreKit 2
 
 | Native StoreKit 2 | Unity IAP 5.x |
 |---|---|
-| `Product.products(for:)` | `store.FetchProducts(definitions)` → `store.OnProductsFetched` |
-| `product.purchase()` | `store.PurchaseProduct(product)` |
-| `Transaction.currentEntitlements` (async stream) | `store.FetchPurchases()` → `store.OnPurchasesFetched` |
-| `Transaction.updates` (async stream) | `store.OnPurchasePending` (event-driven) |
-| `transaction.finish()` | `store.ConfirmPurchase(pendingOrder)` |
+| `Product.products(for:)` | `controller.FetchProducts(definitions, UnityIAPServices.GetDefaultStore())` → `controller.OnProductsFetched` |
+| `product.purchase()` | `controller.PurchaseProduct(product)` |
+| `Transaction.currentEntitlements` (async stream) | `controller.FetchPurchases()` → `controller.OnPurchasesFetched` |
+| `Transaction.updates` (async stream) | `controller.OnPurchasePending` (event-driven) |
+| `transaction.finish()` | `controller.ConfirmPurchase(pendingOrder)` |
 | JWS transaction string from `verificationResult` | `order.Info.Apple?.jwsRepresentation` |
-| `Transaction.currentEntitlements` for entitlement check | `store.CheckEntitlement(product)` → `store.OnCheckEntitlement` |
+| `Transaction.currentEntitlements` for entitlement check | `controller.CheckEntitlement(product)` → `controller.OnCheckEntitlement` |
 | `winBackOffer` / `eligibleWinBackOffers` | **Not supported** — report as hard blocker |
 
 ---

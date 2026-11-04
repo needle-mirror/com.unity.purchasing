@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace UnityEngine.Purchasing
@@ -51,6 +52,16 @@ namespace UnityEngine.Purchasing
         /// backend omits the field; suppress the picker UI only when the server explicitly returns false.
         /// </summary>
         Task<EligiblePaymentProviders> GetEligiblePaymentProviders();
+
+        /// <summary>
+        /// Checks whether the calling player can buy each catalog listing now, given the listing's purchase limit.
+        /// Entitlements are not considered. Accepts 1 to 50 catalog listing ids.
+        /// Does not throw: if the request fails, every id maps to a result with <see cref="PurchaseEligibility.Eligible"/> false
+        /// and <see cref="PurchaseEligibilityFailureReason.RequestFailed"/>.
+        /// </summary>
+        /// <param name="catalogListingIds">The catalog listing ids to check.</param>
+        /// <returns>Results keyed by catalog listing id, with an entry for every id passed in. Empty when <paramref name="catalogListingIds"/> is null or empty.</returns>
+        Task<IReadOnlyDictionary<string, PurchaseEligibility>> GetPurchaseEligibility(IReadOnlyList<string>? catalogListingIds);
 
         /// <summary>
         /// Returns a new UGUI payment-method picker. View hierarchy is built lazily on first use;

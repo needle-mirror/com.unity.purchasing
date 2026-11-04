@@ -32,7 +32,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// Optional. Per-order override of the project&#39;s globally configured redirect URLs. When provided, &#x60;successUrl&#x60; is required and the object fully replaces the global config for this order; when omitted, the global config is used.
         /// </summary>
         /// <param name="successUrl">Redirect target after a successful checkout. Must be an absolute https URL on the project&#39;s webshop host (e.g. &#x60;shop.unity.com&#x60;); other hosts are rejected.</param>
-        /// <param name="cancelUrl">Redirect target when the player cancels or abandons checkout. Applies to Stripe checkout only; ignored by providers without a cancel step. Must be on the project&#39;s webshop host.</param>
+        /// <param name="cancelUrl">Redirect target when the player cancels or abandons checkout. Applies to providers with a cancel step (Stripe and mock checkout); ignored by providers without one. Must be on the project&#39;s webshop host.</param>
         [Preserve]
         public OrderRequestRedirectUrls(string successUrl, string cancelUrl = default)
         {
@@ -48,7 +48,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string SuccessUrl{ get; }
         
         /// <summary>
-        /// Redirect target when the player cancels or abandons checkout. Applies to Stripe checkout only; ignored by providers without a cancel step. Must be on the project&#39;s webshop host.
+        /// Redirect target when the player cancels or abandons checkout. Applies to providers with a cancel step (Stripe and mock checkout); ignored by providers without one. Must be on the project&#39;s webshop host.
         /// </summary>
         [Preserve]
         [DataMember(Name = "cancelUrl", EmitDefaultValue = false)]

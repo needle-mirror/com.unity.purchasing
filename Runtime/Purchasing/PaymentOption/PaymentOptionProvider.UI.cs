@@ -67,12 +67,14 @@ namespace UnityEngine.Purchasing
         IReadOnlyList<PurchaseOptionViewModel.PurchaseOpt>? m_CurrentOpts;
 
         // === Procedural sprite caches (cheap; outlive provider instances) ===
+        // Unity's null check rather than ??=: exiting Play Mode destroys these sprites, and without a
+        // domain reload ??= would keep returning the destroyed ones.
         static Sprite? s_SheetSprite;
         static Sprite? s_ButtonSprite;
         static Sprite? s_BadgeSprite;
-        static Sprite SheetSprite  => s_SheetSprite  ??= CreateRoundedSprite(72, 32, sliced: true);
-        static Sprite ButtonSprite => s_ButtonSprite ??= CreateRoundedSprite(48, 18, sliced: true);
-        static Sprite BadgeSprite  => s_BadgeSprite  ??= CreateRoundedSprite(40, 20, sliced: true);
+        static Sprite SheetSprite  => s_SheetSprite  != null ? s_SheetSprite  : s_SheetSprite  = CreateRoundedSprite(72, 32, sliced: true);
+        static Sprite ButtonSprite => s_ButtonSprite != null ? s_ButtonSprite : s_ButtonSprite = CreateRoundedSprite(48, 18, sliced: true);
+        static Sprite BadgeSprite  => s_BadgeSprite  != null ? s_BadgeSprite  : s_BadgeSprite  = CreateRoundedSprite(40, 20, sliced: true);
 
         void BuildHierarchy()
         {

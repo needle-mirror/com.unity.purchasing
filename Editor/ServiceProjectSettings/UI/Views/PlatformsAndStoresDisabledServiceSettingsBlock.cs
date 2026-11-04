@@ -8,9 +8,9 @@ namespace UnityEditor.Purchasing
     {
         protected override void PopulateStateSensitiveSections(VisualElement rootElement, VisualElement currentBuildTargetSection, VisualElement otherStoresSection)
         {
-            currentBuildTargetSection.parent.Remove(currentBuildTargetSection);
-            currentStoreSection.parent.Remove(currentStoreSection);
-            otherStoresSection.parent.Remove(otherStoresSection);
+            currentBuildTargetSection?.RemoveFromHierarchy();
+            currentStoreSection?.RemoveFromHierarchy();
+            otherStoresSection?.RemoveFromHierarchy();
         }
 
         protected override IEnumerable<string> GetStoresForState()

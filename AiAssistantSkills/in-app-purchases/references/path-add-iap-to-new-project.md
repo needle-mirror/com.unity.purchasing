@@ -31,7 +31,7 @@ Always use the latest stable v5 release unless the user specifies a version. Nev
 Search `Assets/**/*.cs` for any existing IAP signals:
 
 ```
-ProductType|ProductDefinition|StoreController|IAPButton|CodelessIAP
+ProductType|ProductDefinition|StoreController|PurchasingController|IAPButton|CodelessIAP
 ProcessPurchase|PendingOrder|DeferredOrder|ConfirmPurchase|FetchPurchases
 IStoreListener|UnityPurchasing\.Initialize|ConfigurationBuilder
 ```
@@ -83,7 +83,7 @@ Before generating code:
 
 Create a single `IAPManager` (MonoBehaviour singleton or service, matching project pattern) that:
 
-- Holds the `StoreController` instance.
+- Holds a `PurchasingController`: `new PurchasingController(UnityIAPServices.GetDefaultStore())` — see [purchasing-controller.md](purchasing-controller.md). D2C can be added later by adding `PaymentProvider.Name`, without a second controller. It requires v5.5+: if the installed package doesn't contain it, recommend upgrading; use a `StoreController` only if the user can't or won't upgrade.
 - Exposes `Buy(string productId)`.
 - Exposes `RestorePurchases()` — **only** if the product list contains `NonConsumable` or `Subscription` types.
 - Fires UI-friendly events or callbacks for: `OnInitialized`, `OnProductsLoaded`, `OnPurchaseSuccess`, `OnPurchaseFailed`, `OnPurchaseDeferred`.
@@ -135,12 +135,12 @@ Do not grant anything. Fire `OnPurchaseFailed` with the reason. See **Failure De
 
 - Unlock a durable entitlement (feature flag, item ownership).
 - Include `RestorePurchases()` — required on iOS, good practice on Android.
-- Re-apply the entitlement on app startup: call `store.FetchPurchases()` and re-check ownership in `OnPurchasesFetched`, or use `store.CheckEntitlement(product)`. See **Entitlement Checking** and **Fetch Existing Purchases** in SKILL.md.
+- Re-apply the entitlement on app startup: call `controller.FetchPurchases()` and re-check ownership in `OnPurchasesFetched`, or use `controller.CheckEntitlement(product)`. See **Entitlement Checking** and **Fetch Existing Purchases** in SKILL.md.
 
 ### Subscription
 
 - Restore or check subscription state on app startup, not only at purchase time. Subscriptions can expire or be cancelled externally.
-- Use `store.CheckEntitlement(product)` or inspect `OnPurchasesFetched` results to update active/expired/unknown state.
+- Use `controller.CheckEntitlement(product)` or inspect `OnPurchasesFetched` results to update active/expired/unknown state.
 - See **Subscription Info** in SKILL.md for the correct access path (`order.Info.PurchasedProductInfo`, `IsSubscribed() == Result.True`).
 
 ## Step 7 — Cloud Save Integration

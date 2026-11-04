@@ -5,21 +5,7 @@
         "Unity.Purchasing.Utilities"
     ],
     "includePlatforms": [],
-    "excludePlatforms": [
-        "Editor",
-        "GameCoreScarlett",
-        "GameCoreXboxOne",
-        "LinuxStandalone64",
-        "CloudRendering",
-        "PS4",
-        "PS5",
-        "Switch",
-        "WSA",
-        "WebGL",
-        "WindowsStandalone32",
-        "WindowsStandalone64",
-        "XboxOne"
-    ],
+    "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],

@@ -50,10 +50,10 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
         {
             try
             {
-                // Take any impression_id staged by a preceding PaymentOptionsShownEvent;
-                // otherwise mint one for this journey. Single id for every item in
-                // the cart — they all belong to the same purchase journey.
-                var impressionId = ImpressionIdContext.TakeOrMint();
+                // The purchase journey's impression_id, set by the caller's scope.
+                // Single id for every item in the cart — they all belong to the
+                // same purchase journey.
+                var impressionId = ImpressionScope.Shared.Current;
                 var pps = await m_PlayerData.CreatePlayerIdentityAsync(impressionId);
                 foreach (var item in cart.Items())
                 {
@@ -72,7 +72,8 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
         {
             try
             {
-                var impressionId = ImpressionIdContext.Mint();
+                // The shown window's impression_id, set by the picker's scope.
+                var impressionId = ImpressionScope.Shared.Current;
                 var pps = await m_PlayerData.CreatePlayerIdentityAsync(impressionId);
                 // No cart yet at modal-show time; envelope's Order stays null.
                 var iaps = BuildEnvelope(null, null, pps, new PaymentOptionsShownEvent
@@ -92,7 +93,10 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
         {
             try
             {
-                var pps = await m_PlayerData.CreatePlayerIdentityAsync();
+                // The journey's id when the payment is reported inside its scope: a store
+                // answering synchronously, or an SK2 answer carrying the id back (see
+                // AppleStoreImpl.EnterAnsweredImpressionScope). Otherwise null.
+                var pps = await m_PlayerData.CreatePlayerIdentityAsync(ImpressionScope.Shared.Current);
                 var insightsPayload = MapPayload(payload);
                 foreach (var item in order.CartOrdered.Items())
                 {
@@ -114,7 +118,9 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
         {
             try
             {
-                var pps = await m_PlayerData.CreatePlayerIdentityAsync();
+                // The journey's id when the failure is reported inside its scope: a store
+                // failing synchronously, or an SK2 answer carrying the id back. Otherwise null.
+                var pps = await m_PlayerData.CreatePlayerIdentityAsync(ImpressionScope.Shared.Current);
                 var variant = new PurchaseFailedEvent
                 {
                     FailureReason = MapFailureReason(order.FailureReason),
@@ -395,7 +401,7 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
             };
         }
 
-        static Sku BuildSku(CartItem cartItem)
+        internal static Sku BuildSku(CartItem cartItem)
         {
             var product = cartItem.Product;
             product.catalogListings.TryGetValue(cartItem.CatalogListingId, out var listing);
@@ -410,7 +416,9 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
                 LocalizedPriceString = meta?.localizedPriceString,
                 PriceMicro = meta != null ? (long?)(meta.localizedPrice * 1_000_000m) : null,
                 IsoCurrencyCode = meta?.isoCurrencyCode,
-                Quantity = cartItem.Quantity
+                Quantity = cartItem.Quantity,
+                CatalogListingId = cartItem.CatalogListingId,
+                UnitySku = product.uSku
             };
         }
 

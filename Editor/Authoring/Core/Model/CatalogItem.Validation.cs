@@ -18,6 +18,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         internal const int DescriptionMaxLength = 250;
         internal const int SubtitleMaxLength = 50;
         internal const int BadgeTextMaxLength = 50;
+        internal const int PurchaseLimitMinCount = 1;
         internal const string RequiredCurrencyCode = "USD";
         internal const string ValidIdChars = "a-zA-Z0-9._-";
         internal const string USkuPattern = "^[" + ValidIdChars + "]+$";
@@ -114,6 +115,32 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             }
 
             ValidateStoreIdOverrides(states);
+
+            if (PurchaseLimit != null && !Enum.IsDefined(typeof(PurchaseLimitPeriod), PurchaseLimit.Period))
+            {
+                states.Add(new AssetState("Invalid purchase limit",
+                    "A purchase limit period must be Hour, Day or Month.",
+                    SeverityLevel.Error, ValidationStateType));
+            }
+            else if (PurchaseLimit is { Count: < 0 })
+            {
+                states.Add(new AssetState("Invalid purchase limit",
+                    $"A purchase limit count must be a whole number of {PurchaseLimitMinCount} or more.",
+                    SeverityLevel.Error, ValidationStateType));
+            }
+            else if (PurchaseLimit is { IsSet: true } && PurchaseLimit.Count < PurchaseLimitMinCount)
+            {
+                states.Add(new AssetState("Invalid purchase limit",
+                    $"A purchase limit count must be at least {PurchaseLimitMinCount}.",
+                    SeverityLevel.Error, ValidationStateType));
+            }
+            // Blocks a deploy that would otherwise clear the remote limit.
+            else if (PurchaseLimit is { IsSet: false } && PurchaseLimit.Count != 0)
+            {
+                states.Add(new AssetState("Invalid purchase limit",
+                    "A purchase limit count needs a period (Hour, Day or Month). Clear the count to remove the limit.",
+                    SeverityLevel.Error, ValidationStateType));
+            }
 
             return states;
         }

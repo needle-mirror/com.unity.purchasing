@@ -1,4 +1,8 @@
-.platform-tag {
-    background-color:#AEAEAE; /*from light.uss --theme-line-selection-background-color*/
-    color:#ffffff; /*from light.uss --theme-line-selection-text-color*/
+.editor-setup-label {
+    color: #4c4c4c;
+}
+
+.editor-setup-title,
+.editor-setup-value {
+    color: #090909;
 }

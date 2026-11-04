@@ -1,3 +1,5 @@
+// ULO-13058: Platform gating should be in the asmdef, move there when possible
+#if !((UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS) && !UNITY_EDITOR)
 using System;
 using UnityEngine.Purchasing.Extension;
 
@@ -132,6 +134,11 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
+        public void Purchase(string productJson, string optionsJson, string impressionId)
+        {
+            throw new NotImplementedException();
+        }
+
         public void FetchStorefront()
         {
             throw new NotImplementedException();
@@ -167,9 +174,20 @@ namespace UnityEngine.Purchasing
             throw new NotImplementedException();
         }
 
+        public bool IsSceneFrontmost()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void SetSceneBecameFrontmostCallback(SceneBecameFrontmostCallback callback)
+        {
+            throw new NotImplementedException();
+        }
+
         public string FetchNativeDeviceInfo()
         {
             throw new NotImplementedException();
         }
     }
 }
+#endif

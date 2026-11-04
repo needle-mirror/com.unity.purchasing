@@ -14,16 +14,18 @@ namespace UnityEngine.Purchasing
     {
         readonly HashSet<string?> m_ProcessedPurchaseToken;
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
+        readonly ITransactionLog m_TransactionLog;
         IProductCache? m_ProductCache;
         IStorePurchaseConfirmCallback? m_ConfirmCallback;
         int m_RetryCount = 0;
         const int k_MaxRetryAttempts = 5;
 
         [Preserve]
-        internal GooglePlayStoreFinishTransactionService(IGooglePlayStoreService googlePlayStoreService)
+        internal GooglePlayStoreFinishTransactionService(IGooglePlayStoreService googlePlayStoreService, ITransactionLog transactionLog)
         {
             m_ProcessedPurchaseToken = new HashSet<string?>();
             m_GooglePlayStoreService = googlePlayStoreService;
+            m_TransactionLog = transactionLog;
         }
 
         public void SetProductCache(IProductCache? productCache)
@@ -81,6 +83,12 @@ namespace UnityEngine.Purchasing
             {
                 m_RetryCount = 0;
                 m_ProcessedPurchaseToken.Add(purchase.purchaseToken);
+                // A stale Play cache can return a consumed token after a restart, when the set above is gone,
+                // so consumed tokens are also kept on disk and skipped when fetching purchases.
+                if (product?.type == ProductType.Consumable)
+                {
+                    m_TransactionLog.Record(ConsumedTokenKey(purchase.purchaseToken));
+                }
                 CallPurchaseSucceededUpdateReceipt(purchase);
                 return;
             }
@@ -114,6 +122,10 @@ namespace UnityEngine.Purchasing
         {
             m_ConfirmCallback?.OnConfirmOrderSucceeded(googlePurchase.purchaseToken);
         }
+
+        // The legacy PurchasingManager records raw Google purchase tokens in the same log when a purchase is
+        // confirmed, before its consume completes, so consumed tokens get a key only this store writes.
+        internal static string ConsumedTokenKey(string purchaseToken) => "GooglePlayConsumed:" + purchaseToken;
 
         static bool IsResponseCodeInRecoverableState(IGoogleBillingResult billingResult)
         {

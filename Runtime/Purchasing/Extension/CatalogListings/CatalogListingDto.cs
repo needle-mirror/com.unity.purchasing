@@ -92,6 +92,9 @@ namespace UnityEngine.Purchasing.CatalogListings
         [DataMember(Name = "storeIdOverrides")]
         public List<StoreIdOverrideDto> StoreIdOverrides { get; set; } = new List<StoreIdOverrideDto>();
 
+        [Preserve]
+        [DataMember(Name = "purchaseLimit")] public PurchaseLimitDto? PurchaseLimit { get; set; }
+
         /// <summary>
         /// The catalog listing's identifier within LiveContent. Not present in the JSON content body;
         /// populated from the LiveContent envelope (currently the config path; may switch to a more
@@ -103,6 +106,30 @@ namespace UnityEngine.Purchasing.CatalogListings
         /// True when the item has a corresponding Webshop item.
         /// </summary>
         public bool HasWebshop { get; set; }
+    }
+
+    [Preserve]
+    [DataContract]
+    internal class PurchaseLimitDto
+    {
+        [Preserve]
+        [DataMember(Name = "count")] public int Count { get; set; }
+
+        [Preserve]
+        [DataMember(Name = "period")] public string? Period { get; set; }
+
+        // Null for a malformed limit; the backend rejects those listings at create order anyway.
+        internal PurchaseLimit? ToPurchaseLimit()
+        {
+            PurchaseLimitPeriod? period = Period?.ToLowerInvariant() switch
+            {
+                "hour" => PurchaseLimitPeriod.Hour,
+                "day" => PurchaseLimitPeriod.Day,
+                "month" => PurchaseLimitPeriod.Month,
+                _ => null
+            };
+            return period == null || Count < 1 ? null : new PurchaseLimit(Count, period.Value);
+        }
     }
 
     [Preserve]

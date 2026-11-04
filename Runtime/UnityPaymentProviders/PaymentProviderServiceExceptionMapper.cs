@@ -74,6 +74,19 @@ namespace UnityEngine.Purchasing.PaymentProviderService
                 throw new PaymentProviderException<NotFoundError>(
                     $"Could not find resource. Status code {e.response.StatusCode}.", error);
             }
+            // ResponseHandler unwraps the create order 409 oneOf into its concrete type.
+            catch (HttpException<PurchaseLimitReachedErrorResponse> e)
+            {
+                var error = new PurchaseLimitReachedError(e.Response.StatusCode);
+                throw new PaymentProviderException<PurchaseLimitReachedError>(
+                    $"Purchase limit reached. {e.ActualError?.Detail}", error);
+            }
+            catch (HttpException<BasicConflictErrorResponse> e) when (e.Response.StatusCode is 409)
+            {
+                var error = new ConflictError(e.Response.StatusCode);
+                throw new PaymentProviderException<ConflictError>(
+                    $"Conflict occured. {e.ActualError?.Detail}", error);
+            }
             catch (HttpException<BasicErrorResponse> e) when (e.Response.StatusCode is 409)
             {
                 var error = new ConflictError(e.Response.StatusCode);

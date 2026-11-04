@@ -9,6 +9,7 @@ namespace UnityEditor.Purchasing
     {
         const string k_OpenSkillsFolderBtn = "OpenSkillsFolderButton";
         const string k_InstallSkillsBtn = "InstallSkillsButton";
+        const string k_ClaudeCodeRow = "ClaudeCodeRow";
         const string k_PackageSkillsRelativePath = "Packages/com.unity.purchasing/AiAssistantSkills/in-app-purchases";
         const string k_ClaudeSkillsDestFolder = "skills/in-app-purchases";
 
@@ -31,6 +32,7 @@ namespace UnityEditor.Purchasing
 
         void SetupStyleSheets()
         {
+            // The .editor-setup* classes in AISkills.uxml come from the PlatformSupportVisual sheets the settings root loads.
             m_Block.AddStyleSheetPath(UIResourceUtils.purchasingCommonUssPath);
             m_Block.AddStyleSheetPath(EditorGUIUtility.isProSkin
                 ? UIResourceUtils.purchasingDarkUssPath
@@ -41,14 +43,17 @@ namespace UnityEditor.Purchasing
         {
             m_Block.Q<Button>(k_OpenSkillsFolderBtn).clicked += OpenSkillsFolder;
 
-            var installButton = m_Block.Q<Button>(k_InstallSkillsBtn);
             if (ClaudeConfigDirectoryExists())
             {
-                installButton.clicked += InstallSkillsToClaudeCode;
+                m_Block.Q<Button>(k_InstallSkillsBtn).clicked += InstallSkillsToClaudeCode;
             }
             else
             {
-                installButton.style.display = DisplayStyle.None;
+                var row = m_Block.Q(k_ClaudeCodeRow) ?? m_Block.Q(k_InstallSkillsBtn);
+                if (row != null)
+                {
+                    row.style.display = DisplayStyle.None;
+                }
             }
         }
 

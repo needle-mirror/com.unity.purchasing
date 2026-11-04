@@ -1,4 +1,8 @@
-.platform-tag {
-    background-color:#4D4D4D; /*from dark.uss --theme-line-selection-background-color*/
-    color:#ffffff;  /*from dark.uss --theme-line-selection-text-color*/
+.editor-setup-label {
+    color: #A4A4A4;
+}
+
+.editor-setup-title,
+.editor-setup-value {
+    color: #EEEEEE;
 }

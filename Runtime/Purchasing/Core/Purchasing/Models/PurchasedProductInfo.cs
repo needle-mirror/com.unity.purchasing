@@ -1,7 +1,7 @@
 #nullable enable
 
 using System;
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
 using Unity.XGamingRuntime;
 #endif
 using UnityEngine;
@@ -20,7 +20,7 @@ namespace UnityEngine.Purchasing
             }
         }
 
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
         public PurchasedProductInfo(string productId, ProductType productType, XStoreProduct xStoreProduct)
         {
             this.productId = productId;

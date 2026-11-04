@@ -24,7 +24,10 @@ namespace UnityEngine.Purchasing.Registration
     class IapCoreInitializeCallback : IInitializablePackage
     {
         const string k_PurchasingPackageName = "com.unity.purchasing";
+#if IAP_UNITY_AUTH_ENABLED
         static SessionEventEmitter s_SessionEventEmitter;
+        static IAuthenticationService s_SessionEventSource;
+#endif
         static DeepLinkService s_DeepLinkService;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -34,6 +37,16 @@ namespace UnityEngine.Purchasing.Registration
             // to the fresh DeepLinkService (DeepLinkManager disposes the old one) instead of a stale,
             // disposed instance that would silently stop handling deep links.
             s_DeepLinkService = null;
+            // The emitter holds the previous session's player data and listens to its AuthenticationService:
+            // drop it so this session builds and subscribes its own.
+#if IAP_UNITY_AUTH_ENABLED
+            if (s_SessionEventEmitter != null && s_SessionEventSource != null)
+            {
+                s_SessionEventSource.SignedIn -= s_SessionEventEmitter.SendAuthenticationCompleteEvent;
+            }
+            s_SessionEventSource = null;
+            s_SessionEventEmitter = null;
+#endif
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -94,7 +107,8 @@ namespace UnityEngine.Purchasing.Registration
                 StoreFactory.Instance().StoreLocationContext);
             s_SessionEventEmitter = new SessionEventEmitter(playerData, new CoreRegistryHelper());
 
-            AuthenticationService.Instance.SignedIn += s_SessionEventEmitter.SendAuthenticationCompleteEvent;
+            s_SessionEventSource = AuthenticationService.Instance;
+            s_SessionEventSource.SignedIn += s_SessionEventEmitter.SendAuthenticationCompleteEvent;
 #endif
         }
 

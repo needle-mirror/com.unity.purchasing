@@ -1,11 +1,12 @@
 <UXML xmlns="UnityEngine.UIElements">
-    <VisualElement name="AISkillsBlock" class="project-settings-title-container">
-        <Label text="AI Skills" class="project-settings-title"/>
-        <Label text="Claude Code skills for Unity IAP development assistance" class="label-container"/>
-        <VisualElement class="button-container">
-            <Button name="OpenSkillsFolderButton" text="Open Skills Folder" class="submit-button"/>
-            <Button name="InstallSkillsButton" text="Install to Claude Code" class="submit-button"/>
+    <VisualElement name="AISkillsBlock" class="editor-setup ai-skills-block">
+        <VisualElement class="editor-setup-row">
+            <Label text="Local directory" class="editor-setup-title editor-setup-label"/>
+            <Button name="OpenSkillsFolderButton" text="Open skills folder" class="ai-skills-button"/>
+        </VisualElement>
+        <VisualElement name="ClaudeCodeRow" class="editor-setup-row">
+            <Label text="Claude Code" class="editor-setup-title editor-setup-label"/>
+            <Button name="InstallSkillsButton" text="Install to Claude Code" class="ai-skills-button"/>
         </VisualElement>
     </VisualElement>
-    <VisualElement class="separator" />
 </UXML>

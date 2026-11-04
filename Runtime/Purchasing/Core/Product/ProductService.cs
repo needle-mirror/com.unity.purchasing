@@ -48,14 +48,17 @@ namespace UnityEngine.Purchasing
             }
 #endif
 
-            try
+            using (ImpressionScope.Shared.EnterNone())
             {
-                CheckStoreConnectionState();
-                m_FetchProductsUseCase.FetchProducts(productDefinitions, HandleProductsFetched, HandleProductsFetchFailed, retryPolicy ?? k_DefaultRetryPolicy);
-            }
-            catch (Exception e)
-            {
-                HandleProductsFetchFailed(productDefinitions, e.Message);
+                try
+                {
+                    CheckStoreConnectionState();
+                    m_FetchProductsUseCase.FetchProducts(productDefinitions, HandleProductsFetched, HandleProductsFetchFailed, retryPolicy ?? k_DefaultRetryPolicy);
+                }
+                catch (Exception e)
+                {
+                    HandleProductsFetchFailed(productDefinitions, e.Message);
+                }
             }
         }
 

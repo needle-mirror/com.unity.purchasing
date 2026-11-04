@@ -1,18 +1,17 @@
 <UXML xmlns="UnityEngine.UIElements">
     <VisualElement name="UnlinkedSeparator" class="separator" />
     <VisualElement name="GoogleConfigBlock" class="project-settings-title-container">
-        <Label name="PaymentProviderConfigurationTitle" text="Payment Provider Configuration" class="configuration-title"/>
-        <VisualElement name="CodaConfigItem" class="configuration-item">
+        <VisualElement name="CodaConfigItem" class="configuration-item expanded">
             <VisualElement class="configuration-item-header">
                 <Image class="configuration-icon coda" />
                 <VisualElement class="configuration-info">
                     <VisualElement class="configuration-name">
-                        <Label text="Codapay" />
-                        <VisualElement class="configuration-badge configured">
-                            <Label text="Configured" />
+                        <Label text="Coda" />
+                        <VisualElement name="CodaConnectedBadge" class="configuration-badge connected">
+                            <Label text="Connected" />
                         </VisualElement>
-                        <VisualElement class="configuration-badge">
-                            <Label text="Not Configured" />
+                        <VisualElement name="CodaNotConnectedBadge" class="configuration-badge">
+                            <Label text="Not Connected" />
                         </VisualElement>
                     </VisualElement>
                     <Label text="A high-performant gaming payment solution with global reach, with frictionless checkout." class="configuration-description" />
@@ -20,20 +19,21 @@
                 <VisualElement class="configuration-toggle" />
             </VisualElement>
             <VisualElement class="configuration-item-body">
-                <VisualElement>
-                    <Label text="Connect Codapay to start processing in‑app purchases:" class="description"/>
-                    <VisualElement class="label-container">
-                        <Label text="1. Connect Codapay in your " class="numbered-item"/>
-                        <VisualElement name="CodaPaymentProviderLink" class="link-container-integrated">
-                            <TextElement text="Unity Dashboard" class="link-button"/>
-                            <VisualElement class="external-link-icon"/>
-                        </VisualElement>
+                <Label text="Connect Codapay to process D2C in-app purchases" class="configuration-body-title"/>
+                <VisualElement class="configuration-list">
+                    <VisualElement class="configuration-list-row">
+                        <Label text="1. Connect Coda in your " class="configuration-list-item"/>
+                        <Label name="CodaPaymentProviderLink" text="Unity Dashboard" class="configuration-list-item configuration-link"/>
+                        <Label text="." class="configuration-list-item"/>
                     </VisualElement>
-                    <Label text="2. Codapay hosted popup will appear to install Unity’s App. Follow the guided flow." class="numbered-item"/>
-                    <Label text="3. Once the app install is successful, you’ll be redirected back to your Unity Dashboard to finish setup." class="numbered-item"/>
-                    <VisualElement class="invisible-separator" />
-                    <Label text="Note: In order to process live transactions, you will need to complete Codapay's verification, which can be done in Codapay's dashboard." class="numbered-item"/>
+                    <VisualElement class="configuration-list-row">
+                        <Label text="2. Coda's hosted pop-up will appear to install Unity's App. Follow the guided flow or refer to " class="configuration-list-item"/>
+                        <Label name="CodaDocumentationLink" text="Documentation" class="configuration-list-item configuration-link"/>
+                        <Label text="." class="configuration-list-item"/>
+                    </VisualElement>
+                    <Label text="3. Once the app install is successful, you'll be redirected back to your Unity Dashboard to finish setup." class="configuration-list-item"/>
                 </VisualElement>
+                <Label text="Note: In order to process live transactions, you will need to complete Coda's KYC verification, which is done in their dashboard." class="configuration-note"/>
             </VisualElement>
         </VisualElement>
         <VisualElement name="UnlinkedFeatures">
@@ -56,15 +56,17 @@
             </VisualElement>
             <VisualElement class="separator" />
         </VisualElement>
-        <VisualElement name="GooglePlayConfigItem" class="configuration-item">
+        <VisualElement name="GooglePlayConfigItem" class="configuration-item expanded">
             <VisualElement class="configuration-item-header">
                 <Image class="configuration-icon google-play" />
                 <VisualElement class="configuration-info">
                     <VisualElement class="configuration-name">
                         <Label text="Google Play" />
-                        <VisualElement name="GoogleKeyInfoIcon" class="configuration-info-icon" tooltip="How to find your Google license key&#10;&#10;1. Go to Google Play Console.&#10;2. Select your app.&#10;3. Go to Monetization setup to find your license key." />
-                        <VisualElement name="GoogleKeyConfiguredBadge" class="configuration-badge configured">
-                            <Label text="Configured" />
+                        <VisualElement name="GoogleKeyInfoIcon" class="configuration-info-icon" tooltip="How to find your Google license key&#10;&#10;1. Go to Google Play Console.&#10;2. Select your app.&#10;3. Go to Monetization setup to find your license key.">
+                            <Label text="i" />
+                        </VisualElement>
+                        <VisualElement name="GoogleKeyConfiguredBadge" class="configuration-badge connected">
+                            <Label text="Connected" />
                         </VisualElement>
                         <VisualElement name="GoogleKeyMissingBadge" class="configuration-badge missing-key">
                             <Label text="Missing license key" />
@@ -77,39 +79,38 @@
             <VisualElement class="configuration-item-body">
                 <VisualElement name="RevenueValidationBlock">
                     <VisualElement name="missing-key-mode">
-                        <HelpBox text="Your Google license key is missing. To remove this warning, add your license key to your cloud project settings, or enter it in the Receipt Obfuscator field below and push to the cloud." message-type="Warning" class="missing-key-box">
+                        <HelpBox text="Your Google license key is missing. To remove this warning, add your license key to your cloud project settings, or enter the key in the Receipt Obfuscator field below and push to the cloud." message-type="Warning" class="configuration-help-box missing-key-box">
                             <Button name="GoToCloudProjectButton" text="Go to cloud project" />
                         </HelpBox>
                     </VisualElement>
                     <VisualElement name="error-unauthorized-user">
-                        <HelpBox text="You are not authorized to view or set the license key of this cloud project." message-type="Error" />
+                        <HelpBox text="You are not authorized to view or set the license key of this cloud project." message-type="Error" class="configuration-help-box" />
                     </VisualElement>
                     <VisualElement name="error-server-error">
-                        <HelpBox text="There was an error retrieving the key from the backend. Please try again later." message-type="Error" />
+                        <HelpBox text="There was an error retrieving the key from the backend. Please try again later." message-type="Error" class="configuration-help-box" />
                     </VisualElement>
                     <VisualElement name="error-request-format">
-                        <HelpBox text="The request to get the key on the dashboard was invalid. Please report this as a possible bug." message-type="Error" />
+                        <HelpBox text="The request to get the key on the dashboard was invalid. Please report this as a possible bug." message-type="Error" class="configuration-help-box" />
                     </VisualElement>
                 </VisualElement>
                 <VisualElement name="unlinked-missing-key-mode">
-                    <HelpBox text="Your Google license key is missing. To remove this warning, connect to a cloud project and add your license key to your cloud project settings." message-type="Warning" />
+                    <HelpBox text="Your Google license key is missing. To remove this warning, connect to a cloud project and add your license key to your cloud project settings." message-type="Warning" class="configuration-help-box" />
                 </VisualElement>
                 <Toggle name="IgnoreGoogleLicenseKeyWarningToggle" text="Ignore Google license key warning in the editor logs." class="ignore-warning-toggle" />
-                <VisualElement class="invisible-separator" />
                 <VisualElement name="ReceiptObfuscatorBlock">
-                    <Label text="Receipt Obfuscator (client-side)" class="project-settings-subtitle"/>
-                    <Label text="Enter your license key in the input field below" class="label-container"/>
-                    <TextField name="GooglePlayKeyEntry" class="multiline-field-value" multiline="true"/>
-                    <Label text="Receipt obfuscation for Google Play will create a Tangle class in your project, note that this does not replace server side validation." class="label-container obfuscator-note"/>
-                    <VisualElement class="button-container obfuscator-buttons">
-                        <Button name="ObfuscateKeysButton" text="Obfuscate License Key" class="submit-button"/>
-                        <Button name="PushLicenseKeyButton" text="Push License Key to Cloud" class="submit-button"/>
+                    <Label name="ReceiptObfuscatorTitle" text="Receipt Obfuscator" class="configuration-body-title"/>
+                    <Label text="Enter your license key in the input field below" class="configuration-caption"/>
+                    <TextField name="GooglePlayKeyEntry" class="configuration-key-field" multiline="true"/>
+                    <Label text="Receipt obfuscation for Google Play will create a Tangle class in your project, note that this does not replace server side validation." class="configuration-fine-print"/>
+                    <VisualElement class="configuration-buttons">
+                        <Button name="ObfuscateKeysButton" text="Obfuscate License Key" class="configuration-button"/>
+                        <Button name="PushLicenseKeyButton" text="Push License Key to Cloud" class="configuration-button"/>
                     </VisualElement>
                     <VisualElement name="push-error">
-                        <HelpBox message-type="Error" />
+                        <HelpBox message-type="Error" class="configuration-help-box configuration-inline-error" />
                     </VisualElement>
                     <VisualElement name="verification">
-                        <Label text="GooglePlayTangle.cs has been generated and exists in your project." class="label-container"/>
+                        <Label text="GooglePlayTangle.cs has been generated and exists in your project." class="configuration-caption configuration-status"/>
                     </VisualElement>
                     <VisualElement name="error-message">
                         <Label text="-Google Errors Show Here-." class="warning-message"/>
@@ -117,17 +118,17 @@
                 </VisualElement>
             </VisualElement>
         </VisualElement>
-        <VisualElement name="StripeConfigItem" class="configuration-item">
+        <VisualElement name="StripeConfigItem" class="configuration-item expanded">
             <VisualElement class="configuration-item-header">
                 <Image class="configuration-icon stripe" />
                 <VisualElement class="configuration-info">
                     <VisualElement class="configuration-name">
                         <Label text="Stripe" />
-                        <VisualElement class="configuration-badge configured">
-                            <Label text="Configured" />
+                        <VisualElement name="StripeConnectedBadge" class="configuration-badge connected">
+                            <Label text="Connected" />
                         </VisualElement>
-                        <VisualElement class="configuration-badge">
-                            <Label text="Not Configured" />
+                        <VisualElement name="StripeNotConnectedBadge" class="configuration-badge">
+                            <Label text="Not Connected" />
                         </VisualElement>
                     </VisualElement>
                     <Label text="Accept in-app payments with a customizable checkout experience designed to boost conversion and reduce costs." class="configuration-description" />
@@ -135,22 +136,22 @@
                 <VisualElement class="configuration-toggle" />
             </VisualElement>
             <VisualElement class="configuration-item-body">
-                <VisualElement>
-                    <Label text="Connect Stripe to start processing in‑app purchases:" class="description"/>
-                    <VisualElement class="label-container">
-                        <Label text="1. Connect Stripe in your " class="numbered-item"/>
-                        <VisualElement name="StripePaymentProviderLink" class="link-container-integrated">
-                            <TextElement text="Unity Dashboard" class="link-button"/>
-                            <VisualElement class="external-link-icon"/>
-                        </VisualElement>
+                <Label text="Connect Stripe to process D2C in-app purchases" class="configuration-body-title"/>
+                <VisualElement class="configuration-list">
+                    <VisualElement class="configuration-list-row">
+                        <Label text="1. Connect Stripe in your " class="configuration-list-item"/>
+                        <Label name="StripePaymentProviderLink" text="Unity Dashboard" class="configuration-list-item configuration-link"/>
+                        <Label text="." class="configuration-list-item"/>
                     </VisualElement>
-                    <Label text="2. Stripe hosted popup will appear to install Unity’s App. Follow the guided flow." class="numbered-item"/>
-                    <Label text="3. Once the app install is successful, you’ll be redirected back to your Unity Dashboard to finish setup." class="numbered-item"/>
-                    <VisualElement class="invisible-separator" />
-                    <Label text="Note: In order to process live transactions, you will need to complete Stripe's verification, which is done in Stripe's dashboard." class="numbered-item"/>
+                    <VisualElement class="configuration-list-row">
+                        <Label text="2. Stripe's hosted pop-up will appear to install Unity's App. Follow the guided flow or refer to " class="configuration-list-item"/>
+                        <Label name="StripeDocumentationLink" text="Documentation" class="configuration-list-item configuration-link"/>
+                        <Label text="." class="configuration-list-item"/>
+                    </VisualElement>
+                    <Label text="3. Once the app install is successful, you'll be redirected back to your Unity Dashboard to finish setup." class="configuration-list-item"/>
                 </VisualElement>
+                <Label text="Note: In order to process live transactions, you will need to complete Stripe's KYC verification, which is done in their dashboard." class="configuration-note"/>
             </VisualElement>
         </VisualElement>
     </VisualElement>
-    <VisualElement class="separator" />
 </UXML>

@@ -121,6 +121,10 @@ namespace UnityEngine.Purchasing.Extension
 
         internal bool HasAuthAccountChangedSubscriber => m_OnAuthAccountChanged != null;
 
+        // Called when the game subscribes to OnPurchasePending, the signal that it can now handle
+        // purchases the store delivers unprompted. Stores that push such purchases override this.
+        internal virtual void OnPurchasePendingSubscribed() { }
+
 #if IAP_UNITY_AUTH_ENABLED
         string? m_LastKnownPlayerId;
         bool m_AuthWired;

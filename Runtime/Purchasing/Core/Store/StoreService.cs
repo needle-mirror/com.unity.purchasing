@@ -27,7 +27,10 @@ namespace UnityEngine.Purchasing
 
         public Task Connect()
         {
-            return m_StoreConnectUseCase.Connect();
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                return m_StoreConnectUseCase.Connect();
+            }
         }
 
         public ConnectionState GetConnectionState()

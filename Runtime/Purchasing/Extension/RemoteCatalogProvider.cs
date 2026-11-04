@@ -29,11 +29,32 @@ namespace UnityEngine.Purchasing
     {
         Dictionary<string?, storeSpecificIDsByCatalogListingId> m_StoreSpecificIds = new();
         List<ProductDefinition> m_Products = new();
+        Task<FetchRemoteCatalogResult>? m_LatestFetch;
 
-        public async Task<FetchRemoteCatalogResult> FetchRemoteCatalog()
+        public Task<FetchRemoteCatalogResult> FetchRemoteCatalog()
+        {
+            // Overlapping fetches would both clear and then both append, so each one waits for the previous one.
+            return m_LatestFetch = FetchAfter(m_LatestFetch);
+        }
+
+        async Task<FetchRemoteCatalogResult> FetchAfter(Task<FetchRemoteCatalogResult>? previous)
+        {
+            if (previous != null)
+            {
+                await previous; // Never throws: the fetch reports its errors in the result.
+            }
+
+            return await Fetch();
+        }
+
+        async Task<FetchRemoteCatalogResult> Fetch()
         {
             try
             {
+                // The provider holds only what the latest fetch returned: a refetch replaces the catalog, a failed one empties it.
+                m_Products.Clear();
+                m_StoreSpecificIds.Clear();
+
                 var catalogListingClient = CatalogListingClientProvider.Instance();
                 if (!catalogListingClient.IsAvailable)
                 {
@@ -73,6 +94,9 @@ namespace UnityEngine.Purchasing
             }
             catch (Exception e)
             {
+                // A listing can throw after earlier ones were added; a failed fetch leaves no catalog.
+                m_Products.Clear();
+                m_StoreSpecificIds.Clear();
                 return new FetchRemoteCatalogResult {Success = false, Exception = e};
             }
 

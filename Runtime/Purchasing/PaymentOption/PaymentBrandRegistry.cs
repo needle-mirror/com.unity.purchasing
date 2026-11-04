@@ -35,6 +35,11 @@ namespace UnityEngine.Purchasing
 
         static readonly Dictionary<string, Sprite> s_Cache = new();
 
+        // Exiting Play Mode destroys the cached sprites; without a domain reload they would be
+        // returned destroyed in the next Play session.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad() => s_Cache.Clear();
+
         // True when the storeName resolves to the Apple Pay brand on the
         // current (or overridden) platform. Used by the picker to invert the
         // button styling per Apple Pay brand guidelines: black-on-light-sheet,

@@ -34,6 +34,8 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         public List<HdImageDto> HdImages { get; set; }
         [DataMember(Name = "promotion"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public PromotionDto Promotion { get; set; }
+        [DataMember(Name = "purchaseLimit"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public PurchaseLimitDto PurchaseLimit { get; set; }
 
         // Captures any remaining top-level JSON keys this DTO doesn't model — keeps the upsert
         // round trip lossless if a future schema adds new top-level fields. The webshop additions
@@ -137,5 +139,25 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         Sale,
         Bonus,
         Limited,
+    }
+
+    [Serializable, DataContract]
+    public class PurchaseLimitDto
+    {
+        [DataMember(Name = "count")]
+        public int Count;
+        [DataMember(Name = "period")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public PurchaseLimitPeriodDto Period;
+    }
+
+    public enum PurchaseLimitPeriodDto
+    {
+        [EnumMember(Value = "hour")]
+        Hour,
+        [EnumMember(Value = "day")]
+        Day,
+        [EnumMember(Value = "month")]
+        Month,
     }
 }

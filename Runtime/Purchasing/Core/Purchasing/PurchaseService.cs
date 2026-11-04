@@ -52,7 +52,20 @@ namespace UnityEngine.Purchasing
         /// Event triggered when a purchase is pending confirmation or processing.
         /// Subscribe to this event to handle purchases that require additional processing before completion.
         /// </summary>
-        public event Action<PendingOrder>? OnPurchasePending;
+        public event Action<PendingOrder>? OnPurchasePending
+        {
+            add
+            {
+                m_OnPurchasePending += value;
+                if (value != null)
+                {
+                    m_StoreWrapper.instance.OnPurchasePendingSubscribed();
+                }
+            }
+            remove => m_OnPurchasePending -= value;
+        }
+
+        Action<PendingOrder>? m_OnPurchasePending;
 
         /// <summary>
         /// Event triggered when a purchase has been successfully confirmed and completed.
@@ -149,7 +162,7 @@ namespace UnityEngine.Purchasing
             }
             catch (InvalidCartItemException e)
             {
-                OnPurchaseFailed?.Invoke(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
+                RaisePurchaseFailed(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
                     "Attempting to purchase an invalid product: " + e.Message));
             }
         }
@@ -164,6 +177,27 @@ namespace UnityEngine.Purchasing
         /// <param name="catalogListingId">Catalog listing id of the product to purchase (uSku also accepted for back-compat).</param>
         public void PurchaseProduct(string catalogListingId)
         {
+            var cart = TryBuildCart(catalogListingId);
+            if (cart != null)
+            {
+                Purchase(cart);
+            }
+        }
+
+        // Raises OnPurchaseFailed only: no analytics, no Insights failed event. As the active
+        // journey's outcome, so a purchase started from the handler begins its own journey.
+        private protected void RaisePurchaseFailed(FailedOrder order)
+        {
+            using (ImpressionScope.Shared.EnterOutcome())
+            {
+                OnPurchaseFailed?.Invoke(Stamped(order));
+            }
+        }
+
+        // Resolves a catalog listing id (or uSku, for back-compat) to a cart. Returns null
+        // after emitting OnPurchaseFailed if the listing can't be resolved to a product.
+        private protected ICart? TryBuildCart(string catalogListingId)
+        {
             var cache = m_StoreWrapper.instance.ProductCache;
             var product = cache.FindByCatalogListingId(catalogListingId);
             if (product == null && cache.productsByUSku.TryGetValue(catalogListingId, out var byUSku))
@@ -173,20 +207,20 @@ namespace UnityEngine.Purchasing
             if (product == null)
             {
 
-                OnPurchaseFailed?.Invoke(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
+                RaisePurchaseFailed(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
                     "Attempting to purchase an invalid catalog listing: " + catalogListingId));
-                return;
+                return null;
             }
 
             try
             {
-                var cartItem = new CartItem(product, catalogListingId);
-                Purchase(new Cart(cartItem));
+                return new Cart(new CartItem(product, catalogListingId));
             }
             catch (InvalidCartItemException e)
             {
-                OnPurchaseFailed?.Invoke(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
+                RaisePurchaseFailed(new FailedOrder(new Cart(Product.CreateUnknownProduct("InvalidProduct")), PurchaseFailureReason.ProductUnavailable,
                     "Attempting to purchase an invalid product: " + e.Message));
+                return null;
             }
         }
 
@@ -196,8 +230,16 @@ namespace UnityEngine.Purchasing
         /// <param name="cart">The cart containing products to purchase. All products in the cart will be processed for purchase.</param>
         public void Purchase(ICart cart)
         {
+            RunPurchaseJourney(cart, m_PurchaseUseCase.Purchase);
+        }
+
+        // The purchase journey shared by every entry point that starts a purchase:
+        // the missing-callback warnings, intent-start, the connection check, then
+        // startPurchase hands the cart to the store.
+        private protected void RunPurchaseJourney(ICart cart, Action<ICart> startPurchase)
+        {
 #if DEBUG
-            if (OnPurchasePending == null)
+            if (m_OnPurchasePending == null)
             {
                 Debug.unityLogger.LogIAPError("IPurchaseService.Purchase called without a callback defined for IPurchaseService.OnPurchasePending.");
             }
@@ -213,23 +255,37 @@ namespace UnityEngine.Purchasing
             }
 #endif
 
-            SendPurchaseIntentStartEvent(cart);
+            // Every event and store call made synchronously (or awaited) from
+            // here shares one impression_id. Joins an enclosing journey's scope,
+            // e.g. a pick from the payment option modal.
+            using (ImpressionScope.Shared.EnterOrJoin())
+            {
+                SendPurchaseIntentStartEvent(cart);
 
-            if (!IsStoreConnected())
-            {
-                OnPurchaseFailed?.Invoke(new FailedOrder(cart, PurchaseFailureReason.StoreNotConnected,
-                    "Store is not connected. Please check your internet connection and try again."));
-                return;
-            }
+                // These two failures are this journey's outcome but don't come from a
+                // store, so they mark it themselves (see PurchaseUseCase).
+                if (!IsStoreConnected())
+                {
+                    using (ImpressionScope.Shared.EnterOutcome())
+                    {
+                        OnPurchaseFailed?.Invoke(Stamped(new FailedOrder(cart, PurchaseFailureReason.StoreNotConnected,
+                            "Store is not connected. Please check your internet connection and try again.")));
+                    }
+                    return;
+                }
 
-            try
-            {
-                m_AnyPurchaseStarted = true;
-                m_PurchaseUseCase.Purchase(cart);
-            }
-            catch (Exception e)
-            {
-                OnPurchaseFailed?.Invoke(new FailedOrder(cart, PurchaseFailureReason.Unknown, e.Message));
+                try
+                {
+                    m_AnyPurchaseStarted = true;
+                    startPurchase(cart);
+                }
+                catch (Exception e)
+                {
+                    using (ImpressionScope.Shared.EnterOutcome())
+                    {
+                        OnPurchaseFailed?.Invoke(Stamped(new FailedOrder(cart, PurchaseFailureReason.Unknown, e.Message)));
+                    }
+                }
             }
         }
 
@@ -261,19 +317,27 @@ namespace UnityEngine.Purchasing
                         order,
                         PurchaseFailureReason.ValidationFailure,
                         "Transaction verification failed - " + ex.Message);
-                    OnPurchaseFailed?.Invoke(failedOrder);
+                    RaisePurchaseFailed(failedOrder);
                 }
 
                 return;
             }
 
             SendPurchasePaidEvent(order);
-            OnPurchasePending?.Invoke(order);
+            m_OnPurchasePending?.Invoke(order);
         }
         #endif
 
+        // Tags orders, and the products in their carts, with the store that produced them. Already tagged ones keep their store.
+        T Stamped<T>(T order) where T : Order
+        {
+            order.SetStoreNameIfMissing(m_StoreWrapper.name);
+            return order;
+        }
+
         internal void PurchaseSucceeded(PendingOrder order)
         {
+            Stamped(order);
             try
             {
                 RemoveDeferredOrders(order);
@@ -317,6 +381,7 @@ namespace UnityEngine.Purchasing
 
         internal void PurchaseFailed(FailedOrder order)
         {
+            Stamped(order);
             m_AnalyticsClient.OnPurchaseFailed(order);
             SendPurchaseFailedEvent(order);
             OnPurchaseFailed?.Invoke(order);
@@ -324,6 +389,7 @@ namespace UnityEngine.Purchasing
 
         void PurchaseDeferred(DeferredOrder order)
         {
+            Stamped(order);
             m_PurchaseCache.Add(order);
             OnPurchaseDeferred?.Invoke(order);
         }
@@ -340,44 +406,47 @@ namespace UnityEngine.Purchasing
                 Debug.unityLogger.LogIAPWarning("IPurchaseService.ConfirmPurchase called without a callback defined for IPurchaseService.OnPurchaseConfirmed.");
             }
 #endif
-            var validationError = ConfirmPurchaseValidations(order);
-            if (validationError != null)
+            using (ImpressionScope.Shared.EnterNone())
             {
-                OnConfirmFailed(validationError);
-                return;
-            }
+                var validationError = ConfirmPurchaseValidations(order);
+                if (validationError != null)
+                {
+                    OnConfirmFailed(validationError);
+                    return;
+                }
 
-            try
-            {
-                // TODO: IAP-4074fulfill order
-                m_ConfirmOrderUseCase.ConfirmOrder(
-                    order,
-                    (pendingOrder, resultOrder) =>
-                    {
-                        switch (resultOrder)
+                try
+                {
+                    // TODO: IAP-4074fulfill order
+                    m_ConfirmOrderUseCase.ConfirmOrder(
+                        order,
+                        (pendingOrder, resultOrder) =>
                         {
-                            case ConfirmedOrder confirmedOrder:
-                                OnConfirmSucceeded(pendingOrder, confirmedOrder);
-                                break;
-                            case FailedOrder failedOrder:
-                                OnConfirmFailed(failedOrder);
-                                break;
-                            default:
-                                OnConfirmFailed(new FailedOrder(
-                                    pendingOrder,
-                                    PurchaseFailureReason.Unknown,
-                                    $"Received invalid order type after confirmation: {resultOrder.GetType()}"));
-                                break;
+                            switch (resultOrder)
+                            {
+                                case ConfirmedOrder confirmedOrder:
+                                    OnConfirmSucceeded(pendingOrder, confirmedOrder);
+                                    break;
+                                case FailedOrder failedOrder:
+                                    OnConfirmFailed(failedOrder);
+                                    break;
+                                default:
+                                    OnConfirmFailed(new FailedOrder(
+                                        pendingOrder,
+                                        PurchaseFailureReason.Unknown,
+                                        $"Received invalid order type after confirmation: {resultOrder.GetType()}"));
+                                    break;
+                            }
                         }
-                    }
-                );
-            }
-            catch (Exception e)
-            {
-                OnConfirmFailed(new FailedOrder(
-                    order,
-                    PurchaseFailureReason.Unknown,
-                    e.Message));
+                    );
+                }
+                catch (Exception e)
+                {
+                    OnConfirmFailed(new FailedOrder(
+                        order,
+                        PurchaseFailureReason.Unknown,
+                        e.Message));
+                }
             }
         }
 
@@ -412,6 +481,7 @@ namespace UnityEngine.Purchasing
 
         void OnConfirmSucceeded(PendingOrder pendingOrder, ConfirmedOrder confirmedOrder)
         {
+            confirmedOrder.SetStoreNameIfMissing(pendingOrder.StoreName ?? m_StoreWrapper.name);
             RemovePendingOrders(pendingOrder);
             m_PurchaseCache.Add(confirmedOrder);
 
@@ -422,6 +492,7 @@ namespace UnityEngine.Purchasing
 
         void OnConfirmFailed(FailedOrder failedOrder)
         {
+            Stamped(failedOrder);
             OnPurchaseConfirmed?.Invoke(failedOrder);
         }
 
@@ -443,7 +514,10 @@ namespace UnityEngine.Purchasing
             }
 #endif
 
-            TryFetchPurchases(OnFetchSuccess, OnFetchFailure);
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                TryFetchPurchases(OnFetchSuccess, OnFetchFailure);
+            }
         }
 
         internal void TryFetchPurchases(Action<Orders> successCallback, Action<PurchasesFetchFailureDescription>? failureCallback)
@@ -470,8 +544,14 @@ namespace UnityEngine.Purchasing
             OnPurchasesFetched?.Invoke(fetchedPurchases);
         }
 
+        // Also called directly by store extensions (Google's fetch on focus), so stamping lives here.
         internal void OnFetchSuccessProcessAndCache(Orders fetchedPurchases)
         {
+            foreach (var order in fetchedPurchases.ConfirmedOrders.Cast<Order>().Concat(fetchedPurchases.PendingOrders).Concat(fetchedPurchases.DeferredOrders))
+            {
+                Stamped(order);
+            }
+
             m_PurchaseCache.Clear();
             foreach (var fetchedPurchase in fetchedPurchases.ConfirmedOrders)
             {
@@ -521,17 +601,50 @@ namespace UnityEngine.Purchasing
             return m_PurchasesProcessedInSession.Contains(transactionId);
         }
 
+        // An order delivered to no subscriber is not marked processed, so the next FetchPurchases
+        // routes it to OnPurchasePending once the game subscribes.
+        bool HasPendingOrderSubscriber(PendingOrder order)
+        {
+            if (m_OnPurchasePending != null)
+            {
+                return true;
+            }
+
+            Debug.unityLogger.LogIAPVerbose($"Pending order for transaction {order.Info.TransactionID} was not delivered: OnPurchasePending has no subscriber. Subscribe to OnPurchasePending, then call FetchPurchases to receive it.");
+            return false;
+        }
+
 #if IAP_TX_VERIFIER_ENABLED
         async void ProcessPendingOrder(PendingOrder fetchedPurchase)
         {
-            await HandleVerification(fetchedPurchase);
+            if (!HasPendingOrderSubscriber(fetchedPurchase))
+            {
+                return;
+            }
+
+            // An outcome, as in PurchaseUseCase: a fetched order can be delivered while a
+            // journey is active, and a purchase started from the handler must not join it.
+            using (ImpressionScope.Shared.EnterOutcome())
+            {
+                await HandleVerification(fetchedPurchase);
+            }
             m_PurchasesProcessedInSession.Add(fetchedPurchase.Info.TransactionID);
         }
 #else
         void ProcessPendingOrder(PendingOrder fetchedPurchase)
         {
-            SendPurchasePaidEvent(fetchedPurchase);
-            OnPurchasePending?.Invoke(fetchedPurchase);
+            if (!HasPendingOrderSubscriber(fetchedPurchase))
+            {
+                return;
+            }
+
+            // An outcome, as in PurchaseUseCase: a fetched order can be delivered while a
+            // journey is active, and a purchase started from the handler must not join it.
+            using (ImpressionScope.Shared.EnterOutcome())
+            {
+                SendPurchasePaidEvent(fetchedPurchase);
+                m_OnPurchasePending?.Invoke(fetchedPurchase);
+            }
             m_PurchasesProcessedInSession.Add(fetchedPurchase.Info.TransactionID);
         }
 #endif
@@ -571,19 +684,22 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            if (!IsStoreConnected())
+            using (ImpressionScope.Shared.EnterNone())
             {
-                OnEntitlementChecked(new Entitlement(product, null, EntitlementStatus.Unknown, "Store is not connected."));
-                return;
-            }
+                if (!IsStoreConnected())
+                {
+                    OnEntitlementChecked(new Entitlement(product, null, EntitlementStatus.Unknown, "Store is not connected."));
+                    return;
+                }
 
-            try
-            {
-                m_CheckEntitlementUseCase.IsProductEntitled(product, OnEntitlementChecked);
-            }
-            catch (Exception e)
-            {
-                OnEntitlementChecked(new Entitlement(product, null, EntitlementStatus.Unknown, $"Exception during entitlement check: {e.Message}"));
+                try
+                {
+                    m_CheckEntitlementUseCase.IsProductEntitled(product, OnEntitlementChecked);
+                }
+                catch (Exception e)
+                {
+                    OnEntitlementChecked(new Entitlement(product, null, EntitlementStatus.Unknown, $"Exception during entitlement check: {e.Message}"));
+                }
             }
         }
 
@@ -642,24 +758,15 @@ namespace UnityEngine.Purchasing
         /// and the second parameter provides an error message if the operation failed.</param>
         public void RestoreTransactions(Action<bool, string?>? callback)
         {
-            if (!IsStoreConnected())
+            using (ImpressionScope.Shared.EnterNone())
             {
-                callback?.Invoke(false, "Store not connected.");
-                return;
-            }
-
-            Action<bool, string?> newCallback = (success, error) =>
-            {
-                if (success)
+                if (!IsStoreConnected())
                 {
-                    FetchPurchases();
+                    callback?.Invoke(false, "Store not connected.");
+                    return;
                 }
-                callback?.Invoke(success, error);
-            };
 
-            try
-            {
-                Action<bool, string?> fetchCallback = (success, error) =>
+                Action<bool, string?> newCallback = (success, error) =>
                 {
                     if (success)
                     {
@@ -667,11 +774,23 @@ namespace UnityEngine.Purchasing
                     }
                     callback?.Invoke(success, error);
                 };
-                RestoreTransactionsInternal(fetchCallback);
-            }
-            catch (Exception e)
-            {
-                callback?.Invoke(false, e.Message);
+
+                try
+                {
+                    Action<bool, string?> fetchCallback = (success, error) =>
+                    {
+                        if (success)
+                        {
+                            FetchPurchases();
+                        }
+                        callback?.Invoke(success, error);
+                    };
+                    RestoreTransactionsInternal(fetchCallback);
+                }
+                catch (Exception e)
+                {
+                    callback?.Invoke(false, e.Message);
+                }
             }
         }
 

@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using Unity.Services.Core.Editor.Environments;
+using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine.Purchasing;
 
 namespace UnityEditor.Purchasing
@@ -13,11 +16,37 @@ namespace UnityEditor.Purchasing
         static string DashboardHost => k_IsStaging ? "https://staging.cloud.unity.com" : "https://cloud.unity.com";
 
         internal static string iapSettingssUrl => ServicesHost + IapSettingsConsts.ApiPath + IapSettingsConsts.SettingsEndpoint;
+        // {0} project, {1} environment.
+        internal static string paymentProviderConfigurationUrl => ServicesHost + "/api/iap/v1/projects/{0}/environments/{1}/payment-provider/configuration";
 
         internal static string cloudProjectSettingsUrl => DashboardHost + "/home/organizations/{0}/projects/{1}/settings";
 
         internal static string paymentProviderUrl => DashboardHost + "/home/organizations/{0}/projects/{1}/environments/{2}/in-app-purchase/payment-providers";
+        internal static string remoteCatalogUrl => DashboardHost + "/home/organizations/{0}/projects/{1}/environments/{2}/in-app-purchase/catalog";
         internal static string inAppPurchasesUrl => DashboardHost + "/home/organizations/{0}/in-app-purchase/about";
+
+        // Formats an environment-scoped page ({0} org, {1} project, {2} environment) for the active environment, falling back to
+        // production, and to the organization's In-App Purchasing page when the environments aren't known yet.
+        internal static string BuildEnvironmentPageUrl(string environmentPageUrlFormat)
+        {
+            var environmentId = ResolveEnvironmentId();
+            var organizationKey = OrganizationProvider.Organization.Key;
+            return environmentId == Guid.Empty
+                ? string.Format(inAppPurchasesUrl, organizationKey)
+                : string.Format(environmentPageUrlFormat, organizationKey, CloudProjectSettings.projectId, environmentId);
+        }
+
+        // The active environment, else production, else Guid.Empty while the environments aren't known yet.
+        internal static Guid ResolveEnvironmentId()
+        {
+            var environmentId = EnvironmentsApi.Instance.ActiveEnvironmentId ?? Guid.Empty;
+            if (environmentId == Guid.Empty)
+            {
+                environmentId = EnvironmentsApi.Instance.Environments?.FirstOrDefault(environment => environment.Name == "production").Id ?? Guid.Empty;
+            }
+
+            return environmentId;
+        }
 
         // Accepts both "-cloudEnvironment staging" and "-cloudEnvironment=staging", like Core.
         internal static bool IsStagingCloudEnvironment(string[] args)

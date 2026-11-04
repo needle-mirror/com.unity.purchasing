@@ -1,11 +1,13 @@
 using UnityEditor.UIElements;
+using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace UnityEditor.Purchasing
 {
     class XboxConfigurationSettingsBlock : IPurchasingSettingsUIBlock
     {
-        readonly VisualElement m_XboxConfigurationBlock;
+        static readonly Color k_XboxGreen = new Color32(0x10, 0x7C, 0x10, 0xFF);
+
         VisualElement m_ConfigurationBlock;
 
         public VisualElement GetUIBlockElement()
@@ -19,6 +21,7 @@ namespace UnityEditor.Purchasing
             m_ConfigurationBlock.Bind(new SerializedObject(XboxSettingsLoader.LoadOrCreate()));
             SetupStyleSheets();
             SetupPurchaseValidation();
+            StoreCardUtils.SetupCard(m_ConfigurationBlock, "XboxIcon", k_XboxGreen, "BuildSettings.GameCoreXboxSeries", "BuildSettings.XboxOne");
 
             return m_ConfigurationBlock;
         }
@@ -34,11 +37,11 @@ namespace UnityEditor.Purchasing
             };
 
 #if IAP_CLOUDCODE_ENABLED
-            m_ConfigurationBlock.Q<Label>("CloudCodeRequiredLabel").style.display = DisplayStyle.None;
+            m_ConfigurationBlock.Q("CloudCodeRequiredNote").style.display = DisplayStyle.None;
             SetFieldsEnabled(fields, toggle.value);
             toggle.RegisterValueChangedCallback(evt => SetFieldsEnabled(fields, evt.newValue));
 #else
-            m_ConfigurationBlock.Q<Label>("CloudCodeRequiredLabel").style.display = DisplayStyle.Flex;
+            m_ConfigurationBlock.Q("CloudCodeRequiredNote").style.display = DisplayStyle.Flex;
             SetFieldsEnabled(fields, false);
             toggle.SetEnabled(false);
 #endif

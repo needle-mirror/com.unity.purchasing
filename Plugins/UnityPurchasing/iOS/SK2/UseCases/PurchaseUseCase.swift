@@ -24,6 +24,9 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
     // managed side. Their failure and deferral callbacks carry it, so they are not taken as the
     // answer to a managed Purchase call of the same product.
     @TaskLocal static var isPromotionalPurchase = false
+    // The impression_id of the managed purchase call in progress. Its answers (success and
+    // failure payloads) carry it back, so the managed side can tie their events to the journey.
+    @TaskLocal static var impressionId: String? = nil
 
     @Dependency private(set) var fetchProductsUseCase: ProductUseCaseProtocol
     @Dependency private(set) var transactionObserver: TransactionObserverUseCaseProtocol
@@ -124,8 +127,12 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
             let purchaseResult = try await product.purchase(confirmIn: (scene?.windowScene)!, options: Set(purchaseProductOptions))
             switch purchaseResult {
             case .success(let verification):
+                 if case .verified(let transaction) = verification {
+                     await PurchasedTransactions.shared.keep(transaction)
+                 }
                  var purchaseDetails = await createPurchaseDetails(from: verification)
                  purchaseDetails.requestedProductId = product.id
+                 purchaseDetails.impressionId = Self.impressionId
                  return purchaseDetails
             case .userCancelled:
                 await purchaseProductExceptionCallbacks(productID: product.id, error: "UserCancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
@@ -162,8 +169,12 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
         let result = try await product.purchase(options: options)
         switch result {
         case .success(let verification):
+            if case .verified(let transaction) = verification {
+                await PurchasedTransactions.shared.keep(transaction)
+            }
             var purchaseDetails = await createPurchaseDetails(from: verification)
             purchaseDetails.requestedProductId = product.id
+            purchaseDetails.impressionId = Self.impressionId
             return purchaseDetails
         case .userCancelled:
             await purchaseProductExceptionCallbacks(productID: product.id, error: "User cancelled", reason: PurchaseFailureReason.UserCancelled.rawValue)
@@ -182,6 +193,7 @@ public class PurchaseUseCase: NSObject, PurchaseUseCaseProtocol {
     private func purchaseProductExceptionCallbacks(productID: String, error: String, reason : Int) async {
         var purchaseDetail = PurchaseDetails(productId: productID, verificationError: error, reason: reason)
         purchaseDetail.promotional = Self.isPromotionalPurchase ? true : nil
+        purchaseDetail.impressionId = Self.impressionId
         let jsonString = encodeToJSON(purchaseDetail)
         await storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
     }

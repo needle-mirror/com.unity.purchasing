@@ -21,6 +21,7 @@ using LiveContentAdapterCloudError = UnityEngine.Purchasing.LiveContentAdapterSe
 using UnityEngine.Purchasing.PaymentProviderService.Models;
 using UnityEngine.Purchasing.Utilities;
 using UnityEngine.Scripting;
+using AOT;
 using BadRequestError = UnityEngine.Purchasing.PaymentProviderService.BadRequestError;
 using CloudProjectAuthenticationException = UnityEngine.Purchasing.PaymentProviderService.CloudProjectAuthenticationException;
 using ConflictError = UnityEngine.Purchasing.PaymentProviderService.ConflictError;
@@ -53,6 +54,7 @@ namespace UnityEngine.Purchasing.Stores
 
         ILogger m_Logger;
         readonly ILinkOutSessionIdProvider m_LinkOutSessionIdProvider;
+        readonly IImpressionScope m_ImpressionScope;
 
         protected readonly CheckoutLauncherCoordinator m_CheckoutCoordinator;
 
@@ -67,7 +69,8 @@ namespace UnityEngine.Purchasing.Stores
             IUtil util,
             IPlayerData playerData,
             ICurrencyFormatter currencyFormatter,
-            ILinkOutSessionIdProvider linkOutSessionIdProvider
+            ILinkOutSessionIdProvider linkOutSessionIdProvider,
+            IImpressionScope impressionScope
             )
         {
             m_PaymentProviderClientWrapper = paymentProviderClientWrapper;
@@ -78,8 +81,10 @@ namespace UnityEngine.Purchasing.Stores
             m_PlayerData = playerData;
             m_CurrencyFormatter = currencyFormatter;
             m_LinkOutSessionIdProvider = linkOutSessionIdProvider;
+            m_ImpressionScope = impressionScope;
             m_CheckoutCoordinator = new CheckoutLauncherCoordinator(util, logger);
             m_Util.focusChanged += OnFocusChanged;
+            IsFrontmost = IsAppFrontmost;
         }
 
         // Test seam.
@@ -93,6 +98,7 @@ namespace UnityEngine.Purchasing.Stores
             IPlayerData playerData,
             ICurrencyFormatter currencyFormatter,
             ILinkOutSessionIdProvider linkOutSessionIdProvider,
+            IImpressionScope impressionScope,
             CheckoutLauncherCoordinator coordinator
         )
         {
@@ -104,8 +110,10 @@ namespace UnityEngine.Purchasing.Stores
             m_PlayerData = playerData;
             m_CurrencyFormatter = currencyFormatter;
             m_LinkOutSessionIdProvider = linkOutSessionIdProvider;
+            m_ImpressionScope = impressionScope;
             m_CheckoutCoordinator = coordinator;
             m_Util.focusChanged += OnFocusChanged;
+            IsFrontmost = IsAppFrontmost;
         }
 
         // One presentation mode per launch context (both default to ExternalBrowser):
@@ -147,9 +155,61 @@ namespace UnityEngine.Purchasing.Stores
         // Polling must only begin once the user returns from the browser / the webview is closed.
         bool m_CheckoutInProgress = false;
 
+        // On iPad the browser window can cover the game without reliable focus changes, so the player is only back
+        // once the game is frontmost again. Always true elsewhere.
+        internal Func<bool> IsFrontmost;
+        bool m_ObservingFrontmost;
+
+        static event Action? s_SceneBecameFrontmost;
+        static bool s_FrontmostCallbackRegistered;
+        // Kept alive: the native plugin holds on to the function pointer.
+        static readonly SceneBecameFrontmostCallback s_SceneBecameFrontmostCallback = OnNativeSceneBecameFrontmost;
+
+        [MonoPInvokeCallback(typeof(SceneBecameFrontmostCallback))]
+        static void OnNativeSceneBecameFrontmost() => s_SceneBecameFrontmost?.Invoke();
+
+        // Created lazily, never from a constructor.
+        INativeAppleStore? IosNativeStore =>
+            m_Util.platform == RuntimePlatform.IPhonePlayer ? (m_NativeStore ??= new NativeStoreProvider().GetStorekit()) : null;
+
+        bool IsAppFrontmost() => IosNativeStore?.IsSceneFrontmost() ?? true;
+
+        void ObserveFrontmost()
+        {
+            var nativeStore = IosNativeStore;
+            if (nativeStore == null || m_ObservingFrontmost)
+            {
+                return;
+            }
+
+            m_ObservingFrontmost = true;
+            s_SceneBecameFrontmost += OnBecameFrontmost;
+            if (!s_FrontmostCallbackRegistered)
+            {
+                s_FrontmostCallbackRegistered = true;
+                nativeStore.SetSceneBecameFrontmostCallback(s_SceneBecameFrontmostCallback);
+            }
+        }
+
         void OnFocusChanged(bool hasFocus)
         {
-            if (!hasFocus || m_CheckoutInProgress || m_ProcessingUnresolvedOrders || !m_UnresolvedOrders.HasOrders)
+            // Frontmost last, so native code only runs with an order out.
+            if (!hasFocus || !m_UnresolvedOrders.HasOrders || !IsFrontmost())
+            {
+                return;
+            }
+
+            PollIfPlayerReturned();
+        }
+
+        internal void OnBecameFrontmost()
+        {
+            PollIfPlayerReturned();
+        }
+
+        void PollIfPlayerReturned()
+        {
+            if (m_CheckoutInProgress || m_ProcessingUnresolvedOrders || !m_UnresolvedOrders.HasOrders)
             {
                 return;
             }
@@ -408,6 +468,13 @@ namespace UnityEngine.Purchasing.Stores
                         k_WebshopUnsupportedMessage));
                 return false;
             }
+            // GenerateURL inside the callback creates the order, so it can hit the purchase limit.
+            catch (PaymentProviderException<PurchaseLimitReachedError> e)
+            {
+                PurchaseCallback?.OnPurchaseFailed(
+                    new FailedOrder(cart, PurchaseFailureReason.PurchaseLimitReached, e.Message));
+                return false;
+            }
             catch (Exception e)
             {
                 PurchaseCallback?.OnPurchaseFailed(
@@ -557,7 +624,8 @@ namespace UnityEngine.Purchasing.Stores
                 price,
                 webshopPrice,
                 webshopPriceString,
-                catalogListingDto.HasWebshop
+                catalogListingDto.HasWebshop,
+                catalogListingDto.PurchaseLimit?.ToPurchaseLimit()
             );
         }
 
@@ -628,7 +696,7 @@ namespace UnityEngine.Purchasing.Stores
                 var customReferenceId = orderData.customReferenceId;
                 var metadata = orderData.metadata;
 
-                var orderInfo = new PaymentProvidersOrderInfo(transactionId, PaymentProvider.Name, customReferenceId, metadata);
+                var orderInfo = new PaymentProvidersOrderInfo(transactionId, PaymentProvider.Name, customReferenceId, metadata, PurchaseDateFromOrderData(orderData));
                 return orderData.status switch
                 {
                     OrderStatus.Created => new DeferredOrder(cart, orderInfo),
@@ -644,6 +712,25 @@ namespace UnityEngine.Purchasing.Stores
             {
                 return null;
             }
+        }
+
+        // Use the order's creation date as the purchase date,
+        // so it is available as a PendingOrder and as the ConfirmedOrder built from it.
+        // A Created order is not paid yet (DeferredOrder), so it has no purchase date.
+        static DateTime? PurchaseDateFromOrderData(OrderData orderData)
+        {
+            if (orderData.status is not (OrderStatus.Paid or OrderStatus.Fulfilled) || orderData.createdAt == default)
+            {
+                return null;
+            }
+
+            // Newtonsoft keeps a "Z" date as UTC but converts one with an offset to local time.
+            return orderData.createdAt.Kind switch
+            {
+                DateTimeKind.Local => orderData.createdAt.ToUniversalTime(),
+                DateTimeKind.Unspecified => DateTime.SpecifyKind(orderData.createdAt, DateTimeKind.Utc),
+                _ => orderData.createdAt
+            };
         }
 
         private ICart CreateCartFromOrderData(OrderData orderData, ICartValidator cartValidator)
@@ -684,28 +771,6 @@ namespace UnityEngine.Purchasing.Stores
 
         public void Purchase(ICart cart, string paymentProviderName)
         {
-            if (string.IsNullOrEmpty(paymentProviderName))
-            {
-                PurchaseCallback?.OnPurchaseFailed(new FailedOrder(cart, PurchaseFailureReason.Unknown,
-                    $"{nameof(paymentProviderName)} must be non-empty"));
-                return;
-            }
-            PurchaseInternal(cart, paymentProviderName);
-        }
-
-        public void PurchaseProduct(string catalogListingId, string paymentProviderName)
-        {
-            if (string.IsNullOrEmpty(paymentProviderName))
-            {
-                PurchaseCallback?.OnPurchaseFailed(new FailedOrder(
-                    new Cart(Product.CreateUnknownProduct("InvalidProduct")),
-                    PurchaseFailureReason.Unknown,
-                    $"{nameof(paymentProviderName)} must be non-empty"));
-                return;
-            }
-            var cart = BuildCartForCatalogListing(catalogListingId);
-            if (cart is null)
-                return; // BuildCartForCatalogListing already emitted OnPurchaseFailed
             PurchaseInternal(cart, paymentProviderName);
         }
 
@@ -717,6 +782,12 @@ namespace UnityEngine.Purchasing.Stores
                 Debug.unityLogger.LogIAPWarning("IPaymentProvidersExtendedPurchaseService.Purchase called without a callback defined for IStoreService.OnAuthAccountChanged.");
             }
 #endif
+            // The order created for this purchase, including one primed by GenerateURL in the
+            // compliance callback, carries the purchase's impression_id. Joins the scope
+            // PurchaseService opened for both entry points (Purchase(cart) and the named
+            // provider overloads), so the order matches the intent-start event.
+            using var impressionScope = m_ImpressionScope.EnterOrJoin();
+
             var connectionState = GetStoreConnectionState();
 
             if (connectionState != ConnectionState.Connected || !m_PaymentProviderClientWrapper.PaymentProviderClientIsAvailable)
@@ -763,6 +834,11 @@ namespace UnityEngine.Purchasing.Stores
             {
                 await OpenURL(catalogListingId, externalTokens, paymentProviderName);
             }
+            catch (PaymentProviderException<PurchaseLimitReachedError> e)
+            {
+                var failedOrder = new FailedOrder(cart, PurchaseFailureReason.PurchaseLimitReached, e.Message);
+                PurchaseCallback?.OnPurchaseFailed(failedOrder);
+            }
             catch (PaymentProviderException<ConflictError> e)
             {
                 var reason = firstCartItem.Product.type switch
@@ -799,6 +875,9 @@ namespace UnityEngine.Purchasing.Stores
             m_UnresolvedOrders.AddOrder(orderData);
 
             m_OrderDataCache.TryRemove(catalogListingId, out _);
+
+            // Before the browser can cover the game.
+            ObserveFrontmost();
 
             // Suppress focus-driven polling while the checkout is open.
             CheckoutResult result;
@@ -1033,6 +1112,77 @@ namespace UnityEngine.Purchasing.Stores
                 .GetEligiblePaymentProviders();
             return new EligiblePaymentProviders(providers, paymentOptionPopupEnabled);
         }
+
+        public async Task<IReadOnlyDictionary<string, PurchaseEligibility>> GetPurchaseEligibility(IReadOnlyList<string>? catalogListingIds)
+        {
+            var results = new Dictionary<string, PurchaseEligibility>();
+            if (catalogListingIds == null || catalogListingIds.Count == 0)
+            {
+                return results;
+            }
+
+            PurchaseEligibilityResponse response;
+            try
+            {
+                response = await m_PaymentProviderClientWrapper
+                    .GetPaymentProviderService()
+                    .GetPurchaseEligibility(catalogListingIds.ToList());
+            }
+            catch (Exception e)
+            {
+                foreach (var id in catalogListingIds)
+                {
+                    results[id] = new PurchaseEligibility(id, false, null, null, PurchaseEligibilityFailureReason.RequestFailed, e.Message);
+                }
+                return results;
+            }
+
+            // The generated model can't tell absent from default: an absent remaining reads 0, an absent nextEligibleAt reads default.
+            // The server omits remaining for listings the player hasn't bought this UTC month; the full limit is left then.
+            foreach (var l in response?.Listings ?? new List<ListingEligibility>())
+            {
+                results[l.CatalogListingId] = new PurchaseEligibility(
+                    l.CatalogListingId,
+                    l.Eligible,
+                    l.Eligible && l.Remaining == 0 ? PurchaseLimitCount(l.CatalogListingId) : l.Remaining,
+                    l.NextEligibleAt == default ? null : l.NextEligibleAt);
+            }
+            foreach (var f in response?.Failures ?? new List<ListingEligibilityFailure>())
+            {
+                var reason = ToFailureReason(f.Reason);
+                results[f.CatalogListingId] = new PurchaseEligibility(f.CatalogListingId, false, null, null, reason, reason.ToString());
+            }
+            foreach (var id in catalogListingIds)
+            {
+                if (!results.ContainsKey(id))
+                {
+                    results[id] = new PurchaseEligibility(id, false, null, null, PurchaseEligibilityFailureReason.RequestFailed, "Not returned by the server.");
+                }
+            }
+            return results;
+        }
+
+        int? PurchaseLimitCount(string catalogListingId)
+        {
+            var product = ProductCache?.FindByCatalogListingId(catalogListingId);
+            if (product == null || !product.catalogListings.TryGetValue(catalogListingId, out var listing))
+            {
+                return null;
+            }
+            return (listing.metadata as PaymentProviderProductMetadata)?.purchaseLimit?.count;
+        }
+
+        static PurchaseEligibilityFailureReason ToFailureReason(ListingEligibilityFailure.ReasonOptions reason)
+        {
+            return reason switch
+            {
+                ListingEligibilityFailure.ReasonOptions.CatalogUnavailable => PurchaseEligibilityFailureReason.CatalogUnavailable,
+                ListingEligibilityFailure.ReasonOptions.ListingNotFound => PurchaseEligibilityFailureReason.ListingNotFound,
+                ListingEligibilityFailure.ReasonOptions.InvalidPurchaseLimit => PurchaseEligibilityFailureReason.InvalidPurchaseLimit,
+                _ => PurchaseEligibilityFailureReason.RequestFailed
+            };
+        }
+
         /// <summary>
         /// Returns the URL the current flow will redirect the player to. Intended for use inside
         /// the compliance callback registered with <see cref="SetComplianceCheck"/>:
@@ -1047,6 +1197,9 @@ namespace UnityEngine.Purchasing.Stores
         /// </summary>
         public async Task<string?> GenerateURL(string? catalogListingId, IReadOnlyList<PaymentProviderToken>? externalTokens = null)
         {
+            // Inside a compliance callback this joins the purchase's impression_id; called on
+            // its own, the order it creates is a journey of its own.
+            using var impressionScope = m_ImpressionScope.EnterOrJoin();
             var context = s_FlowContext.Value;
             if (context?.Channel == PurchaseChannel.Webshop)
             {
@@ -1054,7 +1207,7 @@ namespace UnityEngine.Purchasing.Stores
                 {
                     throw new RestrictedTokensNotAvailable(k_WebshopUnsupportedMessage);
                 }
-                context.WebshopUrl ??= await FetchWebshopUrl(catalogListingId, context.ImpressionId, externalTokens);
+                context.WebshopUrl ??= await FetchWebshopUrl(catalogListingId, m_ImpressionScope.Current, externalTokens);
                 return context.WebshopUrl;
             }
 
@@ -1081,6 +1234,11 @@ namespace UnityEngine.Purchasing.Stores
                 Debug.unityLogger.LogIAPWarning("IPaymentProvidersExtendedPurchaseService.RedirectToWebshop called without a callback defined for IStoreService.OnAuthAccountChanged.");
             }
 #endif
+            // One impression_id for the whole redirect, joining an enclosing
+            // journey's scope if one is active.
+            using var impressionScope = m_ImpressionScope.EnterOrJoin();
+            var impressionId = m_ImpressionScope.Current;
+
             // Null catalogListingId opens the generic Unity webshop. There's no product to
             // build a cart from, but the compliance callback still runs with an empty cart so
             // developers can gate webshop access globally (e.g. age, region).
@@ -1101,8 +1259,7 @@ namespace UnityEngine.Purchasing.Stores
                 return;
             }
 
-            var impressionId = ImpressionIdContext.TakeOrMint();
-            s_FlowContext.Value = new PurchaseFlowContext(PurchaseChannel.Webshop, impressionId: impressionId);
+            s_FlowContext.Value = new PurchaseFlowContext(PurchaseChannel.Webshop);
             string? primedUrl;
             try
             {
@@ -1243,7 +1400,7 @@ namespace UnityEngine.Purchasing.Stores
                     locale: location.Locale,
                     currencyCode: location.CurrencyCode,
                     country: location.CountryCode,
-                    playerIdentity: await m_PlayerData.CreatePlayerIdentityAsync(ImpressionIdContext.TakeOrMint()),
+                    playerIdentity: await m_PlayerData.CreatePlayerIdentityAsync(m_ImpressionScope.Current),
                     paymentProviderOverride: paymentProviderName ?? m_PaymentProviderOverride,
                     customReferenceId: m_CustomReferenceId,
                     customMetadata: m_CustomMetadata,
@@ -1384,16 +1541,11 @@ namespace UnityEngine.Purchasing.Stores
         // RedirectToWebshop pick it up after the callback returns (shared by-reference via AsyncLocal).
         public string? WebshopUrl { get; set; }
 
-        // The journey's impression_id, so a webshop URL primed from inside the compliance
-        // callback (GenerateURL) carries the same id as the outer RedirectToWebshop fetch.
-        public string? ImpressionId { get; }
-
-        public PurchaseFlowContext(PurchaseChannel channel, string? paymentProviderName = null, string? webshopUrl = null, string? impressionId = null)
+        public PurchaseFlowContext(PurchaseChannel channel, string? paymentProviderName = null, string? webshopUrl = null)
         {
             Channel = channel;
             PaymentProviderName = paymentProviderName;
             WebshopUrl = webshopUrl;
-            ImpressionId = impressionId;
         }
     }
 }

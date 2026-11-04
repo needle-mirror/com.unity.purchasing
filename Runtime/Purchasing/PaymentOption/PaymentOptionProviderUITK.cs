@@ -80,33 +80,42 @@ namespace UnityEngine.Purchasing
                     $"NoEligibleStore: no store has {catalogListingId} cached and no webshop available; returning null");
                 return null;
             }
-            var task = m_VM.BeginShowPurchaseOptionForListing(storeOptions, catalogListingId, out var opts);
-            if (opts.Count > 0)
+            // Each window is its own journey: Enter() always mints a new impression_id
+            // (EnterOrJoin() would join an enclosing journey's instead). The view model
+            // keeps it for the pick.
+            using (ImpressionScope.Shared.Enter())
             {
-                BuildButtons(opts);
-                m_Overlay!.RemoveFromClassList(k_OverlayHidden);
-                EmitOptionsShown(opts);
+                var task = m_VM.BeginShowPurchaseOptionForListing(storeOptions, catalogListingId, ImpressionScope.Shared.Current, out var opts);
+                if (opts.Count > 0)
+                {
+                    OpenWindow(opts);
+                }
+                var chosen = await task;
+                return chosen?.StoreName;
             }
-            var chosen = await task;
-            // Drop any staged impression_id if the modal closed without a pick;
-            // no-op when the user picked (PurchaseIntentStart already consumed it).
-            ImpressionIdContext.Clear();
-            return chosen?.StoreName;
         }
 
         async Task<PurchaseOption?> IPaymentOptionProvider.ShowPurchaseOption(IReadOnlyList<PurchaseOption> options)
         {
             EnsureInitialized();
-            var task = m_VM!.BeginShowPurchaseOption(options, out var opts);
-            if (opts.Count > 0)
+            // See ShowPurchaseOption(string): one new impression_id per window.
+            using (ImpressionScope.Shared.Enter())
             {
-                BuildButtons(opts);
-                m_Overlay!.RemoveFromClassList(k_OverlayHidden);
-                EmitOptionsShown(opts);
+                var task = m_VM!.BeginShowPurchaseOption(options, ImpressionScope.Shared.Current, out var opts);
+                if (opts.Count > 0)
+                {
+                    OpenWindow(opts);
+                }
+                return await task;
             }
-            var chosen = await task;
-            ImpressionIdContext.Clear();
-            return chosen;
+        }
+
+        // Both ShowPurchaseOption overloads open the window here.
+        void OpenWindow(IReadOnlyList<PurchaseOptionViewModel.PurchaseOpt> opts)
+        {
+            BuildButtons(opts);
+            m_Overlay!.RemoveFromClassList(k_OverlayHidden);
+            EmitOptionsShown(opts);
         }
 
         // Same mapping as the UGUI provider; see PaymentOptionProvider.EmitOptionsShown.

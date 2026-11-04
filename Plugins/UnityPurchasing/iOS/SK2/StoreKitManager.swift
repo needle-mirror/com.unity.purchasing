@@ -23,7 +23,7 @@ public protocol StoreKitManagerProtocol {
     func addTransactionObserver()
     func fetchProducts(productJson: String) async
     func fetchSubscriptionInfo(for productId: String) async
-    func purchase(productJson: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async
+    func purchase(productJson: String, options: [String: AnyObject], impressionId: String?, storefrontChangeCallback: StorefrontCallbackDelegateType?) async
     func fetchAppReceipt() -> String
     func fetchPurchasedProducts() async
     func fetchTransactions(for productIds: [String]) async
@@ -77,7 +77,14 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
      - Parameter options: purchase options
      - Parameter storefrontChangeCallback: handler for result
      */
-    public func purchase(productJson: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async {
+    public func purchase(productJson: String, options: [String: AnyObject], impressionId: String?, storefrontChangeCallback: StorefrontCallbackDelegateType?) async {
+        // The answer to this call, success or failure, echoes impressionId back to the managed side.
+        await PurchaseUseCase.$impressionId.withValue(impressionId) {
+            await performPurchase(productJson: productJson, options: options, storefrontChangeCallback: storefrontChangeCallback)
+        }
+    }
+
+    private func performPurchase(productJson: String, options: [String: AnyObject], storefrontChangeCallback: StorefrontCallbackDelegateType?) async {
         var productId = ""
         do {
             let product = try decodeJSONToType(productJson, ProductDefinition.self)
@@ -90,7 +97,8 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
             let jsonString = encodeToJSON(purchaseDetail)
             await storeKitCallback.callback(subject: "OnPurchaseSucceeded", payload: jsonString, entitlementStatus: 0)
         } catch {
-            let purchaseDetail = PurchaseDetails(productId: productId, verificationError: error.localizedDescription, reason: PurchaseFailureReason.Unknown.rawValue)
+            var purchaseDetail = PurchaseDetails(productId: productId, verificationError: error.localizedDescription, reason: PurchaseFailureReason.Unknown.rawValue)
+            purchaseDetail.impressionId = PurchaseUseCase.impressionId
             let jsonString = encodeToJSON(purchaseDetail)
             await self.storeKitCallback.callback(subject: "OnPurchaseFailed", payload: jsonString, entitlementStatus: 0)
         }
@@ -365,12 +373,16 @@ public class StoreKitManager: StoreKitManagerProtocol, @unchecked Sendable {
     public func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async
     {
         // Report the result of the finish pass so C# only confirms orders once it has run.
-        let finished = await transactionUseCase.finishTransaction(transactionId: transactionId, logFinishTransaction: logFinishTransaction)
-        if finished {
+        switch await transactionUseCase.finishTransaction(transactionId: transactionId, logFinishTransaction: logFinishTransaction) {
+        case .finished:
             await storeKitCallback.callback(subject: "OnFinishTransactionSucceeded", payload: String(transactionId), entitlementStatus: 0)
-        } else {
+        case .notFound:
             printLog("finishTransaction: \(transactionId) not found in unfinished transactions.")
             await storeKitCallback.callback(subject: "OnFinishTransactionFailed", payload: String(transactionId), entitlementStatus: 0)
+        case .stillUnfinished:
+            printLog("finishTransaction: \(transactionId) is still unfinished after calling Transaction.finish().")
+            // Pending: the transaction is still unfinished, i.e. entitled but not finished.
+            await storeKitCallback.callback(subject: "OnFinishTransactionFailed", payload: String(transactionId), entitlementStatus: PurchaseState.Pending.rawValue)
         }
     }
 

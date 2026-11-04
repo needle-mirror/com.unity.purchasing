@@ -32,6 +32,8 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights.Models
         public long? PriceMicro { get; set; }
         public string? IsoCurrencyCode { get; set; }
         public long Quantity { get; set; } = 1;
+        public string? CatalogListingId { get; set; }
+        public string? UnitySku { get; set; }
     }
 
     internal sealed class OrderData

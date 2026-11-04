@@ -68,6 +68,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
             string after,
             bool? start,
             string schema,
+            string schemaVersion,
             CancellationToken cancellationToken)
         {
             await RefreshTokenAsync();
@@ -77,6 +78,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.LiveContentAdminApi
                 limit: limit,
                 path: pathPrefix,
                 schema: schema,
+                schemaVersion: schemaVersion,
                 after: after,
                 start: start,
                 variantTag: DefaultVariantTag(),

@@ -519,6 +519,23 @@
     flex-shrink:0;
 }
 
+/* AI Skills tab */
+/* Layout, label column and row pitch come from the .editor-setup* classes. The tab host already
+   spaces content below the tab bar, so drop .editor-setup's own top padding. */
+.editor-setup.ai-skills-block {
+    padding-top:0;
+}
+
+/* Default-height buttons fill the row, so the rows need their own spacing to keep the buttons apart. */
+.ai-skills-block .editor-setup-row {
+    margin-bottom:3px;
+}
+
+/* Fixed width so both buttons line up as one column, as in the design. */
+.ai-skills-button {
+    width:150px;
+    margin:0;
+}
 /* Additions from the CloudBuild Service */
 .cloudbuild .service-icon {
     background-image:resource("Builtin Skins/Shared/Images/ServicesWindow-ServiceIcon-Build.png");
@@ -565,118 +582,238 @@
     display:none;
 }
 
+/* Service cards */
+/* Cards space themselves with their own margins, so the wrapper adds none and every card gap is the same. */
+#GoogleConfigBlock {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
 .configuration-item {
-    background-color: var(--unity-theme-background-color-6);
-    border-color: var(--unity-theme-border-color-21);
     border-width: 1px;
-    border-radius: 3px;
-    padding: 8px;
+    border-radius: 4px;
+    padding: 16px;
     margin: 4px 0;
 }
 
-.configuration-item.expanded .configuration-item-body {
-    display: flex;
-}
-
-.configuration-item.expanded .configuration-toggle {
-    rotate: -90deg;
-}
-
 .configuration-item-header {
-    display: flex;
     flex-direction: row;
-    padding: 4px;
     align-items: center;
 }
 
 .configuration-icon {
     width: 48px;
     height: 48px;
+    flex-shrink: 0;
     background-color: white;
-    border-radius: 5px;
+    border-radius: 6px;
     overflow: hidden;
 }
 
+/* --unity-image rather than background-image: the Image element draws it inside the padding, which insets the
+   full-bleed Coda and Stripe art like the logos on the other tiles. */
 .configuration-icon.google-play {
-    background-image: url("/Packages/com.unity.purchasing/Icons/Icon-GooglePlay.png");
+    --unity-image: url("/Packages/com.unity.purchasing/Icons/Icon-GooglePlay.png");
 }
 
 .configuration-icon.stripe {
-    background-image: url("/Packages/com.unity.purchasing/Icons/Icon-Stripe.png");
+    --unity-image: url("/Packages/com.unity.purchasing/Icons/Icon-Stripe.png");
+    padding: 11px;
 }
 
 .configuration-icon.coda {
-    background-image: url("/Packages/com.unity.purchasing/Icons/Icon-Coda.png");
+    --unity-image: url("/Packages/com.unity.purchasing/Icons/Icon-Coda.png");
+    padding: 9px;
 }
 
+/* Top-aligned with the icon, not centred: a two-line description grows downwards like in the design. */
 .configuration-info {
-    padding-left: 8px;
-    padding-right: 8px;
+    align-self: flex-start;
     flex-grow: 1;
-    min-height: 48px;
+    flex-shrink: 1;
+    padding: 0 12px 0 10px;
 }
 
 .configuration-name {
     -unity-font-style: bold;
-    display: flex;
     flex-direction: row;
     align-items: center;
 }
 
+.configuration-name > .unity-label {
+    margin: 0;
+    padding: 0;
+}
+
 .configuration-description {
-    margin: 4px 0 8px 0;
+    font-size: 11px;
+    margin: 4px 0 0 0;
+    padding: 0;
     white-space: normal;
 }
 
 .configuration-badge {
-    border-width: 1px;
-    border-color: var(--unity-theme-background-color-11);
-    padding: 2px 4px;
-    margin-left: 4px;
-    background-color: var(--unity-theme-background-color-53);
-    -unity-font-style: normal;
-    font-size: 10px;
-    overflow: hidden;
+    display: none;
     flex-shrink: 0;
-    display: none;
-}
-
-.configuration-badge.configured {
-    color: var(--unity-theme-border-color-25);
-    border-color: var(--unity-theme-border-color-25);
-}
-
-.unlinked-features-heading {
-    -unity-font-style: bold;
-    margin: 8px 0;
-}
-
-.unlinked-feature {
-    padding: 12px 16px;
-}
-
-.unlinked-feature-title {
-    font-size: 14px;
-    margin-bottom: 8px;
-}
-
-.unlinked-feature-description {
-    white-space: normal;
-}
-
-.configuration-info-icon {
-    width: 16px;
-    height: 16px;
     margin-left: 4px;
-    display: none;
-}
-
-.configuration-info-icon.visible {
-    display: flex;
+    padding: 0 4px;
+    border-width: 1px;
+    border-radius: 3px;
+    -unity-font-style: normal;
 }
 
 .configuration-badge.visible {
     display: flex;
+}
+
+.configuration-badge > .unity-label {
+    font-size: 9px;
+    margin: 0;
+    padding: 1px 0;
+}
+
+/* Drawn rather than the editor's console info icon, which is an exclamation mark, not the design's "i". */
+.configuration-info-icon {
+    width: 12px;
+    height: 12px;
+    margin-left: 6px;
+    border-radius: 6px;
+    justify-content: center;
+    align-items: center;
+}
+
+.configuration-info-icon > .unity-label {
+    font-size: 9px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    margin: 0;
+    padding: 0;
+}
+
+/* A solid chevron drawn from two borders: right-pointing when collapsed, pointing down when open. */
+.configuration-toggle {
+    width: 9px;
+    height: 9px;
+    margin: 0 6px 0 5px;
+    border-right-width: 2px;
+    border-bottom-width: 2px;
+    flex-shrink: 0;
+    rotate: -45deg;
+}
+
+.configuration-item.expanded .configuration-toggle {
+    rotate: 45deg;
+}
+
+.configuration-item-body {
+    display: none;
+    margin-top: 16px;
+}
+
+.configuration-item.expanded .configuration-item-body {
+    display: flex;
+}
+
+.configuration-body-title {
+    font-size: 15px;
+    margin: 0 0 6px 0;
+    padding: 0;
+    white-space: normal;
+}
+
+.configuration-list {
+    margin-left: 5px;
+}
+
+.configuration-list-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.configuration-list-item {
+    margin: 0;
+    padding: 1px 0;
+    white-space: normal;
+}
+
+/* Labels drop the trailing space of the text before the link. */
+.configuration-link {
+    cursor: link;
+    margin-left: 3px;
+}
+
+.configuration-note {
+    font-size: 11px;
+    margin: 14px 0 0 0;
+    padding: 0;
+    white-space: normal;
+}
+
+.configuration-caption {
+    font-size: 11px;
+    margin: 0 0 6px 0;
+    padding: 0;
+    white-space: normal;
+}
+
+.configuration-fine-print {
+    font-size: 10px;
+    margin: 4px 0 6px 0;
+    padding: 0;
+    white-space: normal;
+}
+
+.configuration-key-field {
+    margin: 0;
+}
+
+.configuration-key-field > .unity-base-text-field__input {
+    min-height: 24px;
+    -unity-text-align: middle-left;
+    overflow: hidden;
+}
+
+.configuration-buttons {
+    flex-direction: row;
+}
+
+.configuration-button {
+    width: 220px;
+    margin: 0 10px 0 0;
+    flex-shrink: 1;
+}
+
+/* The design's help boxes carry a small inline icon, not the 32px default. */
+.configuration-help-box {
+    margin: 0;
+    align-items: flex-start;
+    padding: 6px 8px;
+    min-height: 0;
+}
+
+/* The default icon keeps a 32px minimum, which would make a one-line box twice its text height. */
+.configuration-help-box > .unity-help-box__icon {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    margin: 0 6px 0 0;
+}
+
+.configuration-help-box > .unity-help-box__label {
+    font-size: 11px;
+    min-height: 0;
+    margin: 1px 0 0 0;
+    padding: 0;
+    -unity-text-align: upper-left;
+}
+
+.configuration-inline-error {
+    margin-top: 12px;
+}
+
+.configuration-status {
+    margin-top: 8px;
 }
 
 /* The label claims most of the row, so the button wraps onto its own line under it, pushed right. */
@@ -685,62 +822,164 @@
 }
 
 .missing-key-box > .unity-help-box__label {
-    flex-basis: 90%;
+    flex-basis: 85%;
     flex-grow: 1;
+    flex-shrink: 0;
 }
 
 .missing-key-box > .unity-button {
-    margin-left: auto;
-    margin-top: 4px;
-    margin-bottom: 4px;
+    margin: 4px 0 0 auto;
 }
 
 .ignore-warning-toggle {
-    margin: 8px 0;
+    margin: 12px 0 14px 0;
 }
 
 .ignore-warning-toggle .unity-toggle__text {
     margin-left: 4px;
+    font-size: 11px;
 }
 
-.obfuscator-note {
-    font-size: 10px;
+.unlinked-features-heading {
+    -unity-font-style: bold;
+    margin: 8px 0;
+}
+
+.unlinked-feature {
+    padding: 14px 16px;
+}
+
+.unlinked-feature-title {
+    font-size: 14px;
+    margin: 0 0 10px 0;
+    padding: 0;
+}
+
+.unlinked-feature-description {
+    font-size: 11px;
+    margin: 0;
+    padding: 0;
     white-space: normal;
 }
 
-.button-container.obfuscator-buttons {
+/* Apple and Xbox cards */
+/* The cards' own margins space them; the container's vertical padding would double the gap. */
+#AppleConfigBlock,
+#XboxConfigBlock {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+/* Flush with the info box edges above them. */
+.xbox-field {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+/* Built-in platform icons fill their texture edge to edge; the padding gives the logo the tile margin of the other cards. */
+.configuration-icon.store-icon {
+    padding: 8px;
+}
+
+.configuration-caption.apple-note {
+    margin-bottom: 10px;
+}
+
+.configuration-help-box.xbox-cloud-code-note {
+    margin-bottom: 10px;
+}
+
+.xbox-field > .unity-base-field__label {
+    min-width: 200px;
+}
+
+/* Page layout: header, tabs and sections */
+.iap-tab-bar {
     flex-direction: row;
+    margin: 26px 8px 22px 8px;
 }
 
-.configuration-toggle {
-    width: 16px;
-    height: 16px;
-    rotate: 90deg;
+.iap-tab {
+    padding: 0 18px 2px 18px;
+    margin: 0;
+    border-bottom-width: 2px;
+    border-bottom-color: rgba(0, 0, 0, 0);
+    -unity-text-align: middle-center;
+    cursor: link;
 }
 
-.configuration-item-body {
-    border-top-width: 1px;
-    border-top-color: var(--unity-theme-background-color-11);
-    padding: 8px 4px;
-    margin-top: 8px;
-    display: none;
+/* Dimmed like Unity's disabled controls, but still hoverable so its tooltip shows. */
+.iap-tab--unavailable {
+    opacity: 0.5;
 }
 
-.configuration-title {
+/* Blocks bring their own 8px side padding, so the shell's own rows add the same to line up with them. */
+.iap-tab-content {
+    padding: 0 0 12px 0;
+}
+
+.iap-nav-buttons {
+    flex-direction: row;
+    margin: 0 8px 6px 8px;
+}
+
+.iap-nav-button {
+    margin: 0 8px 0 0;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* On the card column, 2px like Core's own header divider. */
+.iap-section-separator {
+    margin: 22px 8px 26px 8px;
+    height: 2px;
+}
+
+.iap-section-heading {
     -unity-font-style: bold;
-    font-size: 14px;
-    margin-bottom: 8px;
+    padding: 0;
+    margin: 0 8px 2px 8px;
 }
 
-/* Xbox Configuration */
-.xbox-toggle > .unity-toggle__input {
-    flex-direction:row-reverse;
+/* Sized like the card descriptions, which share the same colour. */
+.iap-section-text {
+    font-size: 11px;
+    white-space: normal;
+    padding: 0;
+    margin: 7px 8px 0 8px;
 }
 
-.xbox-toggle > .unity-toggle__input > .unity-toggle__text {
-    flex-grow:1;
+.iap-section-button {
+    align-self: flex-start;
+    margin: 8px 8px 0 8px;
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
-.xbox-text-field > .unity-base-field__label {
-    min-width:200px;
+.iap-unlinked-features {
+    padding: 0 8px;
+}
+
+.iap-unlinked-features .unlinked-features-heading {
+    padding-left: 0;
+    margin-left: 0;
+}
+
+.iap-unlinked-features .separator {
+    height: 2px;
+}
+
+/* The divider closing the features list sits midway between the last card and the tab titles. */
+.iap-unlinked-features > #UnlinkedFeatures > .separator {
+    margin-top: 15px;
+    margin-bottom: 0;
+}
+
+.iap-unlinked-tabs > .iap-tab-bar {
+    margin-top: 20px;
+}
+
+/* Cancels the Google Play block's own top padding and card margin, so its card edge sits at the same gap under the tab bar as every other tab's first content. */
+.iap-unlinked-setup-tab {
+    margin-top: -8px;
 }

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine.Scripting;
 
@@ -38,14 +39,25 @@ namespace UnityEngine.Purchasing.PaymentProviders
 
         public Task<EligiblePaymentProviders> GetEligiblePaymentProviders()
         {
-            return m_PaymentProvidersExtendedService.GetEligiblePaymentProviders();
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                return m_PaymentProvidersExtendedService.GetEligiblePaymentProviders();
+            }
+        }
+
+        public Task<IReadOnlyDictionary<string, PurchaseEligibility>> GetPurchaseEligibility(IReadOnlyList<string>? catalogListingIds)
+        {
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                return m_PaymentProvidersExtendedService.GetPurchaseEligibility(catalogListingIds);
+            }
         }
 
         // Override the IPaymentProvidersStoreExtendedService default factories so the
         // modal receives the PaymentProvider purchase service's IPurchaseEventEmitter
-        // and can fire PaymentOptionsShownEvent + mint the impression_id. Falls back
-        // to the parameterless factory (no telemetry) if the purchase service hasn't
-        // been constructed yet — modal still works, just no event.
+        // and can fire PaymentOptionsShownEvent. Falls back to the parameterless
+        // factory (no telemetry) if the purchase service hasn't been constructed
+        // yet — modal still works, just no event.
         public IPaymentOptionProvider GetPaymentOptionProviderUGUI()
         {
             return new PaymentOptionProvider(ResolveEmitter());

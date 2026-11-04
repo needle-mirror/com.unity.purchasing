@@ -90,6 +90,12 @@ namespace UnityEngine.Purchasing
         public string uSku { get; }
 
         /// <summary>
+        /// The name of the store this product was fetched from, e.g. <c>GooglePlay.Name</c>.
+        /// The same catalog item fetched by two stores is two products, each with its own store name.
+        /// </summary>
+        public string StoreName { get; internal set; }
+
+        /// <summary>
         /// The product type. Mirrors the <see cref="ProductDefinition.type"/> of the listing
         /// the product was constructed from.
         /// </summary>

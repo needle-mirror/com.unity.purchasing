@@ -90,6 +90,12 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// The operation could not be completed due to an unexpected mismatch in order state.
         /// </summary>
-        OrderStateChanged = 14
+        OrderStateChanged = 14,
+
+        /// <summary>
+        /// The player has bought this catalog listing as many times as its purchase limit allows
+        /// in the current period.
+        /// </summary>
+        PurchaseLimitReached = 15
     }
 }

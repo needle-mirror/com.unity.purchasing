@@ -276,7 +276,7 @@ The catalog file plays two distinct roles in the package. Knowing which one appl
 | Use case | Path |
 |---|---|
 | Ship a buy button with zero C# | **Codeless** — catalog + `CodelessIAPButton` |
-| Custom UI states, server validation, granular control of the purchase flow | **Scripted** — `StoreController` + an `IAPManager` (see [path-add-iap-to-new-project.md](path-add-iap-to-new-project.md)) |
+| Custom UI states, server validation, granular control of the purchase flow | **Scripted** — `PurchasingController` + an `IAPManager` (see [path-add-iap-to-new-project.md](path-add-iap-to-new-project.md)) |
 | Catalog-managed product list + scripted purchase flow | **Mixed** — catalog drives `CodelessIAPStoreListener` for product registration, scripted code subscribes to its events |
 | Export products to Apple Application Loader / Play Console | Codeless catalog — the only built-in export path |
 
@@ -284,7 +284,7 @@ Default recommendation when starting a new project from scratch: scripted IAP. C
 
 ### Auto-init race condition
 
-If the project has **both** a non-empty `IAPProductCatalog.json` with `enableCodelessAutoInitialization: true` **and** a scripted `StoreController` initialized in user code, two init paths race for the same native store. Symptoms:
+If the project has **both** a non-empty `IAPProductCatalog.json` with `enableCodelessAutoInitialization: true` **and** a scripted `StoreController` or `PurchasingController` initialized in user code, two init paths race for the same native store. Symptoms:
 
 - Duplicate `OnPurchasePending` callbacks (one per init's listener set).
 - "Store already connected" warnings on `Connect()`.
@@ -293,7 +293,7 @@ If the project has **both** a non-empty `IAPProductCatalog.json` with `enableCod
 Mitigations (pick one):
 
 1. **Keep scripted, disable codeless:** set `"enableCodelessAutoInitialization": false` in the catalog JSON. The catalog stays available for `ProductCatalog.LoadDefaultCatalog()` calls.
-2. **Keep codeless, remove scripted init:** delete the user's `StoreController` setup; rely on `CodelessIAPStoreListener.Instance`.
+2. **Keep codeless, remove scripted init:** delete the user's `StoreController` / `PurchasingController` setup; rely on `CodelessIAPStoreListener.Instance`.
 3. **Empty the catalog:** clear `products` to `[]`. `CodelessIAPStoreListener.InitializeCodelessPurchasingOnLoad` short-circuits on empty catalogs even with the flag on.
 
 Surface this before adding scripted IAP to a project that already has a non-empty catalog.
@@ -316,12 +316,12 @@ When triaging an IAP issue or planning changes, check in order:
 1. Does `Assets/Resources/IAPProductCatalog.json` exist?
 2. Is `enableCodelessAutoInitialization` true? (`grep enableCodelessAutoInitialization Assets/Resources/IAPProductCatalog.json`)
 3. Are there `CodelessIAPButton` or legacy `IAPButton` components in scenes/prefabs?
-4. Does user code construct a `StoreController` directly (or call `UnityIAPServices.StoreController(...)`)?
+4. Does user code construct a `StoreController` or `PurchasingController` (or call `UnityIAPServices.StoreController(...)`)?
 5. Does user code reference `CodelessIAPStoreListener.Instance`?
 
 Routing the result:
 
-| Catalog | autoInit | Scripted `StoreController` | Action |
+| Catalog | autoInit | Scripted `StoreController` / `PurchasingController` | Action |
 |---|---|---|---|
 | present (non-empty) | true | absent | Pure codeless — edit the catalog freely. |
 | present (non-empty) | true | present | **Race condition** — surface to the user, apply one of the three mitigations. |

@@ -38,14 +38,15 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="country">Country of purchase in ISO 3166-1 alpha-2 format. Used by payment providers that require a country-of-purchase signal (currently Codapay only); ignored by others. When omitted, the country is derived from the player&#39;s locale as a temporary backward-compatibility fallback for older SDK versions.</param>
         /// <param name="paymentProvider">Optional. Specify payment provider instead of using the default one configured for this project environment.</param>
         /// <param name="uiMode">Optional. One of &#x60;hosted&#x60; or &#x60;embedded&#x60;. How the checkout is presented. &#x60;hosted&#x60; (default) returns a provider-hosted checkout page in &#x60;url&#x60;. &#x60;embedded&#x60; returns an &#x60;embeddedInfo&#x60; object (client secret, plus a publishable key for Stripe) for rendering an in-page form via the payment provider&#39;s JS SDK and leaves &#x60;url&#x60; empty. Only &#x60;stripe&#x60; supports &#x60;embedded&#x60;; other providers reject the request. In &#x60;embedded&#x60; mode the player is never redirected, so only payment methods that don&#39;t require a redirect are offered (cards, Apple Pay, Google Pay, Link).</param>
+        /// <param name="entryChannel">Optional. The player-journey channel the order started from, independent of the referer-derived purchase origin. One of &#x60;game_deeplink&#x60; or &#x60;direct&#x60;: &#x60;game_deeplink&#x60; means the session began at the in-game Purchase UI (i.e. a deep-linked webshop session); &#x60;direct&#x60; means an organic browser first webshop visit. Client-asserted and analytics-grade (same trust level as the &#x60;player.identity&#x60; map). Honored only for orders arriving with a webshop referer; ignored for in-app/SDK orders (which are always treated as &#x60;game_deeplink&#x60;) and silently dropped when unrecognized. When omitted, the channel is left unspecified.</param>
         /// <param name="externalTransactionTokens">Optional external-link transaction tokens, used by developers to self-report the transaction to Apple/Google. Stored with the order and surfaced in order webhooks; not returned in the order response. Up to two tokens may be supplied because a single Apple external purchase can yield two distinct token types depending on the region — for example an &#x60;acquisition&#x60; token and a &#x60;linkOut&#x60; token.</param>
         /// <param name="redirectUrls">redirectUrls param</param>
         /// <param name="customReferenceId">Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with your internal system. Stored with the order and returned in the order response and order webhooks.</param>
-        /// <param name="linkOutSessionId">Optional, internal. Link-out session ID, for use with webshops.</param>
-        /// <param name="metadata">Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks.</param>
+        /// <param name="linkOutSessionId">Optional, internal. The opaque, backend-minted key from a prior link-out session registration (see registerLinkOutSession). Relayed verbatim by the webshop on a game-deeplinked order; the backend exchanges it for the registered device context. Ignored when absent, unrecognised, or when the session&#39;s owner does not match the ordering player.</param>
+        /// <param name="metadata">Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks. Limited to 20 keys; each key is limited to 40 bytes and each value to 100 bytes. Limits are enforced on the UTF-8 byte length, not the character count, so multi-byte characters count multiple times. Orders exceeding these limits are rejected.</param>
         /// <param name="deviceInfo">deviceInfo param</param>
         [Preserve]
-        public OrderRequest(Player player, string currency, List<string> skus = default, List<string> catalogListingIds = default, string country = default, string paymentProvider = default, string uiMode = "hosted", List<OrderRequestExternalTransactionTokensInner> externalTransactionTokens = default, OrderRequestRedirectUrls redirectUrls = default, string customReferenceId = default, System.Guid linkOutSessionId = default, Dictionary<string, string> metadata = default, DeviceInfo deviceInfo = default)
+        public OrderRequest(Player player, string currency, List<string> skus = default, List<string> catalogListingIds = default, string country = default, string paymentProvider = default, string uiMode = "hosted", string entryChannel = default, List<OrderRequestExternalTransactionTokensInner> externalTransactionTokens = default, OrderRequestRedirectUrls redirectUrls = default, string customReferenceId = default, System.Guid linkOutSessionId = default, Dictionary<string, string> metadata = default, DeviceInfo deviceInfo = default)
         {
             Player = player;
             Skus = skus;
@@ -54,6 +55,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             Country = country;
             PaymentProvider = paymentProvider;
             UiMode = uiMode;
+            EntryChannel = entryChannel;
             ExternalTransactionTokens = externalTransactionTokens;
             RedirectUrls = redirectUrls;
             CustomReferenceId = customReferenceId;
@@ -112,6 +114,13 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string UiMode{ get; }
         
         /// <summary>
+        /// Optional. The player-journey channel the order started from, independent of the referer-derived purchase origin. One of &#x60;game_deeplink&#x60; or &#x60;direct&#x60;: &#x60;game_deeplink&#x60; means the session began at the in-game Purchase UI (i.e. a deep-linked webshop session); &#x60;direct&#x60; means an organic browser first webshop visit. Client-asserted and analytics-grade (same trust level as the &#x60;player.identity&#x60; map). Honored only for orders arriving with a webshop referer; ignored for in-app/SDK orders (which are always treated as &#x60;game_deeplink&#x60;) and silently dropped when unrecognized. When omitted, the channel is left unspecified.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "entryChannel", EmitDefaultValue = false)]
+        public string EntryChannel{ get; }
+        
+        /// <summary>
         /// Optional external-link transaction tokens, used by developers to self-report the transaction to Apple/Google. Stored with the order and surfaced in order webhooks; not returned in the order response. Up to two tokens may be supplied because a single Apple external purchase can yield two distinct token types depending on the region — for example an &#x60;acquisition&#x60; token and a &#x60;linkOut&#x60; token.
         /// </summary>
         [Preserve]
@@ -133,14 +142,14 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string CustomReferenceId{ get; }
         
         /// <summary>
-        /// Optional, internal. Link-out session ID, for use with webshops.
+        /// Optional, internal. The opaque, backend-minted key from a prior link-out session registration (see registerLinkOutSession). Relayed verbatim by the webshop on a game-deeplinked order; the backend exchanges it for the registered device context. Ignored when absent, unrecognised, or when the session&#39;s owner does not match the ordering player.
         /// </summary>
         [Preserve]
         [DataMember(Name = "linkOutSessionId", EmitDefaultValue = false)]
         public System.Guid LinkOutSessionId{ get; }
         
         /// <summary>
-        /// Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks.
+        /// Optional. Arbitrary key/value metadata stored with the order and returned in the order response and order webhooks. Limited to 20 keys; each key is limited to 40 bytes and each value to 100 bytes. Limits are enforced on the UTF-8 byte length, not the character count, so multi-byte characters count multiple times. Orders exceeding these limits are rejected.
         /// </summary>
         [Preserve]
         [DataMember(Name = "metadata", EmitDefaultValue = false)]
@@ -188,6 +197,10 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             if (UiMode != null)
             {
                 serializedModel += "uiMode," + UiMode + ",";
+            }
+            if (EntryChannel != null)
+            {
+                serializedModel += "entryChannel," + EntryChannel + ",";
             }
             if (ExternalTransactionTokens != null)
             {
@@ -258,6 +271,12 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
             {
                 var uiModeStringValue = UiMode.ToString();
                 dictionary.Add("uiMode", uiModeStringValue);
+            }
+            
+            if (EntryChannel != null)
+            {
+                var entryChannelStringValue = EntryChannel.ToString();
+                dictionary.Add("entryChannel", entryChannelStringValue);
             }
             
             if (CustomReferenceId != null)

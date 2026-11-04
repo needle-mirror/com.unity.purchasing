@@ -212,7 +212,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
 
             foreach (var nested in shape.Nested)
             {
-                if (!row.TryRequired(nested.RequiredColumn, out _))
+                if (!Builds(nested, row))
                 {
                     continue;
                 }
@@ -337,13 +337,43 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
         {
             for (var nested = column.Nested; nested != null; nested = nested.Parent)
             {
-                if (!row.TryRequired(nested.RequiredColumn, out _))
+                if (!Builds(nested, row))
                 {
                     return false;
                 }
             }
 
             return true;
+        }
+
+        static bool Builds(CsvNested nested, CsvRow row)
+        {
+            if (row.TryRequired(nested.RequiredColumn, out _))
+            {
+                return true;
+            }
+
+            if (!nested.CreateWhenAnySet)
+            {
+                return false;
+            }
+
+            foreach (var column in nested.Target.Columns)
+            {
+                var raw = row.Raw(column);
+                if (string.IsNullOrWhiteSpace(raw))
+                {
+                    continue;
+                }
+
+                // A cell spelling out the "not set" value (e.g. None) is still an opt-out.
+                if (!(column.Converter.TryFromCsv(raw, out var value) && column.IsAbsent(value)))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         // Null means "the CSV said nothing about this", empty means "the author cleared it" — the

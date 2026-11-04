@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEditor.UIElements;
 using UnityEngine.Purchasing;
 using UnityEngine.UIElements;
 
@@ -9,7 +10,7 @@ namespace UnityEditor.Purchasing
 {
     class PlatformsAndStoresEnabledServiceSettingsBlock : PlatformsAndStoresServiceSettingsBlock
     {
-        IMGUIContainerPopupAdapter currentStoreTargetContainer { get; set; }
+        PopupField<string> currentStoreField { get; set; }
 
         protected override void FinalizeSetupPlatformAndStoresBlock()
         {
@@ -42,10 +43,10 @@ namespace UnityEditor.Purchasing
                 return;
             }
 
-            var field = GetTagContainer(currentStoreSection) as IMGUIContainer;
-            if (field != null && currentStoreTargetContainer != null && currentStoreTargetContainer.container == field)
+            var stores = BuildTargetGroup.Android.ToAppStores();
+            if (currentStoreField != null && stores.Contains(appStore))
             {
-                currentStoreTargetContainer.index = BuildTargetGroup.Android.ToAppStores().IndexOf(appStore);
+                currentStoreField.SetValueWithoutNotify(appStore.ToDisplayName());
             }
         }
 
@@ -63,21 +64,17 @@ namespace UnityEditor.Purchasing
 
         void PopulateCurrentStoreTarget(VisualElement baseElement)
         {
-            var field = GetTagContainer(baseElement) as IMGUIContainer;
-            if (field == null)
+            var stores = EditorUserBuildSettings.activeBuildTargetGroup.ToAppStoreDisplayNames().ToList();
+            if (baseElement == null || stores.Count == 0)
             {
+                baseElement?.RemoveFromHierarchy();
                 return;
             }
 
-            var stores = EditorUserBuildSettings.activeBuildTargetGroup.ToAppStoreDisplayNames();
-
-            currentStoreTargetContainer = new IMGUIContainerPopupAdapter()
-            {
-                popupValueChangedAction = OnCurrentStoreTargetChanged,
-                options = stores.ToArray(),
-                index = stores.IndexOf(GetCurrentStoreTarget()),
-                container = field
-            };
+            currentStoreField = new PopupField<string>(stores, Math.Max(0, stores.IndexOf(GetCurrentStoreTarget())));
+            currentStoreField.AddToClassList("editor-setup-dropdown");
+            currentStoreField.RegisterValueChangedCallback(evt => OnCurrentStoreTargetChanged(evt.newValue));
+            baseElement.Add(currentStoreField);
         }
 
         void OnCurrentStoreTargetChanged(string storeName)
@@ -148,9 +145,7 @@ namespace UnityEditor.Purchasing
 
         static void PopulatePlatform(VisualElement baseElement, string platform)
         {
-            var tagContainer = GetClearedTagContainer(baseElement);
-
-            tagContainer?.Add(MakePlatformStoreTag(platform));
+            SetValue(baseElement, platform);
         }
     }
 }

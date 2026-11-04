@@ -33,7 +33,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// </summary>
         /// <param name="linkOutSessionId">Backend-minted opaque key the webshop relays at order-create.</param>
         [Preserve]
-        public LinkOutSessionRegisterResponse(System.Guid linkOutSessionId = default)
+        public LinkOutSessionRegisterResponse(System.Guid linkOutSessionId)
         {
             LinkOutSessionId = linkOutSessionId;
         }
@@ -42,7 +42,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// Backend-minted opaque key the webshop relays at order-create.
         /// </summary>
         [Preserve]
-        [DataMember(Name = "linkOutSessionId", EmitDefaultValue = false)]
+        [DataMember(Name = "linkOutSessionId", IsRequired = true, EmitDefaultValue = true)]
         public System.Guid LinkOutSessionId{ get; }
     
         /// <summary>

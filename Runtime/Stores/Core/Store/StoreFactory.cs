@@ -72,7 +72,7 @@ namespace UnityEngine.Purchasing
             RegisterStore(MacAppStore.Name, InstantiateMacAppStore);
             RegisterStore(GooglePlay.Name, InstantiateGooglePlayStore);
             RegisterStore(PaymentProvider.Name, InstantiatePaymentProviderStore);
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
             RegisterStore(XboxStore.Name, InstantiateXboxStore);
 #endif
         }
@@ -141,6 +141,7 @@ namespace UnityEngine.Purchasing
             var di = CreateBaseDiService();
             di.AddInstance(StoreLocationContext);
             di.AddInstance(new AppleAppStoreCartValidator(storeDisplayName));
+            di.AddInstance(ImpressionScope.Shared);
             AddMetricizedAppleStoreDependencies(di);
             CreateAndAssignNativeAppleStore(di.GetInstance<AppleStoreImpl>());
             WireStoreOverrideReverseLookup(di.GetInstance<AppleStoreImpl>().ProductCache, "apple");
@@ -226,6 +227,7 @@ namespace UnityEngine.Purchasing
             di.AddService<DotNetCurrencyFormatter>();
 #endif
             di.AddService<LinkOutSessionIdProvider>();
+            di.AddInstance(ImpressionScope.Shared);
             di.AddService<PaymentProviderImpl>();
 
             di.AddInstance(PaymentProviderServiceProvider.Instance());
@@ -261,6 +263,7 @@ namespace UnityEngine.Purchasing
             di.AddService<GooglePurchaseConverter>();
             di.AddService<GooglePlayPurchaseCallback>();
             di.AddService<GooglePlayStorePurchaseService>();
+            di.AddInstance(BuildTransactionLog());
             di.AddService<GooglePlayStoreFinishTransactionService>();
             di.AddService<GooglePlayStoreFetchPurchasesService>();
             di.AddService<TelemetryMetricsInstanceWrapper>();
@@ -291,7 +294,7 @@ namespace UnityEngine.Purchasing
             di.AddService<MetricizedGooglePlayStoreService>();
         }
 
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
         IStoreWrapper InstantiateXboxStore()
         {
             var di = CreateBaseDiService();

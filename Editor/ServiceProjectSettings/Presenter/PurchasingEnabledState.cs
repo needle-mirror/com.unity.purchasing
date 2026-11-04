@@ -7,11 +7,12 @@ namespace UnityEditor.Purchasing
         public PurchasingEnabledState(SimpleStateMachine<bool> stateMachine)
             : base(k_StateNameEnabled, stateMachine)
         {
-            m_UIBlocks.Add(new GooglePlayConfigurationSettingsBlock());
-            m_UIBlocks.Add(new AppleConfigurationSettingsBlock());
-            m_UIBlocks.Add(new XboxConfigurationSettingsBlock());
+            cloudBlocks.Add(new GooglePlayConfigurationSettingsBlock());
 
-            m_UIBlocks.Add(new LegacyCatalogMigrationSettingsBlock());
+            notRequiredForCloudBlocks.Add(new AppleConfigurationSettingsBlock());
+            notRequiredForCloudBlocks.Add(new XboxConfigurationSettingsBlock());
+
+            trailingBlocks.Add(new LegacyCatalogMigrationSettingsBlock());
 
             ModifyActionForEvent(false, HandleDisabling);
         }

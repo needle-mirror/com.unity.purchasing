@@ -18,7 +18,7 @@ namespace UnityEngine.Purchasing
         static extern void unityPurchasing_FetchProducts(string json);
 
         [DllImport("unitypurchasing")]
-        static extern void unityPurchasing_PurchaseProduct(string productJson, string optionsJson, StorefrontChangeCallback storefrontCallbackDelegate);
+        static extern void unityPurchasing_PurchaseProduct(string productJson, string optionsJson, StorefrontChangeCallback storefrontCallbackDelegate, string impressionId);
 
         [DllImport("unitypurchasing")]
         static extern IntPtr unityPurchasing_FetchAppReceipt();
@@ -258,7 +258,7 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            Purchase(productJSON, developerPayload, null);
+            Purchase(productJSON, developerPayload, impressionId: null);
         }
 
         public void FinishTransaction(string productDescription, string transactionId)
@@ -383,7 +383,19 @@ namespace UnityEngine.Purchasing
                 return;
             }
 
-            unityPurchasing_PurchaseProduct(productJson, optionsJson, callback);
+            unityPurchasing_PurchaseProduct(productJson, optionsJson, callback, null);
+        }
+
+        public void Purchase(string productJson, string optionsJson, string impressionId)
+        {
+            // StoreKit 1 purchases are sent to the SK transaction listener and cannot hold an impression_id
+            if (useStoreKit1)
+            {
+                unityPurchasingPurchase(productJson, optionsJson);
+                return;
+            }
+
+            unityPurchasing_PurchaseProduct(productJson, optionsJson, null, impressionId);
         }
 
         // TODO: IAP-3929
@@ -457,6 +469,11 @@ namespace UnityEngine.Purchasing
         public void ExternalPurchaseFetchToken(string tokenType, ExternalPurchaseCallback callback) { }
         public void ExternalPurchaseShowNotice(string noticeType, ExternalPurchaseCallback callback) { }
         public void ExternalPurchaseFetchStorefront(ExternalPurchaseCallback callback) { }
+
+        // No iPad windowing on macOS.
+        public bool IsSceneFrontmost() => true;
+
+        public void SetSceneBecameFrontmostCallback(SceneBecameFrontmostCallback callback) { }
 
         public string FetchNativeDeviceInfo()
         {

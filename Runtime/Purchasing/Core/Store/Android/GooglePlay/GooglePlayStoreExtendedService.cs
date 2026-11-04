@@ -59,7 +59,10 @@ namespace UnityEngine.Purchasing
         }
         public void EndConnection()
         {
-            m_GooglePlayStoreConnectionUseCase.EndConnection();
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                m_GooglePlayStoreConnectionUseCase.EndConnection();
+            }
         }
     }
 }

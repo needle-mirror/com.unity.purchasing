@@ -34,6 +34,16 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
             /// <summary>
             /// Async Operation.
+            /// Check purchase eligibility.
+            /// </summary>
+            /// <param name="request">Request object for GetPurchaseEligibility.</param>
+            /// <param name="operationConfiguration">Configuration for GetPurchaseEligibility.</param>
+            /// <returns>Task for a Response object containing status code, headers, and PurchaseEligibilityResponse object.</returns>
+            /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
+            Task<Response<PurchaseEligibilityResponse>> GetPurchaseEligibilityAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.GetPurchaseEligibilityRequest request, Configuration operationConfiguration = null);
+
+            /// <summary>
+            /// Async Operation.
             /// Create an order.
             /// </summary>
             /// <param name="request">Request object for InitiatePaymentProviderOrder.</param>
@@ -74,7 +84,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
             /// <summary>
             /// Async Operation.
-            /// Register a link-out session.
+            /// Register link-out device context.
             /// </summary>
             /// <param name="request">Request object for RegisterLinkOutSession.</param>
             /// <param name="operationConfiguration">Configuration for RegisterLinkOutSession.</param>
@@ -165,6 +175,33 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
         /// <summary>
         /// Async Operation.
+        /// Check purchase eligibility.
+        /// </summary>
+        /// <param name="request">Request object for GetPurchaseEligibility.</param>
+        /// <param name="operationConfiguration">Configuration for GetPurchaseEligibility.</param>
+        /// <returns>Task for a Response object containing status code, headers, and PurchaseEligibilityResponse object.</returns>
+        /// <exception cref="UnityEngine.Purchasing.PaymentProviderService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
+        public async Task<Response<PurchaseEligibilityResponse>> GetPurchaseEligibilityAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.GetPurchaseEligibilityRequest request,
+            Configuration operationConfiguration = null)
+        {
+            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(PurchaseEligibilityResponse)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   } };
+
+            // Merge the operation/request level configuration with the client level configuration.
+            var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
+
+            var response = await HttpClient.MakeRequestAsync("POST",
+                request.ConstructUrl(finalConfiguration.BasePath),
+                request.ConstructBody(),
+                request.ConstructHeaders(_accessToken, finalConfiguration),
+                finalConfiguration.RequestTimeout ?? _baseTimeout);
+
+            var handledResponse = ResponseHandler.HandleAsyncResponse<PurchaseEligibilityResponse>(response, statusCodeToTypeMap);
+            return new Response<PurchaseEligibilityResponse>(response, handledResponse);
+        }
+
+
+        /// <summary>
+        /// Async Operation.
         /// Create an order.
         /// </summary>
         /// <param name="request">Request object for InitiatePaymentProviderOrder.</param>
@@ -174,7 +211,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
         public async Task<Response<OrderResponse>> InitiatePaymentProviderOrderAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.InitiatePaymentProviderOrderRequest request,
             Configuration operationConfiguration = null)
         {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(OrderResponse)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"404", typeof(BasicErrorResponse)   },{"409", typeof(BasicErrorResponse)   },{"422", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   },{"503", typeof(BasicErrorResponse)   } };
+            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(OrderResponse)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"404", typeof(BasicErrorResponse)   },{"409", typeof(InitiatePaymentProviderOrder409Response)   },{"422", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   },{"502", typeof(BasicErrorResponse)   },{"503", typeof(BasicErrorResponse)   },{"504", typeof(BasicErrorResponse)   } };
 
             // Merge the operation/request level configuration with the client level configuration.
             var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
@@ -273,7 +310,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
 
         /// <summary>
         /// Async Operation.
-        /// Register a link-out session.
+        /// Register link-out device context.
         /// </summary>
         /// <param name="request">Request object for RegisterLinkOutSession.</param>
         /// <param name="operationConfiguration">Configuration for RegisterLinkOutSession.</param>
@@ -309,7 +346,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Apis.PaymentProvider
         public async Task<Response<OrderResponse>> UpdateOrderAsync(UnityEngine.Purchasing.PaymentProviderService.PaymentProvider.UpdateOrderRequest request,
             Configuration operationConfiguration = null)
         {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(OrderResponse)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"404", typeof(BasicErrorResponse)   },{"409", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   },{"503", typeof(BasicErrorResponse)   } };
+            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(OrderResponse)   },{"400", typeof(InitiatePaymentProviderOrder400Response)   },{"401", typeof(BasicErrorResponse)   },{"403", typeof(BasicErrorResponse)   },{"404", typeof(BasicErrorResponse)   },{"409", typeof(BasicErrorResponse)   },{"429", typeof(BasicErrorResponse)   },{"500", typeof(BasicErrorResponse)   },{"503", typeof(BasicErrorResponse)   } };
 
             // Merge the operation/request level configuration with the client level configuration.
             var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);

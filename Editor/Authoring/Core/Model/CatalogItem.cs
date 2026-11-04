@@ -56,6 +56,9 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         [CsvNested(RequiredMember = nameof(Model.Promotion.Type))]
         [DataMember(Name = "promotion"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public Promotion Promotion { get; set; }
+        [CsvNested(RequiredMember = nameof(Model.PurchaseLimit.Period), CreateWhenAnySet = true)]
+        [DataMember(Name = "purchaseLimit"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public PurchaseLimit PurchaseLimit { get; set; }
         [DataMember(Name = "storeIdOverrides"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public List<StoreIdOverride> StoreIdOverrides { get; set; }
 
@@ -158,6 +161,10 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
             if (catalogItem.Promotion != null)
             {
                 Promotion = new Promotion(catalogItem.Promotion);
+            }
+            if (catalogItem.PurchaseLimit != null)
+            {
+                PurchaseLimit = new PurchaseLimit(catalogItem.PurchaseLimit);
             }
             if (catalogItem.StoreIdOverrides != null)
             {
@@ -404,5 +411,40 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         Sale,
         Bonus,
         Limited,
+    }
+
+    /// <summary>
+    /// How many times one player can buy the listing per UTC period. Enforced by the backend for
+    /// Payment Provider purchases only.
+    /// </summary>
+    [Serializable, DataContract]
+    public class PurchaseLimit
+    {
+        // None is the unset sentinel: Unity's inspector always creates the instance.
+        [CsvColumn("PurchaseLimitPeriod", 25, Absent = PurchaseLimitPeriod.None, Converter = typeof(CsvPurchaseLimitPeriodConverter))]
+        [DataMember(Name = "period")]
+        [JsonConverter(typeof(StringEnumConverter))]
+        public PurchaseLimitPeriod Period;
+        [CsvColumn("PurchaseLimitCount", 24, Converter = typeof(CsvPurchaseLimitCountConverter))]
+        [DataMember(Name = "count")]
+        public int Count;
+
+        public PurchaseLimit() { }
+
+        public PurchaseLimit(PurchaseLimit other)
+        {
+            Period = other.Period;
+            Count = other.Count;
+        }
+
+        public bool IsSet => Period is PurchaseLimitPeriod.Hour or PurchaseLimitPeriod.Day or PurchaseLimitPeriod.Month;
+    }
+
+    public enum PurchaseLimitPeriod
+    {
+        None,
+        Hour,
+        Day,
+        Month,
     }
 }

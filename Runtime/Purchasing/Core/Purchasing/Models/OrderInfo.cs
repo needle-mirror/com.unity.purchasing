@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
@@ -20,6 +21,8 @@ namespace UnityEngine.Purchasing
         public List<IPurchasedProductInfo> PurchasedProductInfo { get; set; }
 
         public string TransactionID { get; }
+
+        public DateTime? PurchaseDate { get; }
 
         public string Receipt
         {
@@ -52,10 +55,12 @@ namespace UnityEngine.Purchasing
         /// <param name="receipt">The receipt for the order. May be empty for failed orders.</param>
         /// <param name="transactionID">The transaction ID for the order. May be empty for failed orders or pending transactions.</param>
         /// <param name="storeName">The store name for the order. May be empty in case of unknown store context.</param>
-        public OrderInfo(string receipt, string? transactionID, string storeName)
+        /// <param name="purchaseDate">The UTC date of the purchase. Null when the store does not provide one.</param>
+        public OrderInfo(string receipt, string? transactionID, string storeName, DateTime? purchaseDate = null)
         {
             Receipt = CreateUnifiedReceipt(receipt, transactionID ?? "", storeName);
             TransactionID = transactionID ?? "";
+            PurchaseDate = purchaseDate;
             PurchasedProductInfo = new List<IPurchasedProductInfo>();
         }
 

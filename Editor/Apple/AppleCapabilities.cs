@@ -12,6 +12,7 @@ namespace UnityEditor.Purchasing
     class AppleCapabilities : IPostprocessBuildWithReport
     {
         const string k_StorekitFramework = "StoreKit.framework";
+        const string k_DisableIdfaCondition = "IAP_DISABLE_IDFA";
         public int callbackOrder => 0;
 
         public void OnPostprocessBuild(BuildReport report)
@@ -41,6 +42,9 @@ namespace UnityEditor.Purchasing
             var proj = new PBXProject();
             proj.ReadFromFile(projPath);
 
+#if IAP_DISABLE_IDFA
+            DisableIdfa(proj);
+#endif
             AddStoreKitFramework(proj, projPath);
             AddInAppPurchasingCapability(projPath, proj);
 
@@ -56,6 +60,15 @@ namespace UnityEditor.Purchasing
             );
             manager.AddInAppPurchase();
             manager.WriteToFile();
+        }
+
+        // Scripting defines don't reach Swift, so forward IAP_DISABLE_IDFA as a Swift compilation condition.
+        // UnityStoreKitPlugin.swift then compiles out AdSupport and ASIdentifierManager (Kids Category apps).
+        static void DisableIdfa(PBXProject proj)
+        {
+            var frameworkTargetGuid = proj.GetUnityFrameworkTargetGuid();
+            proj.AddBuildProperty(frameworkTargetGuid, "SWIFT_ACTIVE_COMPILATION_CONDITIONS", "$(inherited)");
+            proj.AddBuildProperty(frameworkTargetGuid, "SWIFT_ACTIVE_COMPILATION_CONDITIONS", k_DisableIdfaCondition);
         }
 
         static void AddStoreKitFramework(PBXProject proj, string projPath)

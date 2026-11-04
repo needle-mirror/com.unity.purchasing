@@ -84,6 +84,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
     {
         public CsvMember Member;
         public CsvColumn RequiredColumn;
+        public bool CreateWhenAnySet;
         public CsvTarget Target;
         public CsvNested Parent;
 
@@ -270,6 +271,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.IO
                     };
                     Walk(child.Member.Type, child.Target, child, owner, all, rowGroups);
                     child.RequiredColumn = Require(child.Target, nested.RequiredMember, member);
+                    child.CreateWhenAnySet = nested.CreateWhenAnySet;
                     target.Nested.Add(child);
                     continue;
                 }

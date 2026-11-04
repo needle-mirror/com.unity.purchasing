@@ -42,5 +42,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
     {
         /// <summary>Member of the nested type that decides whether the object exists at all.</summary>
         public string RequiredMember { get; set; }
+
+        /// <summary>
+        /// Also build the object when any of its cells is filled, so validation sees a half-set object
+        /// instead of the row silently dropping it.
+        /// </summary>
+        public bool CreateWhenAnySet { get; set; }
     }
 }

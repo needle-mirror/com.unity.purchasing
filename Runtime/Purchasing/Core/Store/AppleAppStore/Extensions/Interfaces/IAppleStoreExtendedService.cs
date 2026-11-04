@@ -24,7 +24,16 @@ namespace UnityEngine.Purchasing
         /// Clear all persistent data from the transaction log.
         /// Available in debug only.
         /// </summary>
+        [Obsolete("Use ClearTransactionLog(bool debugOnly) instead. This method behaves like ClearTransactionLog(true).", false)]
         void ClearTransactionLog();
+
+        /// <summary>
+        /// Clear all persistent data from the transaction log.
+        /// After clearing, transactions the store delivers again are reported as new purchases.
+        /// Outside of testing, make sure not to grant a purchase whose transaction ID has already been granted.
+        /// </summary>
+        /// <param name="debugOnly">If true, the log is only cleared in a debug build.</param>
+        void ClearTransactionLog(bool debugOnly);
 
         /// <summary>
         /// Fetches the current App Store storefront information.

@@ -19,8 +19,9 @@ namespace UnityEngine.Purchasing
             IAppleFetchProductsService fetchProductsService,
             ITransactionLog transactionLog, IUtil util, ILogger logger, ITelemetryDiagnostics telemetryDiagnostics,
             IStoreLocationContext storeLocationContext,
-            ITelemetryMetricsService telemetryMetricsService)
-            : base(cartValidator, fetchProductsService, transactionLog, util, logger, telemetryDiagnostics, storeLocationContext)
+            ITelemetryMetricsService telemetryMetricsService,
+            IImpressionScope impressionScope)
+            : base(cartValidator, fetchProductsService, transactionLog, util, logger, telemetryDiagnostics, storeLocationContext, impressionScope)
         {
             m_TelemetryMetricsService = telemetryMetricsService;
         }

@@ -3,22 +3,22 @@ using Unity.Services.Core.Editor.OrganizationHandler;
 using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.Services.Core.Editor.Environments;
+using Unity.Services.Core.Editor;
 
 namespace UnityEditor.Purchasing
 {
     internal class GooglePlayConfigurationSettingsBlock : IPurchasingSettingsUIBlock
     {
-        const string k_GooglePlayConfigItem = "GooglePlayConfigItem";
         const string k_CodaConfigItem = "CodaConfigItem";
         const string k_StripeConfigItem = "StripeConfigItem";
-        const string k_PaymentProviderConfigurationTitle = "PaymentProviderConfigurationTitle";
         const string k_UnlinkedSeparator = "UnlinkedSeparator";
         const string k_RevenueValidationBlock = "RevenueValidationBlock";
         const string k_ConfiguredBadge = "GoogleKeyConfiguredBadge";
         const string k_MissingKeyBadge = "GoogleKeyMissingBadge";
-        const string k_InfoIcon = "GoogleKeyInfoIcon";
+        const string k_CodaConnectedBadge = "CodaConnectedBadge";
+        const string k_CodaNotConnectedBadge = "CodaNotConnectedBadge";
+        const string k_StripeConnectedBadge = "StripeConnectedBadge";
+        const string k_StripeNotConnectedBadge = "StripeNotConnectedBadge";
         const string k_UnlinkedFeatures = "UnlinkedFeatures";
         const string k_MissingKeyMode = "missing-key-mode";
         const string k_UnlinkedMissingKeyMode = "unlinked-missing-key-mode";
@@ -32,6 +32,10 @@ namespace UnityEditor.Purchasing
         const string k_ErrorServer = "error-server-error";
         const string k_CodaPaymentProviderLink = "CodaPaymentProviderLink";
         const string k_StripePaymentProviderLink = "StripePaymentProviderLink";
+        const string k_CodaDocumentationLink = "CodaDocumentationLink";
+        const string k_StripeDocumentationLink = "StripeDocumentationLink";
+        const string k_PaymentProvidersDocumentationUrl = "https://docs.unity.com/en-us/iap/payment-providers";
+        const string k_ReceiptObfuscatorTitle = "ReceiptObfuscatorTitle";
         const string k_VisibleClass = "visible";
         const string k_ExpandedClass = "expanded";
 
@@ -63,8 +67,6 @@ namespace UnityEditor.Purchasing
             m_ConfigurationBlock = SettingsUIUtils.CloneUIFromTemplate(UIResourceUtils.googlePlayConfigUxmlPath);
 
             SetupStyleSheets();
-            // The editor's own info icon, so it follows the light/dark skin.
-            m_ConfigurationBlock.Q(k_InfoIcon).style.backgroundImage = (Texture2D)EditorGUIUtility.IconContent("console.infoicon.sml").image;
             PopulateConfigBlock();
             PopulateObfuscatorBlock();
 
@@ -73,6 +75,7 @@ namespace UnityEditor.Purchasing
                 SetDisplayed(m_ConfigurationBlock.Q(k_UnlinkedFeatures), false);
                 m_ConfigurationBlock.Q(k_UnlinkedSeparator)?.RemoveFromHierarchy();
                 ObtainExistingGooglePlayKey();
+                ObtainPaymentProviderConnections();
             }
             else
             {
@@ -99,12 +102,16 @@ namespace UnityEditor.Purchasing
         // Without a cloud project there is no payment provider to connect and no dashboard key to show.
         void ShowGoogleCardOnly()
         {
-            SetDisplayed(m_ConfigurationBlock.Q(k_PaymentProviderConfigurationTitle), false);
             SetDisplayed(m_ConfigurationBlock.Q(k_CodaConfigItem), false);
             SetDisplayed(m_ConfigurationBlock.Q(k_StripeConfigItem), false);
             SetDisplayed(m_ConfigurationBlock.Q(k_RevenueValidationBlock), false);
             SetDisplayed(m_ConfigurationBlock.Q(k_PushLicenseKeyButton), false);
-            m_ConfigurationBlock.Q(k_GooglePlayConfigItem)?.AddToClassList(k_ExpandedClass);
+            // Unlinked, obfuscation is all the key is used for, so the heading says where it runs.
+            var obfuscatorTitle = m_ConfigurationBlock.Q<Label>(k_ReceiptObfuscatorTitle);
+            if (obfuscatorTitle != null)
+            {
+                obfuscatorTitle.text = "Receipt Obfuscator (client-side)";
+            }
         }
 
         void SetupFoldOutActions() {
@@ -159,50 +166,66 @@ namespace UnityEditor.Purchasing
             m_WebRequests.RequestRetrieveKeyOperation();
         }
 
+        // Badges stay hidden until the dashboard answers, so a failed request never claims either state.
+        async void ObtainPaymentProviderConnections()
+        {
+            var block = m_ConfigurationBlock;
+            var projectId = CloudProjectSettings.projectId;
+            var environmentId = PurchasingUrls.ResolveEnvironmentId();
+            if (environmentId == Guid.Empty)
+            {
+                return;
+            }
+
+            (bool coda, bool stripe)? connections;
+            try
+            {
+                var gatewayToken = await new AccessTokens().GetServicesGatewayTokenAsync();
+                connections = string.IsNullOrEmpty(gatewayToken)
+                    ? null
+                    : await GetPaymentProviderConnectionsWebRequest.RequestAsync(gatewayToken, projectId, environmentId.ToString());
+            }
+            catch (Exception)
+            {
+                connections = null;
+            }
+
+            // A relink while this was in flight means the result describes a project that is no longer linked.
+            if (connections == null || CloudProjectSettings.projectId != projectId)
+            {
+                return;
+            }
+
+            var (coda, stripe) = connections.Value;
+            block.Q(k_CodaConnectedBadge)?.EnableInClassList(k_VisibleClass, coda);
+            block.Q(k_CodaNotConnectedBadge)?.EnableInClassList(k_VisibleClass, !coda);
+            block.Q(k_StripeConnectedBadge)?.EnableInClassList(k_VisibleClass, stripe);
+            block.Q(k_StripeNotConnectedBadge)?.EnableInClassList(k_VisibleClass, !stripe);
+        }
+
         void SetupLinkActions()
         {
             m_ConfigurationBlock.Q<Button>(k_GoToCloudProjectButton).clicked += OpenCloudProjectSettings;
 
-            SetupPaymentProviderLink(k_CodaPaymentProviderLink);
-            SetupPaymentProviderLink(k_StripePaymentProviderLink);
+            SetupLink(k_CodaPaymentProviderLink, OpenPaymentProviderUnityDashboard);
+            SetupLink(k_StripePaymentProviderLink, OpenPaymentProviderUnityDashboard);
+            SetupLink(k_CodaDocumentationLink, OpenPaymentProvidersDocumentation);
+            SetupLink(k_StripeDocumentationLink, OpenPaymentProvidersDocumentation);
         }
 
-        void SetupPaymentProviderLink(string elementName)
+        void SetupLink(string elementName, Action onClick)
         {
-            var link = m_ConfigurationBlock.Q(elementName);
-            if (link != null)
-            {
-                var clickable = new Clickable(OpenPaymentProviderUnityDashboard);
-                link.AddManipulator(clickable);
-            }
+            m_ConfigurationBlock.Q(elementName)?.AddManipulator(new Clickable(onClick));
         }
 
-        void OpenPaymentProviderUnityDashboard()
+        static void OpenPaymentProviderUnityDashboard()
         {
-            Application.OpenURL(BuildPaymentProviderUri());
+            Application.OpenURL(PurchasingUrls.BuildEnvironmentPageUrl(PurchasingUrls.paymentProviderUrl));
         }
 
-        string BuildPaymentProviderUri()
+        static void OpenPaymentProvidersDocumentation()
         {
-            var environmentId = EnvironmentsApi.Instance.ActiveEnvironmentId;
-            if (environmentId == Guid.Empty)
-            {
-                try
-                {
-                    environmentId = EnvironmentsApi.Instance.Environments.First(envInfo => envInfo.Name == "production").Id;
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-
-                if (environmentId == Guid.Empty)
-                {
-                    return string.Format(PurchasingUrls.inAppPurchasesUrl, OrganizationProvider.Organization.Key);
-                }
-            }
-
-            return string.Format(PurchasingUrls.paymentProviderUrl, OrganizationProvider.Organization.Key, CloudProjectSettings.projectId, environmentId);
+            Application.OpenURL(k_PaymentProvidersDocumentationUrl);
         }
 
         static void OpenCloudProjectSettings()
@@ -221,15 +244,15 @@ namespace UnityEditor.Purchasing
         {
             var state = m_GooglePlayDataRef.revenueTrackingState;
 
-            m_ConfigurationBlock.Q(k_ConfiguredBadge)?.EnableInClassList(k_VisibleClass, m_IsProjectLinked && state == GooglePlayRevenueTrackingKeyState.Verified);
+            // Once ignored, the warning, its checkbox and the key status badge stay hidden. Turning the warning back on
+            // means editing ProjectSettings/Packages/com.unity.purchasing/Settings.asset.
+            var ignored = IapEditorProjectSettings.IgnoreGoogleLicenseKeyWarning;
+
+            m_ConfigurationBlock.Q(k_ConfiguredBadge)?.EnableInClassList(k_VisibleClass, !ignored && m_IsProjectLinked && state == GooglePlayRevenueTrackingKeyState.Verified);
             // An unlinked project has no cloud key by definition.
             var isKeyMissing = !m_IsProjectLinked || state == GooglePlayRevenueTrackingKeyState.NoKey;
-            m_ConfigurationBlock.Q(k_MissingKeyBadge)?.EnableInClassList(k_VisibleClass, isKeyMissing);
-            m_ConfigurationBlock.Q(k_InfoIcon)?.EnableInClassList(k_VisibleClass, isKeyMissing);
+            m_ConfigurationBlock.Q(k_MissingKeyBadge)?.EnableInClassList(k_VisibleClass, !ignored && isKeyMissing);
 
-            // Once ignored, the warning and its checkbox stay hidden. Turning the warning back on means editing
-            // ProjectSettings/Packages/com.unity.purchasing/Settings.asset.
-            var ignored = IapEditorProjectSettings.IgnoreGoogleLicenseKeyWarning;
             SetDisplayed(m_ConfigurationBlock.Q(k_MissingKeyMode), !ignored && state == GooglePlayRevenueTrackingKeyState.NoKey);
             SetDisplayed(m_ConfigurationBlock.Q(k_UnlinkedMissingKeyMode), !ignored && !m_IsProjectLinked);
             // A verified key means the build never warns, so there is nothing to ignore.
@@ -280,7 +303,7 @@ namespace UnityEditor.Purchasing
             var key = m_ConfigurationBlock.Q<TextField>(k_GooglePlayKeyEntry).value?.Trim();
             if (!IsBase64(key))
             {
-                ShowPushError("The Google Play License Key is invalid. Copy it again from the Google Play Console under \"Monetization setup\".");
+                ShowPushError("Your Google license key is invalid. Make sure to copy it from the correct app in the Google Play Console.");
                 return;
             }
 

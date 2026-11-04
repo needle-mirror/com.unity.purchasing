@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 
 namespace UnityEngine.Purchasing
@@ -48,5 +49,16 @@ namespace UnityEngine.Purchasing
         /// from the store.
         /// </summary>
         string TransactionID { get; }
+
+        /// <summary>
+        /// The date and time of the purchase, in UTC. Read only.
+        ///
+        /// `null` when the store does not provide a purchase date, and for orders not associated with a paid purchase,
+        /// such as a `DeferredOrder`. A `FailedOrder` keeps the purchase date of the order that failed; one created
+        /// without an order, such as a cancelled Payment Provider purchase, has none.
+        ///
+        /// Custom `IOrderInfo` implementations return `null` unless they implement it.
+        /// </summary>
+        DateTime? PurchaseDate => null;
     }
 }

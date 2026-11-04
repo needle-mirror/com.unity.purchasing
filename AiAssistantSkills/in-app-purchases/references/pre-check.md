@@ -169,6 +169,8 @@ If none of the above matched, search `Packages/manifest.json` for `com.unity.pur
 
 Then route based on the user's answer. Do not automatically route to the new-project path — the project already has IAP configured.
 
+If the project uses `StoreController` (one or several, e.g. one for the platform store and one for `PaymentProvider.Name`), offer to migrate it to a single `PurchasingController` and route to [purchasing-controller.md](purchasing-controller.md#migrating-from-storecontroller) **only if the user agrees** — never migrate unasked; `StoreController` is not deprecated. If they agree, all new code uses `PurchasingController`. If they decline, stay on `StoreController` throughout, new code included: never add a `PurchasingController` next to existing `StoreController`s, since both would receive the same events. If the installed version doesn't contain `PurchasingController` (5.4.x and earlier), recommend upgrading the package first; fall back to `StoreController` only if the user can't or won't upgrade.
+
 ---
 
 ### 5 — No IAP Detected
@@ -193,6 +195,7 @@ If none of the above matched and `com.unity.purchasing` is absent from `manifest
 | Native iOS StoreKit plugin (`SKPaymentQueue` / `DllImport("__Internal")`) | Convert native StoreKit → IAP 5 — see path-convert-native-storekit.md |
 | `com.unity.purchasing` v4 or v4 API patterns | Migrate IAP v4 → v5 |
 | `com.unity.purchasing` v5 already installed | Ask user what to extend — do not auto-route |
+| v5 project using `StoreController` | Offer migration of the whole project to `PurchasingController` (only if the user agrees) — see purchasing-controller.md. If declined, stay on `StoreController` throughout, new code included; never add a `PurchasingController` next to it |
 | No IAP detected | Add Unity IAP 5 to new project |
 | User explicitly requests IAP D2C Capabilities / payment provider | See IAP D2C Capabilities section above |
 
@@ -200,6 +203,6 @@ If none of the above matched and `com.unity.purchasing` is absent from `manifest
 
 ## Also check: Codeless catalog presence
 
-Regardless of which route above wins, check whether `Assets/Resources/IAPProductCatalog.json` exists. This is the **Codeless IAP** catalog and is independent of the routing decision — but if it is present and `enableCodelessAutoInitialization` is true, adding a scripted `StoreController` creates a race condition with `CodelessIAPStoreListener`.
+Regardless of which route above wins, check whether `Assets/Resources/IAPProductCatalog.json` exists. This is the **Codeless IAP** catalog and is independent of the routing decision — but if it is present and `enableCodelessAutoInitialization` is true, adding a scripted `StoreController` or `PurchasingController` creates a race condition with `CodelessIAPStoreListener`.
 
 Surface the catalog's presence and auto-init flag to the user before generating scripted IAP code. See [codeless-catalog.md](codeless-catalog.md) for the race condition details and the three mitigation options.

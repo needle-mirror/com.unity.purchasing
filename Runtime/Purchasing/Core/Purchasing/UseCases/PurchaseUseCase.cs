@@ -26,19 +26,31 @@ namespace UnityEngine.Purchasing
         public event Action<FailedOrder> OnPurchaseFail;
         public event Action<DeferredOrder> OnPurchaseDefer;
 
+        // Every store reports its outcomes here, so this is where a journey ends: the
+        // outcome's events still carry its impression_id, but a purchase started from
+        // a handler of it begins its own journey (see ImpressionScope).
         public void OnPurchaseSucceeded(PendingOrder order)
         {
-            OnPurchaseSuccess?.Invoke(order);
+            using (ImpressionScope.Shared.EnterOutcome())
+            {
+                OnPurchaseSuccess?.Invoke(order);
+            }
         }
 
         public void OnPurchaseFailed(FailedOrder failedOrder)
         {
-            OnPurchaseFail?.Invoke(failedOrder);
+            using (ImpressionScope.Shared.EnterOutcome())
+            {
+                OnPurchaseFail?.Invoke(failedOrder);
+            }
         }
 
         public void OnPurchaseDeferred(DeferredOrder deferredOrder)
         {
-            OnPurchaseDefer?.Invoke(deferredOrder);
+            using (ImpressionScope.Shared.EnterOutcome())
+            {
+                OnPurchaseDefer?.Invoke(deferredOrder);
+            }
         }
     }
 }

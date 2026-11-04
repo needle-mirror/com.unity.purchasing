@@ -22,6 +22,7 @@ namespace UnityEngine.Purchasing.Models
         public string signature { get; }
         public string originalJson { get; }
         public string purchaseToken { get; }
+        public long purchaseTime { get; }
         public string? obfuscatedAccountId { get; }
         public string? obfuscatedProfileId { get; }
         public IEnumerable<ProductDescription> productDescriptions { get; }
@@ -39,6 +40,7 @@ namespace UnityEngine.Purchasing.Models
             originalJson = purchase.Call<string>("getOriginalJson");
             signature = purchase.Call<string>("getSignature");
             purchaseToken = purchase.Call<string>("getPurchaseToken");
+            purchaseTime = purchase.Call<long>("getPurchaseTime");
             var accountIdentifiers = purchase.Call<AndroidJavaObject>("getAccountIdentifiers");
             obfuscatedAccountId = accountIdentifiers.Call<string>("getObfuscatedAccountId");
             obfuscatedProfileId = accountIdentifiers.Call<string>("getObfuscatedProfileId");

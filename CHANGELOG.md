@@ -1,4 +1,41 @@
 # Changelog
+## [5.5.0] - 2026-11-04
+### Added
+- Added `Order.StoreName` and `Product.StoreName`, the name of the store an order belongs to or a product was fetched from.
+- Added `PurchasingController`, which drives several stores (for example Google Play and a Payment Provider) from one object. Calls apply to every store unless a `storeName` is passed, and calls that take a `Product` or `Order` go to its `StoreName`.
+- Added `IOrderInfo.PurchaseDate`, the UTC date and time of the purchase. It is `null` when the store does not provide one, for a `DeferredOrder`, and for a `FailedOrder` that was not a pending order first.
+- Apple - Added `IAppleStoreExtendedService.ClearTransactionLog(bool debugOnly)`, which can also clear the transaction log in release builds. `ClearTransactionLog()` is now obsolete.
+- Apple - Added the `IAP_DISABLE_IDFA` scripting define symbol for apps in the Kids Category. When set, iOS and tvOS builds leave out the AdSupport framework and the code that reads the advertising identifier (IDFA). Developers remain responsible for their own child-directed designation and for any other SDKs in their app.
+- Authoring - Catalog items have an optional purchase limit (count per hour, day or month) in the inspector and as the `PurchaseLimitCount` and `PurchaseLimitPeriod` `.catalog.csv` columns. Catalog items are now deployed with the `UnityRemoteCatalog` 1.2.0 schema.
+- Payment Providers - Added `IPaymentProvidersExtendedService.GetPurchaseEligibility`, which returns whether the player can buy each catalog listing now, how many purchases remain, and when the limit resets.
+- Payment Providers - Added `PaymentProviderProductMetadata.purchaseLimit`, which exposes a catalog listing's purchase limit (`count` per `PurchaseLimitPeriod` of `Hour`, `Day` or `Month`). It is null when the listing has no limit.
+- Payment Providers - Added `PurchaseFailureReason.PurchaseLimitReached`. A purchase that would exceed the catalog listing's purchase limit now fails with this reason instead of `ExistingPurchasePending` or `DuplicateTransaction`.
+- Payment Providers - Added `StoreController.PaymentProvidersExtendedService`, named like the other extended services. Update calls to `StoreController.PaymentProviderStoreExtendedService` to use the new name; the old name will be removed in a future major version.
+
+### Changed
+- Apple - Updated the Apple privacy manifest ([PrivacyInfo.xcprivacy](https://docs.unity.com/en-us/iap/privacy-and-consent/apple-privacy-manifest#privacyinfo.xcprivacy)) with the data the SDK collects.
+- Authoring - Comparing catalog items against their remote counterpart now only reports differences. A matching item no longer shows "Up to date", which could become stale when the remote changed afterwards; an item showing "Deployed" keeps that status unless a difference is found.
+- Editor - Redesigned the In-App Purchasing settings page, with "Cloud setup" and "AI Skills" tabs and cards for each store and payment provider.
+
+### Fixed
+- A `PendingOrder` that arrives while `OnPurchasePending` has no subscriber is no longer treated as handled. The next `FetchPurchases` after subscribing sends it to `OnPurchasePending`. Previously it was not sent there again until the next launch.
+- AI skill - The skill now points to the [Platform compliance](https://docs.unity.com/en-us/iap/platform-compliance) guidance.
+- Apple (StoreKit 2) - `ConfirmPurchase` now reports a `FailedOrder` through `OnPurchaseConfirmed` when StoreKit cannot finish the transaction (for example, while offline), after trying three times. That transaction now stays pending and is redelivered on launch matching the behavior of the other stores.
+- Apple (StoreKit 2) - Fixed pending transactions that could not be finished. Confirming a `PendingOrder` now finishes its transaction even when StoreKit no longer lists it as unfinished.
+- Apple - Clearing the transaction log no longer throws a `DirectoryNotFoundException` when nothing has been recorded yet or the log was already cleared.
+- Apple - The App Receipt in `order.Info.Receipt` is now always up to date.
+  - `IAppleStoreExtendedPurchaseService.SetRefreshAppReceipt` is `true` by default again.
+- Apple - The store now starts listening for transactions only once products are fetched and `OnPurchasePending` has a subscriber. Purchases left unfinished from an earlier session are now delivered to `OnPurchasePending` when the game subscribes, instead of being delivered to no one right after `FetchProducts`. On StoreKit 1, `RestoreTransactions` called before that now fails right away with a message, instead of never completing.
+- Editor - Fixed an `AssemblyLoadContext` leaking on every code reload under CoreCLR.
+- Editor - Without a domain reload, a Play session no longer reuses the Payment Provider, webshop, live content and catalog clients of an earlier session, which kept that session's access token, environment and project. Session events are sent again in every Play session, not only the first.
+- Editor - Without a domain reload, Developer Data settings changed in the Unity Dashboard are now picked up in the next Play session.
+- Fixed Nintendo Switch 2 player builds failing when the In-App Purchasing package is installed.
+- Google Play - A consumable that was already consumed is no longer reported through `OnPurchasePending` again when a device with a stale Play cache returns it after the app restarts. Previously it came back on every launch and could never be confirmed.
+- Payment Providers - On iPad, a purchase made in the external browser is no longer cancelled when the browser opens in a window overlapping the game. The game briefly regained focus, which cancelled the order while the player was still paying.
+- Payment Providers - The Purchase Options UI keeps its rounded backgrounds, button colours and payment brand logos when entering Play Mode again without a domain reload. Previously, every Play session after the first drew flat rectangles and generic options until the next domain reload.
+- Remote catalog - Calling `RemoteCatalogProvider.FetchRemoteCatalog` again no longer duplicates every product; it replaces the previous catalog, and leaves it empty if the fetch fails.
+- Xbox - macOS and Linux player builds no longer fail with `XGamingRuntime` compile errors when "Build for Microsoft GDK" is enabled.
+
 ## [5.4.4] - 2026-10-02
 ### Added
 - Added a dependency on `com.unity.services.deployment`, so the Deployment window is available for deploying catalog items without installing it separately.

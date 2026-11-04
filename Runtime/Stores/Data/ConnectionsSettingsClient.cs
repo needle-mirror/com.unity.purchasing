@@ -27,6 +27,8 @@ namespace UnityEngine.Purchasing.Stores
         // their own client, so the cache is shared across all of them.
         static HashSet<string>? s_Cached;
         static bool s_FetchInProgress;
+        // Bumped by every reset (see FetchAndCacheAsync).
+        static int s_Generation;
 
         readonly ICoreRegistryHelper m_CoreRegistry;
 
@@ -66,23 +68,34 @@ namespace UnityEngine.Purchasing.Stores
 
         async Task FetchAndCacheAsync()
         {
+            // A reset during this fetch (a new Play session) bumps s_Generation: the fetch then neither
+            // writes its result nor clears the in-progress flag, which belongs to the newer fetch.
+            var generation = s_Generation;
             s_FetchInProgress = true;
             try
             {
                 var result = await FetchEnabledAttributesAsync();
-                if (result != null)
+                if (result != null && generation == s_Generation)
                 {
                     s_Cached = result;
                 }
             }
             finally
             {
-                s_FetchInProgress = false;
+                if (generation == s_Generation)
+                {
+                    s_FetchInProgress = false;
+                }
             }
         }
 
-        internal static void ResetForTests()
+        // The cached Developer Data settings would otherwise survive into the next Play session.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad() => ResetStatics();
+
+        internal static void ResetStatics()
         {
+            s_Generation++;
             s_Cached = null;
             s_FetchInProgress = false;
         }

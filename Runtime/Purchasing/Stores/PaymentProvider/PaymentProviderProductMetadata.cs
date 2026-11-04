@@ -24,6 +24,12 @@ namespace UnityEngine.Purchasing
         /// </summary>
         public bool hasWebshop { get; internal set; }
 
+        /// <summary>
+        /// How many times one player can buy this listing per period.
+        /// Null when the catalog listing has no purchase limit.
+        /// </summary>
+        public PurchaseLimit? purchaseLimit { get; internal set; }
+
         internal PaymentProviderProductMetadata(
             string priceString,
             string title,
@@ -32,12 +38,14 @@ namespace UnityEngine.Purchasing
             decimal localizedPrice,
             decimal? localizedWebshopPrice,
             string? webshopPriceString,
-            bool hasWebshop)
+            bool hasWebshop,
+            PurchaseLimit? purchaseLimit = null)
             : base(priceString, title, description, currencyCode, localizedPrice)
         {
             this.localizedWebshopPrice = localizedWebshopPrice;
             this.webshopPriceString = webshopPriceString;
             this.hasWebshop = hasWebshop;
+            this.purchaseLimit = purchaseLimit;
         }
     }
 }

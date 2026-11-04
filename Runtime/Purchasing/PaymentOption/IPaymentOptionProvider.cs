@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing
 
     /// <summary>
     /// Contract for a UI flow that asks the user to pick a payment route, then resolves
-    /// the chosen store name to a StoreController and invokes PurchaseProduct on it.
+    /// the chosen store name to that store's purchase service and invokes PurchaseProduct on it.
     /// Identification is by store-name string; <see cref="NativeAlias"/> is a sentinel that
     /// resolves to the platform's default store at click time.
     /// </summary>

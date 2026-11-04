@@ -1,3 +1,4 @@
+#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_STANDALONE_OSX) && !UNITY_EDITOR
 //+-------------------------------------------------------------------------------+
 //| Copyright (c) 2003 Liping Dai. All rights reserved.                           |
 //| Web: www.lipingshare.com                                                      |
@@ -784,3 +785,4 @@ namespace LipingShare.LCLib.Asn1Processor
 
     }
 }
+#endif

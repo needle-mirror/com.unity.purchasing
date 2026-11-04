@@ -3,21 +3,7 @@
     "references": [
         "Unity.Purchasing.SecurityCore"
     ],
-    "includePlatforms": [
-        "Editor",
-        "GameCoreScarlett",
-        "GameCoreXboxOne",
-        "LinuxStandalone64",
-        "CloudRendering",
-        "PS4",
-        "PS5",
-        "Switch",
-        "WSA",
-        "WebGL",
-        "WindowsStandalone32",
-        "WindowsStandalone64",
-        "XboxOne"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

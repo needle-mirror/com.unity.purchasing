@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if (UNITY_ANDROID || UNITY_IOS || UNITY_TVOS || UNITY_VISIONOS || UNITY_STANDALONE_OSX) && !UNITY_EDITOR
+using System;
 using System.Linq;
 
 namespace UnityEngine.Purchasing.Security
@@ -34,3 +35,4 @@ namespace UnityEngine.Purchasing.Security
         }
     }
 }
+#endif

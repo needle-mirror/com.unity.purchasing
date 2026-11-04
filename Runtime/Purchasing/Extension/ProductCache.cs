@@ -25,6 +25,10 @@ namespace UnityEngine.Purchasing.Extension
         // (not the owning Product). Lets receipt/purchase paths get the matched listing in O(1).
         Dictionary<string, CatalogListing> catalogListingsByStoreSpecificId { get; } = new();
 
+        // The store this cache belongs to, set when the store is registered (StoreManager.GetStore).
+        // Every product added is tagged with it (Product.StoreName).
+        internal string? StoreName { get; set; }
+
         internal ProductCache()
         {
             m_ProductsReadOnly = new ReadOnlyObservableCollection<Product>(m_Products);
@@ -74,6 +78,7 @@ namespace UnityEngine.Purchasing.Extension
                 }
             }
 
+            product.StoreName ??= StoreName;
             if (product.uSku != null)
             {
                 productsByUSku[product.uSku] = product;

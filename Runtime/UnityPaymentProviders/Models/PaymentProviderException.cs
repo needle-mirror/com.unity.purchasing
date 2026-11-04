@@ -112,6 +112,12 @@ namespace UnityEngine.Purchasing.PaymentProviderService
         { }
     }
 
+    internal class PurchaseLimitReachedError : ConflictError
+    {
+        internal PurchaseLimitReachedError(long responseCode) : base(responseCode)
+        { }
+    }
+
     internal class NetworkError
     {
     }

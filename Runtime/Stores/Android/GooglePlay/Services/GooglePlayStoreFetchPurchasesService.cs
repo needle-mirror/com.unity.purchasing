@@ -15,17 +15,20 @@ namespace UnityEngine.Purchasing
     {
         readonly IGooglePlayStoreService m_GooglePlayStoreService;
         readonly IGooglePurchaseConverter m_PurchaseConverter;
+        readonly ITransactionLog m_TransactionLog;
         IProductCache? m_ProductCache;
         IStorePurchaseFetchCallback? m_FetchCallback;
         IUtil m_Util;
 
         [Preserve]
         internal GooglePlayStoreFetchPurchasesService(IGooglePlayStoreService googlePlayStoreService,
-            IGooglePlayStoreFinishTransactionService transactionService, IGooglePurchaseConverter purchaseConverter, IUtil util)
+            IGooglePlayStoreFinishTransactionService transactionService, IGooglePurchaseConverter purchaseConverter, IUtil util,
+            ITransactionLog transactionLog)
         {
             m_GooglePlayStoreService = googlePlayStoreService;
             m_PurchaseConverter = purchaseConverter;
             m_Util = util;
+            m_TransactionLog = transactionLog;
         }
 
         public void SetProductCache(IProductCache productCache)
@@ -64,6 +67,7 @@ namespace UnityEngine.Purchasing
 
             var orders = (await Task.WhenAll(purchases
                     .Select(purchase => m_PurchaseConverter.CreateOrderFromPurchase(purchase, m_ProductCache))))
+                .Where(order => !WasConsumedAlready(order))
                 .ToList();
 
             m_FetchCallback?.OnAllPurchasesRetrieved(orders);
@@ -73,6 +77,21 @@ namespace UnityEngine.Purchasing
             // OnAllPurchasesRetrieved is run on the main thread. In order to have UpdateDeferredProducts happen after
             // it, it needs to also be run on the main thread.
             m_Util.RunOnMainThread(() => UpdateDeferredProductsByPurchases(deferredPurchases));
+        }
+
+        // A consumed consumable leaves Play's purchase list, so one that comes back is a stale device cache.
+        // Surfacing it again would loop forever: the next consume fails with ItemNotOwned.
+        bool WasConsumedAlready(Order order)
+        {
+            var product = order.CartOrdered?.Items()?.FirstOrDefault()?.Product;
+            if (order is not PendingOrder || product?.definition.type != ProductType.Consumable ||
+                !m_TransactionLog.HasRecordOf(GooglePlayStoreFinishTransactionService.ConsumedTokenKey(order.Info.TransactionID)))
+            {
+                return false;
+            }
+
+            Debug.unityLogger.LogIAPWarning($"Google Play returned consumable '{product.definition.id}' again after it was consumed. Skipping it.");
+            return true;
         }
 
         void PurchaseRetrievalFailedForUnknownReasons(string? message = null)

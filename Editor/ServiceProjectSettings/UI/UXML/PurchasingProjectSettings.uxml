@@ -1,3 +1,15 @@
 <UXML xmlns="UnityEngine.UIElements">
-    <VisualElement class="scroll-container"/>
+    <VisualElement name="CloudSetupTabContent">
+        <VisualElement class="iap-nav-buttons">
+            <Button name="GoToRemoteCatalogButton" text="Go to Remote Catalog" class="iap-nav-button" />
+            <Button name="GoToPaymentProvidersButton" text="Go to Payment Providers" class="iap-nav-button" />
+        </VisualElement>
+        <VisualElement name="CloudBlocks" />
+        <VisualElement name="NotRequiredForCloudSection">
+            <VisualElement class="separator iap-section-separator" />
+            <Label text="Not required for cloud" class="iap-section-heading" />
+            <VisualElement name="NotRequiredForCloudBlocks" />
+        </VisualElement>
+        <VisualElement name="TrailingBlocks" />
+    </VisualElement>
 </UXML>

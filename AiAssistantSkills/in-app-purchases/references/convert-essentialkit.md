@@ -117,7 +117,7 @@ Generate all sections before touching any file.
 3. **Product catalog extracted** — all products with ID, type, and store-specific IDs
 4. **Auto Finish Transactions setting** — if disabled, the project uses server-side verification; document the receipt field mapping change (see Step 7)
 5. **Backend validation mapping** — how receipt data sent to backend changes
-6. **Restore flow mapping** — `RestorePurchases()` → `store.RestoreTransactions()` + `store.FetchPurchases()`
+6. **Restore flow mapping** — `RestorePurchases()` → `controller.RestoreTransactions((storeName, success, error) => ...)` (a successful restore fetches purchases itself)
 7. **UI wiring** — shop buttons and callbacks that will need rewiring to Unity IAP events
 8. **Proposed Unity IAP architecture** — new files, product catalog definition
 9. **Files to create / modify**
@@ -127,7 +127,7 @@ Generate all sections before touching any file.
 
 ## Step 4 — Add Unity IAP 5
 
-Use the product catalog extracted in Step 2 as input and follow **`path-add-iap-to-new-project.md`** for the full Unity IAP 5 implementation. Specifically:
+Use the product catalog extracted in Step 2 as input and follow **`path-add-iap-to-new-project.md`** for the full Unity IAP 5 implementation. All Unity IAP code in this conversion uses `PurchasingController` (v5.5+; if the installed package doesn't contain it, recommend upgrading — fall back to `StoreController` only if the user can't or won't). `controller` below is that `PurchasingController`: every event handler takes the store name first (`(storeName, order) => ...`), getters take a store name, and the `RestoreTransactions` callback is `(storeName, success, error)`. See [purchasing-controller.md](purchasing-controller.md). Specifically:
 
 - Match the project's existing patterns for the IAPManager (Step 4 of that file).
 - Apply the save-before-confirm contract (Step 5 of that file).
@@ -183,19 +183,19 @@ After editing, run **Assets > External Dependency Manager > Android Resolver > R
 
 | Essential Kit | Unity IAP 5 |
 |---|---|
-| `BillingServices.InitializeStore()` | `store.Connect()` → `store.FetchProducts(definitions)` |
-| `BillingServices.OnInitializeStoreComplete` | `store.OnStoreConnected` + `store.OnProductsFetched` |
-| `BillingServices.BuyProduct(product, options)` | `store.PurchaseProduct(product)` |
-| `BillingServices.OnTransactionStateChange` (Purchased) | `store.OnPurchasePending` |
-| `BillingServices.OnTransactionStateChange` (Failed) | `store.OnPurchaseFailed` |
-| `BillingServices.OnTransactionStateChange` (Deferred) | `store.OnPurchaseDeferred` |
-| `BillingServices.FinishTransactions(transactions)` | `store.ConfirmPurchase(pendingOrder)` |
-| `BillingServices.RestorePurchases(forceRefresh)` | `store.RestoreTransactions(callback)` (user-triggered) + `store.FetchPurchases()` (startup) |
-| `BillingServices.OnRestorePurchasesComplete` | `store.OnPurchasesFetched` + `store.RestoreTransactions` callback |
-| `BillingServices.IsProductPurchased(id)` | `store.CheckEntitlement(product)` + `store.OnCheckEntitlement` |
-| `BillingServices.CanMakePayments()` | `store.AppleStoreExtendedService?.canMakePayments` (Apple only) |
-| `BillingServices.GetProductWithId(id)` | `store.GetProductById(id)` |
-| `BillingServices.GetTransactions()` | `store.GetPurchases()` |
+| `BillingServices.InitializeStore()` | `controller.Connect()` → `controller.FetchProducts(definitions, storeName)` for each store |
+| `BillingServices.OnInitializeStoreComplete` | `controller.OnStoreConnected` + `controller.OnProductsFetched` |
+| `BillingServices.BuyProduct(product, options)` | `controller.PurchaseProduct(product)` |
+| `BillingServices.OnTransactionStateChange` (Purchased) | `controller.OnPurchasePending` |
+| `BillingServices.OnTransactionStateChange` (Failed) | `controller.OnPurchaseFailed` |
+| `BillingServices.OnTransactionStateChange` (Deferred) | `controller.OnPurchaseDeferred` |
+| `BillingServices.FinishTransactions(transactions)` | `controller.ConfirmPurchase(pendingOrder)` |
+| `BillingServices.RestorePurchases(forceRefresh)` | `controller.RestoreTransactions((storeName, success, error) => ...)` (user-triggered) + `controller.FetchPurchases()` (startup) |
+| `BillingServices.OnRestorePurchasesComplete` | `controller.OnPurchasesFetched` + `controller.RestoreTransactions` callback |
+| `BillingServices.IsProductPurchased(id)` | `controller.CheckEntitlement(product)` + `controller.OnCheckEntitlement` |
+| `BillingServices.CanMakePayments()` | `controller.AppleStoreExtendedService?.canMakePayments` (Apple only) |
+| `BillingServices.GetProductWithId(id)` | `controller.GetProductById(id, storeName)` |
+| `BillingServices.GetTransactions()` | `controller.GetPurchases(storeName)` |
 | `IBillingProduct` | `Product` |
 | `IBillingTransaction` | `PendingOrder` (on `OnPurchasePending`) |
 | `product.Price.LocalizedText` | `product.metadata.localizedPriceString` |

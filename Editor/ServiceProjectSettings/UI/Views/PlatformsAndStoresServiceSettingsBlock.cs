@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.UIElements;
 
@@ -17,14 +15,13 @@ namespace UnityEditor.Purchasing
             XboxStore.DisplayName
         };
 
-        static readonly string k_TagClass = "platform-tag";
-        static readonly string k_TagContainerClass = "tag-container";
+        const string k_ValueClass = "editor-setup-value";
+        const string k_JumpToBuildSettingsButtonName = "JumpToBuildSettingsButton";
 
-        static readonly string k_CurrentBuildTargetSectionName = "CurrentBuildTargetSection";
-        static readonly string k_CurrentStoreSectionName = "CurrentStoreSection";
-        static readonly string k_SupportedStoresSectionName = "SupportedStoresSection";
-        static readonly string k_OtherStoresSectionName = "OtherStoresSection";
-        static readonly string k_Label = "Label";
+        const string k_CurrentBuildTargetSectionName = "CurrentBuildTargetSection";
+        const string k_CurrentStoreSectionName = "CurrentStoreSection";
+        const string k_SupportedStoresSectionName = "SupportedStoresSection";
+        const string k_OtherStoresSectionName = "OtherStoresSection";
 
         protected VisualElement currentStoreSection { get; set; }
 
@@ -52,6 +49,7 @@ namespace UnityEditor.Purchasing
             currentStoreSection = rootElement.Q(k_CurrentStoreSectionName);
 
             SetupStyleSheets(rootElement);
+            SetupJumpToBuildSettingsButton(rootElement.Q<Button>(k_JumpToBuildSettingsButtonName));
             PopulateSections(rootElement);
             FinalizeSetupPlatformAndStoresBlock();
 
@@ -64,71 +62,43 @@ namespace UnityEditor.Purchasing
             rootElement.AddStyleSheetPath(EditorGUIUtility.isProSkin ? UIResourceUtils.platformSupportDarkUssPath : UIResourceUtils.platformSupportLightUssPath);
         }
 
+        // Unity 6 replaced the Build Settings window with Build Profiles, and opens it from the same entry point.
+        static void SetupJumpToBuildSettingsButton(Button button)
+        {
+            if (button == null)
+            {
+                return;
+            }
+
+#if !UNITY_6000_0_OR_NEWER
+            button.text = "Jump to Build Settings";
+#endif
+            button.clicked += BuildPlayerWindow.ShowBuildPlayerWindow;
+        }
+
         void PopulateSections(VisualElement rootElement)
         {
             var currentBuildTargetSection = rootElement.Q(k_CurrentBuildTargetSectionName);
             var otherStoresSection = rootElement.Q(k_OtherStoresSectionName);
 
             PopulateStateSensitiveSections(rootElement, currentBuildTargetSection, otherStoresSection);
-            PopulateSupportedStoresSection(rootElement.Q(k_SupportedStoresSectionName));
+            PopulateStores(rootElement.Q(k_SupportedStoresSectionName), GetStoresForState());
         }
 
         protected abstract void PopulateStateSensitiveSections(VisualElement rootElement, VisualElement currentBuildTargetSection, VisualElement otherStoresSection);
 
-        void PopulateSupportedStoresSection(VisualElement baseElement)
-        {
-            PopulateStores(baseElement, GetStoresForState());
-        }
-
         protected static void PopulateStores(VisualElement baseElement, IEnumerable<string> stores)
         {
-            var tagContainer = GetClearedTagContainer(baseElement);
+            SetValue(baseElement, string.Join(", ", stores));
+        }
 
-            if (tagContainer != null)
+        protected static void SetValue(VisualElement baseElement, string value)
+        {
+            var label = baseElement?.Q<Label>(className: k_ValueClass);
+            if (label != null)
             {
-                foreach (var store in stores)
-                {
-                    tagContainer.Add(MakePlatformStoreTag(store));
-                }
+                label.text = value;
             }
-        }
-
-        protected static VisualElement GetClearedTagContainer(VisualElement baseElement)
-        {
-            var tagContainer = GetTagContainer(baseElement);
-            tagContainer?.Clear();
-            return tagContainer;
-        }
-
-        protected static VisualElement GetTagContainer(VisualElement baseElement)
-        {
-            return baseElement?.Q(className: k_TagContainerClass);
-        }
-
-        protected static VisualElement MakePlatformStoreTag(string assetDisplayName)
-        {
-            var storeLabel = MakeLabel();
-
-            var label = storeLabel.Q(name: k_Label) as Label;
-            AddText(label, assetDisplayName);
-
-            return storeLabel;
-        }
-
-        static VisualElement MakeLabel()
-        {
-            var label = SettingsUIUtils.CloneUIFromTemplate(UIResourceUtils.labelUxmlPath);
-            label.AddToClassList(k_TagClass);
-            return label;
-        }
-        static void AddText(Label label, string assetDisplayName)
-        {
-            if (label == null)
-            {
-                return;
-            }
-
-            label.text = assetDisplayName;
         }
 
         protected abstract void FinalizeSetupPlatformAndStoresBlock();

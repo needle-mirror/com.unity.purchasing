@@ -1,10 +1,8 @@
 <UXML xmlns="UnityEngine.UIElements">
-    <VisualElement name="CatalogEditorBlock" class="project-settings-title-container">
-        <Label text="Legacy Catalog" class="project-settings-title"/>
-        <Label text="This project still uses the local IAPProductCatalog.json. Convert it to a catalog CSV you can deploy to the Remote Catalog. Your existing file is left untouched and keeps working." class="label-container"/>
-        <VisualElement class="button-container">
-            <Button name="CatalogEditorButton" text="Migrate to Remote Catalog" class="submit-button"/>
-        </VisualElement>
+    <VisualElement name="CatalogEditorBlock">
+        <VisualElement class="separator iap-section-separator" />
+        <Label text="Legacy Catalog" class="iap-section-heading" />
+        <Label text="This project still uses the local IAPProductCatalog.json. Convert it to a catalog CSV you can deploy to the Remote Catalog. Your existing file is left untouched and keeps working." class="iap-section-text" />
+        <Button name="CatalogEditorButton" text="Migrate to Remote Catalog" class="iap-section-button" />
     </VisualElement>
-    <VisualElement class="separator" />
 </UXML>

@@ -31,7 +31,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <summary>
         /// Request body for updating an order
         /// </summary>
-        /// <param name="status">Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Orders with &#x60;created&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.</param>
+        /// <param name="status">Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Only orders with &#x60;paid&#x60; status can be marked as &#x60;fulfilled&#x60;. Orders with &#x60;paid&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.</param>
         [Preserve]
         public UpdateOrderRequest(StatusOptions status)
         {
@@ -39,7 +39,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         }
 
         /// <summary>
-        /// Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Orders with &#x60;created&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.
+        /// Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Only orders with &#x60;paid&#x60; status can be marked as &#x60;fulfilled&#x60;. Orders with &#x60;paid&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.
         /// </summary>
         [Preserve]
         [JsonConverter(typeof(StringEnumConverter))]
@@ -47,9 +47,9 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public StatusOptions Status{ get; }
     
         /// <summary>
-        /// Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Orders with &#x60;created&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.
+        /// Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Only orders with &#x60;paid&#x60; status can be marked as &#x60;fulfilled&#x60;. Orders with &#x60;paid&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.
         /// </summary>
-        /// <value>Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Orders with &#x60;created&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.</value>
+        /// <value>Updates the order status. Supported values are &#x60;fulfilled&#x60;, &#x60;cancelled&#x60;, and &#x60;revoked&#x60;. Only orders with &#x60;created&#x60; status can be marked as &#x60;cancelled&#x60;. Only orders with &#x60;paid&#x60; status can be marked as &#x60;fulfilled&#x60;. Orders with &#x60;paid&#x60; or &#x60;fulfilled&#x60; status can be marked as &#x60;revoked&#x60;. Once cancelled or revoked, an order cannot be changed to another status.</value>
         [Preserve]
         [JsonConverter(typeof(StringEnumConverter))]
         public enum StatusOptions

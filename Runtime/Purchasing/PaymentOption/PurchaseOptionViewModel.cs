@@ -11,13 +11,23 @@ namespace UnityEngine.Purchasing
         bool m_Disposed;
         TaskCompletionSource<PurchaseOption?>? m_TcsOption;
 
+        // Analytics: the open window's impression_id, handed over by the provider at
+        // show time and re-entered around the pick, which arrives in a click handler
+        // outside the provider's scope. Set and cleared together with m_TcsOption.
+        string? m_WindowImpressionId;
+
         // Service resolvers — overridden by tests to inject fakes.
-        // Defaults return a real StoreController, which implements both interfaces.
+        // Defaults resolve the store's own services through the providers, so the picker doesn't depend on the
+        // public entry points (UnityIAPServices, StoreController) that wrap them.
         internal virtual IPurchaseService ResolvePurchaseService(string storeName)
-            => ResolveController(storeName);
+            => ServiceStoreName(storeName) is { } name
+                ? PurchaseServiceProvider.GetPurchaseService(name)
+                : PurchaseServiceProvider.GetDefaultPurchaseService();
 
         internal virtual IProductService ResolveProductService(string storeName)
-            => ResolveController(storeName);
+            => ServiceStoreName(storeName) is { } name
+                ? ProductServiceProvider.GetProductService(name)
+                : ProductServiceProvider.GetDefaultProductService();
 
         // Metadata of the requested listing, not the product's base listing: listings of one product
         // can carry different prices and webshop settings.
@@ -36,7 +46,7 @@ namespace UnityEngine.Purchasing
         // (that one owns the eligibility/picker-config surface); these methods
         // live on the purchase side. Virtual so tests can fake the extension.
         internal virtual IPaymentProvidersExtendedPurchaseService? ResolvePaymentProviders()
-            => UnityIAPServices.Purchase(PaymentProvider.Name).PaymentProviders;
+            => PurchaseServiceProvider.GetPurchaseService(PaymentProvider.Name).PaymentProviders;
 
         // Routes a non-webshop pick to the right purchase method without
         // mutating SetPaymentProviderOverride state. Known SDK stores (native,
@@ -129,6 +139,7 @@ namespace UnityEngine.Purchasing
 
         public Task<PurchaseOption?> BeginShowPurchaseOption(
             IReadOnlyList<PurchaseOption> options,
+            string? impressionId,
             out IReadOnlyList<PurchaseOpt> internalOptions)
         {
             CheckPreconditionsOption(options);
@@ -144,6 +155,7 @@ namespace UnityEngine.Purchasing
 
             internalOptions = BuildOptsFromOptions(options);
             m_TcsOption = new TaskCompletionSource<PurchaseOption?>();
+            m_WindowImpressionId = impressionId;
             return m_TcsOption.Task;
         }
 
@@ -159,6 +171,7 @@ namespace UnityEngine.Purchasing
         public Task<PurchaseOption?> BeginShowPurchaseOptionForListing(
             IReadOnlyList<PurchaseOption> storeOptions,
             string catalogListingId,
+            string? impressionId,
             out IReadOnlyList<PurchaseOpt> internalOptions)
         {
             if (m_Disposed)
@@ -205,6 +218,7 @@ namespace UnityEngine.Purchasing
             }
             internalOptions = opts;
             m_TcsOption = new TaskCompletionSource<PurchaseOption?>();
+            m_WindowImpressionId = impressionId;
             return m_TcsOption.Task;
         }
 
@@ -217,7 +231,9 @@ namespace UnityEngine.Purchasing
             if (tcs is null)
                 throw new InvalidOperationException("No picker flow in progress");
 
+            var impressionId = m_WindowImpressionId;
             m_TcsOption = null;
+            m_WindowImpressionId = null;
 
             if (choice is null)
             {
@@ -234,9 +250,12 @@ namespace UnityEngine.Purchasing
                 // instead of vanishing into UnobservedTaskException.
                 try
                 {
-                    var redirect = ResolvePaymentProviders()?.RedirectToWebshop(choice.CatalogListingId);
-                    if (redirect is not null)
-                        await redirect;
+                    using (EnterWindowImpression(impressionId))
+                    {
+                        var redirect = ResolvePaymentProviders()?.RedirectToWebshop(choice.CatalogListingId);
+                        if (redirect is not null)
+                            await redirect;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -253,7 +272,10 @@ namespace UnityEngine.Purchasing
             // awaiters of ShowPurchaseOption fault instead of hanging forever.
             try
             {
-                PurchaseSelectedOption(choice.StoreName, choice.CatalogListingId);
+                using (EnterWindowImpression(impressionId))
+                {
+                    PurchaseSelectedOption(choice.StoreName, choice.CatalogListingId);
+                }
             }
             catch (Exception ex)
             {
@@ -264,11 +286,18 @@ namespace UnityEngine.Purchasing
             tcs.TrySetResult(pick);
         }
 
+        // Analytics: the pick's purchase carries the window's impression_id. No id (a
+        // window shown outside any scope) means no scope; the purchase's entry point then
+        // mints its own.
+        static IDisposable? EnterWindowImpression(string? impressionId)
+            => impressionId != null ? ImpressionScope.Shared.Enter(impressionId) : null;
+
         public void Dispose()
         {
             if (m_Disposed) return;
             m_TcsOption?.TrySetResult(null);
             m_TcsOption = null;
+            m_WindowImpressionId = null;
             m_Disposed = true;
         }
 
@@ -333,19 +362,16 @@ namespace UnityEngine.Purchasing
         }
 
 
-        static StoreController ResolveController(string storeName)
+        // The store whose services back a picker option: null (the default store) for the native alias, the store
+        // itself for SDK store names. Any other name is a PSP-specific identifier (e.g. "stripe", "coda", "mock"),
+        // backed by the PaymentProvider store; callers that route a purchase to that specific provider use
+        // IPaymentProvidersExtendedPurchaseService.PurchaseProduct(listing, name).
+        static string? ServiceStoreName(string storeName)
         {
             if (storeName == IPaymentOptionProvider.NativeAlias)
-                return new StoreController();
+                return null;
 
-            if (IsKnownSdkStoreName(storeName))
-                return new StoreController(storeName);
-
-            // Unknown name — treat as a PSP-specific identifier (e.g. "stripe", "coda",
-            // "mock"). Returns the base PaymentProvider controller; callers that need to
-            // route a purchase to this specific provider use
-            // IPaymentProvidersExtendedPurchaseService.PurchaseProduct(listing, name).
-            return new StoreController(PaymentProvider.Name);
+            return IsKnownSdkStoreName(storeName) ? storeName : PaymentProvider.Name;
         }
 
         internal static string DisplayStoreName(string storeName)
@@ -504,7 +530,7 @@ namespace UnityEngine.Purchasing
         {
             try
             {
-                var ext = UnityIAPServices.Store(PaymentProvider.Name).PaymentProviders;
+                var ext = StoreServiceProvider.GetStoreService(PaymentProvider.Name).PaymentProviders;
                 if (ext == null)
                     return new EligiblePaymentProviders(Array.Empty<string>());
 

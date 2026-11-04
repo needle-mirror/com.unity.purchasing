@@ -47,7 +47,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         /// <param name="fulfilledAt">Date time in ISO 8601 format. &#x60;null&#x60; if the order has not been fulfilled.</param>
         /// <param name="revokedAt">Date time in ISO 8601 format. &#x60;null&#x60; if the order has not been revoked.</param>
         /// <param name="customReferenceId">Optional. A unique custom identifier that you can set to any value to help reconcile IAP Orders with your internal system. </param>
-        /// <param name="metadata">Additional metadata about the player</param>
+        /// <param name="metadata">The key/value metadata provided at order creation.</param>
         [Preserve]
         public OrderResponse(System.Guid id, string status, DateTime createdAt, DateTime updatedAt, System.Guid projectId = default, System.Guid environmentId = default, string playerId = default, string paymentProvider = default, string paymentProviderResourceId = default, string url = default, string uiMode = default, OrderResponseEmbeddedInfo embeddedInfo = default, List<OrderResponseLineItemsInner> lineItems = default, DateTime? fulfilledAt = default, DateTime? revokedAt = default, string customReferenceId = default, Dictionary<string, string> metadata = default)
         {
@@ -169,7 +169,7 @@ namespace UnityEngine.Purchasing.PaymentProviderService.Models
         public string CustomReferenceId{ get; }
         
         /// <summary>
-        /// Additional metadata about the player
+        /// The key/value metadata provided at order creation.
         /// </summary>
         [Preserve]
         [DataMember(Name = "metadata", EmitDefaultValue = false)]

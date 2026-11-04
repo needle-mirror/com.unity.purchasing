@@ -8,7 +8,33 @@ protocol TransactionUseCaseProtocol {
     func isPending(_ productId: String) async throws -> PurchaseState
     func fetchAllTransactions() async -> (finishedTransactions: [String : PurchaseDetails], unfinishedTransactions: [String : PurchaseDetails])
     func fetchTransactions(for productIds: [String]) async -> TransactionResponse
-    func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async -> Bool
+    func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async -> FinishTransactionResult
+}
+
+// Transactions delivered to C# as pending by `product.purchase()` or `Transaction.updates`, kept so a
+// finish can reach one that `Transaction.unfinished` no longer lists. StoreKit can mark a transaction
+// finished locally while the server never got the finish (e.g. offline): the App Store then answers
+// each repeat purchase with that transaction, and only a `Transaction` instance can be finished again.
+@available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
+actor PurchasedTransactions {
+    static let shared = PurchasedTransactions()
+    private var transactions: [UInt64: Transaction] = [:]
+
+    // Keyed by ID: a transaction delivered by more than one source is kept once.
+    func keep(_ transaction: Transaction) {
+        transactions[transaction.id] = transaction
+    }
+
+    func take(_ transactionId: UInt64) -> Transaction? {
+        transactions.removeValue(forKey: transactionId)
+    }
+}
+
+enum FinishTransactionResult {
+    case finished
+    case notFound
+    // StoreKit could not finish it (e.g. offline) and it remains unfinished.
+    case stillUnfinished
 }
 
 @available(iOS 15.0, macOS 12.0, tvOS 15.0, visionOS 1.0, *)
@@ -154,10 +180,11 @@ class TransactionUseCase: TransactionUseCaseProtocol, @unchecked Sendable {
 
     /**
      Use `Transaction.finish` to finish the specified transaction.
-     - Returns: `true` if the transaction was found in `Transaction.unfinished` and finished,
-     `false` if it was not found (StoreKit already considers it finished).
+     - Returns: `.finished` if the transaction was found in `Transaction.unfinished` and finished,
+     `.stillUnfinished` if it is still unfinished after `finish()`, `.notFound` if it was not found
+     (StoreKit already considers it finished).
      */
-    public func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async -> Bool {
+    public func finishTransaction(transactionId: UInt64, logFinishTransaction: Bool) async -> FinishTransactionResult {
         // Fetch all unfinished transactions
         let transactions = Transaction.unfinished
 
@@ -170,15 +197,35 @@ class TransactionUseCase: TransactionUseCaseProtocol, @unchecked Sendable {
         }) {
             // Extract the verified transaction
             if case .verified(let txn) = transaction {
+                _ = await PurchasedTransactions.shared.take(transactionId)
                 // Finish the transaction
                 await txn.finish()
                 if (logFinishTransaction)
                 {
                     printLog("Finishing transaction \(transactionId) \(txn.productID)")
                 }
-                return true
+                // finish() cannot throw: when StoreKit fails to finish (e.g. NSURLErrorDomain -1009
+                // while offline) it only logs, and the transaction stays unfinished. Online, the first
+                // finish() sometimes does not take either, and a later one does: try twice more.
+                var retries = 2
+                while await isPendingTransaction(transactionId) {
+                    if retries == 0 {
+                        return .stillUnfinished
+                    }
+                    retries -= 1
+                    try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 s
+                    printLog("Transaction \(transactionId) is still unfinished: finishing it again")
+                    await txn.finish()
+                }
+                return .finished
             }
         }
-        return false
+        // Not unfinished locally, but it was delivered to C#: finish it again in case the server never
+        // got the finish. Still reported as not found, so the C# outcome is unchanged.
+        if let txn = await PurchasedTransactions.shared.take(transactionId) {
+            await txn.finish()
+            printLog("finishTransaction: \(transactionId) \(txn.productID) not found in unfinished transactions; finishing the delivered transaction.")
+        }
+        return .notFound
     }
 }

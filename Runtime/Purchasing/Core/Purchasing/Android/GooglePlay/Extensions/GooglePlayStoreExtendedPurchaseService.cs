@@ -133,55 +133,67 @@ namespace UnityEngine.Purchasing
         }
 #pragma warning restore 618, 612
 
+        // A subscription change is a purchase, but until it gets its own journey (follow-up
+        // to ULO-13130) it runs with none: it must not take the caller's id, and a purchase
+        // started from its OnPurchaseFailed must not join the caller's journey.
         public void UpgradeDowngradeSubscription(Product oldProduct, Product newProduct, GooglePlayReplacementMode desiredReplacementMode)
         {
-            try
+            using (ImpressionScope.Shared.EnterNone())
             {
-                var purchaseService = UnityIAPServices.Purchase(GooglePlay.Name);
-                var orders = purchaseService.GetPurchases();
+                try
+                {
+                    var purchaseService = UnityIAPServices.Purchase(GooglePlay.Name);
+                    var orders = purchaseService.GetPurchases();
 // Obsolete: Product.transactionID
 #pragma warning disable 618, 612
-                var order = orders.First(order => order.CartOrdered.Items().Contains(oldProduct)) ?? new ConfirmedOrder(new Cart(new CartItem(oldProduct)), new OrderInfo("", oldProduct.transactionID, ""));
+                    var order = orders.First(order => order.CartOrdered.Items().Contains(oldProduct)) ?? new ConfirmedOrder(new Cart(new CartItem(oldProduct)), new OrderInfo("", oldProduct.transactionID, ""));
 #pragma warning restore 618, 612
-                UpgradeDowngradeSubscription(order, newProduct, desiredReplacementMode);
-            }
-            catch (Exception e)
-            {
-                PurchaseFailed(new FailedOrder(new Cart(new CartItem(newProduct)), PurchaseFailureReason.Unknown, e.Message));
+                    UpgradeDowngradeSubscription(order, newProduct, desiredReplacementMode);
+                }
+                catch (Exception e)
+                {
+                    PurchaseFailed(new FailedOrder(new Cart(new CartItem(newProduct)), PurchaseFailureReason.Unknown, e.Message));
+                }
             }
         }
 
         public void UpgradeDowngradeSubscription(Order order, Product newProduct, GooglePlayReplacementMode desiredReplacementMode)
         {
-            try
+            using (ImpressionScope.Shared.EnterNone())
             {
-                m_GooglePlayChangeSubscriptionUseCase.ChangeSubscription(order, new CartItem(newProduct), desiredReplacementMode);
-            }
-            catch (Exception e)
-            {
-                PurchaseFailed(new FailedOrder(new Cart(new CartItem(newProduct)), PurchaseFailureReason.Unknown, e.Message));
+                try
+                {
+                    m_GooglePlayChangeSubscriptionUseCase.ChangeSubscription(order, new CartItem(newProduct), desiredReplacementMode);
+                }
+                catch (Exception e)
+                {
+                    PurchaseFailed(new FailedOrder(new Cart(new CartItem(newProduct)), PurchaseFailureReason.Unknown, e.Message));
+                }
             }
         }
 
         public void UpgradeDowngradeSubscription(Order currentOrder, string newCatalogListingId, GooglePlayReplacementMode desiredReplacementMode)
         {
-            var newProduct = m_StoreWrapper.instance.ProductCache.FindByCatalogListingId(newCatalogListingId);
-            if (newProduct == null)
+            using (ImpressionScope.Shared.EnterNone())
             {
-                var unknown = Product.CreateUnknownProduct(newCatalogListingId);
-                PurchaseFailed(new FailedOrder(new Cart(new CartItem(unknown)), PurchaseFailureReason.ProductUnavailable,
-                    $"No product found for catalog listing id '{newCatalogListingId}'."));
-                return;
-            }
+                var newProduct = m_StoreWrapper.instance.ProductCache.FindByCatalogListingId(newCatalogListingId);
+                if (newProduct == null)
+                {
+                    var unknown = Product.CreateUnknownProduct(newCatalogListingId);
+                    PurchaseFailed(new FailedOrder(new Cart(new CartItem(unknown)), PurchaseFailureReason.ProductUnavailable,
+                        $"No product found for catalog listing id '{newCatalogListingId}'."));
+                    return;
+                }
 
-            try
-            {
-                var cartItem = new CartItem(newProduct, newCatalogListingId);
-                m_GooglePlayChangeSubscriptionUseCase.ChangeSubscription(currentOrder, cartItem, desiredReplacementMode);
-            }
-            catch (Exception e)
-            {
-                PurchaseFailed(new FailedOrder(new Cart(new CartItem(newProduct)), PurchaseFailureReason.Unknown, e.Message));
+                try
+                {
+                    var cartItem = new CartItem(newProduct, newCatalogListingId);
+                    m_GooglePlayChangeSubscriptionUseCase.ChangeSubscription(currentOrder, cartItem, desiredReplacementMode);
+                }
+                catch (Exception e)
+                {
+                    PurchaseFailed(new FailedOrder(new Cart(new CartItem(newProduct)), PurchaseFailureReason.Unknown, e.Message));
+                }
             }
         }
 

@@ -46,6 +46,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Service
             string after,
             bool? start,
             string schema,
+            string schemaVersion,
             CancellationToken cancellationToken);
 
         /// <summary>

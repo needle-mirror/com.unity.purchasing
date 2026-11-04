@@ -84,12 +84,35 @@ namespace UnityEngine.Purchasing
 
         public void Purchase(ICart cart, string paymentProviderName)
         {
-            m_PaymentProviderCallbacks.Purchase(cart, paymentProviderName);
+            if (!ValidatePaymentProviderName(cart, paymentProviderName))
+                return;
+
+            RunPurchaseJourney(cart, c => m_PaymentProviderCallbacks.Purchase(c, paymentProviderName));
         }
 
         public void PurchaseProduct(string catalogListingId, string paymentProviderName)
         {
-            m_PaymentProviderCallbacks.PurchaseProduct(catalogListingId, paymentProviderName);
+            if (!ValidatePaymentProviderName(new Cart(Product.CreateUnknownProduct("InvalidProduct")), paymentProviderName))
+                return;
+
+            var cart = TryBuildCart(catalogListingId);
+            if (cart == null)
+                return; // TryBuildCart already emitted OnPurchaseFailed
+
+            RunPurchaseJourney(cart, c => m_PaymentProviderCallbacks.Purchase(c, paymentProviderName));
+        }
+
+        // Fails before the purchase journey starts, so no event is sent: there is no
+        // purchase intent at this point. That includes analytics transactionFailed, hence
+        // RaisePurchaseFailed rather than PurchaseFailed.
+        bool ValidatePaymentProviderName(ICart cart, string paymentProviderName)
+        {
+            if (!string.IsNullOrEmpty(paymentProviderName))
+                return true;
+
+            RaisePurchaseFailed(new FailedOrder(cart, PurchaseFailureReason.Unknown,
+                $"{nameof(paymentProviderName)} must be non-empty"));
+            return false;
         }
 
         protected override void RestoreTransactionsInternal(Action<bool, string?>? callback)

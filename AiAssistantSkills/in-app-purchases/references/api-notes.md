@@ -3,7 +3,8 @@
 ## Table of Contents
 
 - [Anti-Hallucination: v5 vs Legacy API](#anti-hallucination-v5-vs-legacy-api)
-- [StoreController (v5) Key Members](#storecontroller-v5-key-members)
+- [PurchasingController (v5.5+) — use for all new code](#purchasingcontroller-v55--use-for-all-new-code)
+- [StoreController (existing projects and fallback)](#storecontroller-existing-projects-and-fallback)
 - [Alternative Service Access (DefaultStore / DefaultProduct / DefaultPurchase)](#alternative-service-access-defaultstore--defaultproduct--defaultpurchase)
 - [CatalogProvider](#catalogprovider)
 - [Initialization Example](#initialization-example)
@@ -15,7 +16,7 @@
 - [Fetch Existing Purchases](#fetch-existing-purchases)
 - [Receipt Validation](#receipt-validation)
   - [IAppleOrderInfo Complete Member List](#iappleorderinfo-complete-member-list)
-- [Extended Service Events (NOT on StoreController)](#extended-service-events-not-on-storecontroller)
+- [Extended Service Events (NOT on the controller)](#extended-service-events-not-on-the-controller)
 - [AppleStoreExtendedProductService Key Members](#applestoreextendedproductservice-key-members)
 - [Subscription Info Access Path](#subscription-info-access-path)
 - [Event Subscription Rules](#event-subscription-rules)
@@ -30,30 +31,63 @@ Unity IAP v5 is the current API. The legacy API (v4) is `[Obsolete]`. Do NOT use
 
 | WRONG (Legacy v4) | CORRECT (v5) |
 |---|---|
-| `UnityPurchasing.Initialize(listener, builder)` | `UnityIAPServices.StoreController()` then `store.Connect()` |
-| `IStoreListener.OnInitialized(controller, extensions)` | `store.OnStoreConnected` event |
-| `IStoreListener.ProcessPurchase(args)` | `store.OnPurchasePending` event |
-| `controller.InitiatePurchase(product)` | `store.PurchaseProduct(product)` |
-| `controller.ConfirmPendingPurchase(product)` | `store.ConfirmPurchase(pendingOrder)` |
-| `extensions.GetExtension<IAppleExtensions>()` | `store.AppleStoreExtendedService` / `store.AppleStoreExtendedPurchaseService` |
-| `extensions.GetExtension<IGooglePlayStoreExtensions>()` | `store.GooglePlayStoreExtendedService` / `store.GooglePlayStoreExtendedPurchaseService` |
+| `UnityPurchasing.Initialize(listener, builder)` | `new PurchasingController(UnityIAPServices.GetDefaultStore())` then `controller.Connect()` |
+| `IStoreListener.OnInitialized(controller, extensions)` | `controller.OnStoreConnected` event — `storeName => ...` |
+| `IStoreListener.ProcessPurchase(args)` | `controller.OnPurchasePending` event — `(storeName, pendingOrder) => ...` |
+| `controller.InitiatePurchase(product)` | `controller.PurchaseProduct(product)` |
+| `controller.ConfirmPendingPurchase(product)` | `controller.ConfirmPurchase(pendingOrder)` |
+| `extensions.GetExtension<IAppleExtensions>()` | `controller.AppleStoreExtendedService` / `controller.AppleStoreExtendedPurchaseService` |
+| `extensions.GetExtension<IGooglePlayStoreExtensions>()` | `controller.GooglePlayStoreExtendedService` / `controller.GooglePlayStoreExtendedPurchaseService` |
 | `ConfigurationBuilder.Instance(...)` | Not needed; use `ProductDefinition` list with `FetchProducts` |
 
 ## Anti-Hallucination: Common v5 Mistakes
 
-These are NOT real APIs — do not use them:
+Do not use these — they don't exist, or are obsolete in v5:
 
-| WRONG (does not exist) | CORRECT |
+| WRONG | CORRECT |
 |---|---|
-| `store.OnStoreConnectionFailed` | `store.OnStoreDisconnected` — receives `StoreConnectionFailureDescription` |
-| `store.FetchProducts(defs, successCb, failCb)` | `store.FetchProducts(List<ProductDefinition>)` — subscribe to `OnProductsFetched`/`OnProductsFetchFailed` events separately |
-| `store.FetchPurchases(successCb, failCb)` | `store.FetchPurchases()` — subscribe to `OnPurchasesFetched`/`OnPurchasesFetchFailed` events separately |
+| `controller.OnStoreConnectionFailed` | `controller.OnStoreDisconnected` — receives `(storeName, StoreConnectionFailureDescription)` |
+| `controller.FetchProducts(defs, successCb, failCb)` | `controller.FetchProducts(List<ProductDefinition>, storeName)` — subscribe to `OnProductsFetched`/`OnProductsFetchFailed` events separately |
+| `controller.FetchPurchases(successCb, failCb)` | `controller.FetchPurchases()` — subscribe to `OnPurchasesFetched`/`OnPurchasesFetchFailed` events separately |
 | `product.receipt` | `order.Info.Receipt` — receipt is on the order, not the product |
-| `product.hasReceipt` | `store.CheckEntitlement(product)` + `OnCheckEntitlement` |
+| `product.hasReceipt` | `controller.CheckEntitlement(product)` + `OnCheckEntitlement` |
 | `new SubscriptionManager(product, introJson)` | `order.Info.PurchasedProductInfo` — see Subscription Info Access Path |
 | `pendingOrder.OrderInfo.Apple.jwsRepresentation` | `pendingOrder.Info.Apple?.jwsRepresentation` — note `Info` not `OrderInfo`, and null-check `?.` |
 
-## StoreController (v5) Key Members
+For new code, use `new PurchasingController(UnityIAPServices.GetDefaultStore())` instead of `UnityIAPServices.StoreController()` — see [purchasing-controller.md](purchasing-controller.md). `StoreController` still exists, for packages without `PurchasingController` and for existing projects.
+
+## PurchasingController (v5.5+) — use for all new code
+
+`PurchasingController` is the controller for all code you write: one object for every store the app sells through, a single store included — `new PurchasingController(UnityIAPServices.GetDefaultStore())`, or `new PurchasingController(UnityIAPServices.GetDefaultStore(), PaymentProvider.Name)` with IAP D2C Capabilities. Every event takes the store name first, getters require a store name, and purchases route by `Product.StoreName` / `Order.StoreName`. Full members, rules, errors and the migration mapping: [purchasing-controller.md](purchasing-controller.md).
+
+It requires v5.5+ — check the installed package contains it. If it doesn't, recommend upgrading; use `StoreController` (next section) only if the user can't or won't upgrade. It is **not** a `StoreController` and does not implement the three service interfaces: do not apply `StoreController` signatures to it.
+
+**`OnAuthAccountChanged` (fires once per store):** that store's cached products and purchases are cleared before the event. Re-fetch that store only:
+
+```csharp
+controller.OnAuthAccountChanged += async storeName =>
+{
+    var catalogProvider = new RemoteCatalogProvider();
+    var catalogResult = await catalogProvider.FetchRemoteCatalog();
+    if (!catalogResult.Success)
+    {
+        Debug.LogError($"[{storeName}] Remote Catalog fetch failed: {catalogResult.Exception?.Message}");
+        return;
+    }
+    catalogProvider.FetchProducts(defs => controller.FetchProductsWithNoRetries(defs, storeName), storeName);
+
+    // Or, from a local list: controller.FetchProducts(productDefinitions, storeName);
+
+    // Then FetchPurchases(storeName) from OnProductsFetched: StoreKit 1 (iOS < 15) needs the products cached first.
+};
+```
+
+Do not read `GetProducts(storeName)` or `GetPurchases(storeName)` inside the handler — they are empty.
+
+## StoreController (existing projects and fallback)
+
+Use these signatures only to read or maintain code that already uses `StoreController`, or when the installed package has no `PurchasingController` and the user can't upgrade. For an existing `StoreController` project, offer to migrate (see [purchasing-controller.md](purchasing-controller.md#migrating-from-storecontroller)) and do it only if the user agrees.
+
 
 ```csharp
 // Store lifecycle
@@ -72,7 +106,7 @@ event Action<ProductFetchFailed>? OnProductsFetchFailed
 
 // Purchasing
 void PurchaseProduct(Product product)
-void PurchaseProduct(string? productId)
+void PurchaseProduct(string catalogListingId)
 void Purchase(ICart cart)
 void ConfirmPurchase(PendingOrder order)
 void FetchPurchases()
@@ -99,9 +133,11 @@ IGooglePlayStoreExtendedService? GooglePlayStoreExtendedService { get; }
 IAppleStoreExtendedProductService? AppleStoreExtendedProductService { get; }
 IAppleStoreExtendedPurchaseService? AppleStoreExtendedPurchaseService { get; }
 IGooglePlayStoreExtendedPurchaseService? GooglePlayStoreExtendedPurchaseService { get; }
+IPaymentProvidersExtendedService? PaymentProvidersExtendedService { get; }   // 5.4.x: PaymentProviderStoreExtendedService (still works in 5.5)
+IPaymentProvidersExtendedPurchaseService? PaymentProvidersExtendedPurchaseService { get; }
 ```
 
-**`OnAuthAccountChanged` — breaking behavior in v5.4:**  
+**`StoreController.OnAuthAccountChanged` — breaking behavior in v5.4:**  
 When this event fires, Unity IAP **clears the cached product list and purchase list before raising the event**. Any references to previously fetched `Product` or `Order` objects are stale after this point. Re-run the full init sequence in the handler:
 
 ```csharp
@@ -135,7 +171,7 @@ store.OnAuthAccountChanged += async () =>
     // Or, if the products come from a local list rather than the Remote Catalog:
     // store.FetchProducts(productDefinitions);
 
-    store.FetchPurchases();
+    // Then store.FetchPurchases() from OnProductsFetched: StoreKit 1 (iOS < 15) needs the products cached first.
 };
 ```
 
@@ -143,7 +179,7 @@ Do not read from `GetProducts()` or `GetPurchases()` inside `OnAuthAccountChange
 
 ## Alternative Service Access (DefaultStore / DefaultProduct / DefaultPurchase)
 
-Instead of `StoreController` (which implements all three interfaces), you can access individual services:
+Only for code that needs `IStoreService` / `IProductService` / `IPurchaseService` — `PurchasingController` does not implement them. You can access a store's individual services:
 
 ```csharp
 IStoreService m_StoreService = UnityIAPServices.DefaultStore();
@@ -151,7 +187,7 @@ IProductService m_ProductService = UnityIAPServices.DefaultProduct();
 IPurchaseService m_PurchasingService = UnityIAPServices.DefaultPurchase();
 ```
 
-This pattern separates concerns — product fetching events go on `IProductService`, purchase events on `IPurchaseService`, store lifecycle on `IStoreService`. `StoreController` combines all three.
+These are one store's services (`UnityIAPServices.Store(name)` / `Product(name)` / `Purchase(name)` for a named store). Product fetching events go on `IProductService`, purchase events on `IPurchaseService`, store lifecycle on `IStoreService`.
 
 ## CatalogProvider
 
@@ -177,31 +213,54 @@ var storeSpecificIds = new Dictionary<string, StoreSpecificIds>
 };
 
 catalogProvider.AddProducts(products, storeSpecificIds);
-catalogProvider.FetchProducts(m_ProductService.FetchProductsWithNoRetries);
+var storeName = UnityIAPServices.GetDefaultStore();
+catalogProvider.FetchProducts(defs => controller.FetchProductsWithNoRetries(defs, storeName), storeName);
+```
+
+With several stores on the controller, fetch each store in turn — one provider is enough, the controller copies each store's definitions:
+
+```csharp
+foreach (var store in controller.StoreNames)
+    catalogProvider.FetchProducts(defs => controller.FetchProductsWithNoRetries(defs, store), store);
 ```
 
 ## Initialization Example
 
 ```csharp
-StoreController m_StoreController;
+PurchasingController m_Controller;
 
 async void Awake()
 {
-    m_StoreController = UnityIAPServices.StoreController();
+    // One store here; add PaymentProvider.Name for IAP D2C Capabilities (after Unity Services sign-in).
+    m_Controller = new PurchasingController(UnityIAPServices.GetDefaultStore());
 
     // Subscribe to ALL events BEFORE Connect — pending purchases may fire on reconnect
-    m_StoreController.OnPurchasePending += OnPurchasePending;
-    m_StoreController.OnPurchaseConfirmed += (order) => Debug.Log("Purchase complete");
-    m_StoreController.OnPurchaseFailed += (failed) => Debug.LogError($"{failed.FailureReason} - {failed.Details}");
-    m_StoreController.OnPurchaseDeferred += (deferred) => Debug.Log("Purchase deferred (e.g., Ask-to-Buy)");
+    m_Controller.OnPurchasePending += OnPurchasePending;
+    m_Controller.OnPurchaseConfirmed += (storeName, order) =>
+    {
+        if (order is FailedOrder failed)
+            Debug.LogError($"[{storeName}] Confirmation failed: {failed.FailureReason} - {failed.Details}");
+        else
+            Debug.Log($"[{storeName}] Purchase complete");
+    };
+    m_Controller.OnPurchaseFailed += (storeName, failed) => Debug.LogError($"{failed.FailureReason} - {failed.Details}");
+    m_Controller.OnPurchaseDeferred += (storeName, deferred) => Debug.Log("Purchase deferred (e.g., Ask-to-Buy)");
+    m_Controller.OnProductsFetched += (storeName, fetched) =>
+    {
+        Debug.Log("Products ready");
+        m_Controller.FetchPurchases(storeName);   // after the products: StoreKit 1 (iOS < 15) matches purchases against them
+    };
+    m_Controller.OnProductsFetchFailed += (storeName, failure) => Debug.LogError($"Product fetch failed: {failure.FailureReason}");
+    m_Controller.OnPurchasesFetched += (storeName, orders) => Debug.Log($"Restored {orders.PendingOrders.Count} pending purchases");
+    m_Controller.OnPurchasesFetchFailed += (storeName, failure) => Debug.LogError($"Purchase fetch failed: {failure.Message}");
 
-    m_StoreController.OnStoreConnected += OnStoreConnected;
-    m_StoreController.OnStoreDisconnected += (failure) => Debug.LogError($"Store disconnected: {failure.Message}");
+    m_Controller.OnStoreConnected += OnStoreConnected;
+    m_Controller.OnStoreDisconnected += (storeName, failure) => Debug.LogError($"Store disconnected: {failure.Message}");
 
-    await m_StoreController.Connect();
+    await m_Controller.Connect();
 }
 
-void OnStoreConnected()
+void OnStoreConnected(string storeName)
 {
     var products = new List<ProductDefinition>
     {
@@ -210,13 +269,13 @@ void OnStoreConnected()
         new ProductDefinition("com.mygame.vip_monthly", ProductType.Subscription)
     };
 
-    m_StoreController.OnProductsFetched += (fetched) => Debug.Log("Products ready");
-    m_StoreController.OnProductsFetchFailed += (failure) => Debug.LogError($"Product fetch failed: {failure.FailureReason}");
-    m_StoreController.FetchProducts(products);
+    m_Controller.FetchProducts(products, storeName);   // purchases are fetched in OnProductsFetched
+}
 
-    m_StoreController.OnPurchasesFetched += (orders) => Debug.Log($"Restored {orders.PendingOrders.Count} pending purchases");
-    m_StoreController.OnPurchasesFetchFailed += (failure) => Debug.LogError($"Purchase fetch failed: {failure.Message}");
-    m_StoreController.FetchPurchases();
+void OnPurchasePending(string storeName, PendingOrder order)
+{
+    GrantContent(order);                  // save before confirming
+    m_Controller.ConfirmPurchase(order);  // routed by order.StoreName
 }
 ```
 
@@ -238,11 +297,11 @@ new ProductDefinition("com.mygame.coins100", ProductType.Consumable,
 ### Access Fetched Products
 
 ```csharp
-// Get all fetched products (cached)
-ReadOnlyObservableCollection<Product> allProducts = store.GetProducts();
+// Get one store's fetched products (cached) — the store name is required
+ReadOnlyObservableCollection<Product> allProducts = controller.GetProducts(storeName);
 
-// Get a specific product by ID
-Product coinsPack = store.GetProductById("com.mygame.coins100");
+// Get a specific product by ID from that store
+Product coinsPack = controller.GetProductById("com.mygame.coins100", storeName);
 ```
 
 ### CatalogListings and uSku (v5.4+)
@@ -277,19 +336,19 @@ When initiating a purchase by listing rather than by product ID, pass the `Catal
 ## Two-Step Purchase Flow
 
 ```csharp
-// Step 1: Initiate purchase
-store.PurchaseProduct(product);
+// Step 1: Initiate purchase — goes to the store the product was fetched from (product.StoreName)
+controller.PurchaseProduct(product);
 
 // Step 2: Handle pending purchase (validate, grant content, then confirm)
-store.OnPurchasePending += (pendingOrder) =>
+controller.OnPurchasePending += (storeName, pendingOrder) =>
 {
     var product = pendingOrder.CartOrdered.Items().FirstOrDefault()?.Product;
     GrantContent(product);
-    store.ConfirmPurchase(pendingOrder);
+    controller.ConfirmPurchase(pendingOrder);   // goes to pendingOrder.StoreName
 };
 
 // Step 3: Purchase confirmed — Order can be ConfirmedOrder OR FailedOrder
-store.OnPurchaseConfirmed += (order) =>
+controller.OnPurchaseConfirmed += (storeName, order) =>
 {
     switch (order)
     {
@@ -303,13 +362,13 @@ store.OnPurchaseConfirmed += (order) =>
 };
 
 // Handle failures
-store.OnPurchaseFailed += (failedOrder) =>
+controller.OnPurchaseFailed += (storeName, failedOrder) =>
 {
     Debug.LogError($"Purchase failed: {failedOrder.FailureReason} - {failedOrder.Details}");
 };
 
 // Handle deferred purchases (e.g., Ask-to-Buy on iOS)
-store.OnPurchaseDeferred += (deferredOrder) =>
+controller.OnPurchaseDeferred += (storeName, deferredOrder) =>
 {
     Debug.Log("Purchase is pending approval (e.g., parental approval)");
 };
@@ -322,12 +381,13 @@ If the app crashes between steps 2 and 4, the pending purchase is re-delivered o
 ## Restore Transactions
 
 ```csharp
-store.RestoreTransactions((success, error) =>
+// Called once per store, with that store's result. Pass a store name to restore only that store.
+controller.RestoreTransactions((storeName, success, error) =>
 {
     if (success)
-        Debug.Log("Transactions restored. Check OnPurchasePending for each restored purchase.");
+        Debug.Log($"[{storeName}] Transactions restored. Check OnPurchasePending for each restored purchase.");
     else
-        Debug.LogError($"Restore failed: {error}");
+        Debug.LogError($"[{storeName}] Restore failed: {error}");
 });
 ```
 
@@ -336,9 +396,9 @@ Each restored purchase triggers `OnPurchasePending`.
 ## Entitlement Checking
 
 ```csharp
-store.CheckEntitlement(product);
+controller.CheckEntitlement(product);   // goes to product.StoreName
 
-store.OnCheckEntitlement += (entitlement) =>
+controller.OnCheckEntitlement += (storeName, entitlement) =>
 {
     if (entitlement.Status == EntitlementStatus.FullyEntitled)
         Debug.Log($"Player owns: {entitlement.Product.definition.id}");
@@ -348,9 +408,9 @@ store.OnCheckEntitlement += (entitlement) =>
 ## Fetch Existing Purchases
 
 ```csharp
-store.FetchPurchases();
+controller.FetchPurchases();   // every store; pass a store name for one
 
-store.OnPurchasesFetched += (orders) =>
+controller.OnPurchasesFetched += (storeName, orders) =>
 {
     foreach (var confirmedOrder in orders.ConfirmedOrders)
     {
@@ -409,9 +469,9 @@ var jwsRepresentation = order.Info.Apple?.jwsRepresentation;
 | `OwnershipType` | `OwnershipType` | Whether the purchase is `Purchased` or `FamilyShared` |
 | `StoreName` | `string` | Name of the store (e.g., `"AppleAppStore"`) |
 
-## Extended Service Events (NOT on StoreController)
+## Extended Service Events (NOT on the controller)
 
-These events are on the platform-specific extended services, NOT directly on `StoreController`. Always null-check before subscribing (`?.` does not work with `+=`).
+These events are on the platform-specific extended services, NOT directly on `PurchasingController` (or `StoreController`). They take no store name: each extended service belongs to one store. Always null-check before subscribing (`?.` does not work with `+=`).
 
 ```csharp
 // Apple — on IAppleStoreExtendedPurchaseService
@@ -425,8 +485,8 @@ event Action<DeferredPaymentUntilRenewalDateOrder>? OnDeferredPaymentUntilRenewa
 
 **Usage pattern** (cannot use `?.` with `+=`):
 ```csharp
-if (store.AppleStoreExtendedPurchaseService != null)
-    store.AppleStoreExtendedPurchaseService.OnEntitlementRevoked += OnRevoked;
+if (controller.AppleStoreExtendedPurchaseService != null)
+    controller.AppleStoreExtendedPurchaseService.OnEntitlementRevoked += OnRevoked;
 ```
 
 ## AppleStoreExtendedProductService Key Members
@@ -498,7 +558,7 @@ long     GetIntroductoryPricePeriodCycles()
 
 | Call | Success event | Failure event (REQUIRED) |
 |---|---|---|
-| `FetchProducts()` | `OnProductsFetched` | `OnProductsFetchFailed` |
+| `FetchProducts` | `OnProductsFetched` | `OnProductsFetchFailed` |
 | `FetchPurchases()` | `OnPurchasesFetched` | `OnPurchasesFetchFailed` |
 | `Connect()` | `OnStoreConnected` | `OnStoreDisconnected` |
 | `PurchaseProduct()` | `OnPurchasePending` | `OnPurchaseFailed` |
@@ -537,7 +597,9 @@ Supported stores (still active): `"GooglePlay"` | Deprecated: `"AppleAppStore"`,
 ## Interface Hierarchy
 
 ```
-StoreController implements:
+PurchasingController implements none of the service interfaces (it holds each store's services).
+
+StoreController (existing projects / fallback) implements:
   IStoreService      - Connect(), Apple/Google service extensions
   IProductService    - FetchProducts(), GetProducts(), GetProductById()
   IPurchaseService   - PurchaseProduct(), ConfirmPurchase(), FetchPurchases(), Apple/Google purchase extensions
@@ -558,10 +620,10 @@ namespace Unity.AI.Assistant.Agent.Dynamic.Extension.Editor
         public string Description => "Connects to the store and fetches product information.";
         public async void Execute(ExecutionResult result)
         {
-            var store = UnityIAPServices.StoreController();
+            var controller = new PurchasingController(UnityIAPServices.GetDefaultStore());
 
             // Subscribe to events BEFORE Connect
-            store.OnStoreConnected += () =>
+            controller.OnStoreConnected += storeName =>
             {
                 var products = new List<ProductDefinition>
                 {
@@ -569,18 +631,18 @@ namespace Unity.AI.Assistant.Agent.Dynamic.Extension.Editor
                     new ProductDefinition("com.mygame.removeads", ProductType.NonConsumable)
                 };
 
-                store.OnProductsFetched += (fetched) =>
+                controller.OnProductsFetched += (_, fetched) =>
                 {
                     foreach (var p in fetched)
                         result.Log($"{p.definition.id}: {p.metadata.localizedPriceString}");
                 };
-                store.OnProductsFetchFailed += (failure) => result.LogError($"Product fetch failed: {failure.FailureReason}");
+                controller.OnProductsFetchFailed += (_, failure) => result.LogError($"Product fetch failed: {failure.FailureReason}");
 
-                store.FetchProducts(products);
+                controller.FetchProducts(products, storeName);
             };
-            store.OnStoreDisconnected += (failure) => result.LogError($"Store disconnected: {failure.Message}");
+            controller.OnStoreDisconnected += (_, failure) => result.LogError($"Store disconnected: {failure.Message}");
 
-            await store.Connect();
+            await controller.Connect();
         }
     }
 }

@@ -203,6 +203,8 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
             {
                 WriteVarintField(s, 8, sku.Quantity);
             }
+            WriteOptionalString(s, 9, sku.CatalogListingId);
+            WriteOptionalString(s, 10, sku.UnitySku);
         }
 
         static void WriteReporting(Stream s, Reporting r)

@@ -56,9 +56,14 @@ namespace UnityEngine.Purchasing
         public IGooglePlayStoreExtendedService? GooglePlayStoreExtendedService => m_StoreService.Google;
 
         /// <summary>
-        /// Gets the Payment Provider Store extended service for platform-specific operations.
+        /// Gets the Payment Providers extended store service for platform-specific operations.
         /// </summary>
-        public IPaymentProvidersExtendedService? PaymentProviderStoreExtendedService => m_StoreService.PaymentProviders;
+        public IPaymentProvidersExtendedService? PaymentProvidersExtendedService => m_StoreService.PaymentProviders;
+
+        /// <summary>
+        /// Use <see cref="PaymentProvidersExtendedService"/> instead. This name will be removed in a future major version.
+        /// </summary>
+        public IPaymentProvidersExtendedService? PaymentProviderStoreExtendedService => PaymentProvidersExtendedService;
 
         /// <summary>
         /// Gets the Apple Store extended product service for platform-specific product operations.

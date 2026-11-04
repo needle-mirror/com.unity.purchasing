@@ -30,6 +30,7 @@ namespace UnityEngine.Purchasing
             : base(pendingOrder.CartOrdered, pendingOrder.Info)
         {
             // Don't overwrite PurchasedProductInfo - it's already populated from PendingOrder
+            StoreName = pendingOrder.StoreName;
         }
 
         List<IPurchasedProductInfo> FillPurchasedProductInfo(IAppleTransactionSubscriptionInfo? appleTransactionSubscriptionInfo = null)

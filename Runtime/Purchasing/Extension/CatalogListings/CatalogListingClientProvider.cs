@@ -13,6 +13,12 @@ namespace UnityEngine.Purchasing.CatalogListings
 
         static ICatalogListingClient? s_Instance;
 
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_Instance = null;
+        }
+
         public static ICatalogListingClient Instance()
         {
             return s_Instance ??= new CatalogListingClient(

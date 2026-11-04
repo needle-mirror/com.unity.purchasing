@@ -1,4 +1,4 @@
-#if IAP_GDK && MICROSOFT_GDK_SUPPORT
+#if IAP_GDK && MICROSOFT_GDK_SUPPORT && (UNITY_EDITOR || UNITY_GAMECORE || UNITY_STANDALONE_WIN)
 using System;
 using System.Collections.Generic;
 using Unity.XGamingRuntime;

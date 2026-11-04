@@ -1,5 +1,6 @@
 #nullable enable
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Purchasing.Extension;
@@ -17,9 +18,11 @@ namespace UnityEngine.Purchasing
         public async Task<Order> CreateOrderFromPurchase(IGooglePurchase purchase, IProductCache? productCache)
         {
             var cart = await CreateCartFromPurchase(purchase, productCache);
-            var orderInfo = new GoogleOrderInfo(purchase.receipt, purchase.purchaseToken, GooglePlay.Name, purchase.obfuscatedAccountId, purchase.obfuscatedProfileId, purchase.orderId);
+            var isPending = purchase.IsPending();
+            var purchaseDate = isPending ? null : PurchaseDateFromPurchaseTime(purchase.purchaseTime);
+            var orderInfo = new GoogleOrderInfo(purchase.receipt, purchase.purchaseToken, GooglePlay.Name, purchase.obfuscatedAccountId, purchase.obfuscatedProfileId, purchase.orderId, purchaseDate);
 
-            if (purchase.IsPending())
+            if (isPending)
             {
                 return new DeferredOrder(cart, orderInfo);
             }
@@ -31,6 +34,14 @@ namespace UnityEngine.Purchasing
             }
 
             return new PendingOrder(cart, orderInfo);
+        }
+
+        static DateTime? PurchaseDateFromPurchaseTime(long purchaseTime)
+        {
+            // For Google subscriptions, this is the subscription signup time. It won't change after renewal.
+            return purchaseTime > 0
+                ? DateTimeOffset.FromUnixTimeMilliseconds(purchaseTime).UtcDateTime
+                : null;
         }
 
         static ProductType GetProductType(ICart cart)

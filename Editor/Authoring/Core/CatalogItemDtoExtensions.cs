@@ -39,6 +39,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
                 Categories = item.IsWebshopAvailable ? ConvertCategoriesToDto(item.Categories) : null,
                 HdImages = item.IsWebshopAvailable ? ConvertHdImagesToDto(item.HdImages) : null,
                 Promotion = item.IsWebshopAvailable ? ConvertToDto(item.Promotion) : null,
+                PurchaseLimit = ConvertToDto(item.PurchaseLimit),
             };
         }
 
@@ -58,6 +59,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
                 Categories = dto.Categories is null ? null : new List<string>(dto.Categories),
                 HdImages = dto.HdImages?.Select(ConvertFromDto).ToList(),
                 Promotion = ConvertFromDto(dto.Promotion),
+                PurchaseLimit = ConvertFromDto(dto.PurchaseLimit),
             };
         }
 
@@ -176,6 +178,33 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
                 Type = ConvertPromotionTypeFromDto(p.Type),
                 StartsAt = p.StartsAt,
                 EndsAt = p.EndsAt,
+            };
+
+        static PurchaseLimitDto ConvertToDto(PurchaseLimit p) =>
+            p is null || !p.IsSet ? null : new PurchaseLimitDto
+            {
+                Count = p.Count,
+                Period = p.Period switch
+                {
+                    PurchaseLimitPeriod.Hour => PurchaseLimitPeriodDto.Hour,
+                    PurchaseLimitPeriod.Day => PurchaseLimitPeriodDto.Day,
+                    PurchaseLimitPeriod.Month => PurchaseLimitPeriodDto.Month,
+                    _ => throw new ArgumentOutOfRangeException(nameof(p.Period), p.Period, null)
+                },
+            };
+
+        static PurchaseLimit ConvertFromDto(PurchaseLimitDto p) => p is null
+            ? null
+            : new PurchaseLimit
+            {
+                Count = p.Count,
+                Period = p.Period switch
+                {
+                    PurchaseLimitPeriodDto.Hour => PurchaseLimitPeriod.Hour,
+                    PurchaseLimitPeriodDto.Day => PurchaseLimitPeriod.Day,
+                    PurchaseLimitPeriodDto.Month => PurchaseLimitPeriod.Month,
+                    _ => throw new ArgumentOutOfRangeException(nameof(p.Period), p.Period, null)
+                },
             };
 
         static ProductTypeDto ConvertTypeToDto(ProductType productType)

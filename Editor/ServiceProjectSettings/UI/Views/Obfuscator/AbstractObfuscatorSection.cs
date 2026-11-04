@@ -41,6 +41,7 @@ namespace UnityEditor.Purchasing
         {
             ObfuscateKeys();
             UpdateVerificationSection();
+            HandleErrorSection(m_ErrorMessage);
         }
 
         protected abstract void ObfuscateKeys();

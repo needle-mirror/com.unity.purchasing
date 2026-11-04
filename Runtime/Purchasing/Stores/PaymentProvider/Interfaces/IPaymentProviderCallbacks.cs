@@ -16,6 +16,5 @@ namespace UnityEngine.Purchasing
         Task<string?> GenerateURL(string? catalogListingId, IReadOnlyList<PaymentProviderToken>? externalTokens = null);
         Task RedirectToWebshop(string? catalogListingId = null, IReadOnlyList<PaymentProviderToken>? externalTokens = null);
         void Purchase(ICart cart, string paymentProviderName);
-        void PurchaseProduct(string catalogListingId, string paymentProviderName);
     }
 }

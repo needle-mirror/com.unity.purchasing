@@ -5,6 +5,7 @@ using UnityEditor.Purchasing.Editor.Authoring.Core.Model;
 using UnityEditor.Purchasing.Editor.Authoring.Model.Extensions;
 using UnityEngine;
 using UnityEngine.Purchasing;
+using PurchaseLimit = UnityEditor.Purchasing.Editor.Authoring.Core.Model.PurchaseLimit;
 using StoreId = UnityEditor.Purchasing.Editor.Authoring.Core.StoreId;
 
 namespace UnityEditor.Purchasing.Authoring
@@ -25,6 +26,8 @@ namespace UnityEditor.Purchasing.Authoring
         public List<PricingDetails> PricingDetails;
         [Tooltip("The image URL for this product.")]
         public string ImageUrl;
+        [Tooltip("How many times one player can buy this item per UTC period. Applies to Payment Provider purchases only. Set Period to None for no limit.")]
+        public PurchaseLimit PurchaseLimit;
 
         [Header("Webshop availability")]
         [Tooltip("Sell this SKU on Webshop too. When on, Categories, HD Images, and Promotion are deployed and the Webshop schema is added; when off, they are stripped from the upsert.")]
@@ -58,6 +61,7 @@ namespace UnityEditor.Purchasing.Authoring
             Categories = catalogItem.Categories is null ? null : new List<string>(catalogItem.Categories);
             HdImages = catalogItem.HdImages?.Select(i => new HdImage(i)).ToList();
             Promotion = catalogItem.Promotion is null ? null : new Promotion(catalogItem.Promotion);
+            PurchaseLimit = catalogItem.PurchaseLimit is null ? null : new PurchaseLimit(catalogItem.PurchaseLimit);
             AppleOverride = catalogItem.GetStoreIdOverride(StoreId.Apple);
             GoogleOverride = catalogItem.GetStoreIdOverride(StoreId.Google);
             XboxStoreOverride = catalogItem.GetStoreIdOverride(StoreId.XboxStore);

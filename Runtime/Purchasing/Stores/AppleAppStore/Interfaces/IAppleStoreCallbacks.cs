@@ -10,6 +10,7 @@ namespace UnityEngine.Purchasing
         void SetFetchStorePromotionOrderCallbacks(Action<List<Product>> successCallback, Action<string> errorCallback);
         void SetFetchStorePromotionVisibilityCallbacks(Action<string, AppleStorePromotionVisibility> successCallback, Action<string> errorCallback);
         void SetRestoreTransactionsCallback(Action<bool, string?>? successCallback);
+        bool IsTransactionObserverEnabled { get; }
         void ClearTransactionLog();
         bool simulateAskToBuy { get; set; }
         void SetAppAccountToken(Guid token);

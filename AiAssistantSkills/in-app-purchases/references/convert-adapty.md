@@ -227,7 +227,9 @@ Present two choices:
 
 4. **Implement Unity IAP 5 purchase flow.** Follow [path-add-iap-to-new-project.md](path-add-iap-to-new-project.md) using the product catalog extracted from existing Adapty `GetPaywall` calls or hardcoded product IDs found in the codebase.
 
-5. **Call `Adapty.ReportTransaction()` after every confirmed purchase.** In the Unity IAP `OnPurchasePending` handler, after granting content and saving, report the transaction to Adapty:
+   The IAPManager holds a `PurchasingController` (v5.5+; recommend upgrading if the installed package doesn't contain it) — see [purchasing-controller.md](purchasing-controller.md).
+
+5. **Call `Adapty.ReportTransaction()` after every confirmed purchase.** In the Unity IAP `OnPurchasePending` handler (`(storeName, pendingOrder) => ...` on `PurchasingController`), after granting content and saving, report the transaction to Adapty:
 
    ```csharp
    Adapty.ReportTransaction(transactionId, null, (error) =>

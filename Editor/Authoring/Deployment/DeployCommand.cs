@@ -35,11 +35,38 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
         public override async Task ExecuteAsync(IEnumerable<CatalogEntryDeploymentItem> items, CancellationToken cancellationToken = default)
         {
             var itemList = items.ToList();
-            var envId = m_EnvironmentsApi.ActiveEnvironmentId.ToString();
-            await m_Client.Initialize(envId, CloudProjectSettings.projectId, cancellationToken);
-            await m_CategoriesClient.Initialize(envId, CloudProjectSettings.projectId, cancellationToken);
             OnPreDeploy(itemList);
+
+            if (!await TryInitializeClients(itemList, cancellationToken))
+                return;
+
             await m_DeploymentHandler.DeployAsync(itemList, false, false, cancellationToken);
+        }
+
+        /// <summary>
+        /// Initialization rejects a missing project or environment id. Report that on the items,
+        /// otherwise they would keep whatever status they had before the deploy.
+        /// </summary>
+        async Task<bool> TryInitializeClients(
+            IReadOnlyList<CatalogEntryDeploymentItem> items,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var envId = m_EnvironmentsApi.ActiveEnvironmentId.ToString();
+                await m_Client.Initialize(envId, CloudProjectSettings.projectId, cancellationToken);
+                await m_CategoriesClient.Initialize(envId, CloudProjectSettings.projectId, cancellationToken);
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                MarkFailed(items, e.Message);
+                return false;
+            }
         }
 
         static void OnPreDeploy(IReadOnlyList<CatalogEntryDeploymentItem> items)
@@ -49,6 +76,15 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
                 i.Progress = 0f;
                 i.Status = new DeploymentStatus();
                 i.States.Clear();
+            }
+        }
+
+        static void MarkFailed(IReadOnlyList<CatalogEntryDeploymentItem> items, string message)
+        {
+            foreach (var i in items)
+            {
+                i.Status = Statuses.GetFailedToDeploy(message);
+                i.Progress = 100f;
             }
         }
     }

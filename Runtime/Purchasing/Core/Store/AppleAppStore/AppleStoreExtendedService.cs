@@ -36,16 +36,29 @@ namespace UnityEngine.Purchasing.Services
             m_SetAppAccountTokenUseCase.SetAppAccountToken(appAccountToken);
         }
 
+        [Obsolete("Use ClearTransactionLog(bool debugOnly) instead. This method behaves like ClearTransactionLog(true).", false)]
         public void ClearTransactionLog()
         {
-#if DEBUG || IAP_APPLE_CLEAR_TRANSACTION_LOG
-            m_ClearAppleTransactionLogsUseCase.ClearTransactionLog();
+            ClearTransactionLog(true);
+        }
+
+        public void ClearTransactionLog(bool debugOnly)
+        {
+#if !(DEBUG || IAP_APPLE_CLEAR_TRANSACTION_LOG)
+            if (debugOnly)
+            {
+                return;
+            }
 #endif
+            m_ClearAppleTransactionLogsUseCase.ClearTransactionLog();
         }
 
         public void FetchStorefront(Action<AppleStorefront> successCallback, Action<string> errorCallback)
         {
-            m_FetchStorefrontUseCase.FetchStorefront(successCallback, errorCallback);
+            using (ImpressionScope.Shared.EnterNone())
+            {
+                m_FetchStorefrontUseCase.FetchStorefront(successCallback, errorCallback);
+            }
         }
     }
 }
