@@ -8,7 +8,7 @@
     ```bash
       brew install openjdk
     ```
-2. If you don't already have it, you will need the generator jar. This can be found [here](https://pages.prd.mz.internal.unity3d.com/unity-common-openapi-generators/docs/csharp-generator/). **DO NOT SAVE IT TO VERSION CONTROL**
+2. If you don't already have it, you will need the generator jar, v1.3.5 or later, from the [releases page](https://github.com/Unity-Technologies/unity-common-openapi-generators/releases). Earlier versions generate an `EngineStateHelper` that leaks an assembly under CoreCLR. Usage is documented [here](https://pages.prd.mz.internal.unity3d.com/unity-common-openapi-generators/docs/csharp-generator/). **DO NOT SAVE IT TO VERSION CONTROL**
 3. (optional) Update the `./spec.yaml` with the client api spec.
 
 ### Option A) Using the Script (macOS, Linux, or Windows)

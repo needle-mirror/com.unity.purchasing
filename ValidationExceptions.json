@@ -3,17 +3,17 @@
         {
             "ValidationTest": "Manifest Validation",
             "ExceptionMessage": "In package.json, \"displayName\" cannot have any special characters. Read more about this error and potential solutions at https://docs.unity3d.com/Packages/com.unity.package-validation-suite@latest/index.html?preview=1&subfolder=/manual/manifest_validation_error.html#displayName-cannot-have-any-special-characters",
-            "PackageVersion": "5.5.0"
+            "PackageVersion": "5.5.1"
         },
         {
             "ValidationTest": "API Validation",
             "ExceptionMessage": "Removing from includePlatfoms requires a new major version. Was:\"Editor, GameCoreScarlett, GameCoreXboxOne, LinuxStandalone64, CloudRendering, PS4, PS5, Switch, WSA, WebGL, WindowsStandalone32, WindowsStandalone64, XboxOne\" Now:\"\"",
-            "PackageVersion": "5.5.0"
+            "PackageVersion": "5.5.1"
         },
         {
             "ValidationTest": "API Validation",
             "ExceptionMessage": "Removing from includePlatfoms requires a new major version. Was:\"Android, Editor, GameCoreScarlett, GameCoreXboxOne, LinuxStandalone64, CloudRendering, macOSStandalone, PS4, PS5, Switch, WSA, WebGL, WindowsStandalone32, WindowsStandalone64, XboxOne\" Now:\"\"",
-            "PackageVersion": "5.5.0"
+            "PackageVersion": "5.5.1"
         }
     ],
     "WarningExceptions": []

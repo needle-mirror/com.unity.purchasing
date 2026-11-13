@@ -10,7 +10,8 @@ namespace Samples.Purchasing.IAP5.Minimal
     {
         public Text inAppConsole;
 
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         protected void Awake()
         {
@@ -19,25 +20,26 @@ namespace Samples.Purchasing.IAP5.Minimal
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
 
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
 
             FetchProducts();
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
             // Add your validations here before confirming the purchase.
 
             // Before confirming the purchase, reward the entitlement to the player.
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             switch (order)
             {
@@ -59,16 +61,16 @@ namespace Samples.Purchasing.IAP5.Minimal
                 new("com.unity.iap.test.adventure.pass", ProductType.Subscription)
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
         public void InitiatePurchase(string productId)
         {
-            var product = m_StoreController?.GetProducts().FirstOrDefault(product => product.definition.id == productId);
+            var product = m_PurchasingController?.GetProducts(m_StoreName).FirstOrDefault(product => product.definition.id == productId);
 
             if (product != null)
             {
-                m_StoreController?.PurchaseProduct(product);
+                m_PurchasingController?.PurchaseProduct(product);
             }
             else
             {
@@ -78,10 +80,10 @@ namespace Samples.Purchasing.IAP5.Minimal
 
         public void RestorePurchases()
         {
-            m_StoreController.RestoreTransactions(OnTransactionsRestored);
+            m_PurchasingController.RestoreTransactions(OnTransactionsRestored, m_StoreName);
         }
 
-        void OnTransactionsRestored(bool success, string error)
+        void OnTransactionsRestored(string storeName, bool success, string error)
         {
             LogConsole("Transactions restored: " + success);
         }

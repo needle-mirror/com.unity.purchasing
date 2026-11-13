@@ -11,7 +11,8 @@ namespace Samples.Purchasing.AppleAppStore.FraudDetection
 {
     public class FraudDetection : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         public User user;
 
@@ -34,13 +35,14 @@ namespace Samples.Purchasing.AppleAppStore.FraudDetection
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchaseFailed += OnPurchaseFailed;
 
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
 
             FetchProducts();
         }
@@ -52,15 +54,15 @@ namespace Samples.Purchasing.AppleAppStore.FraudDetection
                 new(goldProductId, goldType)
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             if (order.CartOrdered.Items().FirstOrDefault()?.Product.definition.id == goldProductId)
             {
@@ -78,7 +80,7 @@ namespace Samples.Purchasing.AppleAppStore.FraudDetection
             //To make sure the account id and profile id do not contain personally identifiable information, we obfuscate this information by hashing it.
             var hashedUsername = HashString(user.Username);
 
-            m_StoreController.AppleStoreExtendedService?.SetAppAccountToken(new Guid(hashedUsername));
+            m_PurchasingController.AppleStoreExtendedService?.SetAppAccountToken(new Guid(hashedUsername));
         }
 
         static string HashString(string input)
@@ -100,7 +102,7 @@ namespace Samples.Purchasing.AppleAppStore.FraudDetection
 
         public void BuyGold()
         {
-            m_StoreController.PurchaseProduct(goldProductId);
+            m_PurchasingController.PurchaseProduct(goldProductId, m_StoreName);
         }
 
         void AddGold()
@@ -113,7 +115,7 @@ namespace Samples.Purchasing.AppleAppStore.FraudDetection
             goldCountText.text = $"Your Gold: {m_GoldCount}";
         }
 
-        public void OnPurchaseFailed(FailedOrder order)
+        public void OnPurchaseFailed(string storeName, FailedOrder order)
         {
             Debug.Log($"Purchase failed - Product: '{order.CartOrdered.Items().FirstOrDefault()?.Product.definition.id}'," +
                 $" Purchase failure reason: {order.FailureReason}," +

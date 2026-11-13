@@ -10,32 +10,32 @@ namespace Samples.Purchasing.IAP5.Demo
         {
             m_PaywallManager = paywallManager;
         }
-        public void OnInitialProductsFetched(List<Product> products)
+        public void OnInitialProductsFetched(string storeName, List<Product> products)
         {
             m_PaywallManager.m_IAPLogger.LogConsole("===========");
             m_PaywallManager.m_IAPLogger.LogConsole("OnInitialProductsFetched:");
             m_PaywallManager.m_IAPLogger.LogFetchedProducts(products);
             m_PaywallManager.FetchExistingPurchases();
         }
-        public void OnInitialProductsFetchFailed(ProductFetchFailed failure)
+        public void OnInitialProductsFetchFailed(string storeName, ProductFetchFailed failure)
         {
             m_PaywallManager.m_IAPLogger.LogConsole("===========");
             m_PaywallManager.m_IAPLogger.LogConsole("OnInitialProductsFetchFailed:");
             m_PaywallManager.m_IAPLogger.LogConsole(failure.FailureReason);
         }
-        public void OnExistingPurchasesFetched(Orders existingOrders)
+        public void OnExistingPurchasesFetched(string storeName, Orders existingOrders)
         {
             m_PaywallManager.m_IAPLogger.LogConsole("===========");
             m_PaywallManager.m_IAPLogger.LogConsole("OnExistingPurchasesFetched:");
             m_PaywallManager.m_IAPLogger.LogConsole(PaywallManager.IsReceiptAvailable(existingOrders) ? "Success - Found Existing Orders with receipts" : "Notice: - No Existing Orders with receipts");
         }
-        public void OnExistingPurchasesFetchFailed(PurchasesFetchFailureDescription failure)
+        public void OnExistingPurchasesFetchFailed(string storeName, PurchasesFetchFailureDescription failure)
         {
             m_PaywallManager.m_IAPLogger.LogConsole("===========");
             m_PaywallManager.m_IAPLogger.LogConsole("OnExistingPurchasesFetchFailed:");
             m_PaywallManager.m_IAPLogger.LogConsole(failure.Message);
         }
-        public void OnPurchasePending(PendingOrder order)
+        public void OnPurchasePending(string storeName, PendingOrder order)
         {
             foreach (var cartItem in order.CartOrdered.Items())
             {
@@ -48,7 +48,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
             m_PaywallManager.ConfirmOrderIfAutomatic(order);
         }
-        public void OnPurchaseConfirmed(Order order)
+        public void OnPurchaseConfirmed(string storeName, Order order)
         {
             switch (order)
             {
@@ -60,7 +60,7 @@ namespace Samples.Purchasing.IAP5.Demo
                     break;
             }
         }
-        public void OnPurchaseFailed(FailedOrder failedOrder)
+        public void OnPurchaseFailed(string storeName, FailedOrder failedOrder)
         {
             var reason = failedOrder.FailureReason;
 
@@ -69,14 +69,14 @@ namespace Samples.Purchasing.IAP5.Demo
                 m_PaywallManager.m_IAPLogger.LogFailedPurchase(cartItem.Product, reason);
             }
         }
-        public void OnOrderDeferred(DeferredOrder deferredOrder)
+        public void OnOrderDeferred(string storeName, DeferredOrder deferredOrder)
         {
             foreach (var cartItem in deferredOrder.CartOrdered.Items())
             {
                 m_PaywallManager.m_IAPLogger.LogDeferredPurchase(cartItem.Product);
             }
         }
-        public void OnStoreDisconnected(StoreConnectionFailureDescription failure)
+        public void OnStoreDisconnected(string storeName, StoreConnectionFailureDescription failure)
         {
             m_PaywallManager.m_IAPLogger.LogConsole("===========");
             m_PaywallManager.m_IAPLogger.LogConsole("Store Service Disconnected:");

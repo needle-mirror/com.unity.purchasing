@@ -1,6 +1,6 @@
 # In-App Purchasing Sample Scenes - Fetching Additional Products
 
-This sample demonstrates how to use the `StoreController` to dynamically fetch 
+This sample demonstrates how to use the `PurchasingController` to dynamically fetch 
 and display additional products that can be purchased in your store.
 
 The sample uses a fake store for transactions. 

@@ -2,13 +2,17 @@
 // This could either be defined in your Player Settings: Scripting Define Symbols
 // Or directly in code like so:
 #define usePaymentProviderOnly
-// Simply remove this line to disable the Payment Providers and go back to the default sample behaviour.
+// Simply remove this line to disable the Payment Providers and go back to the platform store.
+// Payment Providers need a signed-in player, so this also requires the com.unity.services.authentication package (3.8.1 or later).
 
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+#if usePaymentProviderOnly
+using Unity.Services.Authentication;
+#endif
 using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.Purchasing.Extension;
@@ -20,15 +24,19 @@ namespace Samples.Purchasing.IAP5.Demo
     {
         public IAPLogger m_IAPLogger;
 
-        IStoreService m_StoreService;
-        IProductService m_ProductService;
-        IPurchaseService m_PurchasingService;
+        PurchasingController m_PurchasingController;
+
+#if usePaymentProviderOnly
+        static string StoreName => PaymentProvider.Name;
+#else
+        static string StoreName => UnityIAPServices.GetDefaultStore();
+#endif
 
         IRemoteCatalogProvider m_RemoteCatalogProvider = new RemoteCatalogProvider();
         ICatalogProvider m_CatalogProvider = new CatalogProvider();
         CrossPlatformValidator m_CrossPlatformValidator;
 
-        Action<Entitlement> m_CheckEntitlementAction;
+        Action<string, Entitlement> m_CheckEntitlementAction;
 
         readonly List<ProductPurchaseButtonHelper> activePurchaseButtons = new List<ProductPurchaseButtonHelper>();
         readonly IAPPaywallCallbacks m_IAPPaywallCallbacks;
@@ -47,13 +55,18 @@ namespace Samples.Purchasing.IAP5.Demo
         protected void Start()
         {
             InitializeIapService();
-            CreateServices();
         }
 
         // Here we initialize the catalog, the IAP service, the cross platform validator and connect to the store.
         // If you want to initialize this automatically, change the function signature to "void Start()"
         public async void Initialize()
         {
+            if (m_PurchasingController == null)
+            {
+                m_IAPLogger.LogConsole("The purchasing controller is not created yet. Wait for Unity Services to initialize.");
+                return;
+            }
+
 #if usePaymentProviderOnly
             await InitRemoteCatalog();
 #else
@@ -100,76 +113,75 @@ namespace Samples.Purchasing.IAP5.Demo
         }
 #endif
 
-        void CreateServices()
+        // The controller handles a single store here: the Payment Provider store, or the platform default store.
+        // With PaymentProvider.Name, it must be created after Unity Services are initialized and the player is signed in.
+        void CreateController()
         {
-#if usePaymentProviderOnly
-            m_StoreService = UnityIAPServices.Store(PaymentProvider.Name);
-            m_ProductService = UnityIAPServices.Product(PaymentProvider.Name);
-            m_PurchasingService = UnityIAPServices.Purchase(PaymentProvider.Name);
-#else
-            m_StoreService = UnityIAPServices.DefaultStore();
-            m_ProductService = UnityIAPServices.DefaultProduct();
-            m_PurchasingService = UnityIAPServices.DefaultPurchase();
-#endif
-            ConfigureServicesCallbacks();
-
+            m_PurchasingController = new PurchasingController(StoreName);
+            ConfigureControllerCallbacks();
         }
 
-        void ConfigureServicesCallbacks()
+        void ConfigureControllerCallbacks()
         {
-            ConfigureStoreServiceCallbacks();
-            ConfigureProductServiceCallbacks();
-            ConfigurePurchasingServiceCallbacks();
+            ConfigureStoreCallbacks();
+            ConfigureProductCallbacks();
+            ConfigurePurchasingCallbacks();
             if (m_CheckEntitlementAction != null)
             {
                 AddCheckEntitlementAction(m_CheckEntitlementAction);
             }
         }
 
-        void ConfigureStoreServiceCallbacks()
+        void ConfigureStoreCallbacks()
         {
-            m_StoreService.OnStoreDisconnected += m_IAPPaywallCallbacks.OnStoreDisconnected;
+            m_PurchasingController.OnStoreDisconnected += m_IAPPaywallCallbacks.OnStoreDisconnected;
         }
 
-        void ConfigureProductServiceCallbacks()
+        void ConfigureProductCallbacks()
         {
-            m_ProductService.OnProductsFetched += m_IAPPaywallCallbacks.OnInitialProductsFetched;
-            m_ProductService.OnProductsFetchFailed += m_IAPPaywallCallbacks.OnInitialProductsFetchFailed;
+            m_PurchasingController.OnProductsFetched += m_IAPPaywallCallbacks.OnInitialProductsFetched;
+            m_PurchasingController.OnProductsFetchFailed += m_IAPPaywallCallbacks.OnInitialProductsFetchFailed;
         }
 
-        void ConfigurePurchasingServiceCallbacks()
+        void ConfigurePurchasingCallbacks()
         {
-            m_PurchasingService.OnPurchasesFetched += m_IAPPaywallCallbacks.OnExistingPurchasesFetched;
-            m_PurchasingService.OnPurchasesFetchFailed += m_IAPPaywallCallbacks.OnExistingPurchasesFetchFailed;
-            m_PurchasingService.OnPurchasePending += m_IAPPaywallCallbacks.OnPurchasePending;
-            m_PurchasingService.OnPurchaseConfirmed += m_IAPPaywallCallbacks.OnPurchaseConfirmed;
-            m_PurchasingService.OnPurchaseFailed += m_IAPPaywallCallbacks.OnPurchaseFailed;
-            m_PurchasingService.OnPurchaseDeferred += m_IAPPaywallCallbacks.OnOrderDeferred;
+            m_PurchasingController.OnPurchasesFetched += m_IAPPaywallCallbacks.OnExistingPurchasesFetched;
+            m_PurchasingController.OnPurchasesFetchFailed += m_IAPPaywallCallbacks.OnExistingPurchasesFetchFailed;
+            m_PurchasingController.OnPurchasePending += m_IAPPaywallCallbacks.OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += m_IAPPaywallCallbacks.OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchaseFailed += m_IAPPaywallCallbacks.OnPurchaseFailed;
+            m_PurchasingController.OnPurchaseDeferred += m_IAPPaywallCallbacks.OnOrderDeferred;
         }
 
-        public void AddCheckEntitlementAction(Action<Entitlement> checkEntitlement)
+        public void AddCheckEntitlementAction(Action<string, Entitlement> checkEntitlement)
         {
-            if (m_PurchasingService == null)
+            if (m_PurchasingController == null)
             {
                 m_CheckEntitlementAction = checkEntitlement;
             }
             else
             {
-                m_PurchasingService.OnCheckEntitlement += checkEntitlement;
+                m_PurchasingController.OnCheckEntitlement += checkEntitlement;
             }
         }
 
         public void FetchExistingPurchases()
         {
-            m_PurchasingService.FetchPurchases();
+            m_PurchasingController.FetchPurchases(StoreName);
         }
 
         public void RestorePurchases()
         {
-            m_PurchasingService.RestoreTransactions(OnTransactionsRestored);
+            if (m_PurchasingController == null)
+            {
+                m_IAPLogger.LogConsole("The purchasing controller is not created yet. Wait for Unity Services to initialize.");
+                return;
+            }
+
+            m_PurchasingController.RestoreTransactions(OnTransactionsRestored, StoreName);
         }
 
-        void OnTransactionsRestored(bool success, string error)
+        void OnTransactionsRestored(string storeName, bool success, string error)
         {
             m_IAPLogger.LogConsole("Transactions restored: " + success);
         }
@@ -183,15 +195,45 @@ namespace Samples.Purchasing.IAP5.Demo
 
         void InitializeIapService()
         {
+#if usePaymentProviderOnly
+            IAPService.Initialize(SignInPlayer, (message) =>
+#else
             IAPService.Initialize(OnServiceInitialized, (message) =>
+#endif
             {
                 m_IAPLogger.LogConsole($"Initialization failed, IAP service dependency error: {message}");
             });
         }
 
+#if usePaymentProviderOnly
+        // Payment Providers and the Remote Catalog need a signed-in player.
+        // Anonymous sign-in keeps this sample short, but it does not persist: a player who reinstalls loses their purchase history.
+        // Sign players in with a persistent identity in your game.
+        async void SignInPlayer()
+        {
+            try
+            {
+                // Signing in again throws when the player is already signed in, for example when this scene is reloaded.
+                if (!AuthenticationService.Instance.IsSignedIn)
+                {
+                    await AuthenticationService.Instance.SignInAnonymouslyAsync();
+                }
+            }
+            catch (Exception exception)
+            {
+                m_IAPLogger.LogConsole($"Sign-in failed: {exception.Message}");
+                return;
+            }
+
+            OnServiceInitialized();
+        }
+#endif
+
+        // Local receipt validation is for Google Play only: it needs the GooglePlayTangle class generated by obfuscating
+        // your Google Play license key. StoreKit 2 already validates Apple receipts on the device.
         void CreateCrossPlatformValidator()
         {
-#if !UNITY_EDITOR
+#if UNITY_ANDROID && !UNITY_EDITOR
         try
         {
             if (CanCrossPlatformValidate())
@@ -213,6 +255,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
         void OnServiceInitialized()
         {
+            CreateController();
             InitializeUI();
         }
 
@@ -223,7 +266,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
         async void ConnectToStore()
         {
-            await m_StoreService.Connect();
+            await m_PurchasingController.Connect();
             m_IAPLogger.LogConsole("===========");
             m_IAPLogger.LogConsole("Store Connected.");
             FetchInitialProducts();
@@ -233,9 +276,9 @@ namespace Samples.Purchasing.IAP5.Demo
         void FetchInitialProducts()
         {
 #if usePaymentProviderOnly
-            m_RemoteCatalogProvider.FetchProducts(m_ProductService.FetchProductsWithNoRetries, PaymentProvider.Name);
+            m_RemoteCatalogProvider.FetchProducts(productDefinitions => m_PurchasingController.FetchProductsWithNoRetries(productDefinitions, StoreName), StoreName);
 #else
-            m_CatalogProvider.FetchProducts(m_ProductService.FetchProductsWithNoRetries, DefaultStoreHelper.GetDefaultStoreName());
+            m_CatalogProvider.FetchProducts(productDefinitions => m_PurchasingController.FetchProductsWithNoRetries(productDefinitions, StoreName), StoreName);
 #endif
         }
 
@@ -245,7 +288,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
             if (product != null)
             {
-                m_PurchasingService?.PurchaseProduct(product);
+                m_PurchasingController?.PurchaseProduct(product);
             }
             else
             {
@@ -260,7 +303,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
         public ReadOnlyObservableCollection<Product> GetFetchedProducts()
         {
-            return m_ProductService?.GetProducts();
+            return m_PurchasingController?.GetProducts(StoreName);
         }
 
         public void ConfirmOrderIfAutomatic(PendingOrder order)
@@ -301,7 +344,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
         void ConfirmOrder(PendingOrder pendingOrder)
         {
-            m_PurchasingService.ConfirmPurchase(pendingOrder);
+            m_PurchasingController.ConfirmPurchase(pendingOrder);
         }
 
         public void RegisterButton(ProductPurchaseButtonHelper button)
@@ -334,7 +377,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
         PendingOrder GetPendingOrder(Product product)
         {
-            var orders = m_PurchasingService.GetPurchases();
+            var orders = m_PurchasingController.GetPurchases(StoreName);
 
             foreach (var order in orders)
             {
@@ -358,10 +401,7 @@ namespace Samples.Purchasing.IAP5.Demo
 
         bool CanCrossPlatformValidate()
         {
-            return IsGooglePlay() ||
-                   Application.platform == RuntimePlatform.IPhonePlayer ||
-                   Application.platform == RuntimePlatform.OSXPlayer ||
-                   Application.platform == RuntimePlatform.tvOS;
+            return IsGooglePlay();
         }
 
         void ValidatePurchase(IOrderInfo orderInfo)

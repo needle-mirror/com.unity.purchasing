@@ -8,7 +8,8 @@ namespace Samples.Purchasing.Core.BuyingSubscription
 {
     public class BuyingSubscription : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         // Your subscription ID. It should match the id of your subscription in your store.
         public string subscriptionProductId = "com.mycompany.mygame.my_vip_pass_subscription";
@@ -23,16 +24,20 @@ namespace Samples.Purchasing.Core.BuyingSubscription
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnCheckEntitlement += OnCheckEntitlement;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnCheckEntitlement += OnCheckEntitlement;
             
-            m_StoreController.OnStoreConnected += OnStoreConnected;
-            m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
+            m_PurchasingController.OnStoreConnected += OnStoreConnected;
+            m_PurchasingController.OnStoreDisconnected += OnStoreDisconnected;
 
-            await m_StoreController.Connect();
+            m_PurchasingController.OnProductsFetched += OnProductsFetched;
+            m_PurchasingController.OnProductsFetchFailed += OnProductsFetchFailed;
+
+            await m_PurchasingController.Connect();
         }
 
         void FetchProducts()
@@ -41,52 +46,50 @@ namespace Samples.Purchasing.Core.BuyingSubscription
             {
                 new(subscriptionProductId, ProductType.Subscription)
             };
-            m_StoreController.OnProductsFetched += OnProductsFetched;
-            m_StoreController.OnProductsFetchFailed += OnProductsFetchFailed;
-            m_StoreController.FetchProducts(products);
+            m_PurchasingController.FetchProducts(products, m_StoreName);
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             CheckSubscription();
         }
 
         void CheckSubscription()
         {
-            var product = m_StoreController.GetProducts().FirstOrDefault(p => p.definition.id == subscriptionProductId);
-            m_StoreController.CheckEntitlement(product);
+            var product = m_PurchasingController.GetProducts(m_StoreName).FirstOrDefault(p => p.definition.id == subscriptionProductId);
+            m_PurchasingController.CheckEntitlement(product);
         }
 
-        void OnStoreConnected()
+        void OnStoreConnected(string storeName)
         {
              Debug.Log($"Store connected.");
              FetchProducts();
         }
 
-        void OnStoreDisconnected(StoreConnectionFailureDescription storeConnectionFailureDescription)
+        void OnStoreDisconnected(string storeName, StoreConnectionFailureDescription storeConnectionFailureDescription)
         {
             Debug.Log($"Store disconnected. Reason: {storeConnectionFailureDescription}");
             // Optionally, update UI
         }
 
-        void OnProductsFetchFailed(ProductFetchFailed productFetchFailed)
+        void OnProductsFetchFailed(string storeName, ProductFetchFailed productFetchFailed)
         {
             Debug.Log($"Product fetch failed. Reason: {productFetchFailed.FailureReason}");
             // Optionally, update UI or retry fetching products
         }
 
-        void OnProductsFetched(List<Product> products)
+        void OnProductsFetched(string storeName, List<Product> products)
         {
             Debug.Log("Products successfully fetched from the store.");
             // Optionally, update UI or refresh product list
         }
 
-        void OnCheckEntitlement(Entitlement entitlement)
+        void OnCheckEntitlement(string storeName, Entitlement entitlement)
         {
             if (entitlement.Product.definition.id == subscriptionProductId)
             {
@@ -106,7 +109,7 @@ namespace Samples.Purchasing.Core.BuyingSubscription
 
         public void BuySubscription()
         {
-            m_StoreController.PurchaseProduct(subscriptionProductId);
+            m_PurchasingController.PurchaseProduct(subscriptionProductId, m_StoreName);
         }
 
         void UpdateUI()

@@ -102,6 +102,8 @@ final class UnityPurchasingInAppBrowserController: NSObject, SFSafariViewControl
         }
     }
 
+    // Reads UIKit state, so it must run on the main thread; only called from DispatchQueue.main.async.
+    @MainActor
     private func topMostViewController() -> UIViewController? {
         var root: UIViewController? = nil
 

@@ -10,7 +10,8 @@ namespace Samples.Purchasing.AppleAppStore.HandlingDeferredPurchases
 {
     public class HandlingDeferredPurchases : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         public string goldProductId = "com.mycompany.mygame.gold1";
         public ProductType goldType = ProductType.Consumable;
@@ -32,14 +33,15 @@ namespace Samples.Purchasing.AppleAppStore.HandlingDeferredPurchases
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseDeferred += OnPurchaseDeferred;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseDeferred += OnPurchaseDeferred;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchaseFailed += OnPurchaseFailed;
 
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
 
             FetchProducts();
         }
@@ -49,12 +51,12 @@ namespace Samples.Purchasing.AppleAppStore.HandlingDeferredPurchases
         {
             if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
-                if (m_StoreController.AppleStoreExtendedPurchaseService == null)
+                if (m_PurchasingController.AppleStoreExtendedPurchaseService == null)
                 {
                     Debug.LogError("Apple Store Extended Purchase Service is not available.");
                     return;
                 }
-                m_StoreController.AppleStoreExtendedPurchaseService.simulateAskToBuy = true;
+                m_PurchasingController.AppleStoreExtendedPurchaseService.simulateAskToBuy = true;
             }
         }
 
@@ -65,22 +67,22 @@ namespace Samples.Purchasing.AppleAppStore.HandlingDeferredPurchases
                 new(goldProductId, goldType)
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
             UnlockContent(order);
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseDeferred(DeferredOrder order)
+        void OnPurchaseDeferred(string storeName, DeferredOrder order)
         {
             Debug.Log($"Purchase of {order.CartOrdered.Items().FirstOrDefault()?.Product.definition.id} is deferred");
             UpdateUI();
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             if (order.CartOrdered.Items().FirstOrDefault()?.Product.definition.id == goldProductId)
             {
@@ -88,7 +90,7 @@ namespace Samples.Purchasing.AppleAppStore.HandlingDeferredPurchases
             }
         }
 
-        void OnPurchaseFailed(FailedOrder failedOrder)
+        void OnPurchaseFailed(string storeName, FailedOrder failedOrder)
         {
             Debug.Log($"Purchase failed - Product: '{failedOrder.CartOrdered.Items().FirstOrDefault()?.Product.definition.id}'," +
                 $" Purchase failure reason: {failedOrder.FailureReason}," +
@@ -97,7 +99,7 @@ namespace Samples.Purchasing.AppleAppStore.HandlingDeferredPurchases
 
         public void BuyGold()
         {
-            m_StoreController.PurchaseProduct(goldProductId);
+            m_PurchasingController.PurchaseProduct(goldProductId, m_StoreName);
         }
 
         void UnlockContent(PendingOrder order)

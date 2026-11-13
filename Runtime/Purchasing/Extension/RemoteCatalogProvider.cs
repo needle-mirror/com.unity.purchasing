@@ -64,7 +64,7 @@ namespace UnityEngine.Purchasing
                 var catalogListingResult = await catalogListingClient.GetCatalogListings();
                 if (!catalogListingResult.CompletedSuccessfully)
                 {
-                    var failedAt = catalogListingResult.LastFailedAfter ?? "<first page>";
+                    var failedAt = catalogListingResult.LastCursor ?? "<first page>";
                     return new FetchRemoteCatalogResult
                     {
                         Success = false,

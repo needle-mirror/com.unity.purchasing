@@ -208,7 +208,7 @@ Replace my Google Play and payment provider StoreControllers with a single Purch
 **What it does:** Adds Direct-to-Customer (D2C) third-party payment provider support (Stripe or Coda) via Unity Cloud, including remote catalog setup, deep link configuration, the built-in payment options picker UI, Apple/Google external purchase compliance tools, and entitlement delivery guidance.
 
 **Limitations:**
-- Requires **Unity IAP v5.4+**, **Unity Editor 2022.3+**, `com.unity.services.authentication` **v3.7.1+**, and `com.unity.services.core` **v1.18.0+**. All must be satisfied before any code is written.
+- Requires **Unity IAP v5.4+**, **Unity Editor 2022.3+**, `com.unity.services.authentication` **v3.8.1+** (recommended; v3.7.1 is the minimum), and `com.unity.services.core` **v1.18.0+**. All must be satisfied before any code is written.
 - **Subscriptions are not supported** by IAP D2C Capabilities in v5.4. Only Consumable and NonConsumable products can be used.
 - Requires a **Stripe or Coda account** connected in the Unity Cloud IAP dashboard, and Unity must enable D2C for your organization — contact your Unity Client Partner if it is not yet enabled.
 - **Routing rules** must be configured in the Unity Dashboard before any player is offered a D2C payment option. Without a routing rule, no provider is offered even if a provider account is connected.

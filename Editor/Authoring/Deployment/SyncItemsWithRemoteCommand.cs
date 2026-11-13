@@ -32,6 +32,8 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
 
         const string k_ProjectNotLinked = "The project is not linked to a Unity Cloud project.";
         const string k_NoEnvironment = "No Unity Cloud environment is selected.";
+        const string k_EnvironmentsUnavailable =
+            "Couldn't load the Unity Cloud environments. Check that you're signed in and can access the linked project.";
 
         readonly ILiveContentConfigClient m_Client;
         readonly IEnvironmentsApi m_EnvironmentsApi;
@@ -66,6 +68,17 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
 
             var snapshot = DeployedStatusSnapshot.Capture(allEntries.Concat<IDeploymentItem>(csvItems));
             MarkChecking(entryItems, csvItems);
+
+            // The Deployment package syncs every provider on each domain reload, so a project
+            // with no catalog items would otherwise reach the backend for nothing to compare.
+            if (allEntries.Count == 0)
+            {
+                foreach (var csv in csvItems)
+                {
+                    AggregateCsvStatus(csv, snapshot);
+                }
+                return;
+            }
 
             var environmentId = await TryInitializeClient(allEntries, csvItems, cancellationToken);
             if (environmentId == null)
@@ -143,10 +156,25 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
         /// whose all-zero string passes client validation and gets a 404 that reads as "Not Deployed".
         /// Returns <see cref="Guid.Empty"/> if no environment is available after a refresh.
         /// </summary>
+        /// <remarks>
+        /// The refresh fails when the user can't access the linked project (a 403 when signed out,
+        /// or when the project belongs to an organization they aren't in). That's user-fixable, so
+        /// it is reported on the items rather than logged. Services Core's HttpException is
+        /// internal, so the status can't be checked; any refresh failure is treated this way.
+        /// </remarks>
         async Task<Guid> GetActiveEnvironmentIdAsync()
         {
             if (!HasActiveEnvironment())
-                await m_EnvironmentsApi.RefreshAsync();
+            {
+                try
+                {
+                    await m_EnvironmentsApi.RefreshAsync();
+                }
+                catch (Exception e) when (!(e is OperationCanceledException))
+                {
+                    throw new RemoteTargetUnavailableException($"{k_EnvironmentsUnavailable} ({e.Message})");
+                }
+            }
 
             return m_EnvironmentsApi.ActiveEnvironmentId ?? Guid.Empty;
         }
@@ -339,7 +367,7 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Deployment
 
         /// <summary>
         /// An expected, user-fixable reason the remote can't be reached yet (unlinked project, no
-        /// environment). Reported on the items without logging an error.
+        /// environment, no access to the project's environments). Reported on the items without logging an error.
         /// </summary>
         sealed class RemoteTargetUnavailableException : Exception
         {

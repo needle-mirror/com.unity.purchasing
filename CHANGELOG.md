@@ -1,4 +1,17 @@
 # Changelog
+## [5.5.1] - 2026-11-13
+### Changed
+- Updated the `com.unity.services.core` dependency to 1.19.0, which fixes "Attempted to get location for assembly Unity.Services.Core.Editor ... while it is unloading" being logged on every domain reload under CoreCLR.
+- Authoring - Deploying a routing config (`.iaprouting`) now reads the routing on the server first and names the tags that the deploy removes because the file doesn't have them, also on a dry run. A failed read now fails the deploy instead of overwriting routing that was never read. The `enforceProviderTagValidation` field is no longer sent, as the server never used it; files that still have it load as before.
+- Samples - Updated the samples to use `PurchasingController` instead of `StoreController` and the individual store, product and purchase services.
+
+### Fixed
+- Authoring - Fixed a `403 Forbidden` error logged on every domain reload since 5.5.0 when ProjectSettings has a cloud project ID that isn't linked, or that the signed-in user can't access. Comparing catalog items against their remote counterpart is now skipped when the project isn't linked or has no catalog items. If the project's environments can't be loaded, the reason now shows as the items' status in the Deployment window instead of as a Console error.
+- Authoring - A pending wait for the project to be linked to a cloud project no longer keeps the catalog deployment objects alive across a code reload, which leaked under CoreCLR.
+- Google Play - `UpgradeDowngradeSubscription(Product, Product, GooglePlayReplacementMode)` no longer fails with "Sequence contains no matching element" when the old subscription isn't among the fetched purchases. It now falls back to the old product's transaction id.
+- Insights - Purchase and session events now include the Firebase session ID when one is available and allowed. It was collected when consented to, but left out of the event sent to Unity, so it never reached Unity's purchase data.
+- Remote catalog - Products could be missing from the remote catalog and from Payment Provider products when the environment holds more than 100 configs, because fetching stopped at the first page with fewer than 100 items. Fetching now continues until the server reports no more items.
+
 ## [5.5.0] - 2026-11-04
 ### Added
 - Added `Order.StoreName` and `Product.StoreName`, the name of the store an order belongs to or a product was fetched from.

@@ -37,10 +37,11 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
         /// <param name="contentUri">contentUri param</param>
         /// <param name="id">id param</param>
         /// <param name="path">path param</param>
+        /// <param name="sortIndex">Reserved. Optional pre-defined sort key.</param>
         /// <param name="type">type param</param>
         /// <param name="variantTag">variantTag param</param>
         [Preserve]
-        public ClientFile(string contentHash = default, long contentSize = default, string contentType = default, string contentUri = default, string id = default, string path = default, ResourceType type = default, List<string> variantTag = default)
+        public ClientFile(string contentHash = default, long contentSize = default, string contentType = default, string contentUri = default, string id = default, string path = default, long sortIndex = default, ResourceType type = default, List<string> variantTag = default)
         {
             ContentHash = contentHash;
             ContentSize = contentSize;
@@ -48,6 +49,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
             ContentUri = contentUri;
             Id = id;
             Path = path;
+            SortIndex = sortIndex;
             Type = type;
             VariantTag = variantTag;
         }
@@ -95,6 +97,13 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
         public string Path{ get; }
         
         /// <summary>
+        /// Reserved. Optional pre-defined sort key.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "sortIndex", EmitDefaultValue = false)]
+        public long SortIndex{ get; }
+        
+        /// <summary>
         /// Parameter type of ClientFile
         /// </summary>
         [Preserve]
@@ -138,6 +147,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
             {
                 serializedModel += "path," + Path + ",";
             }
+            serializedModel += "sortIndex," + SortIndex.ToString() + ",";
             serializedModel += "type," + Type.ToString() + ",";
             if (VariantTag != null)
             {
@@ -186,6 +196,9 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
                 var pathStringValue = Path.ToString();
                 dictionary.Add("path", pathStringValue);
             }
+            
+            var sortIndexStringValue = SortIndex.ToString();
+            dictionary.Add("sortIndex", sortIndexStringValue);
             
             var typeStringValue = Type.ToString();
             dictionary.Add("type", typeStringValue);

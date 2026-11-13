@@ -546,7 +546,7 @@ namespace UnityEngine.Purchasing.Stores
 
                 if (!fetchResult.CompletedSuccessfully)
                 {
-                    var failedAt = fetchResult.LastFailedAfter ?? "<first page>";
+                    var failedAt = fetchResult.LastCursor ?? "<first page>";
                     Debug.unityLogger.LogIAPWarning(
                         $"Catalog paging incomplete after cursor {failedAt}; delivering partial product set.");
                 }

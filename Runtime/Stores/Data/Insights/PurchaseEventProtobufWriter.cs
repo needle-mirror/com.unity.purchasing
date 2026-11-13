@@ -41,6 +41,7 @@ namespace UnityEngine.Purchasing.Stores.Data.Insights
             WriteTimestampField(s, 1, e.Timestamp);
             WriteOptionalString(s, 2, e.EventUuid);
             WriteOptionalString(s, 3, e.SessionId);
+            WriteOptionalString(s, 4, e.FirebaseSessionId);
             WriteOptionalString(s, 5, e.ProjectId);
             WriteOptionalString(s, 6, e.EnvironmentId);
             WriteOptionalString(s, 7, e.IapSdkVersion);

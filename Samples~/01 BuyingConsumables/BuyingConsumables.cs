@@ -9,7 +9,8 @@ namespace Samples.Purchasing.Legacy.Core.BuyingConsumables
 {
     public class BuyingConsumables : MonoBehaviour
     {
-        StoreController m_StoreController; // The Unity Purchasing system.
+        PurchasingController m_PurchasingController; // The Unity Purchasing system.
+        string m_StoreName; // The store this sample buys from.
 
         //Your products IDs. They should match the ids of your products in your store.
         public string goldProductId = "com.mycompany.mygame.gold1";
@@ -33,20 +34,21 @@ namespace Samples.Purchasing.Legacy.Core.BuyingConsumables
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchaseFailed += OnPurchaseFailed;
 
-            m_StoreController.OnStoreConnected += OnStoreConnected;
-            m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
+            m_PurchasingController.OnStoreConnected += OnStoreConnected;
+            m_PurchasingController.OnStoreDisconnected += OnStoreDisconnected;
 
-            m_StoreController.OnProductsFetchFailed += OnProductsFetchedFailed;
-            m_StoreController.OnProductsFetched += OnProductsFetched;
+            m_PurchasingController.OnProductsFetchFailed += OnProductsFetchedFailed;
+            m_PurchasingController.OnProductsFetched += OnProductsFetched;
 
             Debug.Log("Connecting to store.");
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
         }
 
         void FetchProducts()
@@ -57,20 +59,20 @@ namespace Samples.Purchasing.Legacy.Core.BuyingConsumables
                 new(diamondProductId, ProductType.Consumable)
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
         public void BuyGold()
         {
-            m_StoreController.PurchaseProduct(goldProductId);
+            m_PurchasingController.PurchaseProduct(goldProductId, m_StoreName);
         }
 
         public void BuyDiamond()
         {
-            m_StoreController.PurchaseProduct(diamondProductId);
+            m_PurchasingController.PurchaseProduct(diamondProductId, m_StoreName);
         }
 
-        void OnPurchaseFailed(FailedOrder order)
+        void OnPurchaseFailed(string storeName, FailedOrder order)
         {
             var product = GetFirstProductInOrder(order);
             if (product == null)
@@ -83,7 +85,7 @@ namespace Samples.Purchasing.Legacy.Core.BuyingConsumables
                       + $"Purchase Failure Details: {order.Details}");
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
             var product = GetFirstProductInOrder(order);
             if (product is null)
@@ -104,10 +106,10 @@ namespace Samples.Purchasing.Legacy.Core.BuyingConsumables
 
             Debug.Log($"Purchase complete - Product: {product.definition.id}");
 
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             switch (order)
             {
@@ -152,26 +154,26 @@ namespace Samples.Purchasing.Legacy.Core.BuyingConsumables
             return order.CartOrdered.Items().First()?.Product;
         }
 
-        // Calling StoreController.Connect without a listener on the StoreController.OnStoreConnect event will result in warnings.
-        void OnStoreConnected()
+        // Calling PurchasingController.Connect without a listener on the PurchasingController.OnStoreConnected event will result in warnings.
+        void OnStoreConnected(string storeName)
         {
             Debug.Log($"Store Connected.");
             FetchProducts();
         }
 
-        // Calling StoreController.Connect without a listener on the StoreController.OnStoreDisconnected event will result in warnings.
-        void OnStoreDisconnected(StoreConnectionFailureDescription description)
+        // Calling PurchasingController.Connect without a listener on the PurchasingController.OnStoreDisconnected event will result in warnings.
+        void OnStoreDisconnected(string storeName, StoreConnectionFailureDescription description)
         {
             Debug.Log($"Store disconnected details: {description.message}");
         }
 
-        // Calling StoreController.Connect without listeners on StoreController.OnProductsFetched and StoreController.OnProductsFetchedFailed will result in warnings.
-        void OnProductsFetched(List<Product> products)
+        // Calling PurchasingController.Connect without listeners on PurchasingController.OnProductsFetched and PurchasingController.OnProductsFetchFailed will result in warnings.
+        void OnProductsFetched(string storeName, List<Product> products)
         {
             Debug.Log($"Products fetched successfully for {products.Count} products.");
         }
 
-        void OnProductsFetchedFailed(ProductFetchFailed failure)
+        void OnProductsFetchedFailed(string storeName, ProductFetchFailed failure)
         {
             Debug.Log($"Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
         }

@@ -272,8 +272,10 @@ namespace UnityEngine.Purchasing.Stores
         // The currency must stay coherent with the country the order is created against: it
         // is only ever taken from the source that supplied that country, or derived from
         // the country itself — never borrowed from another source. Store country and
-        // currency are written at different times (the storefront at connect, the currency
-        // from fetched products, or never), so either can be present without the other.
+        // currency are written at different times (Google: the billing-config country after
+        // Connect, the currency after FetchProducts; Apple: the storefront country, and on
+        // iOS 17+ its currency, after FetchProducts on StoreKit 2 or when the storefront is
+        // fetched explicitly; or never), so either can be present without the other.
         // A null currency is safe: the backend and SelectCurrency both fall back to the
         // first catalog currency.
         static string? SelectCurrency(string? storeCountry, string? storeCurrency, DeviceLocale deviceLocale, RegionInfo? defaultRegion)

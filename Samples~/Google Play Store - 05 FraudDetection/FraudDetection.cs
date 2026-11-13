@@ -11,7 +11,8 @@ namespace Samples.Purchasing.GooglePlay.FraudDetection
 {
     public class FraudDetection : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         public User user;
 
@@ -34,15 +35,16 @@ namespace Samples.Purchasing.GooglePlay.FraudDetection
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchaseFailed += OnPurchaseFailed;
 
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
 
-            ConfigureGoogleFraudDetection(m_StoreController.GooglePlayStoreExtendedService);
+            ConfigureGoogleFraudDetection(m_PurchasingController.GooglePlayStoreExtendedService);
             FetchProducts();
         }
 
@@ -53,7 +55,7 @@ namespace Samples.Purchasing.GooglePlay.FraudDetection
                 new(goldProductId, goldType)
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
         void ConfigureGoogleFraudDetection(IGooglePlayStoreExtendedService googlePlayStoreExtendedService)
@@ -88,15 +90,15 @@ namespace Samples.Purchasing.GooglePlay.FraudDetection
 
         public void BuyGold()
         {
-            m_StoreController.PurchaseProduct(goldProductId);
+            m_PurchasingController.PurchaseProduct(goldProductId, m_StoreName);
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             var product = GetFirstProductInOrder(order);
             if (product == null)
@@ -118,7 +120,7 @@ namespace Samples.Purchasing.GooglePlay.FraudDetection
             }
         }
 
-        void OnPurchaseFailed(FailedOrder order)
+        void OnPurchaseFailed(string storeName, FailedOrder order)
         {
             var product = GetFirstProductInOrder(order);
             if (product == null)

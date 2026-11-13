@@ -12,6 +12,8 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService
 {
     internal class InternalLiveContentAdapterService : ILiveContentAdapterService
     {
+        const string k_NextCursorHeader = "X-Next-Cursor";
+
         readonly ILiveContentAdapterServiceExceptionMapper m_ServiceExceptionMapper;
         readonly IEnvironmentId m_EnvironmentId;
         readonly IClientApiClient m_ApiClient;
@@ -28,7 +30,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService
             m_ServiceExceptionMapper = new LiveContentAdapterServiceExceptionMapper();
         }
 
-        public async Task<List<ConfigContentData>> GetConfigsContent(string schema = null, string schemaVersion = null, int? limit = null, string after = null)
+        public async Task<ConfigContentPage> GetConfigsContent(string schema = null, string schemaVersion = null, int? limit = null, string after = null)
         {
             CheckForCloudProjectInfo();
 
@@ -42,9 +44,16 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService
             return await m_ServiceExceptionMapper.InvokeAndMapServiceExceptions(async () =>
             {
                 var response = await m_ApiClient.GetPlayerConfigsContentAsync(request, m_Configuration);
-                return CreateConfigContentDataFromResponse(response.Result);
+                return new ConfigContentPage
+                {
+                    configs = CreateConfigContentDataFromResponse(response.Result),
+                    nextCursor = GetHeaderValue(response.Headers, k_NextCursorHeader)
+                };
             });
         }
+
+        static string GetHeaderValue(Dictionary<string, string> headers, string headerName) =>
+            headers?.FirstOrDefault(h => string.Equals(h.Key, headerName, StringComparison.OrdinalIgnoreCase)).Value;
 
         void CheckForCloudProjectInfo()
         {

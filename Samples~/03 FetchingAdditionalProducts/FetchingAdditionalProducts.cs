@@ -8,7 +8,8 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
 {
     public class FetchingAdditionalProducts : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         public string goldProductId = "com.mycompany.mygame.gold1";
         public ProductType goldType = ProductType.Consumable;
@@ -34,13 +35,14 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnStoreConnected += OnStoreConnected;
-            m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnStoreConnected += OnStoreConnected;
+            m_PurchasingController.OnStoreDisconnected += OnStoreDisconnected;
 
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
         }
 
         public void OnFetchAdditionalProductsButtonClicked()
@@ -56,19 +58,19 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
             };
 
             Debug.Log($"Fetching additional products in progress");
-            m_StoreController.OnProductsFetched += OnProductsFetched;
-            m_StoreController.OnProductsFetchFailed += OnProductsFetchFailed;
-            m_StoreController.FetchProducts(additionalProductsToFetch);
+            m_PurchasingController.OnProductsFetched += OnProductsFetched;
+            m_PurchasingController.OnProductsFetchFailed += OnProductsFetchFailed;
+            m_PurchasingController.FetchProducts(additionalProductsToFetch, m_StoreName);
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
             Debug.Log($"Purchase pending - Order: {order}");
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
             // Optionally, update UI to show pending state
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             var product = order.CartOrdered.Items().FirstOrDefault()?.Product;
             if (product == null)
@@ -91,12 +93,12 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
 
         public void BuyGold()
         {
-            m_StoreController.PurchaseProduct(goldProductId);
+            m_PurchasingController.PurchaseProduct(goldProductId, m_StoreName);
         }
 
         public void BuyDiamond()
         {
-            m_StoreController.PurchaseProduct(diamondProductId);
+            m_PurchasingController.PurchaseProduct(diamondProductId, m_StoreName);
         }
 
 
@@ -112,29 +114,29 @@ namespace Samples.Purchasing.Core.FetchingAdditionalProducts
                 $" Purchase failure details: {failureDescription.message}");
         }
 
-        void OnStoreConnected()
+        void OnStoreConnected(string storeName)
         {
             Debug.Log($"Store connected.");
         }
 
-        void OnStoreDisconnected(StoreConnectionFailureDescription storeConnectionFailureDescription)
+        void OnStoreDisconnected(string storeName, StoreConnectionFailureDescription storeConnectionFailureDescription)
         {
             Debug.Log($"Store disconnected. Reason: {storeConnectionFailureDescription}");
             // Optionally, update UI
         }
 
-        void OnProductsFetchFailed(ProductFetchFailed productFetchFailed)
+        void OnProductsFetchFailed(string storeName, ProductFetchFailed productFetchFailed)
         {
-            m_StoreController.OnProductsFetched -= OnProductsFetched;
-            m_StoreController.OnProductsFetchFailed -= OnProductsFetchFailed;
+            m_PurchasingController.OnProductsFetched -= OnProductsFetched;
+            m_PurchasingController.OnProductsFetchFailed -= OnProductsFetchFailed;
             Debug.Log($"Product fetch failed. Reason: {productFetchFailed.FailureReason}");
             // Optionally, update UI or retry fetching products
         }
 
-        void OnProductsFetched(List<Product> products)
+        void OnProductsFetched(string storeName, List<Product> products)
         {
-            m_StoreController.OnProductsFetched -= OnProductsFetched;
-            m_StoreController.OnProductsFetchFailed -= OnProductsFetchFailed;
+            m_PurchasingController.OnProductsFetched -= OnProductsFetched;
+            m_PurchasingController.OnProductsFetchFailed -= OnProductsFetchFailed;
             Debug.Log("Products successfully fetched from the store.");
             additionalProductsPanel.SetActive(true); // Show diamond UI
             // Optionally, update UI or refresh product list

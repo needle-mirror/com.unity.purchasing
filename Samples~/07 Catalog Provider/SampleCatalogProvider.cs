@@ -9,10 +9,13 @@ namespace Samples.Purchasing.Core.CatalogProvider
     {
         /// <summary>
         /// Here we create a CatalogProvider for each Catalog that we want to manage.
-        /// We also declare a store, and product service needed to link our remote store with our list of products.
+        /// We also declare a PurchasingController, needed to link our remote store with our list of products.
         /// </summary>
         UnityEngine.Purchasing.CatalogProvider m_DefaultCatalogProvider = new UnityEngine.Purchasing.CatalogProvider();
         UnityEngine.Purchasing.CatalogProvider m_SeasonalCatalogProvider = new UnityEngine.Purchasing.CatalogProvider();
+
+        string m_StoreName;
+        PurchasingController m_Controller;
 
         /// <summary>
         /// Here is an example of hard coded definitions of each product that will end up in the default catalog.
@@ -28,8 +31,11 @@ namespace Samples.Purchasing.Core.CatalogProvider
 
         void Awake()
         {
-            UnityIAPServices.DefaultStore().OnStoreConnected += OnStoreConnected;
-            UnityIAPServices.DefaultStore().OnStoreDisconnected += OnStoreDisconnected;
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_Controller = new PurchasingController(m_StoreName);
+
+            m_Controller.OnStoreConnected += OnStoreConnected;
+            m_Controller.OnStoreDisconnected += OnStoreDisconnected;
             InitDefaultCatalog();
             InitSeasonalCatalog();
 
@@ -38,7 +44,7 @@ namespace Samples.Purchasing.Core.CatalogProvider
             ConnectToStore();
         }
 
-        void OnStoreConnected()
+        void OnStoreConnected(string storeName)
         {
             Debug.Log($"Store connected.");
             
@@ -46,7 +52,7 @@ namespace Samples.Purchasing.Core.CatalogProvider
             FakeFetchProducts();
             
         }
-        void OnStoreDisconnected(StoreConnectionFailureDescription storeConnectionFailureDescription)
+        void OnStoreDisconnected(string storeName, StoreConnectionFailureDescription storeConnectionFailureDescription)
         {
             Debug.Log($"Store disconnected. Reason: {storeConnectionFailureDescription}");
             // Optionally, update UI
@@ -117,7 +123,7 @@ namespace Samples.Purchasing.Core.CatalogProvider
         /// </summary>
         void ConnectToStore()
         {
-            UnityIAPServices.DefaultStore().Connect();
+            m_Controller.Connect();
         }
 
         /// <summary>
@@ -126,8 +132,8 @@ namespace Samples.Purchasing.Core.CatalogProvider
         /// </summary>
         void FetchProducts()
         {
-            m_DefaultCatalogProvider.FetchProducts(UnityIAPServices.DefaultProduct().FetchProductsWithNoRetries);
-            m_SeasonalCatalogProvider.FetchProducts(UnityIAPServices.DefaultProduct().FetchProductsWithNoRetries);
+            m_DefaultCatalogProvider.FetchProducts(defs => m_Controller.FetchProductsWithNoRetries(defs, m_StoreName), m_StoreName);
+            m_SeasonalCatalogProvider.FetchProducts(defs => m_Controller.FetchProductsWithNoRetries(defs, m_StoreName), m_StoreName);
         }
 
         /// <summary>
@@ -161,20 +167,20 @@ namespace Samples.Purchasing.Core.CatalogProvider
         }
 
         /// <summary>
-        /// Setup the necessary callbacks for the ProductService
+        /// Setup the necessary product callbacks on the PurchasingController
         /// </summary>
         void ConfigureProductServiceCallbacks()
         {
-            UnityIAPServices.DefaultProduct().OnProductsFetched += OnInitialProductsFetched;
-            UnityIAPServices.DefaultProduct().OnProductsFetchFailed += OnInitialProductsFetchFailed;
+            m_Controller.OnProductsFetched += OnInitialProductsFetched;
+            m_Controller.OnProductsFetchFailed += OnInitialProductsFetchFailed;
         }
 
-        void OnInitialProductsFetched(List<Product> products)
+        void OnInitialProductsFetched(string storeName, List<Product> products)
         {
             // Your code here
         }
 
-        void OnInitialProductsFetchFailed(ProductFetchFailed failure)
+        void OnInitialProductsFetchFailed(string storeName, ProductFetchFailed failure)
         {
             // Your code here
         }

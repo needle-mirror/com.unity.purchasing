@@ -15,9 +15,6 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         [JsonProperty("mappings")]
         internal Dictionary<string, List<string>> Mappings { get; set; } = new();
 
-        [JsonProperty("enforceProviderTagValidation")]
-        internal bool EnforceProviderTagValidation { get; set; }
-
         internal static ProviderRoutingConfig CreateDefault()
         {
             return new ProviderRoutingConfig

@@ -146,7 +146,7 @@ namespace UnityEngine.Purchasing
                     var orders = purchaseService.GetPurchases();
 // Obsolete: Product.transactionID
 #pragma warning disable 618, 612
-                    var order = orders.First(order => order.CartOrdered.Items().Contains(oldProduct)) ?? new ConfirmedOrder(new Cart(new CartItem(oldProduct)), new OrderInfo("", oldProduct.transactionID, ""));
+                    var order = orders.FirstOrDefault(order => order.CartOrdered.Items().Contains(oldProduct)) ?? new ConfirmedOrder(new Cart(new CartItem(oldProduct)), new OrderInfo("", oldProduct.transactionID, ""));
 #pragma warning restore 618, 612
                     UpgradeDowngradeSubscription(order, newProduct, desiredReplacementMode);
                 }

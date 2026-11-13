@@ -38,9 +38,9 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Apis.Client
             /// </summary>
             /// <param name="request">Request object for GetPlayerConfigs.</param>
             /// <param name="operationConfiguration">Configuration for GetPlayerConfigs.</param>
-            /// <returns>Task for a Response object containing status code, headers, and List&lt;ClientFile&gt; object.</returns>
+            /// <returns>Task for a Response object containing status code, headers, and List&lt;ConfigClientFile&gt; object.</returns>
             /// <exception cref="UnityEngine.Purchasing.LiveContentAdapterService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-            Task<Response<List<ClientFile>>> GetPlayerConfigsAsync(UnityEngine.Purchasing.LiveContentAdapterService.Client.GetPlayerConfigsRequest request, Configuration operationConfiguration = null);
+            Task<Response<List<ConfigClientFile>>> GetPlayerConfigsAsync(UnityEngine.Purchasing.LiveContentAdapterService.Client.GetPlayerConfigsRequest request, Configuration operationConfiguration = null);
 
             /// <summary>
             /// Async Operation.
@@ -149,12 +149,12 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Apis.Client
         /// </summary>
         /// <param name="request">Request object for GetPlayerConfigs.</param>
         /// <param name="operationConfiguration">Configuration for GetPlayerConfigs.</param>
-        /// <returns>Task for a Response object containing status code, headers, and List&lt;ClientFile&gt; object.</returns>
+        /// <returns>Task for a Response object containing status code, headers, and List&lt;ConfigClientFile&gt; object.</returns>
         /// <exception cref="UnityEngine.Purchasing.LiveContentAdapterService.Http.HttpException">An exception containing the HttpClientResponse with headers, response code, and string of error.</exception>
-        public async Task<Response<List<ClientFile>>> GetPlayerConfigsAsync(UnityEngine.Purchasing.LiveContentAdapterService.Client.GetPlayerConfigsRequest request,
+        public async Task<Response<List<ConfigClientFile>>> GetPlayerConfigsAsync(UnityEngine.Purchasing.LiveContentAdapterService.Client.GetPlayerConfigsRequest request,
             Configuration operationConfiguration = null)
         {
-            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(List<ClientFile>)   } };
+            var statusCodeToTypeMap = new Dictionary<string, System.Type>() { {"200", typeof(List<ConfigClientFile>)   } };
 
             // Merge the operation/request level configuration with the client level configuration.
             var finalConfiguration = Configuration.MergeConfigurations(operationConfiguration, Configuration);
@@ -165,8 +165,8 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Apis.Client
                 request.ConstructHeaders(_accessToken, finalConfiguration),
                 finalConfiguration.RequestTimeout ?? _baseTimeout);
 
-            var handledResponse = ResponseHandler.HandleAsyncResponse<List<ClientFile>>(response, statusCodeToTypeMap);
-            return new Response<List<ClientFile>>(response, handledResponse);
+            var handledResponse = ResponseHandler.HandleAsyncResponse<List<ConfigClientFile>>(response, statusCodeToTypeMap);
+            return new Response<List<ConfigClientFile>>(response, handledResponse);
         }
 
 

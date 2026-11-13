@@ -37,9 +37,10 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
         /// <param name="id">id param</param>
         /// <param name="path">path param</param>
         /// <param name="schemas">schemas param</param>
+        /// <param name="sortIndex">Reserved. Optional pre-defined sort key.</param>
         /// <param name="variantTag">variantTag param</param>
         [Preserve]
-        public ClientFileWithContent(Dictionary<string, object> content, string contentHash, long contentSize, string id, string path, List<string> schemas = default, List<string> variantTag = default)
+        public ClientFileWithContent(Dictionary<string, object> content, string contentHash, long contentSize, string id, string path, List<string> schemas = default, long sortIndex = default, List<string> variantTag = default)
         {
             Content = (Dictionary<string, IDeserializable>) JsonObject.GetNewJsonObjectResponse(content);
             ContentHash = contentHash;
@@ -47,6 +48,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
             Id = id;
             Path = path;
             Schemas = schemas;
+            SortIndex = sortIndex;
             VariantTag = variantTag;
         }
 
@@ -93,6 +95,13 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
         public List<string> Schemas{ get; }
         
         /// <summary>
+        /// Reserved. Optional pre-defined sort key.
+        /// </summary>
+        [Preserve]
+        [DataMember(Name = "sortIndex", EmitDefaultValue = false)]
+        public long SortIndex{ get; }
+        
+        /// <summary>
         /// Parameter variantTag of ClientFileWithContent
         /// </summary>
         [Preserve]
@@ -128,6 +137,7 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
             {
                 serializedModel += "schemas," + Schemas.ToString() + ",";
             }
+            serializedModel += "sortIndex," + SortIndex.ToString() + ",";
             if (VariantTag != null)
             {
                 serializedModel += "variantTag," + VariantTag.ToString();
@@ -175,6 +185,9 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Models
                 var schemasStringValue = Schemas.ToString();
                 dictionary.Add("schemas", schemasStringValue);
             }
+            
+            var sortIndexStringValue = SortIndex.ToString();
+            dictionary.Add("sortIndex", sortIndexStringValue);
             
             if (VariantTag != null)
             {

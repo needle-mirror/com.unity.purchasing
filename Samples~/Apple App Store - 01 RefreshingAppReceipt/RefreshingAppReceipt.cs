@@ -10,7 +10,8 @@ namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
 {
     public class RefreshingAppReceipt : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         public string noAdsProductId = "com.mycompany.mygame.no_ads";
 
@@ -30,29 +31,30 @@ namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
-            m_StoreController.OnCheckEntitlement += OnCheckEntitlement;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchaseFailed += OnPurchaseFailed;
+            m_PurchasingController.OnCheckEntitlement += OnCheckEntitlement;
 
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
 
             FetchProducts();
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             HasNoAds();
         }
 
-        void OnCheckEntitlement(Entitlement entitlement)
+        void OnCheckEntitlement(string storeName, Entitlement entitlement)
         {
             if (entitlement.Product.definition.id == noAdsProductId)
             {
@@ -77,12 +79,12 @@ namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
                 new ProductDefinition(noAdsProductId, ProductType.NonConsumable)
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
         public void Refresh()
         {
-            m_StoreController.AppleStoreExtendedPurchaseService?.RefreshAppReceipt(OnRefreshSuccess, OnRefreshFailure);
+            m_PurchasingController.AppleStoreExtendedPurchaseService?.RefreshAppReceipt(OnRefreshSuccess, OnRefreshFailure);
         }
 
         void OnRefreshSuccess(string receipt)
@@ -107,7 +109,7 @@ namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
 
         public void BuyNoAds()
         {
-            m_StoreController.PurchaseProduct(noAdsProductId);
+            m_PurchasingController.PurchaseProduct(noAdsProductId, m_StoreName);
         }
 
         void UpdateUI()
@@ -116,10 +118,10 @@ namespace Samples.Purchasing.AppleAppStore.RefreshingAppReceipt
         }
         void HasNoAds()
         {
-            m_StoreController.CheckEntitlement(m_StoreController.GetProducts().FirstOrDefault(product => product.definition.id == noAdsProductId));
+            m_PurchasingController.CheckEntitlement(m_PurchasingController.GetProducts(m_StoreName).FirstOrDefault(product => product.definition.id == noAdsProductId));
         }
 
-        void OnPurchaseFailed(FailedOrder failedOrder)
+        void OnPurchaseFailed(string storeName, FailedOrder failedOrder)
         {
             Debug.Log($"Purchase failed - Product: '{failedOrder.CartOrdered.Items().FirstOrDefault()?.Product.definition.id}'," +
                 $" Purchase failure reason: {failedOrder.FailureReason}," +

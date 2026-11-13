@@ -369,9 +369,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerConfigsRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for page </summary>
-        [Preserve]
-        public long? Page { get; }
         /// <summary>Accessor for limit </summary>
         [Preserve]
         public long? Limit { get; }
@@ -381,15 +378,21 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// <summary>Accessor for schema </summary>
         [Preserve]
         public string Schema { get; }
-        /// <summary>Accessor for next </summary>
+        /// <summary>Accessor for schemaVersion </summary>
         [Preserve]
-        public string Next { get; }
+        public string SchemaVersion { get; }
         /// <summary>Accessor for after </summary>
         [Preserve]
         public string After { get; }
         /// <summary>Accessor for start </summary>
         [Preserve]
         public bool? Start { get; }
+        /// <summary>Accessor for sortBy </summary>
+        [Preserve]
+        public string SortBy { get; }
+        /// <summary>Accessor for sortOrder </summary>
+        [Preserve]
+        public string SortOrder { get; }
         /// <summary>Accessor for metadata </summary>
         [Preserve]
         public string Metadata { get; }
@@ -399,34 +402,31 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// GetPlayerConfigs Request Object.
         /// Get player configs
         /// </summary>
-        /// <param name="page">Current Page. Deprecated: use the `next` cursor instead for efficient pagination.</param>
         /// <param name="limit">Items Per Page</param>
         /// <param name="path">Path</param>
         /// <param name="schema">URI-escaped Schema identifier</param>
-        /// <param name="next">Opaque cursor token returned in the `X-Next` response header from a previous request. When provided, returns the next page of results. Takes precedence over `after` and `start`.</param>
+        /// <param name="schemaVersion">Version constraint for the schema. Supports exact (1.1.6), partial (1.1), wildcard (1.1.*), single operators (>=1.1.0, <=1.1.0, >1.1.0, <1.1.0, =1.1.0, !=1.1.0, ~>1.1), and comma-separated multi-constraints (>=1.0.0,<2.0.0). When combined with the schema parameter, the schema value is treated as a base URL prefix. Matches documents where at least one schema URL satisfies both constraints. </param>
         /// <param name="after">Path-based cursor - returns configs listed alphabetically after this config path</param>
         /// <param name="start">Path-based cursor - Start from the alphabetically first config path</param>
+        /// <param name="sortBy">Sort By</param>
+        /// <param name="sortOrder">Sort Order</param>
         /// <param name="metadata">AIP-160 filter expression scoped to the metadata object. Field paths are relative to the metadata object — do not include a \"metadata.\" prefix. Supported operators: = != < <= > >= : (has/contains) AND OR NOT. Wildcards: use * in string values for glob matching (e.g. \"io*\" matches \"ios\"). Examples:   ?metadata=platform=\"ios\"   ?metadata=platform=\"ios\" AND version>3   ?metadata=platform=\"ios\" OR platform=\"android\"   ?metadata=NOT platform=\"web\"   ?metadata=tags:\"mobile\"   ?metadata=version:*</param>
         [Preserve]
-        public GetPlayerConfigsRequest(long? page = default(long?), long? limit = 10, string path = default(string), string schema = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
+        public GetPlayerConfigsRequest(long? limit = 10, string path = default(string), string schema = default(string), string schemaVersion = default(string), string after = default(string), bool? start = default(bool?), string sortBy = default(string), string sortOrder = default(string), string metadata = default(string))
         {
-            Page = page;
             Limit = limit;
             Path = path;
             Schema = schema;
-            Next = next;
+            SchemaVersion = schemaVersion;
             After = after;
             Start = start;
+            SortBy = sortBy;
+            SortOrder = sortOrder;
             Metadata = metadata;
             PathAndQueryParams = $"/configs/info";
 
             List<string> queryParams = new List<string>();
 
-            var pageStringValue = Page.ToString();
-            if (!string.IsNullOrEmpty(pageStringValue))
-            {
-                queryParams = AddParamsToQueryParams(queryParams, "page", pageStringValue);
-            }
             var limitStringValue = Limit.ToString();
             if (!string.IsNullOrEmpty(limitStringValue))
             {
@@ -440,9 +440,9 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             {
                 queryParams = AddParamsToQueryParams(queryParams, "schema", Schema);
             }
-            if(!string.IsNullOrEmpty(Next))
+            if(!string.IsNullOrEmpty(SchemaVersion))
             {
-                queryParams = AddParamsToQueryParams(queryParams, "next", Next);
+                queryParams = AddParamsToQueryParams(queryParams, "schemaVersion", SchemaVersion);
             }
             if(!string.IsNullOrEmpty(After))
             {
@@ -452,6 +452,14 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             if (!string.IsNullOrEmpty(startStringValue))
             {
                 queryParams = AddParamsToQueryParams(queryParams, "start", startStringValue);
+            }
+            if(!string.IsNullOrEmpty(SortBy))
+            {
+                queryParams = AddParamsToQueryParams(queryParams, "sortBy", SortBy);
+            }
+            if(!string.IsNullOrEmpty(SortOrder))
+            {
+                queryParams = AddParamsToQueryParams(queryParams, "sortOrder", SortOrder);
             }
             if(!string.IsNullOrEmpty(Metadata))
             {
@@ -542,9 +550,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerConfigsContentRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for page </summary>
-        [Preserve]
-        public long? Page { get; }
         /// <summary>Accessor for limit </summary>
         [Preserve]
         public long? Limit { get; }
@@ -557,15 +562,18 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// <summary>Accessor for schemaVersion </summary>
         [Preserve]
         public string SchemaVersion { get; }
-        /// <summary>Accessor for next </summary>
-        [Preserve]
-        public string Next { get; }
         /// <summary>Accessor for after </summary>
         [Preserve]
         public string After { get; }
         /// <summary>Accessor for start </summary>
         [Preserve]
         public bool? Start { get; }
+        /// <summary>Accessor for sortBy </summary>
+        [Preserve]
+        public string SortBy { get; }
+        /// <summary>Accessor for sortOrder </summary>
+        [Preserve]
+        public string SortOrder { get; }
         /// <summary>Accessor for metadata </summary>
         [Preserve]
         public string Metadata { get; }
@@ -575,44 +583,39 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// GetPlayerConfigsContent Request Object.
         /// Get player configs with inline content
         /// </summary>
-        /// <param name="page">Current Page. Deprecated: use the `next` cursor instead for efficient pagination.</param>
         /// <param name="limit">Items Per Page</param>
         /// <param name="path">Path</param>
         /// <param name="schema">URI-escaped Schema identifier</param>
-        /// <param name="schemaVersion">TEMPORARY DESCRIPTION: schema version filter. Examples: \"1.*\", \">=1.1.0\", \"1.0.0\", \">=1.0.0,<2.0.0\".</param>
-        /// <param name="next">Opaque cursor token returned in the `X-Next` response header from a previous request. When provided, returns the next page of results. Takes precedence over `after` and `start`.</param>
+        /// <param name="schemaVersion">Version constraint for the schema. Supports exact (1.1.6), partial (1.1), wildcard (1.1.*), single operators (>=1.1.0, <=1.1.0, >1.1.0, <1.1.0, =1.1.0, !=1.1.0, ~>1.1), and comma-separated multi-constraints (>=1.0.0,<2.0.0). When combined with the schema parameter, the schema value is treated as a base URL prefix. Matches documents where at least one schema URL satisfies both constraints. </param>
         /// <param name="after">Path-based cursor - returns configs listed alphabetically after this config path</param>
         /// <param name="start">Path-based cursor - Start from the alphabetically first config path</param>
+        /// <param name="sortBy">Sort By</param>
+        /// <param name="sortOrder">Sort Order</param>
         /// <param name="metadata">AIP-160 filter expression scoped to the metadata object. Field paths are relative to the metadata object — do not include a \"metadata.\" prefix. Supported operators: = != < <= > >= : (has/contains) AND OR NOT. Wildcards: use * in string values for glob matching (e.g. \"io*\" matches \"ios\"). Examples:   ?metadata=platform=\"ios\"   ?metadata=platform=\"ios\" AND version>3   ?metadata=platform=\"ios\" OR platform=\"android\"   ?metadata=NOT platform=\"web\"   ?metadata=tags:\"mobile\"   ?metadata=version:*</param>
         [Preserve]
-        public GetPlayerConfigsContentRequest(long? page = default(long?), long? limit = 10, string path = default(string), string schema = default(string), string schemaVersion = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
+        public GetPlayerConfigsContentRequest(long? limit = 10, string path = default(string), string schema = default(string), string schemaVersion = default(string), string after = default(string), bool? start = default(bool?), string sortBy = default(string), string sortOrder = default(string), string metadata = default(string))
         {
-            Page = page;
             Limit = limit;
             Path = path;
             Schema = schema;
             SchemaVersion = schemaVersion;
-            Next = next;
             After = after;
             Start = start;
+            SortBy = sortBy;
+            SortOrder = sortOrder;
             Metadata = metadata;
             PathAndQueryParams = $"/configs/content";
 
             List<string> queryParams = new List<string>();
 
-            var pageStringValue = Page.ToString();
-
-            if (!string.IsNullOrEmpty(pageStringValue))
-
-            {
-
-                queryParams = AddParamsToQueryParams(queryParams, "page", pageStringValue);
-
-            }
             var limitStringValue = Limit.ToString();
+
             if (!string.IsNullOrEmpty(limitStringValue))
+
             {
+
                 queryParams = AddParamsToQueryParams(queryParams, "limit", limitStringValue);
+
             }
             if(!string.IsNullOrEmpty(Path))
             {
@@ -626,10 +629,6 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             {
                 queryParams = AddParamsToQueryParams(queryParams, "schemaVersion", SchemaVersion);
             }
-            if(!string.IsNullOrEmpty(Next))
-            {
-                queryParams = AddParamsToQueryParams(queryParams, "next", Next);
-            }
             if(!string.IsNullOrEmpty(After))
             {
                 queryParams = AddParamsToQueryParams(queryParams, "after", After);
@@ -638,6 +637,14 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             if (!string.IsNullOrEmpty(startStringValue))
             {
                 queryParams = AddParamsToQueryParams(queryParams, "start", startStringValue);
+            }
+            if(!string.IsNullOrEmpty(SortBy))
+            {
+                queryParams = AddParamsToQueryParams(queryParams, "sortBy", SortBy);
+            }
+            if(!string.IsNullOrEmpty(SortOrder))
+            {
+                queryParams = AddParamsToQueryParams(queryParams, "sortOrder", SortOrder);
             }
             if(!string.IsNullOrEmpty(Metadata))
             {
@@ -824,24 +831,24 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
     [Preserve]
     internal class GetPlayerFilesRequest : ClientApiBaseRequest
     {
-        /// <summary>Accessor for page </summary>
-        [Preserve]
-        public long? Page { get; }
         /// <summary>Accessor for limit </summary>
         [Preserve]
         public long? Limit { get; }
         /// <summary>Accessor for path </summary>
         [Preserve]
         public string Path { get; }
-        /// <summary>Accessor for next </summary>
-        [Preserve]
-        public string Next { get; }
         /// <summary>Accessor for after </summary>
         [Preserve]
         public string After { get; }
         /// <summary>Accessor for start </summary>
         [Preserve]
         public bool? Start { get; }
+        /// <summary>Accessor for sortBy </summary>
+        [Preserve]
+        public string SortBy { get; }
+        /// <summary>Accessor for sortOrder </summary>
+        [Preserve]
+        public string SortOrder { get; }
         /// <summary>Accessor for metadata </summary>
         [Preserve]
         public string Metadata { get; }
@@ -851,48 +858,39 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
         /// GetPlayerFiles Request Object.
         /// Get player files
         /// </summary>
-        /// <param name="page">Current Page. Deprecated: use the `next` cursor instead for efficient pagination.</param>
         /// <param name="limit">Items Per Page</param>
         /// <param name="path">Path</param>
-        /// <param name="next">Opaque cursor token returned in the `X-Next` response header from a previous request.  When provided, returns the next page of results. Takes precedence over `after` and `start`.</param>
         /// <param name="after">Path-based cursor - returns files listed alphabetically after this file path</param>
         /// <param name="start">Path-based cursor - Start from the alphabetically first file path</param>
+        /// <param name="sortBy">Sort By</param>
+        /// <param name="sortOrder">Sort Order</param>
         /// <param name="metadata">AIP-160 filter expression scoped to the metadata object. Field paths are relative to the metadata object — do not include a \"metadata.\" prefix. Supported operators: = != < <= > >= : (has/contains) AND OR NOT. Wildcards: use * in string values for glob matching (e.g. \"io*\" matches \"ios\"). Examples:   ?metadata=platform=\"ios\"   ?metadata=platform=\"ios\" AND version>3   ?metadata=platform=\"ios\" OR platform=\"android\"   ?metadata=NOT platform=\"web\"   ?metadata=tags:\"mobile\"   ?metadata=version:*</param>
         [Preserve]
-        public GetPlayerFilesRequest(long? page = default(long?), long? limit = 10, string path = default(string), string next = default(string), string after = default(string), bool? start = default(bool?), string metadata = default(string))
+        public GetPlayerFilesRequest(long? limit = 10, string path = default(string), string after = default(string), bool? start = default(bool?), string sortBy = default(string), string sortOrder = default(string), string metadata = default(string))
         {
-            Page = page;
             Limit = limit;
             Path = path;
-            Next = next;
             After = after;
             Start = start;
+            SortBy = sortBy;
+            SortOrder = sortOrder;
             Metadata = metadata;
             PathAndQueryParams = $"/files/info";
 
             List<string> queryParams = new List<string>();
 
-            var pageStringValue = Page.ToString();
-
-            if (!string.IsNullOrEmpty(pageStringValue))
-
-            {
-
-                queryParams = AddParamsToQueryParams(queryParams, "page", pageStringValue);
-
-            }
             var limitStringValue = Limit.ToString();
+
             if (!string.IsNullOrEmpty(limitStringValue))
+
             {
+
                 queryParams = AddParamsToQueryParams(queryParams, "limit", limitStringValue);
+
             }
             if(!string.IsNullOrEmpty(Path))
             {
                 queryParams = AddParamsToQueryParams(queryParams, "path", Path);
-            }
-            if(!string.IsNullOrEmpty(Next))
-            {
-                queryParams = AddParamsToQueryParams(queryParams, "next", Next);
             }
             if(!string.IsNullOrEmpty(After))
             {
@@ -902,6 +900,14 @@ namespace UnityEngine.Purchasing.LiveContentAdapterService.Client
             if (!string.IsNullOrEmpty(startStringValue))
             {
                 queryParams = AddParamsToQueryParams(queryParams, "start", startStringValue);
+            }
+            if(!string.IsNullOrEmpty(SortBy))
+            {
+                queryParams = AddParamsToQueryParams(queryParams, "sortBy", SortBy);
+            }
+            if(!string.IsNullOrEmpty(SortOrder))
+            {
+                queryParams = AddParamsToQueryParams(queryParams, "sortOrder", SortOrder);
             }
             if(!string.IsNullOrEmpty(Metadata))
             {

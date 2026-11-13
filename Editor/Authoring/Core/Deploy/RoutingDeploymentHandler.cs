@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEditor.Purchasing.Editor.Authoring.Core.Logger;
@@ -31,21 +32,36 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Deploy
                 return result;
             }
 
-            if (dryRun)
-            {
-                item.Status = Statuses.GetDeployed("Would deploy");
-                item.Progress = 100;
-                return result;
-            }
-
             item.Progress = 50;
             item.Status = Statuses.GetDeploying();
 
             try
             {
-                await m_Client.PushRouting(item.RoutingConfig, token);
+                // A deploy replaces the whole mapping, and other writers (Campaigns) add their own tags,
+                // so say which tags on the server the file would remove.
+                var remote = await m_Client.FetchRouting(token);
+                var local = item.RoutingConfig.Mappings;
+                var removed = (remote?.Mappings?.Keys ?? Enumerable.Empty<string>())
+                    .Where(tag => local == null || !local.ContainsKey(tag))
+                    .OrderBy(tag => tag, StringComparer.Ordinal)
+                    .ToList();
+
+                if (!dryRun)
+                {
+                    await m_Client.PushRouting(item.RoutingConfig, token);
+                }
+
+                // Only after the push, so a failed push never reports tags as removed.
+                var removedNote = removed.Count == 0
+                    ? string.Empty
+                    : $" Tags on the server but not in this file {(dryRun ? "would be" : "were")} removed: {string.Join(", ", removed)}.";
+                if (removed.Count > 0)
+                {
+                    m_Logger.LogWarning($"Routing deploy of '{item.Path}':{removedNote}");
+                }
+
                 item.Progress = 100;
-                item.Status = Statuses.GetDeployed("Updated");
+                item.Status = Statuses.GetDeployed((dryRun ? "Would deploy." : "Updated.") + removedNote);
             }
             catch (OperationCanceledException)
             {

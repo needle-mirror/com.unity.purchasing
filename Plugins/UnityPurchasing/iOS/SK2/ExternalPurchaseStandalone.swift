@@ -100,8 +100,8 @@ public enum ExternalPurchaseStandalone {
         // versions coextensive. Without the macOS/visionOS entries, the * wildcard
         // would let those platforms bypass the guard at any version and hit the
         // underlying API on releases that don't yet expose Japan token types.
-        // If we need to support 26.2/26.3 in the future, this guard and the C# layer
-        // (ApplePaymentProviderImpl) must be adjusted.
+        // If we need to support 26.2/26.3 in the future, this guard and the C# token types
+        // (ExternalPurchaseTokenType / ExternalPurchaseClient.ConvertTokenType) must be adjusted.
         if japanTokenTypes.contains(normalizedType) {
             guard #available(iOS 26.4, macOS 26.4, visionOS 26.4, *) else {
                 invokeCallback(callback, subject: "OnFetchExternalPurchaseTokenFailed", payload: "Token type \(tokenType) requires iOS 26.4+ / macOS 26.4+ / visionOS 26.4+ (Japan MSCA compliance).")
@@ -174,7 +174,8 @@ public enum ExternalPurchaseStandalone {
     /**
      Fetch the current storefront country code.
      Standalone — invokes the callback pointer directly (not through storeKitCallback).
-     Used by ApplePaymentProviderImpl for region-based token type selection.
+     Backs ExternalPurchaseClient.FetchStorefrontAsync, which developers call (e.g. from their
+     Payment Provider compliance callback) for region-based token type selection.
      */
     public static func fetchStorefront(callback: @escaping ExternalPurchaseCallbackDelegateType) async {
         if let storefront = await Storefront.current {

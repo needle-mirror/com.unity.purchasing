@@ -11,7 +11,8 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
 {
     public class LocalReceiptValidation : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         CrossPlatformValidator m_Validator = null;
 
@@ -44,21 +45,22 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
-            m_StoreController.OnPurchaseFailed += OnPurchaseFailed;
-            m_StoreController.OnPurchaseDeferred += OnPurchaseDeferred;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchaseFailed += OnPurchaseFailed;
+            m_PurchasingController.OnPurchaseDeferred += OnPurchaseDeferred;
 
-            m_StoreController.OnStoreConnected += OnStoreConnected;
-            m_StoreController.OnStoreDisconnected += OnStoreDisconnected;
+            m_PurchasingController.OnStoreConnected += OnStoreConnected;
+            m_PurchasingController.OnStoreDisconnected += OnStoreDisconnected;
 
-            m_StoreController.OnProductsFetchFailed += OnProductsFetchedFailed;
-            m_StoreController.OnProductsFetched += OnProductsFetched;
+            m_PurchasingController.OnProductsFetchFailed += OnProductsFetchedFailed;
+            m_PurchasingController.OnProductsFetched += OnProductsFetched;
 
             Debug.Log("Connecting to store.");
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
 
         }
 
@@ -78,10 +80,10 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
 
         public void BuyGold()
         {
-            m_StoreController.PurchaseProduct(goldProductId);
+            m_PurchasingController.PurchaseProduct(goldProductId, m_StoreName);
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
             var product = GetFirstProductInOrder(order);
             if (product is null)
@@ -105,7 +107,7 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
             Debug.Log($"Purchase complete - Product: {GetIdFromProduct(product)}");
 
             // We call CompletePurchase, informing Unity IAP that the processing on our side is done and the transaction can be closed.
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
         bool IsPurchaseValid(Order order)
@@ -147,10 +149,10 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
                 new(goldProductId, productType),
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             var product = GetFirstProductInOrder(order);
             if (product == null)
@@ -171,7 +173,7 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
             }
         }
 
-        void OnPurchaseFailed(FailedOrder order)
+        void OnPurchaseFailed(string storeName, FailedOrder order)
         {
             var product = GetFirstProductInOrder(order);
             if (product == null)
@@ -194,8 +196,8 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
             return product?.definition.id ?? "no product found";
         }
 
-        // Calling StoreController.Connect without a listener on StoreController.OnStoreConnected will result in warnings.
-        void OnStoreConnected()
+        // Calling PurchasingController.Connect without a listener on PurchasingController.OnStoreConnected will result in warnings.
+        void OnStoreConnected(string storeName)
         {
             Debug.Log($"Store connected.");
 
@@ -204,25 +206,25 @@ namespace Samples.Purchasing.Core.LocalReceiptValidation
             InitializeValidator();
         }
 
-        // Calling StoreController.Connect without a listener on StoreController.OnStoreDisconnected will result in warnings.
-        void OnStoreDisconnected(StoreConnectionFailureDescription description)
+        // Calling PurchasingController.Connect without a listener on PurchasingController.OnStoreDisconnected will result in warnings.
+        void OnStoreDisconnected(string storeName, StoreConnectionFailureDescription description)
         {
             Debug.Log($"Store disconnected details: {description.message}");
         }
 
-        // Calling StoreController.FetchProducts without listeners on StoreController.OnProductsFetched and StoreController.OnProductsFetchedFailed will result in warnings.
-        void OnProductsFetched(List<Product> products)
+        // Calling PurchasingController.FetchProducts without listeners on PurchasingController.OnProductsFetched and PurchasingController.OnProductsFetchFailed will result in warnings.
+        void OnProductsFetched(string storeName, List<Product> products)
         {
             Debug.Log($"Products fetched successfully for {products.Count} products.");
         }
 
-        void OnProductsFetchedFailed(ProductFetchFailed failure)
+        void OnProductsFetchedFailed(string storeName, ProductFetchFailed failure)
         {
             Debug.Log($"Products fetch failed for {failure.FailedFetchProducts.Count} products: {failure.FailureReason}");
         }
 
-        // Calling StoreController.Purchase without listeners on StoreController.OnPurchaseDeferred will result in warnings.
-        void OnPurchaseDeferred(DeferredOrder order)
+        // Calling PurchasingController.Purchase without listeners on PurchasingController.OnPurchaseDeferred will result in warnings.
+        void OnPurchaseDeferred(string storeName, DeferredOrder order)
         {
             Debug.Log($"Purchase deferred - Product: {GetIdFromProduct(GetFirstProductInOrder(order))}");
         }

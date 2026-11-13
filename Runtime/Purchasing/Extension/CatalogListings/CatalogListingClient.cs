@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Uniject;
 using UnityEngine.Purchasing.LiveContentAdapterService;
@@ -55,16 +54,17 @@ namespace UnityEngine.Purchasing.CatalogListings
 
             var accumulated = new List<CatalogListingDto>();
             string? cursor = null;
+            var requestedCursors = new HashSet<string>(StringComparer.Ordinal);
 
             while (true)
             {
-                List<ConfigContentData>? pageConfigs = null;
+                ConfigContentPage? page = null;
 
                 for (var attempt = 0; attempt < k_MaxAttemptsPerPage; attempt++)
                 {
                     try
                     {
-                        pageConfigs = await liveContentService.GetConfigsContent(
+                        page = await liveContentService.GetConfigsContent(
                             schema: schemaUrlEncoded,
                             schemaVersion: k_SchemaVersion,
                             limit: k_Limit,
@@ -82,17 +82,18 @@ namespace UnityEngine.Purchasing.CatalogListings
                             {
                                 Results = accumulated,
                                 CompletedSuccessfully = false,
-                                LastFailedAfter = cursor
+                                LastCursor = cursor
                             };
                         }
                         await WaitForSecondsAsync(k_BackoffSecondsPerAttempt[attempt]);
                     }
                 }
 
-                accumulated.AddRange(m_Parser.TryParseCatalogResponse(pageConfigs!));
-
-                if (pageConfigs!.Count < k_Limit)
+                // X-Next-Cursor is sent whenever more configs remain and left out on the last page. The page size
+                // says nothing: a schema-filtered page can come back short, or empty, with more to come.
+                if (string.IsNullOrEmpty(page!.nextCursor))
                 {
+                    accumulated.AddRange(m_Parser.TryParseCatalogResponse(page.configs ?? new List<ConfigContentData>()));
                     return new CatalogListingResult
                     {
                         Results = accumulated,
@@ -100,7 +101,21 @@ namespace UnityEngine.Purchasing.CatalogListings
                     };
                 }
 
-                cursor = pageConfigs.LastOrDefault()?.path;
+                // A repeated cursor would fetch the same pages again, forever. The page that repeated it is left
+                // out: it can hold configs already accumulated, and duplicate listing ids break callers that key
+                // the partial result by id.
+                if (!requestedCursors.Add(page.nextCursor))
+                {
+                    return new CatalogListingResult
+                    {
+                        Results = accumulated,
+                        CompletedSuccessfully = false,
+                        LastCursor = cursor
+                    };
+                }
+
+                accumulated.AddRange(m_Parser.TryParseCatalogResponse(page.configs ?? new List<ConfigContentData>()));
+                cursor = page.nextCursor;
             }
         }
 

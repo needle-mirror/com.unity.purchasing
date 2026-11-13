@@ -34,7 +34,7 @@ Use this reference when the user explicitly asks to add IAP D2C Capabilities (th
 |---|---|
 | Unity Editor | **2022.3 or later** — IAP 5.4 does not support older Editor versions |
 | `com.unity.purchasing` | **v5.4+** for IAP D2C Capabilities; **v5.5+** for `PurchasingController`, which all code in this path uses. On 5.4.x, recommend upgrading; fall back to `StoreController` only if the user can't or won't upgrade |
-| `com.unity.services.authentication` | **v3.7.1+** — IAP D2C Capabilities will not initialize without this version or later |
+| `com.unity.services.authentication` | **v3.8.1+** recommended — IAP D2C Capabilities will not initialize below v3.7.1 |
 | `com.unity.services.core` | **v1.18.0+** — required by IAP 5.4 |
 | Unity Gaming Services initialized | `UnityServices.InitializeAsync()` and sign-in must complete **before** IAP D2C Capabilities initialization |
 | Unity Deployment package | Required to deploy product catalogs to the Remote Catalog service (see Step 3) — install via **Window > Package Manager > Unity Registry > Deployment** |
@@ -57,7 +57,7 @@ Search `Packages/manifest.json` for `com.unity.purchasing`:
 
 ### 1b — Unity Authentication detection
 
-Search `Packages/manifest.json` for `com.unity.services.authentication`. If absent, inform the user it must be installed — IAP D2C Capabilities will not initialize without a signed-in player.
+Search `Packages/manifest.json` for `com.unity.services.authentication`. If absent, inform the user it must be installed (v3.8.1 or later) — IAP D2C Capabilities will not initialize without a signed-in player. If present below v3.8.1, recommend upgrading; below v3.7.1, the upgrade is required.
 
 ### 1c — Inventory and economy scan
 

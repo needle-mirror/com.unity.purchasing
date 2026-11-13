@@ -10,7 +10,8 @@ namespace Samples.Purchasing.AppleAppStore.RetrievingJwsRepresentation
 {
     public class RetrievingJwsRepresentation : MonoBehaviour
     {
-        StoreController m_StoreController;
+        PurchasingController m_PurchasingController;
+        string m_StoreName;
 
         public string goldProductId = "com.mycompany.mygame.gold1";
         public ProductType goldType = ProductType.Consumable;
@@ -26,12 +27,13 @@ namespace Samples.Purchasing.AppleAppStore.RetrievingJwsRepresentation
 
         async void InitializeIAP()
         {
-            m_StoreController = UnityIAPServices.StoreController();
+            m_StoreName = UnityIAPServices.GetDefaultStore();
+            m_PurchasingController = new PurchasingController(m_StoreName);
 
-            m_StoreController.OnPurchasePending += OnPurchasePending;
-            m_StoreController.OnPurchaseConfirmed += OnPurchaseConfirmed;
+            m_PurchasingController.OnPurchasePending += OnPurchasePending;
+            m_PurchasingController.OnPurchaseConfirmed += OnPurchaseConfirmed;
 
-            await m_StoreController.Connect();
+            await m_PurchasingController.Connect();
 
             FetchProducts();
         }
@@ -43,20 +45,20 @@ namespace Samples.Purchasing.AppleAppStore.RetrievingJwsRepresentation
                 new(goldProductId, goldType)
             };
 
-            m_StoreController.FetchProducts(initialProductsToFetch);
+            m_PurchasingController.FetchProducts(initialProductsToFetch, m_StoreName);
         }
 
-        void OnPurchasePending(PendingOrder order)
+        void OnPurchasePending(string storeName, PendingOrder order)
         {
             var jwsRepresentation = order.Info.Apple?.jwsRepresentation;
             Debug.Log($"JWS Representation for order: {jwsRepresentation}");
             // This is where you would send jwsRepresentation to server for validation
             // The gold would only be added if the server confirms the purchase.
             AddGold();
-            m_StoreController.ConfirmPurchase(order);
+            m_PurchasingController.ConfirmPurchase(order);
         }
 
-        void OnPurchaseConfirmed(Order order)
+        void OnPurchaseConfirmed(string storeName, Order order)
         {
             if (order.CartOrdered.Items().FirstOrDefault()?.Product.definition.id == goldProductId)
             {
@@ -67,7 +69,7 @@ namespace Samples.Purchasing.AppleAppStore.RetrievingJwsRepresentation
 
         public void BuyGold()
         {
-            m_StoreController.PurchaseProduct(goldProductId);
+            m_PurchasingController.PurchaseProduct(goldProductId, m_StoreName);
         }
 
         void AddGold()
