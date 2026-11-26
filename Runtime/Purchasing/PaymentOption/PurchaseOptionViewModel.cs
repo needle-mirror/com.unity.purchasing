@@ -11,6 +11,36 @@ namespace UnityEngine.Purchasing
         bool m_Disposed;
         TaskCompletionSource<PurchaseOption?>? m_TcsOption;
 
+        // The language the picker shows: SetLocale's, else the device's as checkout reads it.
+        internal string Locale => m_LocaleOverride ?? (m_DeviceLocale ??= PaymentOptionProviderTranslations.ResolveLocale(
+            NativeDeviceLocale.Read().LocaleTagOrCurrentCulture));
+
+        // Read on first use, when the picker draws on the main thread: the native read is a JNI call
+        // on Android, and the strings file is a Resources.Load.
+        string? m_DeviceLocale;
+
+        string? m_LocaleOverride;
+
+        // Null follows the device again; a language without a translation shows English.
+        // Call from the main thread: matching the tag loads the strings file (Resources.Load).
+        internal void SetLocale(string? localeTag)
+        {
+            if (localeTag == null)
+            {
+                m_LocaleOverride = null;
+                return;
+            }
+
+            var match = PaymentOptionProviderTranslations.MatchLocale(localeTag);
+            if (match == null)
+            {
+                Debug.unityLogger.LogIAPWarning(
+                    $"UntranslatedLocale: the Purchase Options UI has no translation for '{localeTag}'; showing English. " +
+                    $"Supported: {string.Join(", ", PaymentOptionProviderTranslations.SupportedLocales)}");
+            }
+            m_LocaleOverride = match ?? PaymentOptionProviderTranslations.Fallback;
+        }
+
         // Analytics: the open window's impression_id, handed over by the provider at
         // show time and re-entered around the pick, which arrives in a click handler
         // outside the provider's scope. Set and cleared together with m_TcsOption.
@@ -77,7 +107,7 @@ namespace UnityEngine.Purchasing
                 throw new ArgumentException("catalogListingId required", nameof(catalogListingId));
 
             var stores = await GetDefaultPurchaseOrder();
-            return ValidateAcrossStores(stores, catalogListingId);
+            return ValidateAcrossStores(WithoutPaymentProvidersForSubscription(stores, catalogListingId), catalogListingId);
         }
 
         public bool ValidatePurchaseOption(IReadOnlyList<PurchaseOption> options)
@@ -92,6 +122,9 @@ namespace UnityEngine.Purchasing
             string? currency = null;
             foreach (var opt in options)
             {
+                if (IsSubscriptionOnPaymentProvider(opt.StoreName, opt.CatalogListingId))
+                    return false;
+
                 var info = GetPriceInfo(opt.StoreName, opt.CatalogListingId);
                 if (info == null)
                     return false;
@@ -144,6 +177,14 @@ namespace UnityEngine.Purchasing
         {
             CheckPreconditionsOption(options);
 
+            options = WithoutPaymentProviderSubscriptionOptions(options);
+            if (options.Count == 0)
+            {
+                Debug.unityLogger.LogIAPWarning("NoEligibleStore: every option is a subscription on a Payment Provider, which doesn't sell them; returning null");
+                internalOptions = Array.Empty<PurchaseOpt>();
+                return Task.FromResult<PurchaseOption?>(null);
+            }
+
             if (options.Count == 1)
             {
                 var only = options[0];
@@ -153,7 +194,7 @@ namespace UnityEngine.Purchasing
                 return Task.FromResult<PurchaseOption?>(only);
             }
 
-            internalOptions = BuildOptsFromOptions(options);
+            internalOptions = CapToMaxButtons(BuildOptsFromOptions(options));
             m_TcsOption = new TaskCompletionSource<PurchaseOption?>();
             m_WindowImpressionId = impressionId;
             return m_TcsOption.Task;
@@ -203,10 +244,10 @@ namespace UnityEngine.Purchasing
             if (includeWebshop)
             {
                 var webshopBadge = ComputeWebshopBadge(catalogListingId);
-                opts.Add(new PurchaseOpt
+                // Webshop leads (spec mocks): webshop, then the payment provider(s), then native.
+                opts.Insert(0, new PurchaseOpt
                 {
                     IsWebshop = true,
-                    Label = "Continue with webshop",
                     Badge = webshopBadge,
                     StoreName = IPaymentOptionProvider.WebshopAlias,
                     CatalogListingId = catalogListingId,
@@ -216,13 +257,52 @@ namespace UnityEngine.Purchasing
                         webshopBadge),
                 });
             }
+            MoveNativeLast(opts);
             internalOptions = opts;
             m_TcsOption = new TaskCompletionSource<PurchaseOption?>();
             m_WindowImpressionId = impressionId;
             return m_TcsOption.Task;
         }
 
-        public async Task CompleteChoice(PurchaseOpt? choice)
+        // The picker leads with the webshop, then the payment provider(s), and keeps the
+        // platform store at the bottom of the list (spec mocks). Applied here rather than in
+        // GetDefaultPurchaseOrder because the webshop opt is added after that order is
+        // resolved, so this is the only point where "last" is actually last.
+        // BeginShowPurchaseOption is deliberately left alone: a cross-product caller
+        // passes its own order and the SDK should not second-guess it.
+        static void MoveNativeLast(List<PurchaseOpt> opts)
+        {
+            var nativeIndex = opts.FindIndex(o => o.IsNative);
+            if (nativeIndex < 0 || nativeIndex == opts.Count - 1)
+                return;
+            var native = opts[nativeIndex];
+            opts.RemoveAt(nativeIndex);
+            opts.Add(native);
+        }
+
+        // Spec: "Max buttons = 3". The POP has no scroll, and RequiredPopHeight / the
+        // fit-to-screen scale assume a short list. The single-listing picker can't exceed it
+        // (native, the first eligible PSP, webshop); a cross-product caller can, so its first
+        // three options, in its own order, are shown and the rest dropped with a warning.
+        internal const int MaxButtons = 3;
+
+        static IReadOnlyList<PurchaseOpt> CapToMaxButtons(IReadOnlyList<PurchaseOpt> opts)
+        {
+            if (opts.Count <= MaxButtons)
+                return opts;
+            var dropped = new List<string>(opts.Count - MaxButtons);
+            for (var i = MaxButtons; i < opts.Count; i++)
+                dropped.Add($"{DisplayStoreName(opts[i].StoreName)} / {opts[i].CatalogListingId}");
+            Debug.unityLogger.LogIAPWarning(
+                $"TooManyOptions: the purchase options UI shows at most {MaxButtons} options; {opts.Count} were provided. Not shown: {string.Join(", ", dropped)}");
+            var kept = new List<PurchaseOpt>(MaxButtons);
+            for (var i = 0; i < MaxButtons; i++)
+                kept.Add(opts[i]);
+            return kept;
+        }
+
+        // Virtual: test seam, so a test can see whether a click reached the ViewModel.
+        public virtual async Task CompleteChoice(PurchaseOpt? choice)
         {
             if (m_Disposed)
                 return;
@@ -286,6 +366,18 @@ namespace UnityEngine.Purchasing
             tcs.TrySetResult(pick);
         }
 
+        // Resolves a pending picker Task with null ("user cancelled"); no-op when nothing is
+        // pending. For a view whose panel went away mid-choice: without it the caller's await
+        // never returns and every later Show fails with "already in progress". Clears the
+        // window's impression_id with the TCS, as CompleteChoice does.
+        internal void CancelPendingChoice()
+        {
+            var tcs = m_TcsOption;
+            m_TcsOption = null;
+            m_WindowImpressionId = null;
+            tcs?.TrySetResult(null);
+        }
+
         // Analytics: the pick's purchase carries the window's impression_id. No id (a
         // window shown outside any scope) means no scope; the purchase's entry point then
         // mints its own.
@@ -308,7 +400,6 @@ namespace UnityEngine.Purchasing
             {
                 opts.Add(new PurchaseOpt
                 {
-                    Label = $"Pay with {DisplayStoreName(option.StoreName)}",
                     Badge = option.Badge,
                     IsNative = string.Equals(option.StoreName, IPaymentOptionProvider.NativeAlias, StringComparison.OrdinalIgnoreCase),
                     StoreName = option.StoreName,
@@ -332,10 +423,17 @@ namespace UnityEngine.Purchasing
         }
 
         /// True when the listing's <see cref="PaymentProviderProductMetadata.hasWebshop"/>
-        /// flag is set. Used by the providers to decide whether to render the webshop
-        /// slot at all. Virtual so tests can stub the webshop branch without
-        /// fabricating a full PaymentProviderProductMetadata.
-        internal virtual bool HasWebshop(string catalogListingId)
+        /// flag is set and the listing isn't a subscription (the webshop sells through the
+        /// Payment Provider backend, which doesn't sell subscriptions). Used by the providers
+        /// to decide whether to render the webshop slot at all.
+        internal bool HasWebshop(string catalogListingId)
+            => !IsSubscriptionOnPaymentProvider(PaymentProvider.Name, catalogListingId)
+                && HasWebshopFlag(catalogListingId);
+
+        /// The listing's <see cref="PaymentProviderProductMetadata.hasWebshop"/> flag. Virtual
+        /// so tests can stub the webshop branch without fabricating a full
+        /// PaymentProviderProductMetadata.
+        internal virtual bool HasWebshopFlag(string catalogListingId)
         {
             var pspMeta = GetListingMetadata(PaymentProvider.Name, catalogListingId)?.GetPaymentProviderProductMetadata();
             return pspMeta?.hasWebshop ?? false;
@@ -345,7 +443,7 @@ namespace UnityEngine.Purchasing
         /// listing's webshop price (from <see cref="PaymentProviderProductMetadata"/>)
         /// against its regular PSP price. Returns null when no webshop price is
         /// configured, when the regular price isn't cached, or when the webshop
-        /// price isn't actually cheaper. Virtual for the same reason as HasWebshop.
+        /// price isn't actually cheaper. Virtual for the same reason as HasWebshopFlag.
         internal virtual string? ComputeWebshopBadge(string catalogListingId)
         {
             var metadata = GetListingMetadata(PaymentProvider.Name, catalogListingId);
@@ -374,6 +472,31 @@ namespace UnityEngine.Purchasing
             return IsKnownSdkStoreName(storeName) ? storeName : PaymentProvider.Name;
         }
 
+        // True for the PaymentProvider store and every PSP-specific identifier it backs, and for the native
+        // alias when the PaymentProvider store is the default store (UnityIAPServices.SetStoreAsDefault).
+        static bool IsPaymentProviderOption(string storeName)
+            => (ServiceStoreName(storeName) ?? DefaultStoreHelper.GetDefaultStoreName()) == PaymentProvider.Name;
+
+        // Payment Providers sell consumables and non-consumables only: PaymentProviderImpl fails a
+        // subscription purchase with ProductTypeNotSupported, so the picker never offers one.
+        bool IsSubscriptionOnPaymentProvider(string storeName, string catalogListingId)
+            => IsPaymentProviderOption(storeName)
+                && ResolveProductService(storeName).GetProductByCatalogListingId(catalogListingId)?.type == ProductType.Subscription;
+
+        IReadOnlyList<string> WithoutPaymentProvidersForSubscription(IReadOnlyList<string> stores, string catalogListingId)
+            => stores.Where(name => !IsSubscriptionOnPaymentProvider(name, catalogListingId)).ToList();
+
+        IReadOnlyList<PurchaseOption> WithoutPaymentProviderSubscriptionOptions(IReadOnlyList<PurchaseOption> options)
+        {
+            var kept = options.Where(o => !IsSubscriptionOnPaymentProvider(o.StoreName, o.CatalogListingId)).ToList();
+            if (kept.Count < options.Count)
+            {
+                Debug.unityLogger.LogIAPVerbose(
+                    $"SubscriptionNotSupported: hiding {options.Count - kept.Count} Payment Provider option(s) for subscriptions");
+            }
+            return kept;
+        }
+
         internal static string DisplayStoreName(string storeName)
         {
             if (string.Equals(storeName, IPaymentOptionProvider.NativeAlias, StringComparison.OrdinalIgnoreCase))
@@ -384,6 +507,10 @@ namespace UnityEngine.Purchasing
                 return "App Store";
             if (storeName == "GooglePlay")
                 return "Play Store";
+            // The store's name in the logs (and SpecStoreName's fallback, which names the test
+            // PSP itself). Spelled out so the logs read as the testing option.
+            if (PaymentBrandRegistry.IsMockProvider(storeName))
+                return "Mock Provider";
             return storeName;
         }
 
@@ -451,7 +578,7 @@ namespace UnityEngine.Purchasing
         /// store. Returns an empty list when no eligible store has the listing — callers
         /// should treat that as "nothing to render" (combine with <see cref="HasWebshop"/>
         /// to decide whether the picker can still open as webshop-only).
-        internal async Task<IReadOnlyList<PurchaseOption>> BuildDefaultOptions(string catalogListingId)
+        internal virtual async Task<IReadOnlyList<PurchaseOption>> BuildDefaultOptions(string catalogListingId)
         {
             var rawOrder = await GetDefaultPurchaseOrder();
             var order = FilterStoresWithListing(rawOrder, catalogListingId);
@@ -482,14 +609,19 @@ namespace UnityEngine.Purchasing
             foreach (var name in stores)
             {
                 var product = ResolveProductService(name).GetProductByCatalogListingId(catalogListingId);
-                if (product != null)
-                {
-                    kept.Add(name);
-                }
-                else
+                if (product == null)
                 {
                     Debug.unityLogger.LogIAPVerbose(
                         $"ListingNotConfigured: {DisplayStoreName(name)} has no product for {catalogListingId} — hiding option");
+                }
+                else if (IsPaymentProviderOption(name) && product.type == ProductType.Subscription)
+                {
+                    Debug.unityLogger.LogIAPVerbose(
+                        $"SubscriptionNotSupported: {DisplayStoreName(name)} doesn't sell subscription {catalogListingId} — hiding option");
+                }
+                else
+                {
+                    kept.Add(name);
                 }
             }
             return kept;
@@ -567,13 +699,138 @@ namespace UnityEngine.Purchasing
 
         internal sealed class PurchaseOpt
         {
-            public string             Label = "";
             public string?            Badge;
             public bool               IsNative;
             public bool               IsWebshop;
             public string             StoreName = "";
             public string             CatalogListingId = "";
             public PurchaseOption?    Option;
+        }
+
+        // What a button shows, so the providers only render it: which brand treatment it
+        // gets (the key into PaymentOptionPopPalette for its background, text color and logo
+        // tone), its text and its badge. Logo sprites stay with the providers — the sprite is
+        // a Unity asset.
+        //
+        // Brand visuals are classified per PSP here, which Invariant 2 allows; nothing in
+        // the flow or routing reads Kind.
+        internal enum ButtonKind
+        {
+            // Text only: a store with no brand logo and no treatment of its own (a new PSP
+            // without a registry entry, ...).
+            Generic,
+            Webshop,
+            Apple,
+            GooglePlay,
+            Coda,
+            Stripe,
+            // A store with a logo in PaymentBrandRegistry but no brand treatment of its own:
+            // its logo on the generic button. A new PSP gets this from its registry entry alone.
+            Branded,
+            // The native store when it has no lockup — the fake store in the editor and on
+            // platforms without a store brand: text on the native store's colors.
+            NativeText,
+            // The test PSP ("mock"): text on gray, as in the mocks.
+            MockProvider,
+        }
+
+        // English pop.button lead text, for tests.
+        internal const string SpecLeadText = "Continue with";
+
+        internal readonly struct ButtonDescriptor
+        {
+            public readonly ButtonKind Kind;
+            // The whole text of a text-only button, and the fallback when a brand logo is missing.
+            public readonly string Label;
+            // Text before the brand logo, possibly empty; null for a text-only button.
+            public readonly string? LeadText;
+            public readonly string? TrailText;
+            public readonly string? Badge;
+
+            public ButtonDescriptor(ButtonKind kind, string label, string? leadText, string? badge, string? trailText = null)
+            {
+                Kind = kind;
+                Label = label;
+                LeadText = leadText;
+                TrailText = trailText;
+                Badge = badge;
+            }
+
+            // Whether the button shows a logo from PaymentBrandRegistry.
+            public bool HasBrand => ShowsBrandLogo(Kind);
+
+            // For a brand whose logo failed to load: rendered as a text-only button instead.
+            public ButtonDescriptor WithoutBrand() => new ButtonDescriptor(ButtonKind.Generic, Label, null, Badge);
+        }
+
+        // Computed per call rather than stored on PurchaseOpt: "native" resolves to a
+        // brand per platform (PaymentBrandRegistry), which the editor can override.
+        internal static ButtonDescriptor DescribeButton(PurchaseOpt opt,
+            string locale = PaymentOptionProviderTranslations.Fallback)
+        {
+            if (opt.IsWebshop)
+                return new ButtonDescriptor(ButtonKind.Webshop,
+                    PaymentOptionProviderTranslations.ButtonLabel(locale, DisplayStoreName(IPaymentOptionProvider.WebshopAlias)),
+                    null, opt.Badge);
+
+            var kind = PaymentBrandRegistry.IsApplePay(opt.StoreName) ? ButtonKind.Apple
+                : PaymentBrandRegistry.IsGooglePay(opt.StoreName) ? ButtonKind.GooglePlay
+                : PaymentBrandRegistry.IsCoda(opt.StoreName) ? ButtonKind.Coda
+                : PaymentBrandRegistry.IsStripe(opt.StoreName) ? ButtonKind.Stripe
+                : PaymentBrandRegistry.HasBrand(opt.StoreName) ? ButtonKind.Branded
+                : PaymentBrandRegistry.IsMockProvider(opt.StoreName) ? ButtonKind.MockProvider
+                : opt.IsNative ? ButtonKind.NativeText
+                : ButtonKind.Generic;
+
+            // The logo stands in for pop.button's {0}.
+            var (lead, trail) = PaymentOptionProviderTranslations.ButtonParts(locale);
+
+            // Every button reads "Continue with …": the logo after it, the native lockup
+            // included, or the store's name.
+            var logo = ShowsBrandLogo(kind);
+            return new ButtonDescriptor(kind,
+                PaymentOptionProviderTranslations.ButtonLabel(locale, SpecDisplayStoreName(opt.StoreName)),
+                logo ? lead : null, opt.Badge, logo ? trail : null);
+        }
+
+        static bool ShowsBrandLogo(ButtonKind kind) => kind == ButtonKind.Apple || kind == ButtonKind.GooglePlay
+            || kind == ButtonKind.Coda || kind == ButtonKind.Stripe || kind == ButtonKind.Branded;
+
+        // The store's name after "Continue with", as the mocks write it; DisplayStoreName is
+        // the one the logs use. A brand's name is only shown when its logo is missing, and then
+        // reads as its logo does ("In-App Purchase" for Apple's lockup).
+        internal static string SpecDisplayStoreName(string storeName)
+        {
+            if (!string.Equals(storeName, IPaymentOptionProvider.NativeAlias, StringComparison.OrdinalIgnoreCase))
+                return SpecStoreName(storeName);
+
+            // "native" shows the brand the registry resolves it to on this platform (or the
+            // editor's override), so the label matches the lockup. Without one, it is named
+            // after the store a purchase would actually go to, resolved per call like the
+            // purchase itself: the fake store in the editor, the Xbox store on GDK, a custom
+            // store set with DefaultStoreHelper.OverrideDefaultStoreName, ...
+            var brandKey = PaymentBrandRegistry.ResolveNativeBrandKey();
+            if (brandKey != null)
+                return SpecStoreName(brandKey);
+            var defaultStore = DefaultStoreHelper.GetDefaultStoreName();
+            return defaultStore == FakeAppStore.Name ? "fake store" : SpecStoreName(defaultStore);
+        }
+
+        static string SpecStoreName(string storeName)
+        {
+            if (storeName == AppleAppStore.Name || storeName == MacAppStore.Name)
+                return "In-App Purchase";
+            if (storeName == GooglePlay.Name)
+                return GooglePlay.DisplayName;
+            if (storeName == XboxStore.Name)
+                return XboxStore.DisplayName;
+            if (PaymentBrandRegistry.IsStripe(storeName))
+                return "Stripe";
+            if (PaymentBrandRegistry.IsCoda(storeName))
+                return "CODA";
+            if (PaymentBrandRegistry.IsMockProvider(storeName))
+                return "mock provider";
+            return DisplayStoreName(storeName);
         }
     }
 }

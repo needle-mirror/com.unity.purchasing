@@ -53,6 +53,13 @@ class TransactionUseCase: TransactionUseCaseProtocol, @unchecked Sendable {
         let transaction = try transactionObserver.checkVerified(result)
         let isPending = await isPendingTransaction(transaction.id)
 
+        // A consumable is entitled only until it is finished (consumed). latest(for:) can still return a
+        // finished one, e.g. with SKIncludeConsumableInAppPurchaseHistory on iOS 18+. Checking only the
+        // latest is enough: the App Store won't sell a consumable again while an earlier one is unfinished.
+        if transaction.productType == .consumable {
+            return isPending ? PurchaseState.Pending : PurchaseState.NotPurchased
+        }
+
         let isPurchased = !isPending && transaction.revocationDate == nil && !transaction.isUpgraded && (transaction.expirationDate == nil || transaction.expirationDate! > Date())
         return isPurchased ? PurchaseState.Purchased : isPending ? PurchaseState.Pending : PurchaseState.NotPurchased
     }

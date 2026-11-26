@@ -33,6 +33,19 @@ namespace UnityEngine.Purchasing
                 ["stripe"]        = (null,                                    "com.unity.purchasing/Brands/StripeWhite"),
             };
 
+        // For tests: every Resources path the registry can load.
+        internal static IEnumerable<string> AllBrandPaths
+        {
+            get
+            {
+                foreach (var (dark, light) in s_BrandPaths.Values)
+                {
+                    if (dark != null) yield return dark;
+                    if (light != null) yield return light;
+                }
+            }
+        }
+
         static readonly Dictionary<string, Sprite> s_Cache = new();
 
         // Exiting Play Mode destroys the cached sprites; without a domain reload they would be
@@ -67,6 +80,22 @@ namespace UnityEngine.Purchasing
         public static bool IsStripe(string storeName)
             => string.Equals(ResolveBrandKey(storeName), "stripe", StringComparison.OrdinalIgnoreCase);
 
+        // True for the test PSP ("mock"). It has no logo; the Spec design gives its button the
+        // gray of the mocks (PurchaseOptionViewModel.ButtonKind.MockProvider).
+        public static bool IsMockProvider(string storeName)
+            => string.Equals(storeName, MockProviderName, StringComparison.OrdinalIgnoreCase);
+
+        // The test PSP's store name, as the backend returns it.
+        public const string MockProviderName = "mock";
+
+        // True when the storeName has a logo mapping, including a PSP that has one but no
+        // brand treatment of its own yet (it gets the generic button with its logo).
+        public static bool HasBrand(string storeName)
+        {
+            var key = ResolveBrandKey(storeName);
+            return key != null && s_BrandPaths.ContainsKey(key);
+        }
+
         public static Sprite? GetBrand(string storeName, Tone tone)
         {
             var key = ResolveBrandKey(storeName);
@@ -74,9 +103,9 @@ namespace UnityEngine.Purchasing
             if (!s_BrandPaths.TryGetValue(key, out var paths)) return null;
 
             var path = tone == Tone.DarkOnLight ? paths.dark : paths.light;
-            if (string.IsNullOrEmpty(path)) return null;
+            if (path is null || path.Length == 0) return null;
 
-            if (s_Cache.TryGetValue(path!, out var cached)) return cached;
+            if (s_Cache.TryGetValue(path, out var cached)) return cached;
 
             var tex = Resources.Load<Texture2D>(path);
             if (tex == null) return null;
@@ -85,27 +114,31 @@ namespace UnityEngine.Purchasing
                 new Rect(0, 0, tex.width, tex.height),
                 new Vector2(0.5f, 0.5f),
                 pixelsPerUnit: 100f);
-            s_Cache[path!] = sprite;
+            s_Cache[path] = sprite;
             return sprite;
         }
 
         // "native" → platform-specific brand (iOS=Apple, Android=Google).
         // Editor / unknown platform → null, caller falls back to text.
         static string? ResolveBrandKey(string storeName)
+            => string.Equals(storeName, IPaymentOptionProvider.NativeAlias, StringComparison.OrdinalIgnoreCase)
+                ? ResolveNativeBrandKey()
+                : storeName;
+
+        // The brand key "native" resolves to on the current (or overridden) platform;
+        // null when it has no store brand (the editor, other platforms).
+        public static string? ResolveNativeBrandKey() => GetEffectivePlatform() switch
         {
-            if (string.Equals(storeName, IPaymentOptionProvider.NativeAlias, StringComparison.OrdinalIgnoreCase))
-            {
-                return GetEffectivePlatform() switch
-                {
-                    RuntimePlatform.IPhonePlayer => "AppleAppStore",
-                    RuntimePlatform.tvOS         => "AppleAppStore",
-                    RuntimePlatform.OSXPlayer    => "AppleAppStore",
-                    RuntimePlatform.Android      => "GooglePlay",
-                    _                            => null,
-                };
-            }
-            return storeName;
-        }
+            RuntimePlatform.IPhonePlayer => "AppleAppStore",
+            RuntimePlatform.tvOS         => "AppleAppStore",
+            RuntimePlatform.OSXPlayer    => "AppleAppStore",
+#if UNITY_VISIONOS
+            // The same guard as DefaultStoreHelper, which routes visionOS to the App Store.
+            RuntimePlatform.VisionOS     => "AppleAppStore",
+#endif
+            RuntimePlatform.Android      => "GooglePlay",
+            _                            => null,
+        };
 
         static RuntimePlatform GetEffectivePlatform()
         {

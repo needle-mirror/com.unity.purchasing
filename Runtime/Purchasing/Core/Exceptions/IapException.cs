@@ -20,6 +20,9 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="info">The serialization information.</param>
         /// <param name="context">The streaming context.</param>
+        // .NET 8 obsoletes formatter-based serialization (SYSLIB0051). Removing this constructor is an API break.
+#pragma warning disable SYSLIB0051
         protected IapException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#pragma warning restore SYSLIB0051
     }
 }

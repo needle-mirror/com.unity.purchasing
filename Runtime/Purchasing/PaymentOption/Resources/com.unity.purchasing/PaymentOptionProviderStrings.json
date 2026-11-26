@@ -1,0 +1,21 @@
+{
+  "_comment": [
+    "Payment option provider strings.",
+    "Shape: key -> BCP-47 tag -> text. The tags here are the supported locales (IPaymentOptionProvider.SupportedLocales): a new language needs a row on every key, and its name in SupportedLocales' XML docs. The tests fail if a key misses a tag.",
+    "'en-US' is required on every key and is the fallback when a locale has no row.",
+    "pop.button is a FORMAT: {0} is the store's name, or where its logo goes. Put it where the language puts the name; text after it is drawn after the logo.",
+    "Badges are deliberately absent: the game supplies badge text itself, so nothing here translates it."
+  ],
+
+  "pop.button": {
+    "en-US": "Continue with {0}",
+    "fr-FR": "Continuer avec {0}",
+    "es-ES": "Continuar con {0}"
+  },
+
+  "pop.header": {
+    "en-US": "How would you like to pay?",
+    "fr-FR": "Comment souhaitez-vous payer\u00a0?",
+    "es-ES": "¿Cómo quieres pagar?"
+  }
+}

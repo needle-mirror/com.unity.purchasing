@@ -200,7 +200,7 @@ Do NOT pass the controller's method as a method group (`catalog.FetchProducts(m_
 Get it from the controller as with a `StoreController`, and keep using the catalog listing ID:
 
 ```csharp
-var picker = m_Controller.PaymentProvidersExtendedService?.GetPaymentOptionProviderUGUI();   // or GetPaymentOptionProviderUITK(hostDocument)
+var picker = m_Controller.PaymentProvidersExtendedService?.GetPaymentOptionProviderUGUI();   // or GetPaymentOptionProviderUITK()
 if (picker == null)
 {
     m_Controller.PurchaseProduct(catalogListingId, UnityIAPServices.GetDefaultStore());   // no Payment Provider store: buy natively
@@ -208,6 +208,8 @@ if (picker == null)
 }
 await picker.ShowPurchaseOption(catalogListingId);
 ```
+
+On Apple platforms the Apple In-App Purchase option's "Continue with" must be in the system font's medium weight (Apple's guidelines for the In-App Purchase mark). The UI Toolkit picker does this on its own. The UGUI picker does it with Unity 6 only when the project has TextMesh Pro's resources imported (**Window > TextMeshPro > Import TMP Essential Resources**); without them, and with Unity 2022.3, it falls back to Unity's built-in font. If a developer uses the UGUI picker on Unity 6 and ships to Apple platforms, suggest importing them.
 
 Purchases made from the picker arrive on the controller's events (`OnPurchasePending(storeName, order)` etc.) because stores share their services — **as long as the controller includes every store the picker can offer**: the platform default store (`UnityIAPServices.GetDefaultStore()`) and `PaymentProvider.Name`.
 

@@ -264,7 +264,7 @@ namespace UnityEngine.Purchasing.Stores
             var deviceLocale = m_DeviceLocaleReader();
             var defaultRegion = GetDefaultRegionInfo();
 
-            var locale = deviceLocale.LocaleTag ?? GetCurrentLocaleCodeIfValid();
+            var locale = deviceLocale.LocaleTagOrCurrentCulture;
             var country = storeCountry ?? deviceLocale.CountryCode ?? defaultRegion?.TwoLetterISORegionName;
             return new CheckoutLocation(locale, country, SelectCurrency(storeCountry, storeCurrency, deviceLocale, defaultRegion));
         }
@@ -360,22 +360,6 @@ namespace UnityEngine.Purchasing.Stores
             return s_RegionTableCurrencyCorrections.TryGetValue(region.TwoLetterISORegionName, out var corrected)
                 ? corrected
                 : region.ISOCurrencySymbol;
-        }
-
-        private string? GetCurrentLocaleCodeIfValid()
-        {
-            string name;
-            try
-            {
-                name = CultureInfo.CurrentCulture.Name;
-            }
-            catch
-            {
-                // CultureInfo.CurrentCulture can throw an ArgumentNullException
-                return null;
-            }
-
-            return name;
         }
 
         private RegionInfo? GetDefaultRegionInfo()

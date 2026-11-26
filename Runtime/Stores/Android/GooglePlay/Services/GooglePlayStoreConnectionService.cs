@@ -59,9 +59,51 @@ namespace UnityEngine.Purchasing
             }
         }
 
-        void OnDisconnected(GoogleBillingResponseCode responseCode)
+        void OnDisconnected(GoogleBillingResponseCode responseCode, string debugMessage)
         {
-            m_ConnectCallback.OnStoreConnectionFailed(new StoreConnectionFailureDescription("GooglePlayStore connection failed", true));
+            var message = string.IsNullOrEmpty(debugMessage)
+                ? $"GooglePlayStore connection failed - Google BillingResponseCode = {responseCode}"
+                : $"GooglePlayStore connection failed: {debugMessage} - Google BillingResponseCode = {responseCode}";
+
+            m_ConnectCallback.OnStoreConnectionFailed(new StoreConnectionFailureDescription(message,
+                IsRetryable(responseCode), ShouldAutoRetry(responseCode)));
+        }
+
+        /// <summary>
+        /// Whether the developer can usefully call Connect again.
+        /// False only for the codes Google lists as non-retriable, which cannot succeed without a change to the app.
+        /// See https://developer.android.com/google/play/billing/errors
+        /// </summary>
+        internal static bool IsRetryable(GoogleBillingResponseCode responseCode)
+        {
+            switch (responseCode)
+            {
+                case GoogleBillingResponseCode.FeatureNotSupported:
+                case GoogleBillingResponseCode.DeveloperError:
+                    return false;
+                default:
+                    return true;
+            }
+        }
+
+        /// <summary>
+        /// Whether IAP reconnects on its own.
+        /// True only for transient codes Google says to retry automatically.
+        /// Anything else is reported to the developer at once rather than retried.
+        /// </summary>
+        internal static bool ShouldAutoRetry(GoogleBillingResponseCode responseCode)
+        {
+            switch (responseCode)
+            {
+                case GoogleBillingResponseCode.ServiceTimeout:
+                case GoogleBillingResponseCode.ServiceDisconnected:
+                case GoogleBillingResponseCode.ServiceUnavailable:
+                case GoogleBillingResponseCode.FatalError:
+                case GoogleBillingResponseCode.NetworkError:
+                    return true;
+                default:
+                    return false;
+            }
         }
     }
 }

@@ -30,10 +30,13 @@ namespace UnityEngine.Purchasing
             var appleStoreExtendedPurchaseService = UnityIAPServices.DefaultPurchase().Apple;
             if (appleStoreExtendedPurchaseService != null)
             {
-                appleStoreExtendedPurchaseService.OnEntitlementRevoked += productIds =>
+                // OnEntitlementRevoked carries a single store-specific product id, not a list.
+                appleStoreExtendedPurchaseService.OnEntitlementRevoked += productId =>
                 {
-                    var products = UnityIAPServices.DefaultProduct().GetProducts().Where(product => productIds.Contains(product.baseListing?.definition.storeSpecificId));
-                    callback?.Invoke((List<Product>)products);
+                    var products = UnityIAPServices.DefaultProduct().GetProducts()
+                        .Where(product => product.baseListing?.definition.storeSpecificId == productId)
+                        .ToList();
+                    callback?.Invoke(products);
                 };
             }
         }

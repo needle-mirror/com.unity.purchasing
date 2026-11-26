@@ -64,9 +64,16 @@ namespace UnityEngine.Purchasing.PaymentProviders
         }
 
 #if IAP_UIELEMENTS
+        public IPaymentOptionProvider GetPaymentOptionProviderUITK()
+        {
+            return new PaymentOptionProviderUITK(ResolveEmitter());
+        }
+
+        [System.Obsolete("The UI Toolkit picker now renders on its own panel and ignores the host UIDocument. " +
+            "Use GetPaymentOptionProviderUITK() instead.")]
         public IPaymentOptionProvider GetPaymentOptionProviderUITK(UnityEngine.UIElements.UIDocument? host = null)
         {
-            return new PaymentOptionProviderUITK(host, ResolveEmitter());
+            return GetPaymentOptionProviderUITK();
         }
 #endif
 

@@ -72,7 +72,10 @@ namespace UnityEngine.Purchasing
         /// </summary>
         /// <param name="obj">The object to compare with the current <see cref="Cart"/>.</param>
         /// <returns>`true` if the specified object is equal to the current <see cref="Cart"/>; otherwise, `false`.</returns>
+        // Newer editors compile against an object.Equals(object?) annotation (CS8765). The parameter stays object to keep the public API unchanged.
+#pragma warning disable CS8765
         public override bool Equals(object obj)
+#pragma warning restore CS8765
         {
             if (ReferenceEquals(this, obj))
                 return true;

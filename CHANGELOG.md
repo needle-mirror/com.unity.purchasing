@@ -1,4 +1,30 @@
 # Changelog
+## [5.6.0] - 2026-11-26
+### Added
+- Payment Providers - Added `IPaymentOptionProvider.ApplyBottomAnchoredLayout()`, `ApplyCenteredLayout()` and `ApplyAutomaticLayout()` to choose the Purchase Options UI's layout.
+- Payment Providers - Added `IPaymentOptionProvider.SetLocale(string)` and `IPaymentOptionProvider.SupportedLocales`. The Purchase Options UI is now translated into English, French and Spanish and follows the device locale, the same one the checkout page uses (English otherwise); `SetLocale` overrides it. Badges are not translated.
+- Payment Providers - Added a parameterless `IPaymentProvidersExtendedService.GetPaymentOptionProviderUITK()`.
+- Payment Providers - Added `PurchaseFailureReason.ProductTypeNotSupported`. Subscriptions are not supported yet for Payment Providers, so purchasing one through a Payment Provider, or calling `GenerateURL` for one, now fails with this reason before any order is created. An order the server rejects for its product type (HTTP 422) fails with the same reason instead of `Unknown`, or `PurchasingUnavailable` when the compliance callback created it.
+
+### Changed
+- Fake Store - The dialog now scales with screen size and blocks clicks to the UI behind it.
+- Google Play - A failed store connection is now only retried automatically for transient response codes. Others, such as `BillingUnavailable`, raise `OnStoreDisconnected` at once, and `IsRetryable` says whether calling `Connect()` again, e.g. after the user updates the Play Store, could succeed. See [Google's billing response codes](https://developer.android.com/google/play/billing/errors).
+- Payment Providers - `GetPaymentOptionProviderUITK(UIDocument)` is obsolete: the UI Toolkit Purchase Options UI now renders on its own panel and ignores that `UIDocument`, so the game's style sheets no longer apply to it. To change its colors, add a style sheet with your `--color-*` overrides to its own `UIDocument`.
+- Payment Providers - The Purchase Options UI (UGUI and UI Toolkit) has a new design and adapts to the device: anchored to the bottom on phones and centered on tablets, the same size across screen densities, inside the safe area, with at most three options and the webshop first, and it closes when the player taps outside it.
+- Payment Providers - The payment option picker no longer offers a Payment Provider or the webshop for a subscription, as subscriptions are not supported yet for Payment Providers. The platform store option is still shown, and `ValidatePurchaseOption` returns `false` for an option list that routes a subscription to a Payment Provider.
+- Payment Providers - `IPaymentProvidersExtendedPurchaseService.SetCustomMetadata` now throws an `ArgumentException` for metadata the Payment Provider backend doesn't accept: more than 20 entries, a key longer than 40 bytes or a value longer than 100 bytes in UTF-8, or a key or value containing a NUL character. The message names the rule that was broken, and the metadata set before is kept.
+
+### Fixed
+- Apple - Fixed the legacy `IAppleConfiguration.SetEntitlementsRevokedListener`, which threw an `InvalidCastException` on every revoked entitlement instead of calling the listener. The listener is now called with the revoked product. (Since Unity IAP 5.0.0)
+- Apple (StoreKit 2) - Fixed `CheckEntitlement` returning `EntitledUntilConsumed` for an already confirmed consumable when `SKIncludeConsumableInAppPurchaseHistory` was enabled. It now returns `NotEntitled` once the purchase is confirmed.
+- Fake Store - In projects that use only the Input System package (1.1.1 or later), the EventSystem that the dialog and the UGUI Purchase Options UI create when the scene has none now responds to input.
+- Google Play - A failed store connection now reports Google's billing response code and debug message in `StoreConnectionFailureDescription.message`.
+- Payment Providers - In the Purchase Options UI (UGUI and UI Toolkit), disposing the provider while `ShowPurchaseOption(string)` is waiting for payment provider eligibility, for example on a scene change, now returns `null` instead of throwing a `NullReferenceException`.
+- Payment Providers - In the Purchase Options UI (UGUI and UI Toolkit), the text of an "AppleAppStore" or "GooglePlay" option passed to `ShowPurchaseOption(IReadOnlyList<PurchaseOption>)` is now readable. It was drawn in the theme's text color on the button's own black or white background.
+- Payment Providers - In the UI Toolkit Purchase Options UI, an option's label no longer runs underneath its badge, and the title no longer runs into the close button at narrow widths.
+- Payment Providers - On Unity 6000.3 and later, the Google Play option in the Purchase Options UI's dark theme could show color bands instead of the Google Play logo. The package no longer includes the unused SVG copies of the logo that caused it.
+- Payment Providers - The Payment Provider store now supports [disabled domain reload](https://docs.unity3d.com/2023.2/Documentation/Manual/DomainReloading.html) in the Editor. Previously, a store from an earlier Play session with an unresolved order could check that order again when the Editor regained focus.
+
 ## [5.5.1] - 2026-11-13
 ### Changed
 - Updated the `com.unity.services.core` dependency to 1.19.0, which fixes "Attempted to get location for assembly Unity.Services.Core.Editor ... while it is unloading" being logged on every domain reload under CoreCLR.

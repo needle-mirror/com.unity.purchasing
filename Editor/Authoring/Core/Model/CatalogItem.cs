@@ -388,12 +388,16 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core.Model
         [DataMember(Name = "type")]
         [JsonConverter(typeof(StringEnumConverter))]
         public PromotionType Type;
+        // UAC1001: Unity's serializer skips these, so the inspector (CatalogItemInspectorConfig) can't show them.
+        // TODO: surface the promotion window in the inspector, as PricingDetails.WebshopPrice does for its nullable.
+#pragma warning disable UAC1001
         [CsvColumn("PromotionStartsAt", 22)]
         [DataMember(Name = "startsAt"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTimeOffset? StartsAt;
         [CsvColumn("PromotionEndsAt", 23)]
         [DataMember(Name = "endsAt"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTimeOffset? EndsAt;
+#pragma warning restore UAC1001
 
         public Promotion() { }
 

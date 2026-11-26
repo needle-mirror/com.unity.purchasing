@@ -23,7 +23,7 @@ namespace UnityEngine.Purchasing.Stores
             var localeListRaw = nativeDict.TryGetValue("localeList", out var ll)
                 ? ll as List<object>
                 : null;
-            var localeList = localeListRaw?.Select(l => l?.ToString().Replace("-", "_") ?? "").ToList()
+            var localeList = localeListRaw?.Select(l => l?.ToString()?.Replace("-", "_") ?? "").ToList()
                              ?? new List<string>();
 
             var languageRaw = nativeDict.TryGetValue("language", out var lang)

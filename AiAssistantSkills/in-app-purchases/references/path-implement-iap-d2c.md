@@ -363,8 +363,18 @@ var m_PaymentOptionProvider = controller.PaymentProvidersExtendedService?.GetPay
 
 **UI Toolkit** (for projects using UI Toolkit):
 ```csharp
-var m_PaymentOptionProvider = controller.PaymentProvidersExtendedService?.GetPaymentOptionProviderUITK(hostDocument);
+var m_PaymentOptionProvider = controller.PaymentProvidersExtendedService?.GetPaymentOptionProviderUITK();
 ```
+
+The UI Toolkit picker renders on its own panel (a `PaymentOptionProviderUITK` GameObject with a `UIDocument`, sorting order 10000), so it needs no host document. Do not pass a `UIDocument`: the `GetPaymentOptionProviderUITK(UIDocument)` overload is obsolete and ignores it. The game's theme and style sheets do not apply to the picker. To override its USS variables (`--color-*`), add a style sheet to that GameObject's `UIDocument.rootVisualElement` before showing the picker. The GameObject is created by the first theme, layout or `ValidatePurchaseOption` call (not by `SetLocale` or `ShowPurchaseOption`), so call a theme or layout method first:
+
+```csharp
+m_PaymentOptionProvider.ApplyLightTheme(); // creates the picker's panel
+GameObject.Find("PaymentOptionProviderUITK").GetComponent<UIDocument>()
+    .rootVisualElement.styleSheets.Add(myOverrides); // a StyleSheet asset with your --color-* overrides
+```
+
+If several pickers are alive at once, `GameObject.Find` returns any one of them.
 
 The picker's purchases arrive on the controller's events (`OnPurchasePending(storeName, order)` etc.) because stores share their services — the controller must include every store the picker can offer (the platform default store and `PaymentProvider.Name`).
 

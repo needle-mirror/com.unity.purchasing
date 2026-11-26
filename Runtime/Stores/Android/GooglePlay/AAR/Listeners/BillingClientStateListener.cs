@@ -16,7 +16,7 @@ namespace UnityEngine.Purchasing
             "com.android.billingclient.api.BillingClientStateListener";
 
         Action m_OnConnected;
-        Action<GoogleBillingResponseCode> m_Disconnect;
+        Action<GoogleBillingResponseCode, string> m_Disconnect;
         readonly IUtil m_Util;
 
         internal BillingClientStateListener(IUtil util)
@@ -30,7 +30,7 @@ namespace UnityEngine.Purchasing
             m_OnConnected = onConnected;
         }
 
-        public void RegisterOnDisconnected(Action<GoogleBillingResponseCode> onDisconnected)
+        public void RegisterOnDisconnected(Action<GoogleBillingResponseCode, string> onDisconnected)
         {
             m_Disconnect = onDisconnected;
         }
@@ -43,23 +43,26 @@ namespace UnityEngine.Purchasing
 
         void HandleBillingSetupFinished(AndroidJavaObject billingResult)
         {
-            IGoogleBillingResult result = new GoogleBillingResult(billingResult);
+            HandleBillingSetupFinished(new GoogleBillingResult(billingResult));
+            billingResult.Dispose();
+        }
+
+        internal void HandleBillingSetupFinished(IGoogleBillingResult result)
+        {
             if (result.responseCode == GoogleBillingResponseCode.Ok)
             {
                 m_OnConnected();
             }
             else
             {
-                m_Disconnect(result.responseCode);
+                m_Disconnect(result.responseCode, result.debugMessage);
             }
-
-            billingResult.Dispose();
         }
 
         [Preserve]
         public void onBillingServiceDisconnected()
         {
-            m_Util.RunOnMainThread(() => m_Disconnect(GoogleBillingResponseCode.ServiceDisconnected));
+            m_Util.RunOnMainThread(() => m_Disconnect(GoogleBillingResponseCode.ServiceDisconnected, null));
         }
     }
 }

@@ -12,6 +12,9 @@ namespace UnityEngine.Purchasing
 
         internal DependencyInjectionException(string message) : base(message) { }
 
+        // .NET 8 obsoletes formatter-based serialization (SYSLIB0051).
+#pragma warning disable SYSLIB0051
         protected DependencyInjectionException(SerializationInfo info, StreamingContext context) : base(info, context) { }
+#pragma warning restore SYSLIB0051
     }
 }

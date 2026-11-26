@@ -88,7 +88,8 @@ namespace UnityEngine.Purchasing
 
 #region Callbacks
         /// <summary>
-        /// Event triggered when the store connection is lost or fails.
+        /// Raised when the store fails to connect, or loses its connection, and IAP won't reconnect on its own.
+        /// Check <see cref="StoreConnectionFailureDescription.IsRetryable"/> to decide whether to offer the player a retry.
         /// </summary>
         public event Action<StoreConnectionFailureDescription>? OnStoreDisconnected
         {
@@ -224,6 +225,11 @@ namespace UnityEngine.Purchasing
         /// <summary>
         /// Sets the retry policy to use when the store disconnects and needs to reconnect.
         /// </summary>
+        /// <remarks>
+        /// The policy applies only to failures the store reports as transient. On Google Play these are
+        /// <c>ServiceTimeout</c>, <c>ServiceDisconnected</c>, <c>ServiceUnavailable</c>, <c>NetworkError</c> and
+        /// <c>FatalError</c>. Other failures raise <see cref="OnStoreDisconnected"/> without a retry.
+        /// </remarks>
         /// <param name="retryPolicy">The retry policy to use, or null to disable automatic reconnection.</param>
         public void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy? retryPolicy) => m_StoreService.SetStoreReconnectionRetryPolicyOnDisconnection(retryPolicy);
 

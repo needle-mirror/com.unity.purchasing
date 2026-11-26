@@ -37,7 +37,15 @@ namespace UnityEngine.Purchasing
         /// `null`by default.
         /// If not `null`, the data sent as the `Metadata` on new Payment Provider orders.
         /// A shallow copy of the dictionary is taken, so later changes to the original dictionary have no effect.
-        /// Call this method again to update. </param>
+        /// Call this method again to update.
+        /// It can have at most 20 entries. Each key can be at most 40 bytes and each value at most 100 bytes,
+        /// measured in UTF-8, so a character outside ASCII counts as more than one byte.
+        /// Keys and values cannot contain a NUL character (<c>\0</c>). </param>
+        /// <exception cref="ArgumentException">
+        /// <paramref name="customMetadata"/> has more than 20 entries, a key or value longer than its limit,
+        /// or a key or value containing a NUL character.
+        /// The message names the rule that was broken. The previously set metadata is kept.
+        /// </exception>
         void SetCustomMetadata(IReadOnlyDictionary<string, string>? customMetadata);
 
         /// <summary>
@@ -81,6 +89,11 @@ namespace UnityEngine.Purchasing
         /// no token is required.
         /// </param>
         /// <returns>The redirect URL the player will be sent to in order to complete the purchase.</returns>
+        /// <remarks>
+        /// Payment Providers do not sell subscriptions. For a subscription's catalog listing, no order is
+        /// created: this returns <c>null</c> and reports the failure through
+        /// <see cref="IPurchaseService.OnPurchaseFailed"/> with <see cref="PurchaseFailureReason.ProductTypeNotSupported"/>.
+        /// </remarks>
         Task<string?> GenerateURL(string? catalogListingId, IReadOnlyList<PaymentProviderToken>? externalTokens = null);
 
         /// <summary>

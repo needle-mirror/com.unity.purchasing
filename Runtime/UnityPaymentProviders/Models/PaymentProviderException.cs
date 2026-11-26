@@ -118,6 +118,23 @@ namespace UnityEngine.Purchasing.PaymentProviderService
         { }
     }
 
+    // 422: the request is valid but the server won't process it. On create order the backend answers it
+    // for several reasons: an unsupported product type, but also a project without Payment Providers set
+    // up, a currency the listing has no price in, an ambiguous SKU or an invalid purchase limit.
+    internal class UnprocessableEntityError : HttpError
+    {
+        internal UnprocessableEntityError(long responseCode) : base(responseCode)
+        { }
+    }
+
+    // The 422 that means the product type is not sold through Payment Providers (only consumables and
+    // non-consumables are, ULO-10540).
+    internal class ProductTypeNotSupportedError : UnprocessableEntityError
+    {
+        internal ProductTypeNotSupportedError(long responseCode) : base(responseCode)
+        { }
+    }
+
     internal class NetworkError
     {
     }

@@ -127,7 +127,11 @@ namespace UnityEngine.Purchasing
         /// <summary>Raised when a store connects. Receives the store name.</summary>
         public event Action<string>? OnStoreConnected { add => m_OnStoreConnected.Add(value); remove => m_OnStoreConnected.Remove(value); }
 
-        /// <summary>Raised when a store disconnects or fails to connect.</summary>
+        /// <summary>
+        /// Raised when a store fails to connect, or loses its connection, and IAP won't reconnect on its own.
+        /// Receives the store name. Check <see cref="StoreConnectionFailureDescription.IsRetryable"/> to decide
+        /// whether to offer the player a retry.
+        /// </summary>
         public event Action<string, StoreConnectionFailureDescription>? OnStoreDisconnected { add => m_OnStoreDisconnected.Add(value); remove => m_OnStoreDisconnected.Remove(value); }
 
         /// <summary>
@@ -194,6 +198,11 @@ namespace UnityEngine.Purchasing
         /// Sets the reconnection retry policy. With no store name, the same instance is used by every store; each
         /// store still retries independently, but a policy that keeps its own state shares it across stores.
         /// </summary>
+        /// <remarks>
+        /// The policy applies only to failures the store reports as transient. On Google Play these are
+        /// <c>ServiceTimeout</c>, <c>ServiceDisconnected</c>, <c>ServiceUnavailable</c>, <c>NetworkError</c> and
+        /// <c>FatalError</c>. Other failures raise <see cref="OnStoreDisconnected"/> without a retry.
+        /// </remarks>
         /// <param name="retryPolicy">The retry policy, or null to disable reconnection.</param>
         /// <param name="storeName">The store to configure, or null for every store.</param>
         public void SetStoreReconnectionRetryPolicyOnDisconnection(IRetryPolicy? retryPolicy, string? storeName = null)

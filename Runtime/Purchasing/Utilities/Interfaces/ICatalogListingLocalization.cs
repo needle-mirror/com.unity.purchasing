@@ -21,6 +21,9 @@ namespace UnityEngine.Purchasing.Utilities
         }
 
         public string? SelectLanguage(IReadOnlyCollection<string> locales, string? playerLocale)
+            => SelectBestLocale(locales, playerLocale);
+
+        internal static string? SelectBestLocale(IReadOnlyCollection<string> locales, string? playerLocale)
         {
             if (playerLocale == null || string.IsNullOrEmpty(playerLocale))
             {
@@ -47,6 +50,11 @@ namespace UnityEngine.Purchasing.Utilities
                 ?? locales.FirstOrDefault();
         }
 
+        // Same language after canonicalization (iw = he, no = nb): what SelectBestLocale's
+        // language tier matches on, without its any-entry last resort.
+        internal static bool SameLanguage(string a, string b)
+            => Subtags(NormalizeLocale(a)).Language == Subtags(NormalizeLocale(b)).Language;
+
         static string NormalizeLocale(string locale)
         {
             return locale.Replace('_', '-').ToLowerInvariant();
@@ -58,7 +66,7 @@ namespace UnityEngine.Purchasing.Utilities
             var parts = normalizedLocale.Split('-');
             var script = parts.Length > 1 && parts[1].Length == 4 ? parts[1] : null;
             var regionIndex = script == null ? 1 : 2;
-            var region = parts.Length > regionIndex && IsRegion(parts[regionIndex]) ? parts[regionIndex] : null;
+            var region = parts.Length > regionIndex && NativeDeviceLocale.IsRegion(parts[regionIndex]) ? parts[regionIndex] : null;
             var language = LanguageKey(parts[0]);
             return (language, script ?? ImpliedScript(language, region), region);
         }
@@ -98,15 +106,6 @@ namespace UnityEngine.Purchasing.Utilities
                 return null;
             }
             return region == "tw" || region == "hk" || region == "mo" ? "hant" : "hans";
-        }
-
-        // ISO 3166-1 alpha-2 or UN M.49 numeric ("419" = Latin America). Mirrors
-        // NativeDeviceLocale.IsRegion, which lives in another assembly.
-        static bool IsRegion(string subtag)
-        {
-            return subtag.Length == 2
-                ? char.IsLetter(subtag[0]) && char.IsLetter(subtag[1])
-                : subtag.Length == 3 && char.IsDigit(subtag[0]) && char.IsDigit(subtag[1]) && char.IsDigit(subtag[2]);
         }
 
         static bool Matches(

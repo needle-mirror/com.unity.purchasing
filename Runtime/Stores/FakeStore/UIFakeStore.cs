@@ -40,10 +40,7 @@ namespace UnityEngine.Purchasing
         }
 
         /// <summary>
-        /// Creates and displays a modal dialog UI. Note pointer events can "drill through" the
-        /// UI activating underlying interface elements. Consider using techniques mentioned in
-        /// http://forum.unity3d.com/threads/frequently-asked-ui-questions.264479/ in apps
-        /// to mitigate this. Shows only one at a time.
+        /// Creates and displays a modal dialog UI. Shows only one at a time.
         /// </summary>
         /// <returns><c>true</c>, if UI was started, <c>false</c> otherwise.</returns>
         /// <param name="model">Store model being shown; uses dialogType to decode.</param>
@@ -206,8 +203,7 @@ namespace UnityEngine.Purchasing
 
         private void CreateEventSystem(Transform rootTransform)
         {
-            m_EventSystem = new GameObject("EventSystem", typeof(EventSystem));
-            m_EventSystem.AddComponent<StandaloneInputModule>();
+            m_EventSystem = UIEventSystemUtility.CreateEventSystem();
             m_EventSystem.transform.parent = rootTransform;
         }
 

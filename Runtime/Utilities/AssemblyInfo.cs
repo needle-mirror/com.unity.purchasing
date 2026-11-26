@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("UnityEditor.Purchasing")]
+[assembly: InternalsVisibleTo("UnityEditor.Purchasing.EditorTests")]
 [assembly: InternalsVisibleTo("Unity.Purchasing")]
 [assembly: InternalsVisibleTo("Unity.Purchasing.Stores")]
 [assembly: InternalsVisibleTo("Unity.Purchasing.Codeless")]

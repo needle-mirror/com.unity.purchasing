@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 namespace UnityEngine.Purchasing
 {
-    //TODO Revamp Codeless for Core API Revamp https://jira.unity3d.com/browse/IAP-2673
+    //TODO Revamp Codeless for Core API Revamp ULO-461
 
     /// <summary>
     /// A GUI component for exposing the current price and allow purchasing of In-App Purchases. Exposes configurable

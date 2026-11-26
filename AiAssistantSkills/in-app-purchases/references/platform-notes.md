@@ -151,6 +151,19 @@ controller.GooglePlayStoreExtendedPurchaseService.OnDeferredPaymentUntilRenewalD
 };
 ```
 
+### Connection Failures
+
+When Google Play fails to connect, Unity IAP acts on Google's billing response code. `failure.Message` on `OnStoreDisconnected` includes the code and Google's debug message.
+
+| Response code | IAP reconnects on its own | `failure.IsRetryable` |
+|---|---|---|
+| `ServiceTimeout`, `ServiceDisconnected`, `ServiceUnavailable`, `NetworkError`, `FatalError` | Yes, under the reconnection retry policy; `OnStoreDisconnected` fires only if those retries fail | `true` |
+| `BillingUnavailable` | No — `OnStoreDisconnected` fires at once | `true`: a retry can succeed after the user fixes the cause, e.g. updates the Play Store or signs in to a Google account |
+| `FeatureNotSupported`, `DeveloperError` | No | `false`: needs a change to the app |
+| Any other code | No | `true` |
+
+Handle it as in [api-notes.md](api-notes.md#handling-a-store-connection-failure): log `failure.Message`, and offer a retry the user starts when `IsRetryable` is true. Google's meaning for each code: [Google Play Billing response codes](https://developer.android.com/google/play/billing/errors).
+
 ## Apple JWS Representation (Server-Side Validation)
 
 For server-side Apple receipt validation (replacing the deprecated `CrossPlatformValidator`):

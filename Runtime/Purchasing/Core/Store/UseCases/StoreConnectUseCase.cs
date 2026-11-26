@@ -75,7 +75,7 @@ namespace UnityEngine.Purchasing
         {
             m_CurrentRequest ??= m_RetryService.CreateRequest(m_Store.Connect, m_RetryPolicyOnDisconnect);
 
-            var hasRetried = await m_CurrentRequest.Retry(failureDescription);
+            var hasRetried = failureDescription.ShouldAutoRetry && await m_CurrentRequest.Retry(failureDescription);
             if (!hasRetried)
             {
                 SendDisconnectionEvent(failureDescription);

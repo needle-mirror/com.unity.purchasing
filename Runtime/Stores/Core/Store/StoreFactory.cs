@@ -31,7 +31,7 @@ namespace UnityEngine.Purchasing
         public readonly ITelemetryMetricsInstanceWrapper TelemetryMetricsInstanceWrapper;
         public readonly ITelemetryDiagnosticsInstanceWrapper TelemetryDiagnosticsInstanceWrapper;
         internal readonly StoreLocationContext StoreLocationContext;
-        readonly Dictionary<string?, Func<IStoreWrapper>> m_StoreInstantiationByName = new Dictionary<string?, Func<IStoreWrapper>>();
+        readonly Dictionary<string, Func<IStoreWrapper>> m_StoreInstantiationByName = new Dictionary<string, Func<IStoreWrapper>>();
 
         internal StoreFactory(IUtil util, ILogger logger, INativeStoreProvider nativeStoreProvider, ITelemetryDiagnosticsInstanceWrapper telemetryDiagnosticsInstanceWrapper, ITelemetryMetricsInstanceWrapper telemetryMetricsInstanceWrapper)
         {

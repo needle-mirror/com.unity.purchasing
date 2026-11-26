@@ -1,0 +1,6 @@
+/* Intentionally empty theme for the UI Toolkit payment option picker's own panel
+ * (PaymentOptionProviderPanelSettings). The picker styles itself from
+ * PaymentOptionProviderModal.uss and sets its font in C#; this theme exists only so
+ * the panel has one, because a PanelSettings without a theme logs
+ * "No Theme Style Sheet set to PanelSettings, UI will not render properly".
+ * Importing Unity's default runtime theme here would restyle the picker's buttons. */

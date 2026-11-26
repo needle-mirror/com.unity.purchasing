@@ -11,7 +11,7 @@ namespace UnityEngine.Purchasing
     {
         static PurchaseServiceContainer? s_Instance;
 
-        readonly Dictionary<string?, IPurchaseService> m_InstantiatedServices = new Dictionary<string?, IPurchaseService>();
+        readonly Dictionary<string, IPurchaseService> m_InstantiatedServices = new Dictionary<string, IPurchaseService>();
 
         internal static PurchaseServiceContainer Instance()
         {

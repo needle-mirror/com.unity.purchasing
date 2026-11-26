@@ -96,6 +96,12 @@ namespace UnityEngine.Purchasing
         /// The player has bought this catalog listing as many times as its purchase limit allows
         /// in the current period.
         /// </summary>
-        PurchaseLimitReached = 15
+        PurchaseLimitReached = 15,
+
+        /// <summary>
+        /// The store does not sell this type of product. Payment Providers, for example, do not
+        /// sell subscriptions.
+        /// </summary>
+        ProductTypeNotSupported = 16
     }
 }

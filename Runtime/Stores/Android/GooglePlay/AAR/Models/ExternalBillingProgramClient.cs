@@ -172,8 +172,15 @@ namespace UnityEngine.Purchasing.GoogleBilling.Models
                 tcs.TrySetResult(true);
                 onConnected?.Invoke();
             });
-            listener.RegisterOnDisconnected((code) =>
+            listener.RegisterOnDisconnected((code, debugMessage) =>
             {
+                // onDisconnected is public API and takes only the code, so Google's debug message is logged instead.
+                if (!string.IsNullOrEmpty(debugMessage))
+                {
+                    Debug.unityLogger.LogIAPWarning(
+                        $"ExternalBillingProgramClient connection failed: {debugMessage} - Google BillingResponseCode = {code}");
+                }
+
                 tcs.TrySetResult(false);
                 onDisconnected?.Invoke(code);
             });

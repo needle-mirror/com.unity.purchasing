@@ -10,7 +10,7 @@ namespace UnityEngine.Purchasing
         static StoreManager? s_Instance;
 
         IStoreFactory? m_StoreFactory;
-        readonly Dictionary<string?, IStoreWrapper> m_InstantiatedStores = new();
+        readonly Dictionary<string, IStoreWrapper> m_InstantiatedStores = new();
 
         public void SetStoreFactory(IStoreFactory? storeFactory)
         {

@@ -20,6 +20,7 @@
 - [AppleStoreExtendedProductService Key Members](#applestoreextendedproductservice-key-members)
 - [Subscription Info Access Path](#subscription-info-access-path)
 - [Event Subscription Rules](#event-subscription-rules)
+- [Handling a Store Connection Failure](#handling-a-store-connection-failure)
 - [Failure Description Property Names](#failure-description-property-names)
 - [CrossPlatformValidator](#crossplatformvalidator)
 - [Interface Hierarchy](#interface-hierarchy)
@@ -47,6 +48,7 @@ Do not use these — they don't exist, or are obsolete in v5:
 | WRONG | CORRECT |
 |---|---|
 | `controller.OnStoreConnectionFailed` | `controller.OnStoreDisconnected` — receives `(storeName, StoreConnectionFailureDescription)` |
+| Calling `Connect()` in a loop from `OnStoreDisconnected` | IAP already retried transient failures before raising it. If `failure.IsRetryable`, offer a retry the user starts — see Handling a Store Connection Failure |
 | `controller.FetchProducts(defs, successCb, failCb)` | `controller.FetchProducts(List<ProductDefinition>, storeName)` — subscribe to `OnProductsFetched`/`OnProductsFetchFailed` events separately |
 | `controller.FetchPurchases(successCb, failCb)` | `controller.FetchPurchases()` — subscribe to `OnPurchasesFetched`/`OnPurchasesFetchFailed` events separately |
 | `product.receipt` | `order.Info.Receipt` — receipt is on the order, not the product |
@@ -565,6 +567,25 @@ long     GetIntroductoryPricePeriodCycles()
 | `CheckEntitlement()` | `OnCheckEntitlement` | — |
 
 **Always subscribe to `OnPurchaseDeferred`** — fires for Ask-to-Buy (iOS) and Google Play deferred purchases. Not subscribing means silently dropping deferred purchases.
+
+## Handling a Store Connection Failure
+
+`OnStoreDisconnected` fires when a store fails to connect, or loses its connection, and IAP won't reconnect on its own. IAP retries transient failures itself, under the policy set with `SetStoreReconnectionRetryPolicyOnDisconnection`, before raising it. So don't retry in a loop from the handler:
+
+- `failure.IsRetryable == true` — calling `Connect()` again could succeed, often only after the user acts (for example, updates the Play Store or signs in). Offer a retry the user starts.
+- `failure.IsRetryable == false` — the connection can't succeed without a change to the app. Log it; don't offer a retry.
+- `failure.Message` holds the store's own detail. On Google Play it includes Google's debug message and billing response code — log it.
+
+```csharp
+m_Controller.OnStoreDisconnected += (storeName, failure) =>
+{
+    Debug.LogError($"[{storeName}] Store disconnected: {failure.Message}");
+    if (failure.IsRetryable)
+        ShowRetryButton(() => m_Controller.Connect(storeName));   // your UI; the user decides when to retry
+};
+```
+
+Google Play specifics (which response codes retry automatically): see [platform-notes.md](platform-notes.md#connection-failures).
 
 ## Failure Description Property Names
 

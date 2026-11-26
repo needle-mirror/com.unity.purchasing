@@ -14,7 +14,9 @@
     "Unity.Purchasing.LiveContentAdapterService",
     "Unity.Purchasing.WebshopService",
     "Unity.Microsoft.GDK",
-    "Unity.Services.Authentication"
+    "Unity.Services.Authentication",
+    "Unity.TextMeshPro",
+    "Unity.InputSystem"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
@@ -35,9 +37,19 @@
       "define": "IAP_UIELEMENTS"
     },
     {
+      "name": "com.unity.ugui",
+      "expression": "2.0.0",
+      "define": "IAP_UGUI_TMP"
+    },
+    {
       "name": "com.unity.services.authentication",
       "expression": "3.0.0",
       "define": "IAP_UNITY_AUTH_ENABLED"
+    },
+    {
+      "name": "com.unity.inputsystem",
+      "expression": "1.1.1",
+      "define": "IAP_INPUT_SYSTEM"
     }
   ],
   "noEngineReferences": false

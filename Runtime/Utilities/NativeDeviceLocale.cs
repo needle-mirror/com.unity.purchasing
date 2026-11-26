@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using UnityEngine.Purchasing.MiniJSON;
 #endif
 
-namespace UnityEngine.Purchasing.Stores
+namespace UnityEngine.Purchasing
 {
     /// <summary>
     /// Country, locale and currency as configured in the device's OS settings.
@@ -31,6 +31,22 @@ namespace UnityEngine.Purchasing.Stores
             CountryCode = countryCode;
             LocaleTag = localeTag;
             CurrencyCode = currencyCode;
+        }
+
+        /// <summary>The tag, else .NET's current culture (which Mono can collapse to en-US).</summary>
+        public string? LocaleTagOrCurrentCulture => LocaleTag ?? CurrentCultureName();
+
+        static string? CurrentCultureName()
+        {
+            try
+            {
+                return System.Globalization.CultureInfo.CurrentCulture.Name;
+            }
+            catch
+            {
+                // CultureInfo.CurrentCulture can throw on a stripped runtime.
+                return null;
+            }
         }
     }
 
@@ -217,7 +233,7 @@ namespace UnityEngine.Purchasing.Stores
         }
 
         // BCP-47 region subtag shape: 2 letters (ISO 3166-1) or 3 digits (UN M.49).
-        static bool IsRegion(string subtag)
+        internal static bool IsRegion(string subtag)
         {
             if (ValidAlpha2(subtag) != null)
             {
@@ -493,11 +509,14 @@ namespace UnityEngine.Purchasing.Stores
                 return null;
             }
 
-            var tag = NormalizeTag(data.TryGetString("localeIdentifier"));
-            var country = ValidAlpha2(data.TryGetString("countryCode"));
-            var currency = ValidCurrency(data.TryGetString("currencyCode"));
+            var tag = NormalizeTag(StringOf(data, "localeIdentifier"));
+            var country = ValidAlpha2(StringOf(data, "countryCode"));
+            var currency = ValidCurrency(StringOf(data, "currencyCode"));
             return (country, tag, currency);
         }
+
+        static string? StringOf(Dictionary<string, object> data, string key)
+            => data.TryGetValue(key, out var value) ? value?.ToString() : null;
 
 #else
         static (string? Country, string? Tag, string? Currency)? ReadUncached()

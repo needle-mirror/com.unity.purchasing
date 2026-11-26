@@ -105,6 +105,30 @@ namespace UnityEngine.Purchasing.PaymentProviderService
                 throw new PaymentProviderException<ConflictError>(
                     $"Conflict occured. Status code {e.response.StatusCode}.", error);
             }
+            catch (HttpException<BasicErrorResponse> e) when (e.Response.StatusCode is 422 && IsProductTypeRejection(e.ActualError?.Detail))
+            {
+                var error = new ProductTypeNotSupportedError(e.Response.StatusCode);
+                throw new PaymentProviderException<ProductTypeNotSupportedError>(
+                    $"Product type not supported. {e.ActualError?.Detail}", error);
+            }
+            catch (HttpException<BasicErrorResponse> e) when (e.Response.StatusCode is 422)
+            {
+                var error = new UnprocessableEntityError(e.Response.StatusCode);
+                throw new PaymentProviderException<UnprocessableEntityError>(
+                    $"Request could not be processed. {e.ActualError?.Detail}", error);
+            }
+            catch (HttpException e) when (e.Response.StatusCode is 422)
+            {
+                var error = new UnprocessableEntityError(e.Response.StatusCode);
+                throw new PaymentProviderException<UnprocessableEntityError>(
+                    "Request could not be processed.", error);
+            }
+            catch (ResponseDeserializationException e) when (e.response.StatusCode is 422)
+            {
+                var error = new UnprocessableEntityError(e.response.StatusCode);
+                throw new PaymentProviderException<UnprocessableEntityError>(
+                    $"Request could not be processed. Status code {e.response.StatusCode}.", error);
+            }
             catch (HttpException e) when (e.Response.StatusCode is 429)
             {
                 if (e.Response.Headers.TryGetValue("Retry-After", out var timeInSeconds) &&
@@ -160,6 +184,17 @@ namespace UnityEngine.Purchasing.PaymentProviderService
         }
 
         #region Helpers
+
+        // The create order 422 carries no problem code, and the backend also answers 422 for a project without
+        // Payment Providers set up, a currency without a price, an ambiguous SKU or an invalid purchase limit.
+        // Its detail is what tells the product type rejection apart (iap-transaction-verifier,
+        // create_order_service_core.go). If that wording changes, the 422 falls back to a generic error.
+        const string k_ProductTypeRejectionDetail = "tried to purchase product(s) with invalid types";
+
+        internal static bool IsProductTypeRejection(string detail)
+        {
+            return detail?.StartsWith(k_ProductTypeRejectionDetail, StringComparison.Ordinal) ?? false;
+        }
 
         #region ValidationError Message Helpers
 

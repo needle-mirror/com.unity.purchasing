@@ -14,7 +14,7 @@ namespace UnityEngine.Purchasing
     {
         static StoreServiceFactory? s_Instance;
 
-        readonly Dictionary<string?, Func<IRetryPolicy, IStoreWrapper, IStoreService>> m_StoreServiceInstantiationByName = new Dictionary<string?, Func<IRetryPolicy, IStoreWrapper, IStoreService>>();
+        readonly Dictionary<string, Func<IRetryPolicy, IStoreWrapper, IStoreService>> m_StoreServiceInstantiationByName = new Dictionary<string, Func<IRetryPolicy, IStoreWrapper, IStoreService>>();
 
         internal static StoreServiceFactory Instance()
         {

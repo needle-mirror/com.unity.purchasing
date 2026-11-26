@@ -24,4 +24,5 @@ public enum PurchaseFailureReason: Int {
     case OrderCancelled = 13
     case OrderStateChanged = 14
     case PurchaseLimitReached = 15
+    case ProductTypeNotSupported = 16
 }

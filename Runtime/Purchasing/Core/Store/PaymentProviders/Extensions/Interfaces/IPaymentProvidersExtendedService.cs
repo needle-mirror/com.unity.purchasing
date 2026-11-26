@@ -70,20 +70,52 @@ namespace UnityEngine.Purchasing
         /// projects that layer UI above that range can tweak it after first use by finding the
         /// "PaymentOptionProvider" GameObject and overriding the Canvas sortingOrder directly.
         /// </summary>
+        /// <remarks>
+        /// On Apple platforms with Unity 6, the "Continue with" text before the Apple In-App Purchase
+        /// mark is drawn in the system font's medium weight, as Apple's guidelines for the mark require,
+        /// through TextMesh Pro. That needs the project's TextMesh Pro resources: import them with
+        /// <b>Window &gt; TextMeshPro &gt; Import TMP Essential Resources</b>. Without them, and with
+        /// Unity 2022.3, the text is drawn in the regular weight. The UI Toolkit picker
+        /// (<c>GetPaymentOptionProviderUITK()</c>) draws the medium weight without them.
+        /// </remarks>
         IPaymentOptionProvider GetPaymentOptionProviderUGUI() => new PaymentOptionProvider();
 
 #if IAP_UIELEMENTS
         /// <summary>
         /// Returns a new UI Toolkit payment-method picker. View hierarchy is built lazily on first
-        /// use and appended to a UIDocument's <c>rootVisualElement</c>; caller owns the returned
-        /// instance and must call <see cref="System.IDisposable.Dispose"/> when done.
+        /// use, on the picker's own panel: a "PaymentOptionProviderUITK" GameObject (kept across
+        /// scene loads) with a <see cref="UnityEngine.UIElements.UIDocument"/> and its own
+        /// <see cref="UnityEngine.UIElements.PanelSettings"/>. The panel is scaled so the picker keeps
+        /// a consistent physical size across screen densities, follows screen resizes and
+        /// orientation changes, and shrinks to fit screens too small for it. Caller owns the returned
+        /// instance and must call <see cref="System.IDisposable.Dispose"/> when done, which also
+        /// destroys that GameObject.
+        /// The GameObject exists once <c>ApplyLightTheme</c>, <c>ApplyDarkTheme</c>,
+        /// <c>ApplyBottomAnchoredLayout</c>, <c>ApplyCenteredLayout</c>, <c>ApplyAutomaticLayout</c> or
+        /// <c>ValidatePurchaseOption</c> has been called, so to customize the picker call one of those
+        /// first, then find the GameObject by name, then call <c>ShowPurchaseOption</c>.
+        /// If several pickers are alive at once, <c>GameObject.Find</c> returns any one of them.
+        /// The panel's sortingOrder is 10000, which places it above Screen Space - Overlay canvases
+        /// and other panels with a lower sortingOrder; projects that layer UI above that range can
+        /// raise it through the GameObject's <see cref="UnityEngine.UIElements.UIDocument.panelSettings"/>.
+        /// Because the picker does not render inside the game's panels, the game's theme and style
+        /// sheets do not apply to it. To override the picker's USS variables, add a style sheet to
+        /// that UIDocument's <see cref="UnityEngine.UIElements.UIDocument.rootVisualElement"/>.
         /// Only available when the <c>com.unity.modules.uielements</c> module is referenced by the project.
         /// </summary>
-        /// <param name="host">UIDocument the picker should attach to. Pass <c>null</c> (default) to
-        /// auto-discover the first active UIDocument in the scene; in scenes with multiple active
-        /// documents, pass one explicitly to guarantee the picker renders under the right one.</param>
+        /// <returns>A new picker instance.</returns>
+        IPaymentOptionProvider GetPaymentOptionProviderUITK() => new PaymentOptionProviderUITK();
+
+        /// <summary>
+        /// Obsolete: the UI Toolkit picker now renders on its own panel, so <paramref name="host"/>
+        /// is ignored. Use <see cref="GetPaymentOptionProviderUITK()"/> instead.
+        /// </summary>
+        /// <param name="host">Ignored.</param>
+        /// <returns>A new picker instance, the same as <see cref="GetPaymentOptionProviderUITK()"/>.</returns>
+        [System.Obsolete("The UI Toolkit picker now renders on its own panel and ignores the host UIDocument. " +
+            "Use GetPaymentOptionProviderUITK() instead.")]
         IPaymentOptionProvider GetPaymentOptionProviderUITK(UnityEngine.UIElements.UIDocument? host = null)
-            => new PaymentOptionProviderUITK(host);
+            => GetPaymentOptionProviderUITK();
 #endif
     }
 }

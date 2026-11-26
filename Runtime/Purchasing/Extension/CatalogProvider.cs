@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class CatalogProvider : ICatalogProvider
     {
-        Dictionary<string?, storeSpecificIDsByProductID> m_StoreSpecificIds = new();
+        Dictionary<string, storeSpecificIDsByProductID> m_StoreSpecificIds = new();
         List<ProductDefinition> m_Products = new();
 
         /// <summary>

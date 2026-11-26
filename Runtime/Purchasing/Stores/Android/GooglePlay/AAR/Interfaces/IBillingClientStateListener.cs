@@ -6,6 +6,6 @@ namespace UnityEngine.Purchasing.Interfaces
     interface IBillingClientStateListener
     {
         void RegisterOnConnected(Action onConnected);
-        void RegisterOnDisconnected(Action<GoogleBillingResponseCode> onDisconnected);
+        void RegisterOnDisconnected(Action<GoogleBillingResponseCode, string> onDisconnected);
     }
 }

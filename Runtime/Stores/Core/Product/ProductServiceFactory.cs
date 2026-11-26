@@ -13,7 +13,7 @@ namespace UnityEngine.Purchasing
     {
         static ProductServiceFactory? s_Instance;
 
-        readonly Dictionary<string?, Func<IStoreWrapper, IProductService>> m_ProductServiceInstantiationByName = new();
+        readonly Dictionary<string, Func<IStoreWrapper, IProductService>> m_ProductServiceInstantiationByName = new();
 
         internal static ProductServiceFactory Instance()
         {

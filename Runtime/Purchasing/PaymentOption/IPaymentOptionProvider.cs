@@ -87,6 +87,72 @@ namespace UnityEngine.Purchasing
         void ApplyLightTheme();
 
         /// <summary>
+        /// Anchors the picker to the bottom of the screen on every device and in every orientation,
+        /// the layout intended for phones, in place of the automatic layout.
+        /// Triggers lazy init if the picker hasn't been initialized yet.
+        /// </summary>
+        /// <remarks>
+        /// Phone and tablet differ in more than position — the bottom-anchored layout also
+        /// fills the available width up to a cap, where the centered one uses a fixed width.
+        /// By default the picker chooses between them per device (see <see cref="ApplyAutomaticLayout"/>);
+        /// this and <see cref="ApplyCenteredLayout"/> pin one instead, until
+        /// <see cref="ApplyAutomaticLayout"/> is called.
+        ///
+        /// Has an empty default implementation so that adding it did not break existing
+        /// implementations of this interface. Both providers in this package override it;
+        /// an implementation that has no notion of layout modes can leave it alone.
+        /// </remarks>
+        void ApplyBottomAnchoredLayout() { }
+
+        /// <summary>
+        /// Centers the picker on screen on every device and in every orientation, the layout
+        /// intended for tablets, in place of the automatic layout.
+        /// Triggers lazy init if the picker hasn't been initialized yet.
+        /// </summary>
+        /// <remarks>
+        /// See <see cref="ApplyBottomAnchoredLayout"/> for how the two layouts differ, and
+        /// why this has an empty default implementation.
+        /// </remarks>
+        void ApplyCenteredLayout() { }
+
+        /// <summary>
+        /// Lets the picker choose its layout from the device, which is the default: phones are
+        /// bottom-anchored and tablets and macOS centered, in either orientation. Off Apple platforms, a screen
+        /// whose shorter side is at least 600 points (dp on Android) counts as a tablet; in the
+        /// Editor, a landscape Game view does. Undoes
+        /// <see cref="ApplyBottomAnchoredLayout"/> and <see cref="ApplyCenteredLayout"/>.
+        /// Triggers lazy init if the picker hasn't been initialized yet.
+        /// </summary>
+        /// <remarks>
+        /// See <see cref="ApplyBottomAnchoredLayout"/> for why this has an empty default implementation.
+        /// </remarks>
+        void ApplyAutomaticLayout() { }
+
+        /// <summary>
+        /// Overrides the device language of this Purchase Options UI.
+        /// Without it, the UI follows the device language, or English when that language has no translation.
+        /// </summary>
+        /// <remarks>
+        /// Applies to this instance only, immediately: a UI already on screen is redrawn in the new language.
+        /// Call it from the main thread.
+        /// A tag in a language without a translation (see <see cref="SupportedLocales"/>) shows English and
+        /// logs a warning. Does nothing once the provider is disposed.
+        ///
+        /// Has an empty default implementation so that adding it did not break existing
+        /// implementations of this interface. Both providers in this package override it.
+        /// </remarks>
+        /// <param name="localeTag">BCP-47 tag (e.g. "fr-FR", "es"), or null to follow the device again.
+        /// A tag is matched by language, so "fr-CA" shows the "fr-FR" translation.</param>
+        void SetLocale(string? localeTag) { }
+
+        /// <summary>
+        /// The BCP-47 tags of the languages the Purchase Options UI is translated into:
+        /// English ("en-US"), French ("fr-FR") and Spanish ("es-ES").
+        /// </summary>
+        /// <seealso cref="SetLocale"/>
+        IReadOnlyCollection<string> SupportedLocales => PaymentOptionProviderTranslations.SupportedLocales;
+
+        /// <summary>
         /// Eligibility pre-check that mirrors what <see cref="ShowPurchaseOption(string)"/>
         /// would do: resolves the default purchase order and verifies the listing is priced
         /// in a single currency across all of those stores.

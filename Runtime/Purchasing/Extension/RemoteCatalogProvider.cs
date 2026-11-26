@@ -27,7 +27,7 @@ namespace UnityEngine.Purchasing
     /// </summary>
     public class RemoteCatalogProvider : IRemoteCatalogProvider
     {
-        Dictionary<string?, storeSpecificIDsByCatalogListingId> m_StoreSpecificIds = new();
+        Dictionary<string, storeSpecificIDsByCatalogListingId> m_StoreSpecificIds = new();
         List<ProductDefinition> m_Products = new();
         Task<FetchRemoteCatalogResult>? m_LatestFetch;
 

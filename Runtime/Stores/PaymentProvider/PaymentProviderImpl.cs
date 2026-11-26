@@ -84,6 +84,7 @@ namespace UnityEngine.Purchasing.Stores
             m_ImpressionScope = impressionScope;
             m_CheckoutCoordinator = new CheckoutLauncherCoordinator(util, logger);
             m_Util.focusChanged += OnFocusChanged;
+            s_StopObservingFocus += StopObservingFocus;
             IsFrontmost = IsAppFrontmost;
         }
 
@@ -113,6 +114,7 @@ namespace UnityEngine.Purchasing.Stores
             m_ImpressionScope = impressionScope;
             m_CheckoutCoordinator = coordinator;
             m_Util.focusChanged += OnFocusChanged;
+            s_StopObservingFocus += StopObservingFocus;
             IsFrontmost = IsAppFrontmost;
         }
 
@@ -162,11 +164,23 @@ namespace UnityEngine.Purchasing.Stores
 
         static event Action? s_SceneBecameFrontmost;
         static bool s_FrontmostCallbackRegistered;
+        static event Action? s_StopObservingFocus;
         // Kept alive: the native plugin holds on to the function pointer.
         static readonly SceneBecameFrontmostCallback s_SceneBecameFrontmostCallback = OnNativeSceneBecameFrontmost;
 
         [MonoPInvokeCallback(typeof(SceneBecameFrontmostCallback))]
         static void OnNativeSceneBecameFrontmost() => s_SceneBecameFrontmost?.Invoke();
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        static void ResetStaticsOnLoad()
+        {
+            s_SceneBecameFrontmost = null;
+            s_FrontmostCallbackRegistered = false;
+            s_StopObservingFocus?.Invoke();
+            s_StopObservingFocus = null;
+        }
+
+        void StopObservingFocus() => m_Util.focusChanged -= OnFocusChanged;
 
         // Created lazily, never from a constructor.
         INativeAppleStore? IosNativeStore =>
@@ -433,11 +447,72 @@ namespace UnityEngine.Purchasing.Stores
             m_CustomReferenceId = customReferenceId;
         }
 
+        // Limits the Payment Provider backend enforces on order metadata (ValidateMetadata in
+        // iap-transaction-verifier, which also refuses NUL characters). Sizes are UTF-8 byte counts.
+        internal const int MaxCustomMetadataEntries = 20;
+        internal const int MaxCustomMetadataKeyBytes = 40;
+        internal const int MaxCustomMetadataValueBytes = 100;
+
         public void SetCustomMetadata(IReadOnlyDictionary<string, string>? customMetadata)
         {
-            m_CustomMetadata = customMetadata == null
-                ? null
-                : new Dictionary<string, string>(customMetadata);
+            if (customMetadata == null)
+            {
+                m_CustomMetadata = null;
+                return;
+            }
+
+            // Copy first so the dictionary that is validated is the one that is stored.
+            var copy = new Dictionary<string, string>(customMetadata);
+            ValidateCustomMetadata(copy);
+            m_CustomMetadata = copy;
+        }
+
+        // Throws so the developer finds out at the call site rather than from a failed order later.
+        // On failure the previously set metadata is kept.
+        static void ValidateCustomMetadata(IReadOnlyDictionary<string, string> customMetadata)
+        {
+            const string rejected = "Custom metadata was not set:";
+
+            if (customMetadata.Count > MaxCustomMetadataEntries)
+            {
+                throw new ArgumentException(
+                    $"{rejected} it has {customMetadata.Count} entries, but at most {MaxCustomMetadataEntries} are allowed.",
+                    nameof(customMetadata));
+            }
+
+            foreach (var entry in customMetadata)
+            {
+                var keyBytes = System.Text.Encoding.UTF8.GetByteCount(entry.Key);
+                if (keyBytes > MaxCustomMetadataKeyBytes)
+                {
+                    throw new ArgumentException(
+                        $"{rejected} the key \"{entry.Key}\" is {keyBytes} bytes in UTF-8, but keys can be at most {MaxCustomMetadataKeyBytes} bytes.",
+                        nameof(customMetadata));
+                }
+
+                // Shown as \0 so the message isn't cut short where the NUL is.
+                if (entry.Key.IndexOf('\0') >= 0)
+                {
+                    throw new ArgumentException(
+                        $"{rejected} the key \"{entry.Key.Replace("\0", "\\0")}\" contains a NUL character (\\0), which is not allowed.",
+                        nameof(customMetadata));
+                }
+
+                var valueBytes = entry.Value == null ? 0 : System.Text.Encoding.UTF8.GetByteCount(entry.Value);
+                if (valueBytes > MaxCustomMetadataValueBytes)
+                {
+                    throw new ArgumentException(
+                        $"{rejected} the value of key \"{entry.Key}\" is {valueBytes} bytes in UTF-8, but values can be at most {MaxCustomMetadataValueBytes} bytes.",
+                        nameof(customMetadata));
+                }
+
+                if (entry.Value != null && entry.Value.IndexOf('\0') >= 0)
+                {
+                    throw new ArgumentException(
+                        $"{rejected} the value of key \"{entry.Key}\" contains a NUL character (\\0), which is not allowed.",
+                        nameof(customMetadata));
+                }
+            }
         }
 
         // Runs the developer-supplied compliance callback before order creation.
@@ -475,6 +550,14 @@ namespace UnityEngine.Purchasing.Stores
                     new FailedOrder(cart, PurchaseFailureReason.PurchaseLimitReached, e.Message));
                 return false;
             }
+            // Same for the backend's 422 that rejects a product type Payment Providers don't sell. Its other
+            // 422s fall through to the generic handler below, as in 5.5.1.
+            catch (PaymentProviderException<ProductTypeNotSupportedError> e)
+            {
+                PurchaseCallback?.OnPurchaseFailed(
+                    new FailedOrder(cart, PurchaseFailureReason.ProductTypeNotSupported, e.Message));
+                return false;
+            }
             catch (Exception e)
             {
                 PurchaseCallback?.OnPurchaseFailed(
@@ -482,6 +565,16 @@ namespace UnityEngine.Purchasing.Stores
                         $"Compliance check threw: {e.Message}"));
                 return false;
             }
+        }
+
+        const string k_SubscriptionUnsupportedMessage =
+            "Payment Providers do not sell subscriptions. Purchase this product through the platform store instead.";
+
+        // Payment Providers sell consumables and non-consumables only; the backend rejects an order for
+        // anything else with a 422 (ULO-10540).
+        static bool ContainsSubscription(ICart cart)
+        {
+            return cart.Items()?.Any(item => item?.Product?.type == ProductType.Subscription) ?? false;
         }
 
         const string k_WebshopUnsupportedMessage =
@@ -797,6 +890,14 @@ namespace UnityEngine.Purchasing.Stores
                 return;
             }
 
+            // Before the compliance callback, which may create the order through GenerateURL.
+            if (ContainsSubscription(cart))
+            {
+                PurchaseCallback?.OnPurchaseFailed(
+                    new FailedOrder(cart, PurchaseFailureReason.ProductTypeNotSupported, k_SubscriptionUnsupportedMessage));
+                return;
+            }
+
             s_FlowContext.Value = new PurchaseFlowContext(PurchaseChannel.PaymentProvider, paymentProviderName);
             try
             {
@@ -837,6 +938,12 @@ namespace UnityEngine.Purchasing.Stores
             catch (PaymentProviderException<PurchaseLimitReachedError> e)
             {
                 var failedOrder = new FailedOrder(cart, PurchaseFailureReason.PurchaseLimitReached, e.Message);
+                PurchaseCallback?.OnPurchaseFailed(failedOrder);
+            }
+            // Only the product type rejection: the backend's other 422s stay Unknown, below.
+            catch (PaymentProviderException<ProductTypeNotSupportedError> e)
+            {
+                var failedOrder = new FailedOrder(cart, PurchaseFailureReason.ProductTypeNotSupported, e.Message);
                 PurchaseCallback?.OnPurchaseFailed(failedOrder);
             }
             catch (PaymentProviderException<ConflictError> e)
@@ -1193,7 +1300,8 @@ namespace UnityEngine.Purchasing.Stores
         /// <paramref name="catalogListingId"/> may be null only inside a webshop compliance callback
         /// (yields the generic Unity webshop URL); a null id outside webshop flow returns null and
         /// emits <see cref="IPurchaseService.OnPurchaseFailed"/> because the Payment Provider order
-        /// path requires a product.
+        /// path requires a product. A subscription's listing likewise returns null and emits
+        /// <see cref="PurchaseFailureReason.ProductTypeNotSupported"/>: Payment Providers don't sell them.
         /// </summary>
         public async Task<string?> GenerateURL(string? catalogListingId, IReadOnlyList<PaymentProviderToken>? externalTokens = null)
         {
@@ -1216,6 +1324,19 @@ namespace UnityEngine.Purchasing.Stores
                 PurchaseCallback?.OnPurchaseFailed(
                     new FailedOrder(new Cart(new List<CartItem>()), PurchaseFailureReason.ProductUnavailable,
                         "GenerateURL outside a webshop flow requires a catalog listing id."));
+                return null;
+            }
+
+            if (ProductCache?.FindByCatalogListingId(catalogListingId)?.type == ProductType.Subscription)
+            {
+                // BuildCartForCatalogListing emits OnPurchaseFailed itself if it can't build the cart.
+                var subscriptionCart = BuildCartForCatalogListing(catalogListingId);
+                if (subscriptionCart != null)
+                {
+                    PurchaseCallback?.OnPurchaseFailed(
+                        new FailedOrder(subscriptionCart, PurchaseFailureReason.ProductTypeNotSupported,
+                            k_SubscriptionUnsupportedMessage));
+                }
                 return null;
             }
 

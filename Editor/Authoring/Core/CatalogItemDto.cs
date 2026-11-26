@@ -76,8 +76,11 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         public string CurrencyCode;
         [DataMember(Name = "amount")]
         public long Amount;
+        // Serialized as JSON through [DataMember]; Unity's serializer skipping nullable fields (UAC1001) does not apply.
+#pragma warning disable UAC1001
         [DataMember(Name = "webshopPrice"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public long? WebshopPrice;
+#pragma warning restore UAC1001
     }
 
 
@@ -128,10 +131,13 @@ namespace UnityEditor.Purchasing.Editor.Authoring.Core
         [DataMember(Name = "type")]
         [JsonConverter(typeof(StringEnumConverter))]
         public PromotionTypeDto Type;
+        // Serialized as JSON through [DataMember]; Unity's serializer skipping nullable fields (UAC1001) does not apply.
+#pragma warning disable UAC1001
         [DataMember(Name = "startsAt"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTimeOffset? StartsAt;
         [DataMember(Name = "endsAt"), JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public DateTimeOffset? EndsAt;
+#pragma warning restore UAC1001
     }
 
     public enum PromotionTypeDto
